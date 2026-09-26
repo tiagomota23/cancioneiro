@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b7a47">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cancioneiro">
+  <title>Cancioneiro</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
+
+  <!-- Índice / listas (fundo verde) -->
+  <section id="view-list" class="view green" hidden>
+    <header class="topbar">
+      <button class="icon-btn" id="btn-back-list" aria-label="Voltar" hidden>
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-menu" aria-label="Índice">
+        <svg viewBox="0 0 24 24"><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/><path d="M8 6h13M8 12h13M8 18h13"/></svg>
+      </button>
+      <h1 class="brand" id="list-brand">CANCIONEIRO</h1>
+      <button class="icon-btn info" id="btn-info" aria-label="Informação"><i>i</i></button>
+    </header>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      <input id="search" type="search" placeholder="PROCURAR CÂNTICO, AUTOR OU LETRA" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="search-clear" class="clear" aria-label="Limpar" hidden>×</button>
+    </div>
+    <h2 class="list-title" id="list-title" hidden></h2>
+    <ul class="rows" id="rows"></ul>
+    <p class="status" id="status"></p>
+  </section>
+
+  <!-- Cântico (fundo branco) -->
+  <section id="view-song" class="view white" hidden>
+    <header class="songbar">
+      <button class="icon-btn" id="btn-back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="spacer"></div>
+      <button class="icon-btn txt" id="btn-chords" aria-label="Mostrar acordes" title="Acordes" hidden>♪</button>
+      <button class="icon-btn txt" id="font-dec" aria-label="Diminuir letra">A<sup>−</sup></button>
+      <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra">A<sup>+</sup></button>
+    </header>
+    <article id="song" class="song"></article>
+  </section>
+
+  <!-- Informação -->
+  <dialog id="info">
+    <h2>Cancioneiro</h2>
+    <p>Procure por título, autor, número ou qualquer palavra da letra ou da tradução.</p>
+    <p>Em cada cântico: <b>A−</b>/<b>A+</b> ajusta o tamanho da letra, <b>♪</b> mostra ou esconde os acordes e os botões de idioma alternam entre o original e a tradução.</p>
+    <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
+    <p class="small" id="info-count"></p>
+    <form method="dialog"><button>Fechar</button></form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

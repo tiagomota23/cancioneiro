@@ -1,0 +1,5 @@
+songs.json
+.env*
+.claude/
+.DS_Store
+supabase/.temp/
