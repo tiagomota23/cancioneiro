@@ -185,58 +185,147 @@
     return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
   }
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const LISTEN_LANGS = [['pt-PT', 'PT'], ['it-IT', 'IT'], ['es-ES', 'ES'], ['en-GB', 'EN'], ['fr-FR', 'FR']];
-  let rec = null, heard = '', listenTimer = null, listenResult = null, cancelled = false;
-  function renderLangs() {
-    $('listen-langs').innerHTML = LISTEN_LANGS.map(([code, lbl]) =>
-      `<button data-l="${code}" class="${(prefs.listenLang || 'pt-PT') === code ? 'on' : ''}">${lbl}</button>`).join('');
-    $('listen-langs').querySelectorAll('button').forEach(b => b.onclick = () => {
-      prefs.listenLang = b.dataset.l; applyFont(); renderLangs();
-      if (rec) { cancelled = true; rec.abort(); setTimeout(startListening, 250); }
-    });
+  // Gravação: microfone -> PCM 16 kHz -> Whisper (worker) a cada ~2,5 s -> correspondência.
+  // Pára sozinho quando um cântico se destaca claramente (ou aos 15 s).
+  const MAX_SECONDS = 18, TARGET_RATE = 16000;
+  // Línguas a experimentar (null = deteção automática do Whisper); a última que resultou vai à frente
+  const LANG_ORDER = ['portuguese', null, 'italian', 'latin', 'spanish', 'english', 'french'];
+  function langQueue() {
+    const last = prefs.lastLang;
+    return last && LANG_ORDER.includes(last) ? [last, ...LANG_ORDER.filter(l => l !== last)] : LANG_ORDER.slice();
   }
+  let worker = null, modelReady = false, modelFailed = false, busy = false;
+  let rec = null, heard = '', listenResult = null, loadProgress = {};
   function listenMsg(status, on) { $('listen-status').textContent = status; $('listen-pulse').classList.toggle('on', !!on); }
-  function openListen() {
-    $('listen').hidden = false; renderLangs(); $('listen-text').textContent = '';
-    if (!SR) { listenMsg('Não disponível'); $('listen-text').textContent = 'Este navegador não permite reconhecimento de voz. Experimente o Chrome (Android) ou o Safari (iPhone).'; $('listen-stop').hidden = true; return; }
-    $('listen-stop').hidden = false;
-    startListening();
+  function getWorker() {
+    if (worker) return worker;
+    worker = new Worker('worker.js', { type: 'module' });
+    worker.onmessage = e => {
+      const m = e.data;
+      if (m.type === 'progress') {
+        loadProgress[m.file] = [m.loaded, m.total];
+        const [l, t] = Object.values(loadProgress).reduce((a, [x, y]) => [a[0] + x, a[1] + y], [0, 0]);
+        if (!modelReady && rec) $('listen-hint').textContent = `A preparar o reconhecimento (só da primeira vez): ${Math.round(100 * l / t)}% de ${Math.round(t / 1e6)} MB`;
+      } else if (m.type === 'ready') {
+        modelReady = true; $('listen-hint').textContent = '';
+        if (rec) tick();
+      } else if (m.type === 'text') {
+        busy = false;
+        if (rec && m.id === rec.id) onTranscript(m.text, m.language);
+      } else if (m.type === 'error') {
+        busy = false;
+        if (!modelReady) { modelFailed = true; }
+        if (rec) { stopRecording(); listenMsg('Erro no reconhecimento'); $('listen-text').textContent = 'Não foi possível transcrever neste dispositivo. ' + m.message; }
+      }
+    };
+    worker.onerror = () => { modelFailed = true; };
+    worker.postMessage({ type: 'load' });
+    return worker;
   }
-  function startListening() {
-    cancelled = false; heard = '';
-    rec = new SR();
-    rec.lang = prefs.listenLang || 'pt-PT';
-    rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
-    rec.onresult = e => {
-      let t = '';
-      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' ';
-      heard = t.trim();
-      $('listen-text').textContent = heard ? `“${heard}”` : '';
-    };
-    rec.onerror = e => {
-      if (e.error === 'aborted') return;
-      cancelled = true;
-      listenMsg(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Sem acesso ao microfone' : e.error === 'no-speech' ? 'Não ouvi nada' : 'Erro: ' + e.error);
-      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-      $('listen-text').textContent = (e.error === 'not-allowed' || e.error === 'service-not-allowed')
-        ? (ios ? 'No iPhone: autorize o microfone e ative o Ditado (Definições › Geral › Teclado › Ativar ditado). Se abriu a app a partir do ecrã principal e não funcionar, experimente no Safari.' : 'Autorize o microfone nas definições do navegador.')
-        : 'Tente de novo, mais perto de quem canta.';
-    };
-    rec.onend = () => { clearTimeout(listenTimer); rec = null; if (!cancelled) finishListening(); };
-    try { rec.start(); listenMsg('A ouvir…', true); } catch (e) { listenMsg('Erro ao iniciar'); }
-    clearTimeout(listenTimer);
-    listenTimer = setTimeout(() => rec && rec.stop(), 10000);
+  function downsample(chunks, rate) {
+    const len = chunks.reduce((a, c) => a + c.length, 0);
+    const input = new Float32Array(len); let o = 0;
+    for (const c of chunks) { input.set(c, o); o += c.length; }
+    if (rate === TARGET_RATE) return input;
+    const ratio = rate / TARGET_RATE, out = new Float32Array(Math.floor(len / ratio));
+    for (let i = 0; i < out.length; i++) {
+      const s = Math.floor(i * ratio), e = Math.min(len, Math.floor((i + 1) * ratio));
+      let sum = 0; for (let k = s; k < e; k++) sum += input[k];
+      out[i] = sum / Math.max(1, e - s);
+    }
+    return out;
+  }
+  const rms = a => { let s = 0; for (let i = 0; i < a.length; i += 4) s += a[i] * a[i]; return Math.sqrt(s / (a.length / 4)); };
+  // Frases que o Whisper "inventa" em silêncio/ruído
+  const HALLUCINATIONS = /(amara\.org|legendas|subt[ií]tulos|sottotitoli|obrigad[oa] por|thank you for watching|thanks for watching|inscreva-se|\[m[uú]sica\]|\(m[uú]sica\))/i;
+  function cleanText(t) { return t.replace(/[♪♫🎵🎶]/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+  async function openListen() {
+    $('listen').hidden = false; $('listen-text').textContent = ''; $('listen-hint').textContent = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.Worker) {
+      listenMsg('Não disponível'); $('listen-text').textContent = 'Este navegador não permite gravar som.'; return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC(); // criado no toque do utilizador (necessário no iPhone)
+    rec = { id: Date.now(), ctx, chunks: [], started: performance.now(), stream: null, lastSent: 0, queue: langQueue(), qi: 0, lang: undefined, best: null };
+    const me = rec;
+    listenMsg('A pedir o microfone…');
+    getWorker();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true, channelCount: 1 } });
+      if (rec !== me) { stream.getTracks().forEach(t => t.stop()); return; }
+      rec.stream = stream;
+      await ctx.resume();
+      const src = ctx.createMediaStreamSource(stream);
+      const proc = ctx.createScriptProcessor(4096, 1, 1);
+      proc.onaudioprocess = e => { if (rec === me) me.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+      src.connect(proc); proc.connect(ctx.destination);
+      rec.started = performance.now();
+      listenMsg('A ouvir…', true);
+      rec.timer = setInterval(tick, 500);
+    } catch (e) {
+      stopRecording();
+      listenMsg('Sem acesso ao microfone');
+      $('listen-text').textContent = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? 'Autorize o microfone: Definições › Apps › Safari › Microfone (ou toque em "aA" na barra do Safari › Definições do site).'
+        : 'Autorize o microfone nas definições do navegador.';
+    }
+  }
+  function tick() {
+    if (!rec || !rec.stream) return;
+    const secs = (performance.now() - rec.started) / 1000;
+    const bar = Math.min(100, Math.round(100 * secs / MAX_SECONDS));
+    $('listen-bar').style.width = bar + '%';
+    if (secs >= MAX_SECONDS && !busy) { finish(); return; }
+    if (!modelReady || busy || secs < 3.5 || secs - rec.lastSent < 2.5) return;
+    const audio = downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * MAX_SECONDS);
+    if (rms(audio.subarray(-TARGET_RATE * 3)) < 0.004) { listenMsg('A ouvir… (muito baixo)', true); return; }
+    rec.lastSent = secs; busy = true;
+    if (!heard) listenMsg('A ouvir e a transcrever…', true);
+    // língua fixada quando uma já deu resultado; senão, experimenta a próxima
+    const language = rec.lang !== undefined ? rec.lang : rec.queue[rec.qi++ % rec.queue.length];
+    getWorker().postMessage({ type: 'transcribe', id: rec.id, audio, language });
+  }
+  function onTranscript(raw, language) {
+    const t = cleanText(raw || '');
+    if (!t || HALLUCINATIONS.test(t)) return;
+    const res = matchLyrics(t), words = tok(t).length;
+    const top = res[0], second = res[1];
+    const score = top ? top.score : 0;
+    if (!rec.best || score >= rec.best.score) rec.best = { text: t, score, language };
+    if (score >= 0.3 && rec.lang === undefined) rec.lang = language; // esta língua funciona: fica
+    heard = rec.best.text;
+    $('listen-text').textContent = `“${heard}”`;
+    const clear = top && score >= 0.45 && (!second || score - second.score >= 0.12);
+    if ((clear && words >= 6) || (words >= 20 && score >= 0.3)) {
+      if (language) { prefs.lastLang = language; applyFont(); }
+      finish();
+    } else listenMsg(top ? 'A ouvir… (a confirmar)' : 'A ouvir…', true);
+  }
+  function stopRecording() {
+    if (!rec) return;
+    clearInterval(rec.timer);
+    if (rec.stream) rec.stream.getTracks().forEach(t => t.stop());
+    try { rec.ctx.close(); } catch (e) {}
+    rec = null; busy = false;
+  }
+  function finish() {
+    stopRecording();
+    if (!heard) {
+      listenMsg('Não percebi a letra');
+      $('listen-text').textContent = modelReady ? 'Tente de novo, mais perto de quem canta.' : 'O reconhecimento ainda estava a ser preparado. Tente de novo dentro de momentos.';
+      return;
+    }
+    finishListening();
   }
   function finishListening() {
-    listenMsg('A procurar…');
-    if (!heard) { listenMsg('Não ouvi nada'); $('listen-text').textContent = 'Tente de novo, mais perto de quem canta.'; return; }
     listenResult = { text: heard, res: matchLyrics(heard) };
+    heard = '';
     $('listen').hidden = true;
     $('search').value = ''; $('search-clear').hidden = true;
     if (location.hash === '#/ouvir') route(); else location.hash = '#/ouvir';
   }
-  function closeListen() { cancelled = true; clearTimeout(listenTimer); if (rec) rec.abort(); $('listen').hidden = true; }
+  function closeListen() { stopRecording(); heard = ''; $('listen').hidden = true; }
   function showListenResults() {
     show('view-list');
     $('btn-back-list').hidden = false; $('btn-favs').hidden = true;
@@ -258,7 +347,7 @@
   window.cancioneiroHeard = t => { heard = t; finishListening(); };
   $('btn-mic').onclick = openListen;
   $('listen-cancel').onclick = closeListen;
-  $('listen-stop').onclick = () => { if (rec) rec.stop(); else if (heard) finishListening(); else startListening(); };
+  $('listen-stop').onclick = () => { if (rec) { if (heard) finish(); else listenMsg('Ainda a ouvir…', true); } else if (heard) finishListening(); else openListen(); };
   $('listen').addEventListener('click', e => { if (e.target === $('listen')) closeListen(); });
 
   // ---------- Vistas ----------

@@ -4,3 +4,5 @@ songs.json
 .DS_Store
 supabase/.temp/
 seed/
+test_audio.wav
+test_audio_it.wav
