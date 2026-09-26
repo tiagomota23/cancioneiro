@@ -56,6 +56,7 @@
 
   function setSongs(list) {
     songs = list;
+    lyrIndex = null;
     bySlug = new Map();
     for (const s of songs) {
       bySlug.set(s.slug, s);
@@ -126,6 +127,132 @@
     }
     return html + (open ? '</mark>' : '');
   }
+
+
+  // ---------- Identificar pela letra ouvida ----------
+  const tok = s => norm(s).split(/[^a-z0-9]+/).filter(w => w.length > 1);
+  let lyrIndex = null; // [{s, wins:[{words:Set, bigrams:Set, line}]}], idf
+  function buildLyricIndex() {
+    const df = new Map(), items = [];
+    for (const s of songs) {
+      const sources = [(s.lyrics || []).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
+      const wins = [], seen = new Set();
+      for (const lines of sources) {
+        const lt = lines.map(tok);
+        lt.forEach(ws => ws.forEach(w => seen.add(w)));
+        for (let i = 0; i < lines.length; i++) {
+          const words = new Set(), bigrams = new Set();
+          for (let k = i; k < Math.min(i + 3, lines.length); k++) {
+            const ws = lt[k];
+            ws.forEach((w, j) => { words.add(w); if (j) bigrams.add(ws[j - 1] + ' ' + w); });
+            if (k > i && lt[k - 1].length && ws.length) bigrams.add(lt[k - 1][lt[k - 1].length - 1] + ' ' + ws[0]);
+          }
+          if (words.size) wins.push({ words, bigrams, line: lines[i] });
+        }
+      }
+      seen.forEach(w => df.set(w, (df.get(w) || 0) + 1));
+      items.push({ s, wins });
+    }
+    const N = songs.length;
+    lyrIndex = { items, idf: w => Math.log((N + 1) / (1 + (df.get(w) || 0))) };
+  }
+  function matchLyrics(text) {
+    if (!lyrIndex) buildLyricIndex();
+    const { items, idf } = lyrIndex;
+    const q = tok(text);
+    const qset = [...new Set(q)];
+    const qbi = new Set(q.slice(1).map((w, i) => q[i] + ' ' + w));
+    const total = qset.reduce((a, w) => a + idf(w), 0) + [...qbi].reduce((a, b) => a + 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0), 0);
+    if (!total) return [];
+    const out = [];
+    for (const { s, wins } of items) {
+      let best = 0, bestLine = null;
+      for (const win of wins) {
+        let sc = 0;
+        for (const w of qset) if (win.words.has(w)) sc += idf(w);
+        for (const b of qbi) if (win.bigrams.has(b)) sc += 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0);
+        if (sc > best) { best = sc; bestLine = win.line; }
+      }
+      if (best) out.push({ s, score: best / total, snip: bestLine });
+    }
+    return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const LISTEN_LANGS = [['pt-PT', 'PT'], ['it-IT', 'IT'], ['es-ES', 'ES'], ['en-GB', 'EN'], ['fr-FR', 'FR']];
+  let rec = null, heard = '', listenTimer = null, listenResult = null, cancelled = false;
+  function renderLangs() {
+    $('listen-langs').innerHTML = LISTEN_LANGS.map(([code, lbl]) =>
+      `<button data-l="${code}" class="${(prefs.listenLang || 'pt-PT') === code ? 'on' : ''}">${lbl}</button>`).join('');
+    $('listen-langs').querySelectorAll('button').forEach(b => b.onclick = () => {
+      prefs.listenLang = b.dataset.l; applyFont(); renderLangs();
+      if (rec) { cancelled = true; rec.abort(); setTimeout(startListening, 250); }
+    });
+  }
+  function listenMsg(status, on) { $('listen-status').textContent = status; $('listen-pulse').classList.toggle('on', !!on); }
+  function openListen() {
+    $('listen').hidden = false; renderLangs(); $('listen-text').textContent = '';
+    if (!SR) { listenMsg('Não disponível'); $('listen-text').textContent = 'Este navegador não permite reconhecimento de voz. Experimente o Chrome (Android) ou o Safari (iPhone).'; $('listen-stop').hidden = true; return; }
+    $('listen-stop').hidden = false;
+    startListening();
+  }
+  function startListening() {
+    cancelled = false; heard = '';
+    rec = new SR();
+    rec.lang = prefs.listenLang || 'pt-PT';
+    rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.onresult = e => {
+      let t = '';
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' ';
+      heard = t.trim();
+      $('listen-text').textContent = heard ? `“${heard}”` : '';
+    };
+    rec.onerror = e => {
+      if (e.error === 'aborted') return;
+      cancelled = true;
+      listenMsg(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Sem acesso ao microfone' : e.error === 'no-speech' ? 'Não ouvi nada' : 'Erro: ' + e.error);
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      $('listen-text').textContent = (e.error === 'not-allowed' || e.error === 'service-not-allowed')
+        ? (ios ? 'No iPhone: autorize o microfone e ative o Ditado (Definições › Geral › Teclado › Ativar ditado). Se abriu a app a partir do ecrã principal e não funcionar, experimente no Safari.' : 'Autorize o microfone nas definições do navegador.')
+        : 'Tente de novo, mais perto de quem canta.';
+    };
+    rec.onend = () => { clearTimeout(listenTimer); rec = null; if (!cancelled) finishListening(); };
+    try { rec.start(); listenMsg('A ouvir…', true); } catch (e) { listenMsg('Erro ao iniciar'); }
+    clearTimeout(listenTimer);
+    listenTimer = setTimeout(() => rec && rec.stop(), 10000);
+  }
+  function finishListening() {
+    listenMsg('A procurar…');
+    if (!heard) { listenMsg('Não ouvi nada'); $('listen-text').textContent = 'Tente de novo, mais perto de quem canta.'; return; }
+    listenResult = { text: heard, res: matchLyrics(heard) };
+    $('listen').hidden = true;
+    $('search').value = ''; $('search-clear').hidden = true;
+    if (location.hash === '#/ouvir') route(); else location.hash = '#/ouvir';
+  }
+  function closeListen() { cancelled = true; clearTimeout(listenTimer); if (rec) rec.abort(); $('listen').hidden = true; }
+  function showListenResults() {
+    show('view-list');
+    $('btn-back-list').hidden = false; $('btn-menu').hidden = true;
+    const title = $('list-title'); title.hidden = false;
+    if (!listenResult) { location.hash = '#/'; return; }
+    const { text, res } = listenResult;
+    title.textContent = res.length ? 'Cânticos parecidos' : 'Nenhum cântico encontrado';
+    const heardWords = new Set(tok(text).filter(w => w.length > 2));
+    const mark = line => line.split(/(\s+)/).map(w => heardWords.has(norm(w).replace(/[^a-z0-9]/g, '')) ? `<mark>${esc(w)}</mark>` : esc(w)).join('');
+    $('rows').innerHTML = res.map(r => {
+      const s = r.s;
+      const author = s.author ? `<span class="a">${esc(s.author)}</span>` : '';
+      const bp = s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : '';
+      return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${esc(s.title)}${author}<span class="snip">${mark(r.snip || '')}</span></span><span class="n">${s.number}${bp}</span></a></li>`;
+    }).join('');
+    $('status').textContent = `Ouvido: “${text}”`;
+  }
+  window.cancioneiroMatch = matchLyrics; // útil para testes
+  window.cancioneiroHeard = t => { heard = t; finishListening(); };
+  $('btn-mic').onclick = openListen;
+  $('listen-cancel').onclick = closeListen;
+  $('listen-stop').onclick = () => { if (rec) rec.stop(); else if (heard) finishListening(); else startListening(); };
+  $('listen').addEventListener('click', e => { if (e.target === $('listen')) closeListen(); });
 
   // ---------- Vistas ----------
   function show(id) {
@@ -222,6 +349,7 @@
     const h = location.hash || '#/';
     const m = h.match(/^#\/cantico\/(.+)$/);
     if (m) { showSong(decodeURIComponent(m[1])); window.scrollTo(0, 0); return; }
+    if (h === '#/ouvir') { lastListHash = h; showListenResults(); return; }
     lastListHash = h;
     const c = h.match(/^#\/lista\/(.+)$/);
     showList(c ? c[1] : null);
