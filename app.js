@@ -20,6 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
+  const APP_VERSION = '2026-09-26 v12';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -73,7 +74,7 @@
       s._a = norm(s.author);
       s._l = s._lines.map(norm);
     }
-    $('info-count').textContent = `${songs.length} cânticos.`;
+    $('info-count').textContent = `${songs.length} cânticos · versão ${APP_VERSION}`;
     if ($('az')) $('az').innerHTML = '';
   }
 
@@ -195,6 +196,41 @@
     return last && LANG_ORDER.includes(last) ? [last, ...LANG_ORDER.filter(l => l !== last)] : LANG_ORDER.slice();
   }
   let worker = null, modelReady = false, modelFailed = false, busy = false;
+  // Transcrição na nuvem (Supabase Edge Function -> Groq Whisper large); o modelo no telemóvel fica como alternativa
+  let cloudFailed = false, cloudError = '';
+  const TRANSCRIBE_URL = () => window.CANCIONEIRO_CONFIG.SUPABASE_URL + '/functions/v1/transcribe';
+  // Som distante: amplifica até o pico ficar perto do máximo (limita a 30x para não amplificar só ruído)
+  function normalize(pcm) {
+    let peak = 0; for (let i = 0; i < pcm.length; i++) { const a = Math.abs(pcm[i]); if (a > peak) peak = a; }
+    const gain = peak > 0 ? Math.min(30, 0.9 / peak) : 1;
+    if (gain <= 1.05) return pcm;
+    const out = new Float32Array(pcm.length); for (let i = 0; i < pcm.length; i++) out[i] = pcm[i] * gain;
+    return out;
+  }
+  function encodeWav(pcm) {
+    pcm = normalize(pcm);
+    const buf = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, TARGET_RATE, true); v.setUint32(28, TARGET_RATE * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+    for (let i = 0; i < pcm.length; i++) { const s = Math.max(-1, Math.min(1, pcm[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+  async function sendCloud(blob, id) {
+    const K = window.CANCIONEIRO_CONFIG.SUPABASE_ANON_KEY;
+    try {
+      const r = await fetch(TRANSCRIBE_URL(), { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': blob.type || 'audio/wav' }, body: blob });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
+      busy = false;
+      if (rec && rec.id === id) { rec.done++; onTranscript(d.text, null); }
+    } catch (e) {
+      busy = false; cloudFailed = true; cloudError = String(e.message || e);
+      if (rec) { $('listen-hint').textContent = `Transcrição na nuvem indisponível (${cloudError}); a usar o modelo do telemóvel.`; getWorker(); }
+    }
+  }
   let rec = null, heard = '', listenResult = null, loadProgress = {};
   function listenMsg(status, on) { $('listen-status').textContent = status; $('listen-pulse').classList.toggle('on', !!on); }
   function getWorker() {
@@ -269,7 +305,8 @@
       const v = Object.values(loadProgress); if (!v.length) return 'a carregar';
       const [l, t] = v.reduce((a, [x, y]) => [a[0] + x, a[1] + y], [0, 0]); return Math.round(100 * l / t) + '%';
     })();
-    $('listen-diag').textContent = `microfone: ${rec.stream ? 'ok' : '…'} · áudio: ${rec.ctx.state}, ${rec.chunks.length} blocos · modelo: ${model} · transcrições: ${rec.done || 0} · ${secs}s`;
+    const engine = cloudFailed ? `telemóvel (${model})` : 'nuvem';
+    $('listen-diag').textContent = `${APP_VERSION} · microfone: ${rec.stream ? 'ok' : '…'} · áudio: ${rec.ctx.state}, ${rec.chunks.length} blocos, rec ${rec.mrChunks ? rec.mrChunks.length : 0} · transcrição: ${engine}, ${rec.done || 0} · ${secs}s`;
   }
   function resumeAudio() {
     if (rec && rec.ctx.state !== 'running') rec.ctx.resume().catch(() => {});
@@ -288,7 +325,7 @@
     rec = { id: Date.now(), ctx, chunks: [], started: performance.now(), stream: null, lastSent: 0, queue: langQueue(), qi: 0, lang: undefined, best: null, done: 0 };
     const me = rec;
     listenMsg('A pedir o microfone…');
-    getWorker();
+    if (cloudFailed) getWorker();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
       if (rec !== me) { stream.getTracks().forEach(t => t.stop()); return; }
@@ -299,6 +336,15 @@
       proc.onaudioprocess = e => { if (rec === me) me.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
       src.connect(analyser); src.connect(proc); proc.connect(ctx.destination);
       rec.analyser = analyser; rec.src = src; rec.proc = proc;
+      // Gravador nativo (o mais fiável no iPhone), usado se o PCM não chegar
+      rec.mrChunks = [];
+      if (window.MediaRecorder) {
+        try {
+          const mr = new MediaRecorder(stream);
+          mr.ondataavailable = e => { if (e.data && e.data.size) me.mrChunks.push(e.data); };
+          mr.start(1000); rec.mr = mr;
+        } catch (e) { /* sem MediaRecorder */ }
+      }
       resumeAudio();
       ctx.onstatechange = () => { if (rec === me && ctx.state !== 'running') showTapToStart(); };
       rec.started = performance.now();
@@ -327,17 +373,28 @@
     if (!rec || !rec.stream) return;
     if (rec.ctx.state !== 'running') resumeAudio();
     const secs = (performance.now() - rec.started) / 1000;
-    const bar = Math.min(100, Math.round(100 * secs / MAX_SECONDS));
-    $('listen-bar').style.width = bar + '%';
+    $('listen-bar').style.width = Math.min(100, Math.round(100 * secs / MAX_SECONDS)) + '%';
     if (secs >= MAX_SECONDS && !busy) { finish(); return; }
-    if (!modelReady || busy || secs < 3.5 || secs - rec.lastSent < 2.5) return;
-    const audio = downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * MAX_SECONDS);
-    if (rms(audio.subarray(-TARGET_RATE * 3)) < 0.004) { listenMsg('Não oiço nada — aproxime o telemóvel', true); return; }
+    const useCloud = !cloudFailed;
+    if (!useCloud && !modelReady) return;
+    if (busy || secs < 3.5 || secs - rec.lastSent < 2.5) return;
+    const pcm = rec.chunks.length ? downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * MAX_SECONDS) : null;
+    const pcmLevel = pcm ? rms(pcm.subarray(-TARGET_RATE * 3)) : 0;
+    const hasMr = rec.mr && rec.mrChunks.length > 0;
+    if (!(pcm && pcmLevel >= 0.0015) && !hasMr) {
+      listenMsg(pcm ? 'Não oiço nada — aproxime o telemóvel' : 'Não está a chegar som do microfone', true);
+      return;
+    }
     rec.lastSent = secs; busy = true;
     if (!heard) listenMsg('A ouvir e a transcrever…', true);
-    // língua fixada quando uma já deu resultado; senão, experimenta a próxima
-    const language = rec.lang !== undefined ? rec.lang : rec.queue[rec.qi++ % rec.queue.length];
-    getWorker().postMessage({ type: 'transcribe', id: rec.id, audio, language });
+    if (useCloud) {
+      const blob = pcm && pcmLevel >= 0.0015 ? encodeWav(pcm) : new Blob(rec.mrChunks, { type: rec.mr.mimeType || 'audio/mp4' });
+      sendCloud(blob, rec.id);
+    } else {
+      if (!pcm) { busy = false; return; }
+      const language = rec.lang !== undefined ? rec.lang : rec.queue[rec.qi++ % rec.queue.length];
+      getWorker().postMessage({ type: 'transcribe', id: rec.id, audio: normalize(pcm), language });
+    }
   }
   function onTranscript(raw, language) {
     const t = cleanText(raw || '');
@@ -358,6 +415,7 @@
   function stopRecording() {
     if (!rec) return;
     clearInterval(rec.timer); cancelAnimationFrame(rec.raf);
+    try { if (rec.mr && rec.mr.state !== 'inactive') rec.mr.stop(); } catch (e) {}
     try { rec.src && rec.src.disconnect(); rec.proc && rec.proc.disconnect(); } catch (e) {}
     if (rec.stream) rec.stream.getTracks().forEach(t => t.stop());
     try { rec.ctx.close(); } catch (e) {}
