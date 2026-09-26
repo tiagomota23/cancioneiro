@@ -25,12 +25,16 @@
       <button class="icon-btn" id="btn-back-list" aria-label="Voltar" hidden>
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
-      <button class="icon-btn" id="btn-menu" aria-label="Índice">
-        <svg viewBox="0 0 24 24"><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/><path d="M8 6h13M8 12h13M8 18h13"/></svg>
+      <button class="icon-btn star-btn" id="btn-favs" aria-label="Cânticos preferidos">
+        <svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/></svg>
       </button>
       <h1 class="brand" id="list-brand">CANCIONEIRO</h1>
       <button class="icon-btn info" id="btn-info" aria-label="Informação"><i>i</i></button>
     </header>
+    <div class="searchrow">
+    <button class="icon-btn" id="btn-menu" aria-label="Índice alfabético">
+      <svg viewBox="0 0 24 24"><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/><path d="M8 6h13M8 12h13M8 18h13"/></svg>
+    </button>
     <div class="search">
       <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
       <input id="search" type="search" placeholder="PROCURAR CÂNTICO, AUTOR OU LETRA" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -38,6 +42,7 @@
       <button id="btn-mic" class="mic" aria-label="Ouvir e identificar cântico" title="Ouvir e identificar">
         <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
       </button>
+    </div>
     </div>
     <h2 class="list-title" id="list-title" hidden></h2>
     <ul class="rows" id="rows"></ul>
@@ -51,6 +56,7 @@
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
       <div class="spacer"></div>
+      <button class="icon-btn fav-toggle" id="btn-fav" aria-label="Adicionar aos preferidos" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/></svg></button>
       <button class="icon-btn txt" id="btn-chords" aria-label="Mostrar acordes" title="Acordes" hidden>♪</button>
       <button class="icon-btn txt" id="font-dec" aria-label="Diminuir letra">A<sup>−</sup></button>
       <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra">A<sup>+</sup></button>
@@ -95,6 +101,7 @@
   <dialog id="info">
     <h2>Cancioneiro</h2>
     <p>Procure por título, autor, número, página do livro ou qualquer palavra da letra ou da tradução.</p>
+    <p>Marque cânticos com a <b>☆</b> para os encontrar depois em <b>★</b> (preferidos, guardados neste telemóvel).</p>
     <p>Toque em <b>🎤</b> e deixe o telemóvel ouvir alguns segundos de um cântico: a app transcreve o que ouve e mostra os cânticos mais parecidos.</p>
     <p>Em cada cântico: <b>A−</b>/<b>A+</b> ajusta o tamanho da letra, <b>♪</b> mostra ou esconde os acordes e os botões de idioma alternam entre o original e a tradução.</p>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>

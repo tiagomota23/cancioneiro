@@ -35,6 +35,12 @@
   let bySlug = new Map();
   const prefs = Object.assign({ fs: 18, chords: true }, store.get('cancioneiro.prefs', {}));
   const songView = {}; // slug -> 'orig' | 'trad'
+  let favs = store.get('cancioneiro.favs', []); // slugs, guardados neste dispositivo
+  const isFav = slug => favs.includes(slug);
+  function toggleFav(slug) {
+    favs = isFav(slug) ? favs.filter(x => x !== slug) : favs.concat(slug);
+    store.set('cancioneiro.favs', favs);
+  }
 
   // ---------- Dados (Supabase) ----------
   async function fetchSongs() {
@@ -233,7 +239,7 @@
   function closeListen() { cancelled = true; clearTimeout(listenTimer); if (rec) rec.abort(); $('listen').hidden = true; }
   function showListenResults() {
     show('view-list');
-    $('btn-back-list').hidden = false; $('btn-menu').hidden = true;
+    $('btn-back-list').hidden = false; $('btn-favs').hidden = true;
     const title = $('list-title'); title.hidden = false;
     if (!listenResult) { location.hash = '#/'; return; }
     const { text, res } = listenResult;
@@ -274,7 +280,7 @@
     const title = $('list-title');
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
-    $('btn-menu').hidden = !$('btn-back-list').hidden;
+    $('btn-favs').hidden = !$('btn-back-list').hidden;
     if (q.trim()) {
       const res = search(q);
       title.hidden = false;
@@ -289,6 +295,14 @@
         return n ? `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>` : '';
       }).join('');
       if (!songs.length) $('status').textContent = 'A carregar…';
+      return;
+    }
+    if (catId === 'favoritos') {
+      title.hidden = false;
+      title.textContent = 'Cânticos preferidos';
+      const list = songs.filter(s => isFav(s.slug)).sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }));
+      rows.innerHTML = list.map(s => songRow(s)).join('');
+      if (!list.length && songs.length) $('status').innerHTML = '<span class="fav-empty">Ainda não tem cânticos preferidos.<br>Abra um cântico e toque na ☆ no topo para o adicionar.</span>';
       return;
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
@@ -335,6 +349,10 @@
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(s.has_chords && mode === 'orig');
+    const fb = $('btn-fav');
+    fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug));
+    fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+    fb.onclick = () => { toggleFav(slug); fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug)); fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'); };
     $('btn-chords').classList.toggle('on', prefs.chords);
     $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => {
       songView[slug] = b.dataset.mode;
@@ -402,6 +420,7 @@
   $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   $('btn-info').onclick = () => $('info').showModal();
+  $('btn-favs').onclick = () => { $('search').value = ''; $('search-clear').hidden = true; location.hash = '#/lista/favoritos'; };
   let t;
   $('search').addEventListener('input', () => {
     $('search-clear').hidden = !$('search').value;
