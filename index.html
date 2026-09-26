@@ -58,6 +58,25 @@
     <article id="song" class="song"></article>
   </section>
 
+  <!-- Índice alfabético (gaveta lateral) -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <aside class="drawer-panel" role="dialog" aria-label="Índice alfabético">
+      <div class="drawer-top">
+        <div class="search drawer-search">
+          <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+          <input id="drawer-search" type="search" placeholder="PROCURAR CÂNTICO OU PÁGINA" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="drawer-body">
+        <button class="icon-btn drawer-close" id="drawer-close" aria-label="Fechar índice">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <ul class="az" id="az"></ul>
+      </div>
+    </aside>
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+  </div>
+
   <!-- Ouvir e identificar -->
   <div id="listen" class="listen" hidden>
     <div class="sheet" role="dialog" aria-label="Ouvir e identificar cântico">

@@ -68,6 +68,7 @@
       s._l = s._lines.map(norm);
     }
     $('info-count').textContent = `${songs.length} cânticos.`;
+    if ($('az')) $('az').innerHTML = '';
   }
 
   async function load() {
@@ -374,7 +375,32 @@
     if ($('search').value) { $('search').value = ''; $('search-clear').hidden = true; route(); }
     else location.hash = '#/';
   };
-  $('btn-menu').onclick = () => { location.hash = '#/'; };
+  // Gaveta: índice alfabético completo
+  const letterOf = t => { const c = norm(t).replace(/^[^a-z0-9]+/, '')[0] || '#'; return /[a-z]/.test(c) ? c.toUpperCase() : '#'; };
+  function renderAZ() {
+    const q = $('drawer-search').value.trim();
+    const list = q ? search(q).map(r => r.s) : songs.slice().sort((a, b) => norm(a.title).replace(/^[^a-z0-9]+/, '').localeCompare(norm(b.title).replace(/^[^a-z0-9]+/, ''), 'pt'));
+    let html = '', cur = null;
+    for (const s of list) {
+      const L = letterOf(s.title);
+      if (!q && L !== cur) { html += `<li class="letter">${L}</li>`; cur = L; }
+      html += `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${esc(s.title)}</span><span class="n">${s.number}${s.book_page ? `<small>pág. ${s.book_page}</small>` : ''}</span></a></li>`;
+    }
+    $('az').innerHTML = html || '<li class="empty">Nenhum cântico encontrado.</li>';
+  }
+  function openDrawer() {
+    if (!$('az').innerHTML || $('drawer-search').value) { $('drawer-search').value = ''; renderAZ(); }
+    $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
+  }
+  function closeDrawer() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
+  $('btn-menu').onclick = openDrawer;
+  $('drawer-close').onclick = closeDrawer;
+  $('drawer-scrim').onclick = closeDrawer;
+  $('az').addEventListener('click', e => { if (e.target.closest('a')) closeDrawer(); });
+  let tz;
+  $('drawer-search').addEventListener('input', () => { clearTimeout(tz); tz = setTimeout(() => { renderAZ(); $('az').scrollTop = 0; }, 120); });
+  $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   $('btn-info').onclick = () => $('info').showModal();
   let t;
   $('search').addEventListener('input', () => {

@@ -234,3 +234,41 @@ dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18p
 .listen-actions { display: flex; gap: 10px; }
 .listen-actions button { flex: 1; padding: 11px; border-radius: 22px; border: 1px solid #ccc; font-size: 15px; }
 .listen-actions .primary { background: var(--green-ink); border-color: var(--green-ink); color: #fff; }
+
+/* Gaveta com índice alfabético */
+.drawer { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+.drawer-panel {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 88%; max-width: 480px;
+  background: linear-gradient(180deg, var(--green-1), var(--green-2));
+  box-shadow: 4px 0 18px rgba(0,0,0,.25);
+  transform: translateX(-102%); transition: transform .28s ease;
+  display: flex; flex-direction: column; color: #fff;
+}
+.drawer-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background .28s; }
+.drawer.open { pointer-events: auto; }
+.drawer.open .drawer-panel { transform: none; }
+.drawer.open .drawer-scrim { background: rgba(0,0,0,.25); }
+.drawer-panel { z-index: 1; }
+.drawer-top { padding: calc(14px + var(--safe-top)) 4px 6px; }
+.drawer-search { position: static; margin: 6px 10px; }
+.drawer-body { flex: 1; min-height: 0; display: flex; }
+.drawer-close { flex: none; margin: 6px 2px 0 4px; color: #fff; align-self: flex-start; }
+.az {
+  flex: 1; min-width: 0; list-style: none; margin: 0; padding: 4px 0 calc(24px + var(--safe-bottom));
+  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--row-line);
+}
+.az .letter {
+  position: sticky; top: 0; z-index: 1;
+  margin: 6px 10px 2px; padding: 1px 12px; background: #e8e8e8; color: #333;
+  font-size: 15px; letter-spacing: .04em;
+}
+.az a {
+  display: flex; align-items: baseline; gap: 10px; padding: 11px 14px 11px 22px;
+  color: #fff; text-decoration: none;
+}
+.az a:active { background: rgba(255,255,255,.1); }
+.az .t { flex: 1; min-width: 0; font-size: 15px; letter-spacing: .03em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.az .n { font-size: 12px; opacity: .9; font-variant-numeric: tabular-nums; text-align: right; }
+.az .n small { display: block; font-size: 10px; opacity: .85; }
+.az .empty { padding: 20px; opacity: .85; font-size: 14px; }
