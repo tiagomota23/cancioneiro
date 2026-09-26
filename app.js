@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-26 v15';
+  const APP_VERSION = '2026-09-26 v16';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
