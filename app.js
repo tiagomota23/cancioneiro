@@ -211,7 +211,7 @@
         if (rec) tick();
       } else if (m.type === 'text') {
         busy = false;
-        if (rec && m.id === rec.id) onTranscript(m.text, m.language);
+        if (rec && m.id === rec.id) { rec.done++; onTranscript(m.text, m.language); }
       } else if (m.type === 'error') {
         busy = false;
         if (!modelReady) { modelFailed = true; }
@@ -240,46 +240,99 @@
   const HALLUCINATIONS = /(amara\.org|legendas|subt[ií]tulos|sottotitoli|obrigad[oa] por|thank you for watching|thanks for watching|inscreva-se|\[m[uú]sica\]|\(m[uú]sica\))/i;
   function cleanText(t) { return t.replace(/[♪♫🎵🎶]/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim(); }
 
+  // Equalizador (mostra que o som está mesmo a chegar) + diagnóstico
+  function drawEq() {
+    if (!rec || !rec.analyser) return;
+    const cv = $('listen-eq'), g = cv.getContext('2d');
+    const data = new Uint8Array(rec.analyser.frequencyBinCount);
+    rec.analyser.getByteFrequencyData(data);
+    const bars = 28, w = cv.width / bars, useful = Math.floor(data.length * 0.22);
+    g.clearRect(0, 0, cv.width, cv.height);
+    let peak = 0;
+    for (let i = 0; i < bars; i++) {
+      let v = 0; const s = Math.floor(i * useful / bars), e = Math.floor((i + 1) * useful / bars);
+      for (let k = s; k < e; k++) v = Math.max(v, data[k]);
+      peak = Math.max(peak, v);
+      const h = Math.max(3, (v / 255) * cv.height);
+      g.fillStyle = v > 20 ? '#1fb385' : '#cfd8d4';
+      g.beginPath();
+      if (g.roundRect) g.roundRect(i * w + 2, (cv.height - h) / 2, w - 4, h, 2); else g.rect(i * w + 2, (cv.height - h) / 2, w - 4, h);
+      g.fill();
+    }
+    rec.peak = peak;
+    rec.raf = requestAnimationFrame(drawEq);
+  }
+  function diag() {
+    if (!rec) return;
+    const secs = ((performance.now() - rec.started) / 1000).toFixed(0);
+    const model = modelReady ? 'pronto' : modelFailed ? 'erro' : (() => {
+      const v = Object.values(loadProgress); if (!v.length) return 'a carregar';
+      const [l, t] = v.reduce((a, [x, y]) => [a[0] + x, a[1] + y], [0, 0]); return Math.round(100 * l / t) + '%';
+    })();
+    $('listen-diag').textContent = `microfone: ${rec.stream ? 'ok' : '…'} · áudio: ${rec.ctx.state}, ${rec.chunks.length} blocos · modelo: ${model} · transcrições: ${rec.done || 0} · ${secs}s`;
+  }
+  function resumeAudio() {
+    if (rec && rec.ctx.state !== 'running') rec.ctx.resume().catch(() => {});
+  }
+
   async function openListen() {
-    $('listen').hidden = false; $('listen-text').textContent = ''; $('listen-hint').textContent = '';
+    $('listen').hidden = false; $('listen-text').textContent = ''; $('listen-hint').textContent = ''; $('listen-diag').textContent = '';
+    const cv = $('listen-eq'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.Worker) {
       listenMsg('Não disponível'); $('listen-text').textContent = 'Este navegador não permite gravar som.'; return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AC(); // criado no toque do utilizador (necessário no iPhone)
-    rec = { id: Date.now(), ctx, chunks: [], started: performance.now(), stream: null, lastSent: 0, queue: langQueue(), qi: 0, lang: undefined, best: null };
+    // Criar e retomar o áudio ainda dentro do toque (o iPhone exige-o)
+    const ctx = new AC();
+    ctx.resume().catch(() => {});
+    rec = { id: Date.now(), ctx, chunks: [], started: performance.now(), stream: null, lastSent: 0, queue: langQueue(), qi: 0, lang: undefined, best: null, done: 0 };
     const me = rec;
     listenMsg('A pedir o microfone…');
     getWorker();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true, channelCount: 1 } });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
       if (rec !== me) { stream.getTracks().forEach(t => t.stop()); return; }
       rec.stream = stream;
-      await ctx.resume();
       const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.6;
       const proc = ctx.createScriptProcessor(4096, 1, 1);
       proc.onaudioprocess = e => { if (rec === me) me.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
-      src.connect(proc); proc.connect(ctx.destination);
+      src.connect(analyser); src.connect(proc); proc.connect(ctx.destination);
+      rec.analyser = analyser; rec.src = src; rec.proc = proc;
+      resumeAudio();
+      ctx.onstatechange = () => { if (rec === me && ctx.state !== 'running') showTapToStart(); };
       rec.started = performance.now();
-      listenMsg('A ouvir…', true);
-      rec.timer = setInterval(tick, 500);
+      if (ctx.state !== 'running') showTapToStart(); else listenMsg('A ouvir…', true);
+      drawEq();
+      rec.timer = setInterval(() => { tick(); diag(); }, 500);
     } catch (e) {
       stopRecording();
       listenMsg('Sem acesso ao microfone');
       $('listen-text').textContent = /iPhone|iPad|iPod/.test(navigator.userAgent)
-        ? 'Autorize o microfone: Definições › Apps › Safari › Microfone (ou toque em "aA" na barra do Safari › Definições do site).'
+        ? 'Autorize o microfone: toque em "aA" na barra do Safari › Definições do site › Microfone › Permitir (ou Definições › Apps › Safari › Microfone).'
         : 'Autorize o microfone nas definições do navegador.';
+      $('listen-diag').textContent = String(e && e.name || e);
     }
   }
+  // Se o iPhone deixou o áudio parado, um toque volta a ativá-lo
+  function showTapToStart() {
+    listenMsg('Toque no microfone para começar');
+    $('listen-hint').textContent = 'O iPhone pausou o áudio — toque no círculo verde.';
+  }
+  $('listen-pulse').onclick = () => {
+    if (!rec) return;
+    rec.ctx.resume().then(() => { if (rec && rec.ctx.state === 'running') { listenMsg('A ouvir…', true); $('listen-hint').textContent = ''; } }).catch(() => {});
+  };
   function tick() {
     if (!rec || !rec.stream) return;
+    if (rec.ctx.state !== 'running') resumeAudio();
     const secs = (performance.now() - rec.started) / 1000;
     const bar = Math.min(100, Math.round(100 * secs / MAX_SECONDS));
     $('listen-bar').style.width = bar + '%';
     if (secs >= MAX_SECONDS && !busy) { finish(); return; }
     if (!modelReady || busy || secs < 3.5 || secs - rec.lastSent < 2.5) return;
     const audio = downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * MAX_SECONDS);
-    if (rms(audio.subarray(-TARGET_RATE * 3)) < 0.004) { listenMsg('A ouvir… (muito baixo)', true); return; }
+    if (rms(audio.subarray(-TARGET_RATE * 3)) < 0.004) { listenMsg('Não oiço nada — aproxime o telemóvel', true); return; }
     rec.lastSent = secs; busy = true;
     if (!heard) listenMsg('A ouvir e a transcrever…', true);
     // língua fixada quando uma já deu resultado; senão, experimenta a próxima
@@ -304,7 +357,8 @@
   }
   function stopRecording() {
     if (!rec) return;
-    clearInterval(rec.timer);
+    clearInterval(rec.timer); cancelAnimationFrame(rec.raf);
+    try { rec.src && rec.src.disconnect(); rec.proc && rec.proc.disconnect(); } catch (e) {}
     if (rec.stream) rec.stream.getTracks().forEach(t => t.stop());
     try { rec.ctx.close(); } catch (e) {}
     rec = null; busy = false;

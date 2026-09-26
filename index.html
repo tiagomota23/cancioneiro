@@ -87,10 +87,12 @@
   <div id="listen" class="listen" hidden>
     <div class="sheet" role="dialog" aria-label="Ouvir e identificar cântico">
       <div class="pulse" id="listen-pulse"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
+      <canvas class="listen-eq" id="listen-eq" width="280" height="60" aria-hidden="true"></canvas>
       <p class="listen-status" id="listen-status">A ouvir…</p>
       <div class="listen-progress"><div id="listen-bar"></div></div>
       <p class="listen-text" id="listen-text"></p>
       <p class="listen-hint" id="listen-hint"></p>
+      <p class="listen-diag" id="listen-diag"></p>
       <div class="listen-actions">
         <button id="listen-cancel">Cancelar</button>
         <button id="listen-stop" class="primary">Procurar</button>
