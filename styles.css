@@ -294,3 +294,15 @@ dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18p
 .topbar #btn-back-list:not([hidden]) + .topbar-left-spacer { display: none; }
 .searchrow .star-btn { width: 38px; margin-right: 2px; }
 .searchrow .star-btn svg { width: 22px; height: 22px; }
+
+/* Entrada */
+.view.login { min-height: 100vh; display: grid; place-items: center; text-align: center;
+  background: linear-gradient(180deg, var(--green-1), var(--green-2)); padding: 24px; }
+.login-box h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 9vw, 56px); letter-spacing: .14em; margin: 0 0 48px .14em; }
+.google-btn { display: inline-flex; align-items: center; gap: 12px; background: #fff; color: #333;
+  font-size: 16px; padding: 12px 22px; border-radius: 26px; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+.google-btn svg { width: 20px; height: 20px; }
+.login-msg { min-height: 1.4em; margin: 18px 0 0; font-size: 14px; }
+.login-note { font-size: 12px; opacity: .8; margin-top: 28px; }
+.info-actions { display: flex; justify-content: space-between; gap: 10px; }
+dialog form button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }

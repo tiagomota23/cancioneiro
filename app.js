@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-26 v16';
+  const APP_VERSION = '2026-09-26 v17';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -43,15 +43,48 @@
     store.set('cancioneiro.favs', favs);
   }
 
+  // ---------- Sessão (Google via Supabase Auth; acesso limitado por email na base de dados) ----------
+  const CFG = window.CANCIONEIRO_CONFIG;
+  const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {
+    auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
+  });
+  let session = null;
+  async function accessToken() {
+    const { data } = await sb.auth.getSession();
+    session = data.session;
+    return session ? session.access_token : null;
+  }
+  function showLogin(msg) {
+    for (const v of ['view-list', 'view-song']) $(v).hidden = true;
+    $('view-login').hidden = false;
+    $('login-msg').textContent = msg || '';
+    $('splash').classList.add('gone');
+  }
+  $('btn-google').onclick = async () => {
+    $('login-msg').textContent = 'A abrir o Google…';
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' } },
+    });
+    if (error) $('login-msg').textContent = 'Erro: ' + error.message;
+  };
+  async function logout(msg) {
+    try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    songs = []; bySlug = new Map(); session = null;
+    if ($('info').open) $('info').close();
+    showLogin(msg);
+  }
+
   // ---------- Dados (Supabase) ----------
   async function fetchSongs() {
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CANCIONEIRO_CONFIG;
-    if (!SUPABASE_URL) return (await fetch('songs.json')).json(); // desenvolvimento local
+    const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
+    const token = await accessToken();
     const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url';
     const all = [];
     for (let from = 0; ; from += 1000) {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, Range: `${from}-${from + 999}` },
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}`, Range: `${from}-${from + 999}` },
       });
       if (!r.ok) throw new Error(`Supabase ${r.status}`);
       const page = await r.json();
@@ -83,6 +116,10 @@
     if (cached && cached.length) { setSongs(cached); route(); }
     try {
       const fresh = await fetchSongs();
+      if (!fresh.length) { // a base de dados só devolve cânticos a emails autorizados
+        await logout(`A conta ${session && session.user.email || ''} não tem acesso ao Cancioneiro.`);
+        return;
+      }
       store.set(CACHE_KEY, fresh);
       const changed = !cached || JSON.stringify(cached) !== JSON.stringify(fresh);
       setSongs(fresh);
@@ -230,10 +267,11 @@
     return new Blob([buf], { type: 'audio/wav' });
   }
   async function sendCloud(blob, id) {
-    const K = window.CANCIONEIRO_CONFIG.SUPABASE_ANON_KEY;
+    const K = CFG.SUPABASE_ANON_KEY;
     try {
+      const token = await accessToken();
       const lc = chosenLang()[0];
-      const r = await fetch(TRANSCRIBE_URL() + (lc !== 'auto' ? '?lang=' + lc : ''), { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': blob.type || 'audio/wav' }, body: blob });
+      const r = await fetch(TRANSCRIBE_URL() + (lc !== 'auto' ? '?lang=' + lc : ''), { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + token, 'Content-Type': blob.type || 'audio/wav' }, body: blob });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
       busy = false;
@@ -579,6 +617,7 @@
   // ---------- Router ----------
   let lastListHash = '#/';
   function route() {
+    if (!session) return;
     const h = location.hash || '#/';
     const m = h.match(/^#\/cantico\/(.+)$/);
     if (m) { showSong(decodeURIComponent(m[1])); window.scrollTo(0, 0); return; }
@@ -650,8 +689,24 @@
 
   applyFont();
   setTimeout(() => $('splash').classList.add('gone'), 900);
-  showList();
-  load();
+  $('btn-logout').onclick = () => logout();
+  sb.auth.onAuthStateChange((event, s) => {
+    session = s;
+    if (event === 'SIGNED_OUT' && $('view-login').hidden) showLogin();
+  });
+  (async () => {
+    await accessToken(); // também troca o ?code= do regresso do Google pela sessão
+    if (location.search.includes('code=') || location.search.includes('error')) {
+      const err = new URLSearchParams(location.search).get('error_description');
+      history.replaceState(null, '', location.pathname + location.hash);
+      if (err && !session) { showLogin('Não foi possível entrar: ' + err); return; }
+    }
+    if (!session) { showLogin(); return; }
+    $('view-login').hidden = true;
+    $('info-user').textContent = 'Sessão: ' + session.user.email;
+    showList();
+    load();
+  })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
