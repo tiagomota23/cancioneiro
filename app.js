@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-26 v13';
+  const APP_VERSION = '2026-09-26 v14';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -198,6 +198,17 @@
   let worker = null, modelReady = false, modelFailed = false, busy = false;
   // Transcrição na nuvem (Supabase Edge Function -> Groq Whisper large); o modelo no telemóvel fica como alternativa
   let cloudFailed = false, cloudError = '';
+  // Língua: automática por omissão; o utilizador pode fixar uma para ajudar a transcrição
+  const LISTEN_LANGS = [['auto', 'Auto', null], ['pt', 'PT', 'portuguese'], ['it', 'IT', 'italian'], ['la', 'LA', 'latin'], ['es', 'ES', 'spanish'], ['en', 'EN', 'english'], ['fr', 'FR', 'french']];
+  const chosenLang = () => LISTEN_LANGS.find(l => l[0] === (prefs.listenLang || 'auto')) || LISTEN_LANGS[0];
+  function renderLangs() {
+    $('listen-langs').innerHTML = LISTEN_LANGS.map(([code, lbl]) =>
+      `<button data-l="${code}" class="${chosenLang()[0] === code ? 'on' : ''}" aria-pressed="${chosenLang()[0] === code}">${lbl}</button>`).join('');
+    $('listen-langs').querySelectorAll('button').forEach(b => b.onclick = () => {
+      prefs.listenLang = b.dataset.l; applyFont(); renderLangs();
+      if (rec) { rec.lang = undefined; rec.best = null; rec.lastSent = 0; } // recomeça a transcrição com a nova língua
+    });
+  }
   const TRANSCRIBE_URL = () => window.CANCIONEIRO_CONFIG.SUPABASE_URL + '/functions/v1/transcribe';
   // Som distante: amplifica até o pico ficar perto do máximo (limita a 30x para não amplificar só ruído)
   function normalize(pcm) {
@@ -221,7 +232,8 @@
   async function sendCloud(blob, id) {
     const K = window.CANCIONEIRO_CONFIG.SUPABASE_ANON_KEY;
     try {
-      const r = await fetch(TRANSCRIBE_URL(), { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': blob.type || 'audio/wav' }, body: blob });
+      const lc = chosenLang()[0];
+      const r = await fetch(TRANSCRIBE_URL() + (lc !== 'auto' ? '?lang=' + lc : ''), { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': blob.type || 'audio/wav' }, body: blob });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
       busy = false;
@@ -314,6 +326,7 @@
 
   async function openListen() {
     $('listen').hidden = false; $('listen-text').textContent = ''; $('listen-hint').textContent = ''; $('listen-diag').textContent = '';
+    renderLangs();
     const cv = $('listen-eq'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.Worker) {
       listenMsg('Não disponível'); $('listen-text').textContent = 'Este navegador não permite gravar som.'; return;
@@ -392,7 +405,8 @@
       sendCloud(blob, rec.id);
     } else {
       if (!pcm) { busy = false; return; }
-      const language = rec.lang !== undefined ? rec.lang : rec.queue[rec.qi++ % rec.queue.length];
+      const forced = chosenLang()[2];
+      const language = forced || (rec.lang !== undefined ? rec.lang : rec.queue[rec.qi++ % rec.queue.length]);
       getWorker().postMessage({ type: 'transcribe', id: rec.id, audio: normalize(pcm), language });
     }
   }

@@ -24,6 +24,9 @@ Deno.serve(async (req) => {
   form.append('model', 'whisper-large-v3-turbo');
   form.append('response_format', 'verbose_json');
   form.append('temperature', '0');
+  // língua opcional escolhida na app (?lang=pt); sem ela o Whisper deteta sozinho
+  const lang = new URL(req.url).searchParams.get('lang');
+  if (lang && /^[a-z]{2}$/.test(lang)) form.append('language', lang);
 
   const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
     method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form,
