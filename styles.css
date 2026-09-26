@@ -1,14 +1,14 @@
 :root {
-  --green-1: #23905a;
-  --green-2: #16663d;
-  --green-ink: #1b7a47;
-  --row-line: rgba(255, 255, 255, 0.16);
+  --green-1: #1fb385;
+  --green-2: #12966a;
+  --green-ink: #0e7f58;
+  --row-line: rgba(255, 255, 255, 0.22);
   --paper: #ffffff;
   --ink: #4a4a4a;
   --ink-soft: #7d7d7d;
-  --chord: #1b7a47;
+  --chord: #0e7f58;
   --fs: 18px;
-  --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --serif: "Marcellus", "Optima", Georgia, serif;
   --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -43,7 +43,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .splash h1 {
   font-family: var(--serif); font-weight: 500;
-  font-size: clamp(34px, 11vw, 64px); letter-spacing: .04em; margin: 0;
+  font-size: clamp(30px, 9vw, 60px); letter-spacing: .14em; margin: 0 0 0 .14em;
 }
 .splash.gone { opacity: 0; pointer-events: none; }
 
@@ -63,7 +63,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .brand {
   position: absolute; left: 50%; transform: translateX(-50%);
   bottom: 8px; margin: 0;
-  font-family: var(--serif); font-weight: 500; font-size: 24px; letter-spacing: .05em;
+  font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: .14em;
   white-space: nowrap;
 }
 .icon-btn {
@@ -92,8 +92,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .search .clear { font-size: 22px; color: #999; padding: 0 2px; }
 
 .list-title {
-  margin: 14px 18px 6px; font-family: var(--serif); font-weight: 500;
-  font-size: 20px; letter-spacing: .05em; text-transform: uppercase;
+  margin: 14px 18px 6px; font-family: var(--serif); font-weight: 400;
+  font-size: 18px; letter-spacing: .1em; text-transform: uppercase;
 }
 
 /* Linhas */
@@ -196,7 +196,7 @@ dialog {
   color: #333; font-size: 15px; line-height: 1.45;
 }
 dialog::backdrop { background: rgba(0,0,0,.45); }
-dialog h2 { font-family: var(--serif); font-weight: 600; color: var(--green-2); margin: 0 0 8px; font-size: 26px; }
+dialog h2 { font-family: var(--serif); font-weight: 400; letter-spacing: .1em; color: var(--green-2); margin: 0 0 8px; font-size: 26px; }
 dialog .small { font-size: 12.5px; color: #666; }
 dialog form { text-align: right; }
 dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18px; border-radius: 18px; }
