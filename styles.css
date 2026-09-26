@@ -24,7 +24,8 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; height: 100%; overflow-x: hidden; }
+body { touch-action: manipulation; }
 body {
   font-family: var(--sans);
   background: var(--green-2);
@@ -89,7 +90,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .search svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; }
 .search input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
-  font: 400 15px var(--sans); color: #333;
+  font: 400 16px var(--sans); color: #333; /* ≥16px: o iPhone não faz zoom ao tocar */
 }
 .search input::placeholder { font-size: 11px; letter-spacing: .08em; color: #a8a8a8; }
 .search input::-webkit-search-cancel-button { display: none; }
