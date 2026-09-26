@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-26 v14';
+  const APP_VERSION = '2026-09-26 v15';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -454,7 +454,7 @@
   function closeListen() { stopRecording(); heard = ''; $('listen').hidden = true; }
   function showListenResults() {
     show('view-list');
-    $('btn-back-list').hidden = false; $('btn-favs').hidden = true;
+    $('btn-back-list').hidden = false;
     const title = $('list-title'); title.hidden = false;
     if (!listenResult) { location.hash = '#/'; return; }
     const { text, res } = listenResult;
@@ -495,7 +495,6 @@
     const title = $('list-title');
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
-    $('btn-favs').hidden = !$('btn-back-list').hidden;
     if (q.trim()) {
       const res = search(q);
       title.hidden = false;

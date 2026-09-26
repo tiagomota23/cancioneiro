@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -25,11 +25,14 @@
       <button class="icon-btn" id="btn-back-list" aria-label="Voltar" hidden>
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
-      <button class="icon-btn star-btn" id="btn-favs" aria-label="Cânticos preferidos">
+      <h1 class="brand" id="list-brand">CANCIONEIRO</h1>
+      <span class="topbar-left-spacer" id="topbar-spacer"></span>
+      <div class="topbar-right">
+        <button class="icon-btn star-btn" id="btn-favs" aria-label="Cânticos preferidos">
         <svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/></svg>
       </button>
-      <h1 class="brand" id="list-brand">CANCIONEIRO</h1>
-      <button class="icon-btn info" id="btn-info" aria-label="Informação"><i>i</i></button>
+        <button class="icon-btn info" id="btn-info" aria-label="Informação"><i>i</i></button>
+      </div>
     </header>
     <div class="searchrow">
     <button class="icon-btn" id="btn-menu" aria-label="Índice alfabético">
@@ -113,7 +116,7 @@
     <form method="dialog"><button>Fechar</button></form>
   </dialog>
 
-  <script src="config.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="config.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

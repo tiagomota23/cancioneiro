@@ -290,3 +290,7 @@ dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18p
 .listen-eq { display: block; width: 280px; max-width: 100%; height: 60px; margin: 2px auto 4px; }
 .listen-diag { font-size: 11px; color: #999; margin: -8px 0 12px; font-variant-numeric: tabular-nums; }
 .listen .pulse { cursor: pointer; }
+.topbar-right { display: flex; align-items: center; margin-left: auto; }
+.topbar-left-spacer { width: 44px; height: 44px; }
+.topbar #btn-back-list:not([hidden]) + .topbar-left-spacer { display: none; }
+@media (max-width: 400px) { .brand { font-size: 19px; letter-spacing: .12em; } }
