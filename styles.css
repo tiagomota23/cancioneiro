@@ -118,7 +118,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   font-size: 12px; letter-spacing: 0; text-transform: none; opacity: .85;
 }
 .rows mark { background: rgba(255,255,255,.28); color: #fff; border-radius: 2px; padding: 0 1px; }
-.rows .n { font-size: 11px; opacity: .8; font-variant-numeric: tabular-nums; }
+.rows .n { font-size: 11px; opacity: .8; font-variant-numeric: tabular-nums; text-align: right; }
+.rows .bp { display: block; font-size: 10px; opacity: .85; margin-top: 2px; white-space: nowrap; }
 .rows .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
 .rows .badge {
   font-size: 10px; letter-spacing: .08em; border: 1px solid rgba(255,255,255,.5);

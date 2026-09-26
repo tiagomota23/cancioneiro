@@ -11,6 +11,7 @@ create table if not exists public.songs (
   translation_language text,
   has_chords           boolean not null default false,
   pdf_url              text,
+  book_page            int,                    -- página no livro impresso
   updated_at           timestamptz not null default now()
 );
 create index if not exists songs_number_idx on public.songs (number);

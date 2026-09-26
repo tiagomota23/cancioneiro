@@ -40,7 +40,7 @@
   async function fetchSongs() {
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CANCIONEIRO_CONFIG;
     if (!SUPABASE_URL) return (await fetch('songs.json')).json(); // desenvolvimento local
-    const cols = 'slug,number,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url';
+    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url';
     const all = [];
     for (let from = 0; ; from += 1000) {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
@@ -94,6 +94,7 @@
     for (const s of songs) {
       let score = 0, snip = null;
       if (num !== null && s.number === num) score += 100;
+      if (num !== null && s.book_page === num) score += 100;
       const inTitle = terms.every(t => s._t.includes(t));
       const inAuthor = terms.every(t => s._a.includes(t));
       if (s._t.startsWith(nq)) score += 60; else if (inTitle) score += 40;
@@ -135,7 +136,7 @@
     const title = q ? highlight(s.title, q) : esc(s.title);
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
     const sn = snip ? `<span class="snip">${highlight(snip, q)}</span>` : '';
-    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${s.number}</span></a></li>`;
+    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
 
   function showList(catId) {
@@ -203,7 +204,7 @@
       <div class="meta">${sw}${pdf}</div>
       ${note}
       ${renderStanzas(body)}
-      <p class="num">${s.number}</p>`;
+      <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(s.has_chords && mode === 'orig');
     $('btn-chords').classList.toggle('on', prefs.chords);
