@@ -16,5 +16,5 @@ create table if not exists public.songs (
 create index if not exists songs_number_idx on public.songs (number);
 
 alter table public.songs enable row level security;
-drop policy if exists "leitura pública" on public.songs;
-create policy "leitura pública" on public.songs for select to anon, authenticated using (true);
+drop policy if exists "leitura publica" on public.songs;
+create policy "leitura publica" on public.songs for select to anon, authenticated using (true);

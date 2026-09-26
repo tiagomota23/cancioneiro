@@ -3,3 +3,4 @@ songs.json
 .claude/
 .DS_Store
 supabase/.temp/
+seed/
