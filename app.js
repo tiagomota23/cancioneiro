@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-27 v24';
+  const APP_VERSION = '2026-09-27 v25';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -650,7 +650,12 @@
            <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(trName)}</button>
          </div>`
       : `<span class="lang-chip">${esc(langName)}</span>`;
-    const pdf = s.pdf_url ? `<a class="pdf" href="${esc(s.pdf_url)}" target="_blank" rel="noopener">Partitura (PDF)</a>` : '';
+    const localPdf = s.pdf_url && !/^https?:/.test(s.pdf_url);
+    const pdf = s.pdf_url
+      ? (localPdf
+        ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura">Partitura (PDF)</a>`
+        : `<a class="pdf" href="${esc(s.pdf_url)}" target="_blank" rel="noopener">Partitura (PDF)</a>`)
+      : '';
     const body = mode === 'trad' ? s.translation : s.lyrics;
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
     $('song').innerHTML = `
@@ -675,13 +680,93 @@
     });
   }
 
+  // ---------- Partitura (PDF) dentro da app ----------
+  // No iPhone, com a app no ecrã principal, abrir o PDF diretamente não deixa voltar atrás;
+  // por isso os PDFs guardados no site são mostrados aqui, com botão "Voltar".
+  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
+  let pdfjs = null, pdfDoc = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null;
+  let lastSongSlug = null, songScroll = 0;
+  async function loadPdfJs() {
+    if (!pdfjs) {
+      pdfjs = await import(PDFJS + 'pdf.min.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.mjs';
+    }
+    return pdfjs;
+  }
+  async function openPdf(url, title, slug) {
+    pdfSlug = slug;
+    $('pdfview').hidden = false;
+    document.body.classList.add('pdf-open');
+    $('pdf-title').textContent = title;
+    if (pdfUrl === url && pdfDoc) return;
+    pdfUrl = url; pdfDoc = null; pdfZoom = 1;
+    $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
+    try {
+      const lib = await loadPdfJs();
+      pdfDoc = await lib.getDocument(url).promise;
+      await renderPdf();
+    } catch (e) {
+      $('pdfpages').innerHTML = `<p class="pdf-msg">Não foi possível mostrar a partitura.<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o PDF</a></p>`;
+    }
+  }
+  async function renderPdf() {
+    if (!pdfDoc) return;
+    const id = ++pdfRender, box = $('pdfpages');
+    box.innerHTML = '';
+    const width = Math.min(box.clientWidth - 16, 900);
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      if (id !== pdfRender) return;
+      const v1 = page.getViewport({ scale: 1 });
+      const scale = width / v1.width * pdfZoom;
+      let r = Math.min(window.devicePixelRatio || 1, 3);
+      while (r > 1 && v1.width * scale * r * v1.height * scale * r > 12e6) r -= 0.5; // limite de memória do iPhone
+      const vp = page.getViewport({ scale: scale * r });
+      const c = document.createElement('canvas');
+      c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      c.style.width = Math.floor(vp.width / r) + 'px'; c.style.height = Math.floor(vp.height / r) + 'px';
+      box.appendChild(c);
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+  }
+  function closePdf() {
+    if ($('pdfview').hidden) return;
+    $('pdfview').hidden = true;
+    document.body.classList.remove('pdf-open');
+    pdfRender++;
+  }
+  $('pdf-back').onclick = () => {
+    if (history.length > 1 && lastSongSlug === pdfSlug) history.back();
+    else location.hash = '#/cantico/' + encodeURIComponent(pdfSlug);
+  };
+  $('pdf-zoom-in').onclick = () => { pdfZoom = Math.min(3, pdfZoom + 0.5); renderPdf(); };
+  $('pdf-zoom-out').onclick = () => { pdfZoom = Math.max(1, pdfZoom - 0.5); renderPdf(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pdfview').hidden) $('pdf-back').click(); });
+  let pdfResize;
+  addEventListener('resize', () => { if (!$('pdfview').hidden) { clearTimeout(pdfResize); pdfResize = setTimeout(renderPdf, 250); } });
+
   // ---------- Router ----------
   let lastListHash = '#/';
   function route() {
     if (!session) return;
     const h = location.hash || '#/';
-    const m = h.match(/^#\/cantico\/(.+)$/);
-    if (m) { showSong(decodeURIComponent(m[1])); window.scrollTo(0, 0); return; }
+    const m = h.match(/^#\/cantico\/([^/]+)(\/partitura)?$/);
+    if (m) {
+      const slug = decodeURIComponent(m[1]);
+      if (m[2]) {
+        if (lastSongSlug !== slug || $('view-song').hidden) showSong(slug);
+        songScroll = window.scrollY;
+        const s = bySlug.get(slug);
+        if (s && s.pdf_url) openPdf(s.pdf_url, s.title, slug);
+        return;
+      }
+      const back = !$('pdfview').hidden && lastSongSlug === slug;
+      closePdf();
+      showSong(slug); lastSongSlug = slug;
+      window.scrollTo(0, back ? songScroll : 0);
+      return;
+    }
+    closePdf();
     if (h === '#/ouvir') { lastListHash = h; showListenResults(); return; }
     lastListHash = h;
     const c = h.match(/^#\/lista\/(.+)$/);
@@ -757,9 +842,9 @@
   addEventListener('resize', fitPlaceholder);
   addEventListener('orientationchange', fitPlaceholder);
   applyFont();
-  // Capa verde com "CANCIONEIRO" durante 3 s ao abrir (não quando se regressa do Google)
+  // Capa verde com "CANCIONEIRO" durante 2 s ao abrir (não quando se regressa do Google)
   const fromGoogle = /[?&](code|error)=/.test(location.search);
-  const splashDone = new Promise(r => setTimeout(r, fromGoogle ? 0 : 3000));
+  const splashDone = new Promise(r => setTimeout(r, fromGoogle ? 0 : 2000));
   $('btn-logout').onclick = () => logout();
   sb.auth.onAuthStateChange((event, s) => {
     if (DEMO) return;

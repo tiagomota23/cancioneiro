@@ -358,3 +358,17 @@ dialog { max-height: 90dvh; overflow-y: auto; }
   .topbar { max-width: 800px; margin: 0 auto; }
 }
 .login-note a { color: #fff; }
+
+/* Partitura (PDF) mostrada dentro da app */
+.pdfview { position: fixed; inset: 0; z-index: 35; background: #f2f2f2; display: flex; flex-direction: column; }
+.pdfbar { flex: none; display: flex; align-items: center; gap: 4px; background: var(--paper); color: var(--green-ink);
+  padding: calc(4px + var(--safe-top)) calc(8px + var(--safe-right)) 4px calc(4px + var(--safe-left)); box-shadow: 0 1px 6px rgba(0,0,0,.12); }
+.pdf-back { display: flex; align-items: center; gap: 2px; height: 44px; padding: 0 8px 0 2px; font-size: 16px; color: var(--green-ink); flex: none; }
+.pdf-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pdf-title { flex: 1; min-width: 0; text-align: center; font-weight: 700; color: #333; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pdfbar .icon-btn { width: 40px; height: 44px; font-size: 22px; flex: none; }
+.pdfpages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 8px 8px calc(24px + var(--safe-bottom)); text-align: center; }
+.pdfpages canvas { display: block; margin: 0 auto 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.pdf-msg { margin-top: 40px; color: #555; }
+body.pdf-open { overflow: hidden; }
+@media (prefers-color-scheme: dark) { .pdfview { background: #222; } .pdf-title { color: #eee; } }

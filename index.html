@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -115,6 +115,19 @@
     </div>
   </div>
 
+  <!-- Partitura (PDF) -->
+  <div id="pdfview" class="pdfview" hidden>
+    <header class="pdfbar">
+      <button class="pdf-back" id="pdf-back" aria-label="Voltar ao cântico">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Voltar</span>
+      </button>
+      <span class="pdf-title" id="pdf-title"></span>
+      <button class="icon-btn txt" id="pdf-zoom-out" aria-label="Reduzir">−</button>
+      <button class="icon-btn txt" id="pdf-zoom-in" aria-label="Ampliar">+</button>
+    </header>
+    <div class="pdfpages" id="pdfpages"></div>
+  </div>
+
   <!-- Informação -->
   <dialog id="info">
     <h2>Cancioneiro</h2>
@@ -131,7 +144,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=24"></script>
-  <script src="app.js?v=24"></script>
+  <script src="config.js?v=25"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>
