@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-27 v19';
+  const APP_VERSION = '2026-09-27 v20';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -60,7 +60,7 @@
     for (const v of ['view-list', 'view-song']) $(v).hidden = true;
     $('view-login').hidden = false;
     $('login-msg').textContent = msg || '';
-    $('splash').classList.add('gone');
+    splashDone.then(() => $('splash').classList.add('gone'));
   }
   $('btn-google').onclick = async () => {
     $('login-msg').textContent = 'A abrir o Google…';
@@ -267,7 +267,8 @@
 
   // Gravação: microfone -> PCM 16 kHz -> Whisper (worker) a cada ~2,5 s -> correspondência.
   // Pára sozinho quando um cântico se destaca claramente (ou aos 15 s).
-  const MAX_SECONDS = 18, TARGET_RATE = 16000;
+  // Captura: primeira tentativa aos 8 s (texto suficiente), última aos 10 s; guarda até 15 s de áudio
+  const FIRST_SECONDS = 8, MAX_SECONDS = 10, BUFFER_SECONDS = 15, TARGET_RATE = 16000;
   // Línguas a experimentar (null = deteção automática do Whisper); a última que resultou vai à frente
   const LANG_ORDER = ['portuguese', null, 'italian', 'latin', 'spanish', 'english', 'french'];
   function langQueue() {
@@ -467,18 +468,21 @@
     if (rec.ctx.state !== 'running') resumeAudio();
     const secs = (performance.now() - rec.started) / 1000;
     $('listen-bar').style.width = Math.min(100, Math.round(100 * secs / MAX_SECONDS)) + '%';
-    if (secs >= MAX_SECONDS && !busy) { finish(); return; }
+    // termina depois da tentativa final (aos 10 s); limite de segurança se a rede demorar
+    if (!busy && (secs >= MAX_SECONDS && rec.lastSent >= MAX_SECONDS - 0.01 || secs >= MAX_SECONDS + 6)) { finish(); return; }
     const useCloud = !cloudFailed;
     if (!useCloud && !modelReady) return;
-    if (busy || secs < 3.5 || secs - rec.lastSent < 2.5) return;
-    const pcm = rec.chunks.length ? downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * MAX_SECONDS) : null;
+    if (busy || secs < FIRST_SECONDS) return;
+    if (rec.lastSent && secs < MAX_SECONDS) return; // entre os 8 s e os 10 s só uma tentativa
+    if (!busy && secs < FIRST_SECONDS + 0.5 && !heard) listenMsg('A transcrever…', true);
+    const pcm = rec.chunks.length ? downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * BUFFER_SECONDS) : null;
     const pcmLevel = pcm ? rms(pcm.subarray(-TARGET_RATE * 3)) : 0;
     const hasMr = rec.mr && rec.mrChunks.length > 0;
     if (!(pcm && pcmLevel >= 0.0015) && !hasMr) {
       listenMsg(pcm ? 'Não oiço nada — aproxime o telemóvel' : 'Não está a chegar som do microfone', true);
       return;
     }
-    rec.lastSent = secs; busy = true;
+    rec.lastSent = Math.max(secs, rec.lastSent ? MAX_SECONDS : 0); busy = true;
     if (!heard) listenMsg('A ouvir e a transcrever…', true);
     if (useCloud) {
       const blob = pcm && pcmLevel >= 0.0015 ? encodeWav(pcm) : new Blob(rec.mrChunks, { type: rec.mr.mimeType || 'audio/mp4' });
@@ -738,7 +742,9 @@
   addEventListener('resize', fitPlaceholder);
   addEventListener('orientationchange', fitPlaceholder);
   applyFont();
-  setTimeout(() => $('splash').classList.add('gone'), 900);
+  // Capa verde com "CANCIONEIRO" durante 3 s ao abrir (não quando se regressa do Google)
+  const fromGoogle = /[?&](code|error)=/.test(location.search);
+  const splashDone = new Promise(r => setTimeout(r, fromGoogle ? 0 : 3000));
   $('btn-logout').onclick = () => logout();
   sb.auth.onAuthStateChange((event, s) => {
     session = s;
@@ -751,8 +757,10 @@
       history.replaceState(null, '', location.pathname + location.hash);
       if (err && !session) { showLogin('Não foi possível entrar: ' + err); return; }
     }
+    await splashDone;
     if (!session) { showLogin(); return; }
     $('view-login').hidden = true;
+    $('splash').classList.add('gone');
     $('info-user').textContent = 'Sessão: ' + session.user.email;
     showList();
     load();
