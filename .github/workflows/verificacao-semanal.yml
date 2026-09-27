@@ -1,0 +1,36 @@
+# Verificação independente do Cancioneiro (corre no GitHub, mesmo que o Supabase esteja em baixo).
+# Se algum passo falhar, o GitHub envia automaticamente um email ao dono do repositório.
+name: Verificação semanal
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # segundas, 06:00 UTC
+  workflow_dispatch: {}
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    env:
+      SITE: https://tiagomota23.github.io/cancioneiro/
+      SB: https://hmfjbyiesghqhwhqgnem.supabase.co
+    steps:
+      - uses: actions/checkout@v4
+      - name: Site do Cancioneiro responde
+        run: curl -fsS "$SITE" | grep -q CANCIONEIRO
+      - name: Código da app publicado
+        run: curl -fsS "${SITE}app.js" | grep -q APP_VERSION
+      - name: Supabase responde e protege os cânticos
+        run: |
+          K=$(grep -o "eyJ[^']*" config.js)
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$SB/rest/v1/songs?select=slug&limit=1" -H "apikey: $K" -H "Authorization: Bearer $K")
+          echo "HTTP $code"; test "$code" = 401 -o "$code" = 403
+      - name: Entrada com Google ativa
+        run: |
+          K=$(grep -o "eyJ[^']*" config.js)
+          curl -fsS "$SB/auth/v1/settings" -H "apikey: $K" | grep -q '"google":true'
+      - name: Função de transcrição ativa
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS "$SB/functions/v1/transcribe")
+          echo "HTTP $code"; test "$code" = 200
+      - name: Verificação de saúde do Supabase correu esta semana
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS "$SB/functions/v1/notify")
+          echo "HTTP $code"; test "$code" = 200

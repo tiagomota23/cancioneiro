@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1ab07f">
+  <title>Cancioneiro · Privacidade</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --g1: #1fb385; --g2: #12966a; --ink: #0e7f58; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Lato, -apple-system, Helvetica, Arial, sans-serif; color: #333; background: #fff; line-height: 1.55; }
+    header { background: linear-gradient(180deg, var(--g1), var(--g2)); color: #fff; text-align: center; padding: 28px 16px; }
+    header h1 { font-family: Marcellus, Georgia, serif; font-weight: 400; letter-spacing: .14em; margin: 0; font-size: clamp(22px, 6vw, 32px); }
+    header p { margin: 6px 0 0; opacity: .9; }
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px 48px; }
+    h2 { font-size: 17px; color: var(--ink); margin: 26px 0 6px; }
+    ul { padding-left: 20px; }
+    a { color: var(--ink); }
+    .small { color: #777; font-size: 13px; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CANCIONEIRO</h1>
+    <p>Política de privacidade</p>
+  </header>
+  <main>
+    <p>O Cancioneiro é uma aplicação privada, sem fins lucrativos, para uso de um pequeno grupo de pessoas autorizadas. Esta página explica que dados são usados e para quê.</p>
+
+    <h2>Entrada com o Google</h2>
+    <p>Para entrar, usa a sua conta Google. A aplicação recebe apenas o seu <b>nome</b> e o seu <b>endereço de email</b>. São usados só para verificar se a conta está autorizada a ver os cânticos e para identificar a sessão. Não acedemos a mais nenhuma informação da sua conta Google.</p>
+
+    <h2>Pedidos de acesso</h2>
+    <p>Se uma conta não autorizada tentar entrar, o nome e o email dessa conta são enviados por email ao administrador, para que possa autorizar ou bloquear o acesso.</p>
+
+    <h2>Cânticos preferidos</h2>
+    <p>Os cânticos que marca como preferidos ficam guardados associados à sua conta, para os ver em qualquer dispositivo. Só a própria pessoa os pode ver.</p>
+
+    <h2>Identificar um cântico pelo som</h2>
+    <p>Quando usa o botão do microfone, alguns segundos de áudio são enviados para um serviço de transcrição (Groq) apenas para converter o som em texto e encontrar o cântico. A aplicação não guarda as gravações.</p>
+
+    <h2>Onde ficam os dados</h2>
+    <ul>
+      <li>Base de dados e contas: <a href="https://supabase.com">Supabase</a>.</li>
+      <li>Transcrição de áudio: <a href="https://groq.com">Groq</a>.</li>
+      <li>Envio de emails ao administrador: <a href="https://resend.com">Resend</a>.</li>
+      <li>Site: GitHub Pages.</li>
+    </ul>
+    <p>Os dados não são vendidos nem partilhados com mais ninguém, nem usados para publicidade.</p>
+
+    <h2>Apagar os seus dados</h2>
+    <p>Para retirar o acesso ou apagar os seus dados (conta e preferidos), envie um email para <a href="mailto:tiago.mota@gmail.com">tiago.mota@gmail.com</a>.</p>
+
+    <p class="small">Última atualização: 27 de setembro de 2026 · <a href="./">Voltar ao Cancioneiro</a></p>
+  </main>
+</body>
+</html>

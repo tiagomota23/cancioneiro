@@ -357,3 +357,4 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 @media (min-width: 700px) {
   .topbar { max-width: 800px; margin: 0 auto; }
 }
+.login-note a { color: #fff; }
