@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-26 v17';
+  const APP_VERSION = '2026-09-27 v18';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -36,12 +36,11 @@
   let bySlug = new Map();
   const prefs = Object.assign({ fs: 18, chords: true }, store.get('cancioneiro.prefs', {}));
   const songView = {}; // slug -> 'orig' | 'trad'
-  let favs = store.get('cancioneiro.favs', []); // slugs, guardados neste dispositivo
+  // Preferidos: guardados no Supabase por utilizador (tabela favorites, RLS: cada um só vê os seus).
+  // Cópia local por utilizador para mostrar logo e funcionar sem rede.
+  let favs = [];
   const isFav = slug => favs.includes(slug);
-  function toggleFav(slug) {
-    favs = isFav(slug) ? favs.filter(x => x !== slug) : favs.concat(slug);
-    store.set('cancioneiro.favs', favs);
-  }
+  const favKey = () => 'cancioneiro.favs.' + (session ? session.user.id : 'anon');
 
   // ---------- Sessão (Google via Supabase Auth; acesso limitado por email na base de dados) ----------
   const CFG = window.CANCIONEIRO_CONFIG;
@@ -71,9 +70,46 @@
   async function logout(msg) {
     try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
     try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
-    songs = []; bySlug = new Map(); session = null;
+    songs = []; bySlug = new Map(); session = null; favs = [];
     if ($('info').open) $('info').close();
     showLogin(msg);
+  }
+
+  async function loadFavs() {
+    favs = store.get(favKey(), []);
+    try {
+      // migração: preferidos antigos guardados só neste dispositivo passam para a conta
+      const legacy = store.get('cancioneiro.favs', null);
+      if (legacy && legacy.length) {
+        const { error } = await sb.from('favorites').upsert(legacy.map(slug => ({ slug })), { onConflict: 'user_id,slug', ignoreDuplicates: true });
+        if (!error) localStorage.removeItem('cancioneiro.favs');
+      } else if (legacy) localStorage.removeItem('cancioneiro.favs');
+      const { data, error } = await sb.from('favorites').select('slug').order('created_at');
+      if (!error && data) { favs = data.map(r => r.slug); store.set(favKey(), favs); }
+    } catch (e) { /* sem rede: fica a cópia local */ }
+    refreshFavUI();
+  }
+  async function toggleFav(slug) {
+    const was = isFav(slug);
+    favs = was ? favs.filter(x => x !== slug) : favs.concat(slug);
+    store.set(favKey(), favs);
+    const { error } = was
+      ? await sb.from('favorites').delete().eq('slug', slug)
+      : await sb.from('favorites').insert({ slug });
+    if (error && !/duplicate/i.test(error.message)) {
+      favs = was ? favs.concat(slug) : favs.filter(x => x !== slug); // repõe
+      store.set(favKey(), favs);
+      alert('Não foi possível guardar o preferido. Verifique a ligação à internet.');
+    }
+    refreshFavUI();
+  }
+  function refreshFavUI() {
+    const fb = $('btn-fav'), slug = fb.dataset.slug;
+    if (slug) {
+      fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug));
+      fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+    }
+    if (location.hash === '#/lista/favoritos' && !$('view-list').hidden) showList('favoritos');
   }
 
   // ---------- Dados (Supabase) ----------
@@ -602,9 +638,9 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(s.has_chords && mode === 'orig');
     const fb = $('btn-fav');
-    fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug));
-    fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
-    fb.onclick = () => { toggleFav(slug); fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug)); fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'); };
+    fb.dataset.slug = slug;
+    fb.onclick = () => toggleFav(slug);
+    refreshFavUI();
     $('btn-chords').classList.toggle('on', prefs.chords);
     $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => {
       songView[slug] = b.dataset.mode;
@@ -706,6 +742,7 @@
     $('info-user').textContent = 'Sessão: ' + session.user.email;
     showList();
     load();
+    loadFavs();
   })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
