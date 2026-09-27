@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1ab07f">
+  <title>Cancioneiro · Pedido de acesso</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --g1: #1fb385; --g2: #12966a; --ink: #0e7f58; --red: #c0392b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+      font-family: Lato, -apple-system, Helvetica, Arial, sans-serif; color: #333;
+      background: linear-gradient(180deg, var(--g1), var(--g2)); }
+    .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 30px rgba(0,0,0,.18); text-align: center; }
+    h1 { font-family: Marcellus, Georgia, serif; font-weight: 400; letter-spacing: .14em; color: var(--g2); font-size: 22px; margin: 0 0 18px; }
+    .who { background: #f3faf7; border: 1px solid #d8e9e1; border-radius: 12px; padding: 14px; margin: 14px 0 18px; }
+    .who b { display: block; font-size: 17px; }
+    .who span { color: #555; overflow-wrap: anywhere; }
+    p { line-height: 1.5; margin: 8px 0; }
+    button { font: 700 16px Lato, sans-serif; border: 0; border-radius: 24px; padding: 13px 26px; color: #fff; cursor: pointer; width: 100%; margin-top: 6px; }
+    button.ok { background: var(--ink); }
+    button.no { background: var(--red); }
+    button:disabled { opacity: .5; }
+    .msg { font-size: 15px; }
+    .small { color: #777; font-size: 13px; }
+    a { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>CANCIONEIRO</h1>
+    <div id="out"><p class="small">A carregar…</p></div>
+  </main>
+  <script src="config.js?v=23"></script>
+  <script>
+  (async () => {
+    const out = document.getElementById('out');
+    const q = new URLSearchParams(location.search);
+    const id = q.get('id'), token = q.get('t'), action = q.get('a');
+    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CANCIONEIRO_CONFIG;
+    const call = async body => {
+      const r = await fetch(SUPABASE_URL + '/functions/v1/notify', { method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
+      return d;
+    };
+    const who = d => `<div class="who"><b>${esc(d.name || '(sem nome)')}</b><span>${esc(d.email)}</span></div>`;
+    const done = d => d.status === 'autorizado'
+      ? `<p class="msg">✅ <b>Acesso autorizado.</b></p><p class="small">Na próxima vez que entrar com o Google, esta pessoa verá os cânticos.</p>`
+      : `<p class="msg">⛔ <b>Acesso bloqueado.</b></p><p class="small">Esta conta já não consegue entrar no Cancioneiro.</p>`;
+    if (!id || !token || !['autorizar', 'bloquear'].includes(action)) { out.innerHTML = '<p>Link inválido.</p>'; return; }
+    try {
+      const d = await call({ type: 'peek', id, token });
+      if (d.status !== 'pendente') { out.innerHTML = who(d) + '<p class="small">Este pedido já foi decidido.</p>' + done(d); return; }
+      const allow = action === 'autorizar';
+      out.innerHTML = who(d) +
+        `<p>${allow ? 'Autorizar esta pessoa a usar o Cancioneiro?' : 'Bloquear esta pessoa? Deixará de conseguir entrar.'}</p>` +
+        `<button id="go" class="${allow ? 'ok' : 'no'}">${allow ? 'Sim, autorizar' : 'Sim, bloquear'}</button>` +
+        `<p class="small" style="margin-top:14px"><a href="?id=${encodeURIComponent(id)}&t=${encodeURIComponent(token)}&a=${allow ? 'bloquear' : 'autorizar'}">${allow ? 'Prefiro bloquear' : 'Prefiro autorizar'}</a></p>`;
+      document.getElementById('go').onclick = async e => {
+        e.target.disabled = true; e.target.textContent = 'A guardar…';
+        try { const r = await call({ type: 'decide', id, token, action }); out.innerHTML = who(r) + done(r); }
+        catch (err) { e.target.disabled = false; e.target.textContent = 'Tentar de novo'; out.insertAdjacentHTML('beforeend', `<p class="small">Erro: ${esc(err.message)}</p>`); }
+      };
+    } catch (err) {
+      out.innerHTML = `<p>Não foi possível abrir o pedido.</p><p class="small">${esc(err.message)}</p>`;
+    }
+  })();
+  </script>
+</body>
+</html>

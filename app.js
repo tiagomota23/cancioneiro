@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-27 v22';
+  const APP_VERSION = '2026-09-27 v23';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -174,7 +174,7 @@
     try {
       const fresh = await fetchSongs();
       if (!fresh.length) { // a base de dados só devolve cânticos a emails autorizados
-        await logout(`A conta ${session && session.user.email || ''} não tem acesso ao Cancioneiro.`);
+        await logout(`A conta ${session && session.user.email || ''} ainda não tem acesso ao Cancioneiro. O pedido foi enviado ao administrador; tente de novo depois de ser autorizado.`);
         return;
       }
       store.set(CACHE_KEY, fresh);
