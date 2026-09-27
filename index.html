@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -71,9 +71,9 @@
       </button>
       <div class="spacer"></div>
       <button class="icon-btn fav-toggle" id="btn-fav" aria-label="Adicionar aos preferidos" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/></svg></button>
-      <button class="icon-btn txt" id="btn-chords" aria-label="Mostrar acordes" title="Acordes" hidden>♪</button>
-      <button class="icon-btn txt" id="font-dec" aria-label="Diminuir letra">A<sup>−</sup></button>
-      <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra">A<sup>+</sup></button>
+      <button class="icon-btn" id="btn-chords" aria-label="Mostrar acordes" title="Acordes" hidden><svg viewBox="0 0 24 24"><path d="M9 18V5.5l10-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></button>
+      <button class="icon-btn txt" id="font-dec" aria-label="Diminuir letra"><span class="a">A</span><span class="s">−</span></button>
+      <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra"><span class="a">A</span><span class="s">+</span></button>
     </header>
     <article id="song" class="song"></article>
   </section>
@@ -129,7 +129,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=20"></script>
-  <script src="app.js?v=20"></script>
+  <script src="config.js?v=21"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>

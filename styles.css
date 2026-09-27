@@ -142,10 +142,19 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   color: var(--green-ink);
 }
 .songbar .spacer { flex: 1; }
-.songbar .txt { font-family: var(--sans); font-size: 17px; width: 42px; display: inline-flex; align-items: flex-start; justify-content: center; line-height: 1; }
-.songbar .txt.big { font-size: 23px; }
-.songbar .txt sup { font-size: .6em; vertical-align: 0; margin-left: 1px; }
-.songbar #btn-chords { font-size: 20px; opacity: .45; }
+.songbar { align-items: center; }
+/* todos os ícones da barra na mesma caixa de 44×44, centrados na mesma linha */
+.songbar .icon-btn { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; }
+.songbar .icon-btn svg { width: 23px; height: 23px; }
+.songbar #btn-chords svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.songbar #btn-chords svg circle { fill: currentColor; stroke: none; }
+/* A−/A+: letras centradas na caixa, com o sinal pequeno em cima à direita (não altera o alinhamento) */
+.songbar .txt { font-family: var(--sans); line-height: 1; position: relative; }
+.songbar .txt .a { font-size: 19px; }
+.songbar .txt.big .a { font-size: 24px; }
+.songbar .txt .s { position: absolute; top: 9px; right: 7px; font-size: 11px; font-weight: 700; }
+.songbar .txt.big .s { top: 7px; right: 5px; }
+.songbar #btn-chords { opacity: .45; }
 .songbar #btn-chords.on { opacity: 1; }
 
 .song {
