@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-27 v18';
+  const APP_VERSION = '2026-09-27 v19';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -48,7 +48,10 @@
     auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
   });
   let session = null;
+  // Modo de teste só em localhost (?demo): sem Google, com a cópia local songs.json
+  const DEMO = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
   async function accessToken() {
+    if (DEMO) { session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
     const { data } = await sb.auth.getSession();
     session = data.session;
     return session ? session.access_token : null;
@@ -77,6 +80,7 @@
 
   async function loadFavs() {
     favs = store.get(favKey(), []);
+    if (DEMO) { refreshFavUI(); return; }
     try {
       // migração: preferidos antigos guardados só neste dispositivo passam para a conta
       const legacy = store.get('cancioneiro.favs', null);
@@ -93,6 +97,7 @@
     const was = isFav(slug);
     favs = was ? favs.filter(x => x !== slug) : favs.concat(slug);
     store.set(favKey(), favs);
+    if (DEMO) { refreshFavUI(); return; }
     const { error } = was
       ? await sb.from('favorites').delete().eq('slug', slug)
       : await sb.from('favorites').insert({ slug });
@@ -116,6 +121,7 @@
   async function fetchSongs() {
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
     const token = await accessToken();
+    if (DEMO) return (await fetch('songs.json')).json();
     const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -723,6 +729,14 @@
   }, { passive: true });
   window.addEventListener('hashchange', route);
 
+  // texto de ajuda da pesquisa ajustado à largura do ecrã
+  function fitPlaceholder() {
+    const w = innerWidth;
+    $('search').placeholder = w < 380 ? 'PROCURAR' : w < 520 ? 'PROCURAR CÂNTICO OU LETRA' : 'PROCURAR CÂNTICO, AUTOR OU LETRA';
+  }
+  fitPlaceholder();
+  addEventListener('resize', fitPlaceholder);
+  addEventListener('orientationchange', fitPlaceholder);
   applyFont();
   setTimeout(() => $('splash').classList.add('gone'), 900);
   $('btn-logout').onclick = () => logout();

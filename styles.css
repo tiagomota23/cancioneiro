@@ -306,3 +306,45 @@ dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18p
 .login-note { font-size: 12px; opacity: .8; margin-top: 28px; }
 .info-actions { display: flex; justify-content: space-between; gap: 10px; }
 dialog form button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }
+
+/* ---- Adaptação a qualquer ecrã (larguras pequenas, paisagem, entalhe/notch) ---- */
+:root {
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+/* elementos flexíveis podem encolher abaixo da largura "natural" do campo de texto */
+.search { min-width: 0; }
+.search input { width: 100%; min-width: 0; }
+.searchrow { padding-left: calc(6px + var(--safe-left)); padding-right: calc(14px + var(--safe-right)); }
+.searchrow > .icon-btn { flex: none; }
+.topbar { padding-left: calc(10px + var(--safe-left)); padding-right: calc(10px + var(--safe-right)); }
+.brand { font-size: clamp(17px, 5.8vw, 24px); max-width: calc(100% - 120px); overflow: hidden; text-overflow: clip; }
+.rows { padding-left: calc(4px + var(--safe-left)); padding-right: var(--safe-right); }
+.list-title { margin-left: calc(18px + var(--safe-left)); margin-right: calc(18px + var(--safe-right)); overflow-wrap: anywhere; }
+.rows .t { overflow-wrap: anywhere; }
+.songbar { padding-left: calc(8px + var(--safe-left)); padding-right: calc(8px + var(--safe-right)); }
+.song { padding-left: calc(20px + var(--safe-left)); padding-right: calc(20px + var(--safe-right)); overflow-wrap: break-word; }
+.song .meta { min-width: 0; }
+.drawer-panel { padding-left: var(--safe-left); }
+.listen .sheet { max-height: 100dvh; overflow-y: auto; padding-left: calc(20px + var(--safe-left)); padding-right: calc(20px + var(--safe-right)); }
+.listen-eq { width: min(280px, 100%); }
+dialog { max-height: 90dvh; overflow-y: auto; }
+/* ecrãs muito estreitos (ex.: iPhone SE, 320 px) */
+@media (max-width: 360px) {
+  .searchrow { gap: 0; }
+  .searchrow > .icon-btn { width: 36px; }
+  .search input::placeholder { letter-spacing: .04em; }
+  .rows .t { letter-spacing: .08em; }
+  .listen-langs button { padding: 5px 8px; }
+}
+/* paisagem com pouca altura: ecrã de gravação mais compacto */
+@media (max-height: 500px) {
+  .listen .pulse { width: 52px; height: 52px; margin-bottom: 4px; }
+  .listen-eq { height: 40px; }
+  .listen .sheet { padding-top: 12px; }
+  .login-box h1 { margin-bottom: 24px; }
+}
+/* ecrãs largos (tablet/computador): conteúdo centrado */
+@media (min-width: 700px) {
+  .topbar { max-width: 800px; margin: 0 auto; }
+}

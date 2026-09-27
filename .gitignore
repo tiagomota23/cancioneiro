@@ -6,3 +6,4 @@ supabase/.temp/
 seed/
 test_audio.wav
 test_audio_it.wav
+_check.js
