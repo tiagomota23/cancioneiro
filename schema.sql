@@ -42,3 +42,14 @@ create policy "favoritos ler" on public.favorites for select to authenticated us
 create policy "favoritos inserir" on public.favorites for insert to authenticated with check (user_id = auth.uid() and public.is_allowed());
 create policy "favoritos apagar" on public.favorites for delete to authenticated using (user_id = auth.uid());
 grant select, insert, delete on public.favorites to authenticated;
+
+-- Verificação semanal do site original (função sync-songs)
+alter table public.songs add column if not exists source_hash text;  -- impressão digital do bloco HTML de origem
+create table if not exists public.sync_log (
+  id bigint generated always as identity primary key, run_at timestamptz not null default now(),
+  added jsonb not null default '[]', updated jsonb not null default '[]', baseline int not null default 0, error text
+);
+alter table public.sync_log enable row level security;
+create policy "registo ler" on public.sync_log for select to authenticated using (public.is_allowed());
+-- set_source_hashes(jsonb): regista a impressão inicial (só service_role)
+-- cron: select cron.schedule('cancioneiro-verificacao-semanal', '0 5 * * 1', $$ select net.http_post(url := '<SUPABASE_URL>/functions/v1/sync-songs', headers := ..., body := '{}'::jsonb) $$);

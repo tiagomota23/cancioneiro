@@ -7,3 +7,8 @@ Webapp móvel (PWA) do cancioneiro: pesquisa por título, autor, número ou pala
 - Alojamento: GitHub Pages.
 
 Formato da letra (`lyrics`/`translation`, jsonb): `[{ "type": "verse" | "chorus", "lines": ["Texto com [Acorde]sílaba", ...] }]`
+
+## Verificação semanal
+A função `supabase/functions/sync-songs` (agendada com pg_cron às segundas, 05:00 UTC) lê https://cancioneiro.marriaga.com/index.html,
+acrescenta cânticos novos e atualiza os que mudaram (comparando a impressão digital `source_hash` de cada bloco). Cânticos apagados na origem não são apagados aqui.
+Cada execução fica registada na tabela `sync_log` e aparece no ecrã ⓘ da app.

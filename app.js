@@ -20,7 +20,7 @@
     { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
   ];
 
-  const APP_VERSION = '2026-09-27 v21';
+  const APP_VERSION = '2026-09-27 v22';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -115,6 +115,21 @@
       fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
     }
     if (location.hash === '#/lista/favoritos' && !$('view-list').hidden) showList('favoritos');
+  }
+
+  // Última verificação semanal do site original (tabela sync_log, escrita pela função sync-songs)
+  async function loadSyncInfo() {
+    if (DEMO) return;
+    try {
+      const { data } = await sb.from('sync_log').select('run_at,added,updated,error').order('run_at', { ascending: false }).limit(1);
+      if (!data || !data.length) return;
+      const r = data[0], d = new Date(r.run_at);
+      const quando = d.toLocaleDateString('pt-PT') + ' ' + d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+      const n = (r.added || []).length, u = (r.updated || []).length;
+      $('info-sync').textContent = r.error
+        ? `Última verificação do site original: ${quando} (erro: ${r.error})`
+        : `Última verificação do site original: ${quando} · ${n} novo${n === 1 ? '' : 's'}, ${u} atualizado${u === 1 ? '' : 's'}`;
+    } catch (e) { /* sem rede */ }
   }
 
   // ---------- Dados (Supabase) ----------
@@ -766,6 +781,7 @@
     showList();
     load();
     loadFavs();
+    loadSyncInfo();
   })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
