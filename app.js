@@ -6,7 +6,7 @@
     gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli', de: 'Alemão', xx: 'Outra língua',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
-  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', canti2024: 'CANTI 2024', songbook: 'Songbook' };
+  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => prefs.src !== 'original';
@@ -46,7 +46,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-09-28 v34';
+  const APP_VERSION = '2026-09-28 v35';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -203,7 +203,7 @@
     const present = new Set(allSongs.flatMap(srcOf));
     const sel = $('src-filter');
     if (sel) {
-      sel.innerHTML = `<option value="todas">Todas as fontes (${allSongs.length})</option>` +
+      sel.innerHTML = `<option value="todas">Tudo (${allSongs.length})</option>` +
         Object.entries(SOURCES).filter(([k]) => present.has(k))
           .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => srcOf(s).includes(k)).length})</option>`).join('');
       sel.value = present.has(f) ? f : 'todas';
@@ -1037,9 +1037,20 @@
     const r = $('info').getBoundingClientRect();
     if (e.target === $('info') && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) closeInfo();
   });
+  // Vista escolhida no ⓘ (Tudo / Cancioneiro / Coro / …): guardada na conta de cada pessoa (user_metadata),
+  // para ser a mesma em todos os seus dispositivos e não passar para outra pessoa no mesmo telemóvel
   function setSource(v) {
     prefs.src = v; store.set('cancioneiro.prefs', prefs);
     applySource(); route();
+    if (session && !DEMO) sb.auth.updateUser({ data: { cancioneiro_vista: v } }).catch(() => {});
+  }
+  function useSource(meta) {
+    const v = (meta || {}).cancioneiro_vista || 'todas';
+    if (v !== prefs.src) { prefs.src = v; store.set('cancioneiro.prefs', prefs); if (allSongs.length) { applySource(); route(); } }
+  }
+  async function restoreSource() {
+    useSource(session && session.user.user_metadata); // já (da sessão guardada)…
+    try { const { data } = await sb.auth.getUser(); if (data && data.user) useSource(data.user.user_metadata); } catch (e) { /* sem rede */ } // …e confirmado no servidor
   }
   $('src-filter').onchange = e => setSource(e.target.value);
   $('btn-favs').onclick = () => { $('search').value = ''; $('search-clear').hidden = true; location.hash = '#/lista/favoritos'; };
@@ -1086,6 +1097,7 @@
     $('view-login').hidden = true;
     $('splash').classList.add('gone');
     $('info-user').textContent = 'Sessão: ' + session.user.email;
+    if (!DEMO) restoreSource();
     showList();
     load();
     loadFavs();
