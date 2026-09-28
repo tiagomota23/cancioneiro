@@ -3,7 +3,7 @@
 
   const LANGS = {
     pt: 'Português', it: 'Italiano', en: 'Inglês', la: 'Latim', es: 'Espanhol', fr: 'Francês',
-    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli',
+    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli', de: 'Alemão', xx: 'Outra língua',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
   const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', canti2024: 'CANTI 2024', songbook: 'Songbook' };
@@ -20,6 +20,11 @@
   ];
   // Momentos da missa (índice do Word "Músicas Coro" do Coro CLU)
   const MOMENTS = ['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora', 'Advento', 'Natal', 'Quaresma', 'Páscoa', 'Geral', 'A aprender'];
+  // Secções dos livros importados (etiquetas song_tags com grp = nome do livro)
+  const BOOKS = [
+    { id: 'sb', grp: 'Songbook', head: 'Songbook', secs: ['English songs', 'Spirituals', 'Rock – pop – folk', 'Songs', 'Hymns', 'Latin songs', 'Troubadour-songs', 'Italian songs', 'Italian folk songs', 'French songs', 'Spanish songs', 'Brasilian songs', 'German songs', 'African songs'] },
+    { id: 'ct', grp: 'CANTI 2024', head: 'CANTI 2024', secs: ['Canti per la liturgia', 'Canti della nostra storia', 'Canti di montagna', 'Canti popolari regionali', 'Canti per bambini', 'Canzoni italiane', 'Canti stranieri'] },
+  ];
   // Categorias do índice (como na versão italiana, agrupadas por língua)
   const CATEGORIES = [
     { id: 'todos', label: 'Todos os cânticos', test: () => true },
@@ -29,7 +34,7 @@
     { id: 'en', label: 'Cânticos ingleses, irlandeses e americanos', test: s => s.language === 'en' },
     { id: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
     { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
-    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw'].includes(s.language) },
+    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw', 'de', 'xx'].includes(s.language) },
     { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.translation },
     { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
@@ -38,9 +43,10 @@
     { id: 'coro-gestos', label: 'Coro — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
     { id: 'coro-outras', label: 'Coro — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
     ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
+    ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-09-28 v32';
+  const APP_VERSION = '2026-09-28 v33';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -664,7 +670,8 @@
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
-    title.textContent = cat.id.startsWith('momento-') ? 'Coro — ' + cat.label : cat.label;
+    const book = BOOKS.find(b => cat.id.startsWith(b.id + '-'));
+    title.textContent = cat.id.startsWith('momento-') ? 'Coro — ' + cat.label : book ? book.head + ' — ' + cat.label : cat.label;
     rows.innerHTML = songs.filter(cat.test)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
@@ -696,7 +703,7 @@
       : `<span class="lang-chip">${esc(langName)}</span>`;
     const scores = scoresOf(s);
     const pdf = scores.map((sc, i) => {
-      const lbl = scores.length > 1 ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
+      const lbl = scores.length > 1 || pageOf(sc) ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
       return sc.url && /^https?:/.test(sc.url)
         ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(lbl)}</a>`
         : `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${esc(lbl)}</a>`;
@@ -802,11 +809,13 @@
   const signed = new Map();
   async function fileUrl(f) {
     if (f.url) return f.url;
-    const hit = signed.get(f.path);
+    const path = f.path.split('#')[0]; // livros: "livros/x.pdf#p=41" (várias páginas do mesmo PDF)
+    if (DEMO) return 'drive-coro-clu/out/' + path; // modo de teste local
+    const hit = signed.get(path);
     if (hit && hit.until > Date.now()) return hit.url;
-    const { data, error } = await sb.storage.from('coro').createSignedUrl(f.path, 3600);
+    const { data, error } = await sb.storage.from('coro').createSignedUrl(path, 3600);
     if (error) throw error;
-    signed.set(f.path, { url: data.signedUrl, until: Date.now() + 3500e3 });
+    signed.set(path, { url: data.signedUrl, until: Date.now() + 3500e3 });
     return data.signedUrl;
   }
   async function playRec(btn, f) {
@@ -833,7 +842,8 @@
   // No iPhone, com a app no ecrã principal, abrir o PDF diretamente não deixa voltar atrás;
   // por isso os PDFs guardados no site são mostrados aqui, com botão "Voltar".
   const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
-  let pdfjs = null, pdfDoc = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null;
+  let pdfjs = null, pdfDoc = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null, pdfPage = 0;
+  const pageOf = f => { const m = (f.path || '').match(/#p=(\d+)/); return m ? +m[1] : 0; };
   let lastSongSlug = null, songScroll = 0;
   async function loadPdfJs() {
     if (!pdfjs) {
@@ -842,13 +852,13 @@
     }
     return pdfjs;
   }
-  async function openPdf(url, title, slug, mime) {
+  async function openPdf(url, title, slug, mime, page = 0) {
     pdfSlug = slug;
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
     $('pdf-title').textContent = title;
-    if (pdfUrl === url && pdfDoc) return;
-    pdfUrl = url; pdfDoc = null; pdfZoom = 1;
+    if (pdfUrl === url && pdfDoc) { if (pdfPage !== page) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
+    pdfUrl = url; pdfDoc = null; pdfZoom = 1; pdfPage = page;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
     try {
       if (/^image\//.test(mime || '')) {
@@ -856,7 +866,7 @@
         return;
       }
       const lib = await loadPdfJs();
-      pdfDoc = await lib.getDocument(url).promise;
+      pdfDoc = await lib.getDocument({ url, disableAutoFetch: !!pdfPage }).promise; // livros grandes: só descarrega as páginas pedidas
       await renderPdf();
     } catch (e) {
       $('pdfpages').innerHTML = `<p class="pdf-msg">Não foi possível mostrar a partitura.<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o ficheiro</a></p>`;
@@ -867,7 +877,10 @@
     const id = ++pdfRender, box = $('pdfpages');
     box.innerHTML = '';
     const width = Math.min(box.clientWidth - 16, 900);
-    for (let i = 1; i <= pdfDoc.numPages; i++) {
+    // num livro (#p=N) mostra só a página do cântico e a seguinte
+    const first = pdfPage ? Math.min(pdfPage, pdfDoc.numPages) : 1;
+    const last = pdfPage ? Math.min(pdfPage + 1, pdfDoc.numPages) : pdfDoc.numPages;
+    for (let i = first; i <= last; i++) {
       const page = await pdfDoc.getPage(i);
       if (id !== pdfRender) return;
       const v1 = page.getViewport({ scale: 1 });
@@ -917,7 +930,7 @@
           (async () => {
             try {
               const url = await fileUrl(sc);
-              if (location.hash === key) openPdf(url, s.title, slug, sc.mime);
+              if (location.hash === key) openPdf(url, s.title, slug, sc.mime, pageOf(sc));
             } catch (e) {
               $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = s.title;
               $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível abrir a partitura.</p>';
