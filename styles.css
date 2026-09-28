@@ -175,8 +175,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .lang-switch button.on { background: var(--green-ink); color: var(--paper); }
 .lang-chip {
-  font-size: 12px; letter-spacing: .06em; padding: 5px 12px; color: var(--green-ink);
-  border: 1px solid var(--green-ink); border-radius: 16px;
+  font-size: 12px; letter-spacing: .06em; padding: 5px 12px; color: var(--paper);
+  background: var(--green-ink); border: 1px solid var(--green-ink); border-radius: 16px;
 }
 .pdf {
   font-size: 12px; letter-spacing: .04em; padding: 5px 12px; border-radius: 16px;
