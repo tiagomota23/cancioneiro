@@ -63,7 +63,7 @@ Deno.serve(async () => {
   const sum = { imported: [], newFolders: [], changed: [], removed: [], skipped: [], baseline: 0 };
   let error = null;
   try {
-    const [last] = await rest('drive_sync_log?select=run_at&order=run_at.desc&limit=1');
+    const [last] = await rest('drive_sync_log?select=run_at&error=is.null&order=run_at.desc&limit=1');
     if (last && Date.now() - new Date(last.run_at).getTime() < 3600e3) return json({ skipped: 'executado há menos de 1 hora' });
     const tok = await accessToken();
     const items = [];
