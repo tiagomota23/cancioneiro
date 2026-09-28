@@ -24,7 +24,10 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; overflow-x: hidden; }
+/* Sem altura fixa nem overflow no body: no iPhone isso transformava o body num segundo scroller
+   (a página só deslizava depois de um zoom). O documento é o único scroller. */
+html { overflow-x: hidden; }
+body { margin: 0; min-height: 100dvh; overflow-x: clip; }
 body { touch-action: manipulation; }
 body {
   font-family: var(--sans);
@@ -48,12 +51,18 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .splash.gone { opacity: 0; pointer-events: none; }
 
-.view { min-height: 100%; }
+.view { min-height: 100dvh; }
+/* Fundo verde numa camada fixa: o iPhone não suporta background-attachment: fixed
+   (repetia o degradê a cada ecrã, com faixas de verde mais claro/escuro) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, var(--green-1) 0%, var(--green-2) 100%);
+}
 .view.green {
-  background: linear-gradient(180deg, var(--green-1) 0%, var(--green-2) 100%) fixed;
+  background: transparent;
   padding-bottom: calc(24px + var(--safe-bottom));
 }
-.view.white { background: var(--paper); color: var(--ink); min-height: 100vh; }
+.view.white { background: var(--paper); color: var(--ink); min-height: 100dvh; }
 
 /* Barra superior (lista) */
 .topbar {
@@ -77,8 +86,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .icon-btn:active { background: rgba(255,255,255,.12); }
 .view.white .icon-btn:active { background: rgba(0,0,0,.06); }
 
+/* Barra de estado do iPhone: faixa verde fixa por cima da lista quando se desliza */
+#view-list::before {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top); z-index: 6;
+  background: var(--green-1);
+}
 .searchrow {
-  position: sticky; top: 0; z-index: 5;
+  position: sticky; top: var(--safe-top); z-index: 5;
+  background: var(--green-1); box-shadow: 0 0 0 100vmax var(--green-1); clip-path: inset(0 -100vmax -12px);
   display: flex; align-items: center; gap: 2px; padding: 6px 14px 10px 6px;
 }
 .searchrow .search { flex: 1; margin: 0; }
@@ -411,9 +426,13 @@ dialog.editor { width: min(94vw, 640px); max-width: none; }
 .edit-actions button:disabled { opacity: .5; }
 
 /* Janela ⓘ: botões sempre visíveis, mesmo quando o texto não cabe no ecrã */
-#info { position: fixed; padding-bottom: 0; }
-#info .info-actions { position: sticky; bottom: 0; background: #fff; margin: 12px -22px 0; padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; }
-.dlg-x { position: sticky; top: 0; float: right; margin: -8px -10px 0 0; width: 40px; height: 40px; border-radius: 50%; font-size: 28px; line-height: 1; color: #666; background: rgba(255,255,255,.9); z-index: 1; }
+/* O texto rola numa área interior; os botões ficam sempre visíveis em baixo */
+#info { padding: 0; overflow: hidden; }
+#info[open] { display: flex; flex-direction: column; max-height: 90dvh; }
+#info .info-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 20px 22px 8px; outline: none; }
+#info .info-actions { flex: none; margin: 0; padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; background: #fff; }
+.dlg-x { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 50%; font-size: 28px; line-height: 1; color: #666; background: rgba(255,255,255,.9); z-index: 1; }
+.dlg-x:focus:not(:focus-visible) { outline: none; }
 
 .pdf-more { text-align: center; margin: 14px 0 24px; }
 .pdf-more button { font-size: 14px; padding: 8px 16px; border-radius: 18px; border: 1px solid var(--green-ink); color: var(--green-ink); background: #fff; }

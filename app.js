@@ -47,7 +47,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-09-28 v36';
+  const APP_VERSION = '2026-09-29 v37';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -648,16 +648,12 @@
     }
     if (!catId) {
       title.hidden = true;
-      const f = prefs.src || 'todas';
-      rows.innerHTML = (f !== 'todas' ? `<li class="src-note">A mostrar só: <b>${esc(SOURCES[f] || f)}</b> · <a href="#" id="src-all">ver todos</a></li>` : '') +
-        CATEGORIES.map(c => {
-          const n = songs.filter(c.test).length;
-          if (!n) return '';
-          return (c.head ? `<li class="cat-head">${esc(c.head)}</li>` : '') +
-            `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
-        }).join('');
-      const all = $('src-all');
-      if (all) all.onclick = e => { e.preventDefault(); setSource('todas'); };
+      rows.innerHTML = CATEGORIES.map(c => {
+        const n = songs.filter(c.test).length;
+        if (!n) return '';
+        return (c.head ? `<li class="cat-head">${esc(c.head)}</li>` : '') +
+          `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
+      }).join('');
       if (!songs.length) $('status').textContent = 'A carregar…';
       return;
     }
