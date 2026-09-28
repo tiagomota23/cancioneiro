@@ -10,8 +10,8 @@
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => prefs.src !== 'original';
-  // Letra editada pela família (lyrics_edit) só fora do modo "Cancioneiro original"; a original nunca é alterada
-  const lyricsOf = s => (extrasOn() && s.lyrics_edit) || s.lyrics || [];
+  // Letra editada pela família (lyrics_edit) aparece em todos os modos; a original (site / Drive) fica guardada em lyrics
+  const lyricsOf = s => s.lyrics_edit || s.lyrics || [];
   const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
   const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
   const scoresOf = s => [
@@ -40,7 +40,7 @@
     ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-28 v28';
+  const APP_VERSION = '2026-09-28 v29';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -709,10 +709,10 @@
     const lyr = lyricsOf(s);
     const body = mode === 'trad' ? s.translation : lyr;
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
-    const edited = extrasOn() && s.lyrics_edit;
+    const edited = !!s.lyrics_edit;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
-    const editBar = extrasOn() && !DEMO && mode === 'orig'
-      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span>` : ''}<button class="edit-btn" id="btn-edit">Editar letra</button></p>`
+    const editBar = !DEMO && mode === 'orig' && extrasOn()
+      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="edit-btn" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit">Editar letra</button></p>`
       : '';
     $('song').innerHTML = `
       <h1>${esc(s.title)}</h1>
@@ -729,6 +729,7 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyr.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
+    if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => toggleFav(slug);
@@ -778,7 +779,8 @@
       $('editor').close();
       showSong(editSlug);
     } catch (e) {
-      $('edit-msg').textContent = 'Não foi possível guardar: ' + (e.message || e);
+      const msg = 'Não foi possível guardar: ' + (e.message || e);
+      if ($('editor').open) $('edit-msg').textContent = msg; else alert(msg);
     } finally {
       for (const b of document.querySelectorAll('#editor button')) b.disabled = false;
     }
@@ -788,7 +790,12 @@
     if (!st.length) { $('edit-msg').textContent = 'A letra não pode ficar vazia.'; return; }
     saveLyrics(st);
   };
-  $('edit-reset').onclick = () => { if (confirm('Repor a letra original deste cântico?')) saveLyrics(null); };
+  function revertLyrics(slug) {
+    if (!confirm('Repor a letra original deste cântico (como no site / pasta do Coro)? A edição fica no histórico.')) return;
+    editSlug = slug;
+    saveLyrics(null);
+  }
+  $('edit-reset').onclick = () => revertLyrics(editSlug);
   $('edit-cancel').onclick = () => $('editor').close();
 
   // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
