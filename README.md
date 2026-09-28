@@ -19,3 +19,10 @@ No ecrã ⓘ, "Mostrar cânticos de" permite voltar a ver só o Cancioneiro orig
 Os cânticos do Coro CLU têm etiquetas (`song_tags`: para a Missa / para Gestos / momentos da Missa) e ficheiros (`song_files`):
 gravações por voz (AAC) e partituras, guardados no bucket privado `coro` do Supabase Storage.
 Os scripts de importação ficam em `drive-coro-clu/` (fora do git).
+
+## Drive do Coro (verificação semanal)
+A função `supabase/functions/drive-sync` (pg_cron `cancioneiro-drive-semanal`, segundas 06:15 UTC) lê a pasta do Coro CLU no Google Drive
+com a autorização (só leitura) dada uma vez em `…/functions/v1/drive-auth` (cliente OAuth "Cancioneiro Drive (sincronização)", segredos
+GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET). Gravações e partituras novas em pastas de cânticos já existentes (`drive_folders`) são
+acrescentadas automaticamente; pastas novas, ficheiros alterados (ex.: o Word "Músicas Coro") e apagados são enviados por email para rever.
+Nada é apagado no Cancioneiro. Estado em `drive_files` / `drive_sync_log` (só service_role).
