@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1ab07f">
+  <title>Cancioneiro · Drive do Coro</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --g1: #1fb385; --g2: #12966a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+      font-family: Lato, -apple-system, Helvetica, Arial, sans-serif; color: #333;
+      background: linear-gradient(180deg, var(--g1), var(--g2)); }
+    .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 30px rgba(0,0,0,.18); text-align: center; }
+    h1 { font-family: Marcellus, Georgia, serif; font-weight: 400; letter-spacing: .14em; color: var(--g2); font-size: 22px; margin: 0 0 18px; }
+    h2 { font-size: 18px; margin: 0 0 10px; }
+    p { line-height: 1.5; color: #555; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>CANCIONEIRO</h1>
+    <h2 id="t"></h2>
+    <p id="m"></p>
+  </main>
+  <script>
+    // Página de resultado da ligação ao Google Drive (função drive-auth); o texto vem no endereço e é mostrado como texto simples
+    const q = new URLSearchParams(location.search);
+    document.getElementById('t').textContent = q.get('t') || 'Drive do Coro';
+    document.getElementById('m').textContent = q.get('m') || '';
+  </script>
+</body>
+</html>
