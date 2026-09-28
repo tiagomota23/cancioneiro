@@ -3,8 +3,21 @@
 
   const LANGS = {
     pt: 'Português', it: 'Italiano', en: 'Inglês', la: 'Latim', es: 'Espanhol', fr: 'Francês',
-    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala',
+    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo',
   };
+  // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
+  const SOURCES = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', canti2024: 'CANTI 2024', songbook: 'Songbook' };
+  const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
+  // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
+  const extrasOn = () => prefs.src !== 'original';
+  const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
+  const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
+  const scoresOf = s => [
+    ...(s.pdf_url ? [{ label: 'Partitura', url: s.pdf_url, mime: 'application/pdf' }] : []),
+    ...filesOf(s, 'score'),
+  ];
+  // Momentos da missa (índice do Word "Músicas Coro" do Coro CLU)
+  const MOMENTS = ['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora', 'Advento', 'Natal', 'Quaresma', 'Páscoa', 'Geral', 'A aprender'];
   // Categorias do índice (como na versão italiana, agrupadas por língua)
   const CATEGORIES = [
     { id: 'todos', label: 'Todos os cânticos', test: () => true },
@@ -14,13 +27,18 @@
     { id: 'en', label: 'Cânticos ingleses, irlandeses e americanos', test: s => s.language === 'en' },
     { id: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
     { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
-    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln'].includes(s.language) },
+    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru'].includes(s.language) },
     { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.translation },
     { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
-    { id: 'partituras', label: 'Cânticos com partitura', test: s => !!s.pdf_url },
+    { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
+    { id: 'gravacoes', label: 'Cânticos com gravações das vozes', test: s => filesOf(s, 'recording').length > 0 },
+    { id: 'coro-missa', head: 'Coro CLU', label: 'Coro CLU — para a Missa', test: s => hasTag(s, 'Coro CLU', 'Para a Missa') },
+    { id: 'coro-gestos', label: 'Coro CLU — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
+    { id: 'coro-outras', label: 'Coro CLU — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
+    ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-27 v25';
+  const APP_VERSION = '2026-09-28 v26';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -33,8 +51,9 @@
   };
 
   let songs = [];
+  let allSongs = [];
   let bySlug = new Map();
-  const prefs = Object.assign({ fs: 18, chords: true }, store.get('cancioneiro.prefs', {}));
+  const prefs = Object.assign({ fs: 18, chords: true, src: 'todas' }, store.get('cancioneiro.prefs', {}));
   const songView = {}; // slug -> 'orig' | 'trad'
   // Preferidos: guardados no Supabase por utilizador (tabela favorites, RLS: cada um só vê os seus).
   // Cópia local por utilizador para mostrar logo e funcionar sem rede.
@@ -137,7 +156,8 @@
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
     const token = await accessToken();
     if (DEMO) return (await fetch('songs.json')).json();
-    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url';
+    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url,' +
+      'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
@@ -152,10 +172,8 @@
   }
 
   function setSongs(list) {
-    songs = list;
-    lyrIndex = null;
-    bySlug = new Map();
-    for (const s of songs) {
+    allSongs = list;
+    for (const s of allSongs) {
       bySlug.set(s.slug, s);
       const lyr = (s.lyrics || []).flatMap(st => st.lines.map(stripChords));
       const tr = (s.translation || []).flatMap(st => st.lines);
@@ -164,7 +182,23 @@
       s._a = norm(s.author);
       s._l = s._lines.map(norm);
     }
-    $('info-count').textContent = `${songs.length} cânticos · versão ${APP_VERSION}`;
+    applySource();
+  }
+  // Filtro por fonte: "todas", ou só uma (ex.: só o Cancioneiro original, como era antes)
+  function applySource() {
+    const f = prefs.src || 'todas';
+    songs = f === 'todas' ? allSongs : allSongs.filter(s => srcOf(s).includes(f));
+    lyrIndex = null;
+    bySlug = new Map(allSongs.map(s => [s.slug, s]));
+    const present = new Set(allSongs.flatMap(srcOf));
+    const sel = $('src-filter');
+    if (sel) {
+      sel.innerHTML = `<option value="todas">Todas as fontes (${allSongs.length})</option>` +
+        Object.entries(SOURCES).filter(([k]) => present.has(k))
+          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => srcOf(s).includes(k)).length})</option>`).join('');
+      sel.value = present.has(f) ? f : 'todas';
+    }
+    $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
     if ($('az')) $('az').innerHTML = '';
   }
 
@@ -603,10 +637,16 @@
     }
     if (!catId) {
       title.hidden = true;
-      rows.innerHTML = CATEGORIES.map(c => {
-        const n = songs.filter(c.test).length;
-        return n ? `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>` : '';
-      }).join('');
+      const f = prefs.src || 'todas';
+      rows.innerHTML = (f !== 'todas' ? `<li class="src-note">A mostrar só: <b>${esc(SOURCES[f] || f)}</b> · <a href="#" id="src-all">ver todos</a></li>` : '') +
+        CATEGORIES.map(c => {
+          const n = songs.filter(c.test).length;
+          if (!n) return '';
+          return (c.head ? `<li class="cat-head">${esc(c.head)}</li>` : '') +
+            `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
+        }).join('');
+      const all = $('src-all');
+      if (all) all.onclick = e => { e.preventDefault(); setSource('todas'); };
       if (!songs.length) $('status').textContent = 'A carregar…';
       return;
     }
@@ -620,7 +660,7 @@
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
-    title.textContent = cat.label;
+    title.textContent = cat.id.startsWith('momento-') ? 'Coro CLU — ' + cat.label : cat.label;
     rows.innerHTML = songs.filter(cat.test)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
@@ -650,12 +690,18 @@
            <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(trName)}</button>
          </div>`
       : `<span class="lang-chip">${esc(langName)}</span>`;
-    const localPdf = s.pdf_url && !/^https?:/.test(s.pdf_url);
-    const pdf = s.pdf_url
-      ? (localPdf
-        ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura">Partitura (PDF)</a>`
-        : `<a class="pdf" href="${esc(s.pdf_url)}" target="_blank" rel="noopener">Partitura (PDF)</a>`)
-      : '';
+    const scores = scoresOf(s);
+    const pdf = scores.map((sc, i) => {
+      const lbl = scores.length > 1 ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
+      return sc.url && /^https?:/.test(sc.url)
+        ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(lbl)}</a>`
+        : `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${esc(lbl)}</a>`;
+    }).join('');
+    const srcs = (extrasOn() ? srcOf(s) : []).map(k => `<span class="src-chip src-${esc(k)}">${esc(SOURCES[k] || k)}</span>`).join('');
+    const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
+    const recs = filesOf(s, 'recording');
+    const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
+      `<li><button class="rec" data-i="${i}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
     const body = mode === 'trad' ? s.translation : s.lyrics;
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
     $('song').innerHTML = `
@@ -664,7 +710,10 @@
       <div class="meta">${sw}${pdf}</div>
       ${note}
       ${renderStanzas(body)}
+      ${recHtml}
+      <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
+    $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(s.has_chords && mode === 'orig');
     const fb = $('btn-fav');
@@ -680,6 +729,37 @@
     });
   }
 
+  // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
+  const signed = new Map();
+  async function fileUrl(f) {
+    if (f.url) return f.url;
+    const hit = signed.get(f.path);
+    if (hit && hit.until > Date.now()) return hit.url;
+    const { data, error } = await sb.storage.from('coro').createSignedUrl(f.path, 3600);
+    if (error) throw error;
+    signed.set(f.path, { url: data.signedUrl, until: Date.now() + 3500e3 });
+    return data.signedUrl;
+  }
+  async function playRec(btn, f) {
+    const li = btn.closest('li');
+    let a = li.querySelector('audio');
+    if (a) { if (a.paused) a.play(); else a.pause(); return; }
+    document.querySelectorAll('.recs audio').forEach(x => x.pause());
+    btn.classList.add('busy');
+    try {
+      a = document.createElement('audio');
+      a.controls = true; a.preload = 'auto';
+      a.src = await fileUrl(f);
+      li.appendChild(a);
+      a.addEventListener('play', () => { document.querySelectorAll('.recs audio').forEach(x => { if (x !== a) x.pause(); }); btn.classList.add('on'); });
+      a.addEventListener('pause', () => btn.classList.remove('on'));
+      await a.play().catch(() => {});
+    } catch (e) {
+      li.insertAdjacentHTML('beforeend', '<span class="rec-err">Não foi possível abrir a gravação.</span>');
+    }
+    btn.classList.remove('busy');
+  }
+
   // ---------- Partitura (PDF) dentro da app ----------
   // No iPhone, com a app no ecrã principal, abrir o PDF diretamente não deixa voltar atrás;
   // por isso os PDFs guardados no site são mostrados aqui, com botão "Voltar".
@@ -693,7 +773,7 @@
     }
     return pdfjs;
   }
-  async function openPdf(url, title, slug) {
+  async function openPdf(url, title, slug, mime) {
     pdfSlug = slug;
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
@@ -702,11 +782,15 @@
     pdfUrl = url; pdfDoc = null; pdfZoom = 1;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
     try {
+      if (/^image\//.test(mime || '')) {
+        $('pdfpages').innerHTML = `<img class="score-img" alt="" src="${esc(url)}">`;
+        return;
+      }
       const lib = await loadPdfJs();
       pdfDoc = await lib.getDocument(url).promise;
       await renderPdf();
     } catch (e) {
-      $('pdfpages').innerHTML = `<p class="pdf-msg">Não foi possível mostrar a partitura.<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o PDF</a></p>`;
+      $('pdfpages').innerHTML = `<p class="pdf-msg">Não foi possível mostrar a partitura.<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o ficheiro</a></p>`;
     }
   }
   async function renderPdf() {
@@ -739,8 +823,9 @@
     if (history.length > 1 && lastSongSlug === pdfSlug) history.back();
     else location.hash = '#/cantico/' + encodeURIComponent(pdfSlug);
   };
-  $('pdf-zoom-in').onclick = () => { pdfZoom = Math.min(3, pdfZoom + 0.5); renderPdf(); };
-  $('pdf-zoom-out').onclick = () => { pdfZoom = Math.max(1, pdfZoom - 0.5); renderPdf(); };
+  const zoomImg = () => { const im = $('pdfpages').querySelector('.score-img'); if (im) im.style.width = (pdfZoom * 100) + '%'; };
+  $('pdf-zoom-in').onclick = () => { pdfZoom = Math.min(3, pdfZoom + 0.5); renderPdf(); zoomImg(); };
+  $('pdf-zoom-out').onclick = () => { pdfZoom = Math.max(1, pdfZoom - 0.5); renderPdf(); zoomImg(); };
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pdfview').hidden) $('pdf-back').click(); });
   let pdfResize;
   addEventListener('resize', () => { if (!$('pdfview').hidden) { clearTimeout(pdfResize); pdfResize = setTimeout(renderPdf, 250); } });
@@ -750,14 +835,26 @@
   function route() {
     if (!session) return;
     const h = location.hash || '#/';
-    const m = h.match(/^#\/cantico\/([^/]+)(\/partitura)?$/);
+    const m = h.match(/^#\/cantico\/([^/]+)(\/partitura(?:\/(\d+))?)?$/);
     if (m) {
       const slug = decodeURIComponent(m[1]);
       if (m[2]) {
         if (lastSongSlug !== slug || $('view-song').hidden) showSong(slug);
         songScroll = window.scrollY;
         const s = bySlug.get(slug);
-        if (s && s.pdf_url) openPdf(s.pdf_url, s.title, slug);
+        const sc = s && scoresOf(s)[+(m[3] || 0)];
+        if (sc) {
+          const key = h;
+          (async () => {
+            try {
+              const url = await fileUrl(sc);
+              if (location.hash === key) openPdf(url, s.title, slug, sc.mime);
+            } catch (e) {
+              $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = s.title;
+              $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível abrir a partitura.</p>';
+            }
+          })();
+        }
         return;
       }
       const back = !$('pdfview').hidden && lastSongSlug === slug;
@@ -819,6 +916,11 @@
   $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   $('btn-info').onclick = () => $('info').showModal();
+  function setSource(v) {
+    prefs.src = v; store.set('cancioneiro.prefs', prefs);
+    applySource(); route();
+  }
+  $('src-filter').onchange = e => setSource(e.target.value);
   $('btn-favs').onclick = () => { $('search').value = ''; $('search-clear').hidden = true; location.hash = '#/lista/favoritos'; };
   let t;
   $('search').addEventListener('input', () => {

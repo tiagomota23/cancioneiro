@@ -372,3 +372,26 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 .pdf-msg { margin-top: 40px; color: #555; }
 body.pdf-open { overflow: hidden; }
 @media (prefers-color-scheme: dark) { .pdfview { background: #222; } .pdf-title { color: #eee; } }
+
+/* Fontes, Coro CLU, gravações */
+.rows li.cat-head { padding: 20px 14px 6px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+.rows li.src-note { padding: 10px 14px; color: #fff; font-size: 13px; opacity: .9; border-bottom: 1px solid var(--row-line); }
+.rows li.src-note a { color: inherit; }
+.src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; margin: 10px 0; }
+.src-row select { font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid #bbb; background: #fff; color: #333; max-width: 100%; }
+.recs { margin: 1.6em 0 .6em; font-size: 15px; }
+.recs h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--green-ink); margin: 0 0 8px; font-weight: 700; }
+.recs ul { list-style: none; margin: 0; padding: 0; }
+.recs li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid rgba(128,128,128,.2); }
+.recs li:last-child { border-bottom: 1px solid rgba(128,128,128,.2); }
+.recs .rl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.recs button.rec { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--green-ink); display: grid; place-items: center; color: var(--green-ink); }
+.recs button.rec svg { width: 18px; height: 18px; fill: currentColor; }
+.recs button.rec.on, .recs button.rec.busy { background: var(--green-ink); color: var(--paper); }
+.recs audio { width: 100%; height: 40px; }
+.rec-err { font-size: 12px; color: #c0392b; width: 100%; }
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 1.6em 0 0; }
+.src-chip { font-size: 11px; letter-spacing: .04em; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--ink-soft); color: var(--ink-soft); }
+.src-chip.src-coro_clu { border-color: var(--green-ink); color: var(--green-ink); }
+.moments { font-size: 11px; color: var(--ink-soft); }
+.score-img { display: block; width: 100%; max-width: none; margin: 8px auto; background: #fff; }

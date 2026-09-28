@@ -53,3 +53,22 @@ alter table public.sync_log enable row level security;
 create policy "registo ler" on public.sync_log for select to authenticated using (public.is_allowed());
 -- set_source_hashes(jsonb): regista a impressão inicial (só service_role)
 -- cron: select cron.schedule('cancioneiro-verificacao-semanal', '0 5 * * 1', $$ select net.http_post(url := '<SUPABASE_URL>/functions/v1/sync-songs', headers := ..., body := '{}'::jsonb) $$);
+
+-- Fontes, etiquetas e ficheiros (Coro CLU e outras fontes)
+-- "original" = cancioneiro.marriaga.com; um cântico pode ter várias fontes.
+create table public.song_sources (
+  song_slug text references public.songs(slug) on delete cascade on update cascade,
+  source text check (source in ('original','coro_clu','canti2024','songbook')), ref text,
+  primary key (song_slug, source));
+create table public.song_tags (
+  song_slug text references public.songs(slug) on delete cascade on update cascade,
+  grp text, tag text, primary key (song_slug, grp, tag));   -- ex.: ('Coro CLU — momento', 'Comunhão')
+create table public.song_files (
+  id bigint generated always as identity primary key,
+  song_slug text references public.songs(slug) on delete cascade on update cascade,
+  kind text check (kind in ('recording','score','other')), label text, path text unique,  -- caminho no bucket "coro"
+  mime text, size bigint, drive_id text unique, sort int default 0, created_at timestamptz default now());
+-- RLS: leitura só para emails autorizados (is_allowed) nas três tabelas; nada para anon.
+-- Os cânticos do site original recebem a fonte 'original' (trigger cancioneiro_song_original, quando source_hash não é nulo).
+-- Storage: bucket privado "coro"; policy "coro ler" (select, authenticated, is_allowed()). A app usa URLs assinados.
+-- Importação: função supabase/functions/coro-import (cabeçalho x-import-token = segredo IMPORT_TOKEN).
