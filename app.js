@@ -3,7 +3,7 @@
 
   const LANGS = {
     pt: 'Português', it: 'Italiano', en: 'Inglês', la: 'Latim', es: 'Espanhol', fr: 'Francês',
-    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo',
+    gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
   const SOURCES = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', canti2024: 'CANTI 2024', songbook: 'Songbook' };
@@ -27,7 +27,7 @@
     { id: 'en', label: 'Cânticos ingleses, irlandeses e americanos', test: s => s.language === 'en' },
     { id: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
     { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
-    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru'].includes(s.language) },
+    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw'].includes(s.language) },
     { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.translation },
     { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
@@ -38,7 +38,7 @@
     ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-28 v26';
+  const APP_VERSION = '2026-09-28 v27';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
