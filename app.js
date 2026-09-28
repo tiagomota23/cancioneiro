@@ -46,7 +46,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-09-28 v33';
+  const APP_VERSION = '2026-09-28 v34';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -844,6 +844,9 @@
   const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
   let pdfjs = null, pdfDoc = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null, pdfPage = 0;
   const pageOf = f => { const m = (f.path || '').match(/#p=(\d+)/); return m ? +m[1] : 0; };
+  // Recortes do cântico no livro: "&c=364:0,0.044,0.5,0.47|365:…" (frações da página: x0,y0,x1,y1)
+  const cropsOf = f => { const m = (f.path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : null; };
+  let pdfCrops = null, pdfWhole = false;
   let lastSongSlug = null, songScroll = 0;
   async function loadPdfJs() {
     if (!pdfjs) {
@@ -852,12 +855,14 @@
     }
     return pdfjs;
   }
-  async function openPdf(url, title, slug, mime, page = 0) {
+  async function openPdf(url, title, slug, mime, page = 0, crops = null) {
+    const sameCrops = JSON.stringify(crops) === JSON.stringify(pdfCrops);
+    pdfCrops = crops; pdfWhole = false;
     pdfSlug = slug;
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
     $('pdf-title').textContent = title;
-    if (pdfUrl === url && pdfDoc) { if (pdfPage !== page) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
+    if (pdfUrl === url && pdfDoc) { if (pdfPage !== page || !sameCrops) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
     pdfUrl = url; pdfDoc = null; pdfZoom = 1; pdfPage = page;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
     try {
@@ -877,6 +882,33 @@
     const id = ++pdfRender, box = $('pdfpages');
     box.innerHTML = '';
     const width = Math.min(box.clientWidth - 16, 900);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    if (pdfCrops && !pdfWhole) {
+      // só a parte da página (ou páginas) onde está o cântico
+      for (const [pg, x0, y0, x1, y1] of pdfCrops) {
+        if (pg < 1 || pg > pdfDoc.numPages) continue;
+        const page = await pdfDoc.getPage(pg);
+        if (id !== pdfRender) return;
+        const v1 = page.getViewport({ scale: 1 });
+        const cw = (x1 - x0) * v1.width, chh = (y1 - y0) * v1.height;
+        const scale = width / cw * pdfZoom;
+        let r = dpr;
+        while (r > 1 && cw * scale * r * chh * scale * r > 12e6) r -= 0.5;
+        const vp = page.getViewport({ scale: scale * r });
+        const c = document.createElement('canvas');
+        c.width = Math.floor(cw * scale * r); c.height = Math.floor(chh * scale * r);
+        c.style.width = Math.floor(cw * scale) + 'px'; c.style.height = Math.floor(chh * scale) + 'px';
+        box.appendChild(c);
+        await page.render({ canvasContext: c.getContext('2d'), viewport: vp, transform: [1, 0, 0, 1, -x0 * vp.width, -y0 * vp.height] }).promise;
+      }
+      if (id !== pdfRender) return;
+      const more = document.createElement('p');
+      more.className = 'pdf-more';
+      more.innerHTML = '<button type="button">Ver a página inteira</button>';
+      more.firstChild.onclick = () => { pdfWhole = true; renderPdf(); };
+      box.appendChild(more);
+      return;
+    }
     // num livro (#p=N) mostra só a página do cântico e a seguinte
     const first = pdfPage ? Math.min(pdfPage, pdfDoc.numPages) : 1;
     const last = pdfPage ? Math.min(pdfPage + 1, pdfDoc.numPages) : pdfDoc.numPages;
@@ -885,7 +917,7 @@
       if (id !== pdfRender) return;
       const v1 = page.getViewport({ scale: 1 });
       const scale = width / v1.width * pdfZoom;
-      let r = Math.min(window.devicePixelRatio || 1, 3);
+      let r = dpr;
       while (r > 1 && v1.width * scale * r * v1.height * scale * r > 12e6) r -= 0.5; // limite de memória do iPhone
       const vp = page.getViewport({ scale: scale * r });
       const c = document.createElement('canvas');
@@ -930,7 +962,7 @@
           (async () => {
             try {
               const url = await fileUrl(sc);
-              if (location.hash === key) openPdf(url, s.title, slug, sc.mime, pageOf(sc));
+              if (location.hash === key) openPdf(url, s.title, slug, sc.mime, pageOf(sc), cropsOf(sc));
             } catch (e) {
               $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = s.title;
               $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível abrir a partitura.</p>';
