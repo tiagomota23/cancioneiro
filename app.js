@@ -10,6 +10,8 @@
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => prefs.src !== 'original';
+  // Letra editada pela família (lyrics_edit) só fora do modo "Cancioneiro original"; a original nunca é alterada
+  const lyricsOf = s => (extrasOn() && s.lyrics_edit) || s.lyrics || [];
   const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
   const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
   const scoresOf = s => [
@@ -38,7 +40,7 @@
     ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-28 v27';
+  const APP_VERSION = '2026-09-28 v28';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -156,7 +158,7 @@
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
     const token = await accessToken();
     if (DEMO) return (await fetch('songs.json')).json();
-    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url,' +
+    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url,rights,lyrics_edit,edited_by,edited_at,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -174,20 +176,22 @@
   function setSongs(list) {
     allSongs = list;
     for (const s of allSongs) {
-      bySlug.set(s.slug, s);
-      const lyr = (s.lyrics || []).flatMap(st => st.lines.map(stripChords));
-      const tr = (s.translation || []).flatMap(st => st.lines);
-      s._lines = lyr.concat(tr);
       s._t = norm(s.title);
       s._a = norm(s.author);
-      s._l = s._lines.map(norm);
     }
     applySource();
+  }
+  function indexLyrics(s) {
+    const lyr = lyricsOf(s).flatMap(st => st.lines.map(stripChords));
+    const tr = (s.translation || []).flatMap(st => st.lines);
+    s._lines = lyr.concat(tr);
+    s._l = s._lines.map(norm);
   }
   // Filtro por fonte: "todas", ou só uma (ex.: só o Cancioneiro original, como era antes)
   function applySource() {
     const f = prefs.src || 'todas';
     songs = f === 'todas' ? allSongs : allSongs.filter(s => srcOf(s).includes(f));
+    allSongs.forEach(indexLyrics);
     lyrIndex = null;
     bySlug = new Map(allSongs.map(s => [s.slug, s]));
     const present = new Set(allSongs.flatMap(srcOf));
@@ -271,7 +275,7 @@
   function buildLyricIndex() {
     const df = new Map(), items = [];
     for (const s of songs) {
-      const sources = [(s.lyrics || []).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
+      const sources = [lyricsOf(s).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
       const wins = [], seen = new Set();
       for (const lines of sources) {
         const lt = lines.map(tok);
@@ -702,20 +706,29 @@
     const recs = filesOf(s, 'recording');
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
       `<li><button class="rec" data-i="${i}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
-    const body = mode === 'trad' ? s.translation : s.lyrics;
+    const lyr = lyricsOf(s);
+    const body = mode === 'trad' ? s.translation : lyr;
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
+    const edited = extrasOn() && s.lyrics_edit;
+    const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
+    const editBar = extrasOn() && !DEMO && mode === 'orig'
+      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span>` : ''}<button class="edit-btn" id="btn-edit">Editar letra</button></p>`
+      : '';
     $('song').innerHTML = `
       <h1>${esc(s.title)}</h1>
       ${s.author ? `<p class="author">${esc(s.author)}</p>` : ''}
+      ${rights}
       <div class="meta">${sw}${pdf}</div>
       ${note}
       ${renderStanzas(body)}
+      ${editBar}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
-    $('btn-chords').hidden = !(s.has_chords && mode === 'orig');
+    $('btn-chords').hidden = !(lyr.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
+    if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => toggleFav(slug);
@@ -728,6 +741,55 @@
       window.scrollTo(0, y);
     });
   }
+
+  // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
+  // Formato de texto: estrofes separadas por linha em branco; refrão começa por "R:"; acordes entre [ ].
+  const toText = st => st.map(x => (x.type === 'chorus' ? 'R: ' : '') + x.lines.join('\n')).join('\n\n');
+  function fromText(t) {
+    return t.replace(/\r/g, '').split(/\n\s*\n/).map(b => b.split('\n').map(l => l.replace(/\s+$/, '')).filter(l => l.trim()))
+      .filter(b => b.length).map(b => {
+        const chorus = /^R:\s*/i.test(b[0]);
+        if (chorus) b[0] = b[0].replace(/^R:\s*/i, '');
+        return { type: chorus ? 'chorus' : 'verse', lines: b.filter(l => l.trim()) };
+      }).filter(x => x.lines.length);
+  }
+  let editSlug = null;
+  function openEditor(slug) {
+    const s = bySlug.get(slug);
+    editSlug = slug;
+    $('edit-title').textContent = s.title;
+    $('edit-text').value = toText(lyricsOf(s));
+    $('edit-msg').textContent = '';
+    $('edit-reset').hidden = !s.lyrics_edit;
+    $('editor').showModal();
+  }
+  async function saveLyrics(value) {
+    const s = bySlug.get(editSlug);
+    $('edit-msg').textContent = 'A guardar…';
+    for (const b of document.querySelectorAll('#editor button')) b.disabled = true;
+    try {
+      const { data, error } = await sb.from('songs').update({ lyrics_edit: value }).eq('slug', editSlug)
+        .select('lyrics_edit,edited_by,edited_at');
+      if (error) throw error;
+      if (!data || !data.length) throw new Error('sem permissão');
+      Object.assign(s, data[0]);
+      store.set(CACHE_KEY, allSongs.map(({ _t, _a, _lines, _l, ...x }) => x));
+      indexLyrics(s); lyrIndex = null;
+      $('editor').close();
+      showSong(editSlug);
+    } catch (e) {
+      $('edit-msg').textContent = 'Não foi possível guardar: ' + (e.message || e);
+    } finally {
+      for (const b of document.querySelectorAll('#editor button')) b.disabled = false;
+    }
+  }
+  $('edit-save').onclick = () => {
+    const st = fromText($('edit-text').value);
+    if (!st.length) { $('edit-msg').textContent = 'A letra não pode ficar vazia.'; return; }
+    saveLyrics(st);
+  };
+  $('edit-reset').onclick = () => { if (confirm('Repor a letra original deste cântico?')) saveLyrics(null); };
+  $('edit-cancel').onclick = () => $('editor').close();
 
   // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
   const signed = new Map();

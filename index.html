@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -147,8 +147,23 @@
     <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button>Fechar</button></form>
   </dialog>
 
+  <!-- Editar letra -->
+  <dialog id="editor" class="editor">
+    <h2>Editar letra</h2>
+    <p class="small" id="edit-title"></p>
+    <textarea id="edit-text" spellcheck="false" autocapitalize="off"></textarea>
+    <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. A letra original não é alterada: com "Cancioneiro original" continua a ver-se a original.</p>
+    <p class="small" id="edit-msg" role="status"></p>
+    <div class="edit-actions">
+      <button type="button" id="edit-reset" class="ghost">Repor original</button>
+      <span></span>
+      <button type="button" id="edit-cancel" class="ghost">Cancelar</button>
+      <button type="button" id="edit-save">Guardar</button>
+    </div>
+  </dialog>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=27"></script>
-  <script src="app.js?v=27"></script>
+  <script src="config.js?v=28"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>

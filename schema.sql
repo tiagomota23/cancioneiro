@@ -72,3 +72,34 @@ create table public.song_files (
 -- Os cânticos do site original recebem a fonte 'original' (trigger cancioneiro_song_original, quando source_hash não é nulo).
 -- Storage: bucket privado "coro"; policy "coro ler" (select, authenticated, is_allowed()). A app usa URLs assinados.
 -- Importação: função supabase/functions/coro-import (cabeçalho x-import-token = segredo IMPORT_TOKEN).
+
+-- Direitos de autor e edição de letras (a letra original nunca é alterada)
+alter table public.songs add column if not exists rights text;
+alter table public.songs add column if not exists lyrics_edit jsonb;
+alter table public.songs add column if not exists edited_by text;
+alter table public.songs add column if not exists edited_at timestamptz;
+create table if not exists public.song_edits (
+  id bigint generated always as identity primary key,
+  song_slug text references public.songs(slug) on delete cascade on update cascade,
+  old_lyrics jsonb, new_lyrics jsonb, edited_by text, edited_at timestamptz not null default now());
+alter table public.song_edits enable row level security;
+drop policy if exists "edicoes ler" on public.song_edits;
+create policy "edicoes ler" on public.song_edits for select to authenticated using (public.is_allowed());
+revoke all on public.song_edits from anon, authenticated;
+grant select on public.song_edits to authenticated;
+create or replace function public.song_edit_stamp() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.lyrics_edit is distinct from old.lyrics_edit then
+    new.edited_by := auth.jwt() ->> 'email';
+    new.edited_at := now();
+    insert into public.song_edits (song_slug, old_lyrics, new_lyrics, edited_by)
+      values (new.slug, coalesce(old.lyrics_edit, old.lyrics), new.lyrics_edit, new.edited_by);
+  end if;
+  return new;
+end $$;
+drop trigger if exists cancioneiro_song_edit on public.songs;
+create trigger cancioneiro_song_edit before update on public.songs for each row execute function public.song_edit_stamp();
+revoke insert, update, delete on public.songs from anon, authenticated;
+grant update (lyrics_edit) on public.songs to authenticated;
+drop policy if exists "canticos editar letra" on public.songs;
+create policy "canticos editar letra" on public.songs for update to authenticated using (public.is_allowed()) with check (public.is_allowed());

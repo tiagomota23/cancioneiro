@@ -395,3 +395,15 @@ body.pdf-open { overflow: hidden; }
 .src-chip.src-coro_clu { border-color: var(--green-ink); color: var(--green-ink); }
 .moments { font-size: 11px; color: var(--ink-soft); }
 .score-img { display: block; width: 100%; max-width: none; margin: 8px auto; background: #fff; }
+
+/* Direitos de autor e edição de letras */
+.song .rights { font-size: .6em; color: var(--ink-soft); margin: -.3em 0 .7em; line-height: 1.4; }
+.edit-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin: .4em 0 1.2em; font-size: 12px; color: var(--ink-soft); }
+.edit-btn { font-size: 12px; padding: 5px 12px; border-radius: 16px; border: 1px solid var(--green-ink); color: var(--green-ink); }
+dialog.editor { width: min(94vw, 640px); max-width: none; }
+.editor textarea { width: 100%; min-height: 45dvh; font: 16px/1.45 ui-monospace, Menlo, monospace; padding: 10px; border: 1px solid #bbb; border-radius: 8px; resize: vertical; box-sizing: border-box; color: #222; background: #fff; }
+.edit-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.edit-actions span { flex: 1; }
+.edit-actions button { color: #fff; background: var(--green-ink); padding: 8px 16px; border-radius: 18px; }
+.edit-actions button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }
+.edit-actions button:disabled { opacity: .5; }
