@@ -40,7 +40,7 @@
     ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-28 v29';
+  const APP_VERSION = '2026-09-28 v30';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -984,7 +984,14 @@
   $('drawer-search').addEventListener('input', () => { clearTimeout(tz); tz = setTimeout(() => { renderAZ(); $('az').scrollTop = 0; }, 120); });
   $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-  $('btn-info').onclick = () => $('info').showModal();
+  $('btn-info').onclick = () => { $('info').showModal(); $('info').scrollTop = 0; };
+  const closeInfo = () => $('info').close();
+  $('info-x').onclick = closeInfo;
+  $('info-close').onclick = closeInfo;
+  $('info').addEventListener('click', e => { // toque fora da janela (no fundo escurecido)
+    const r = $('info').getBoundingClientRect();
+    if (e.target === $('info') && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) closeInfo();
+  });
   function setSource(v) {
     prefs.src = v; store.set('cancioneiro.prefs', prefs);
     applySource(); route();

@@ -407,3 +407,8 @@ dialog.editor { width: min(94vw, 640px); max-width: none; }
 .edit-actions button { color: #fff; background: var(--green-ink); padding: 8px 16px; border-radius: 18px; }
 .edit-actions button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }
 .edit-actions button:disabled { opacity: .5; }
+
+/* Janela ⓘ: botões sempre visíveis, mesmo quando o texto não cabe no ecrã */
+#info { position: fixed; padding-bottom: 0; }
+#info .info-actions { position: sticky; bottom: 0; background: #fff; margin: 12px -22px 0; padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; }
+.dlg-x { position: sticky; top: 0; float: right; margin: -8px -10px 0 0; width: 40px; height: 40px; border-radius: 50%; font-size: 28px; line-height: 1; color: #666; background: rgba(255,255,255,.9); z-index: 1; }

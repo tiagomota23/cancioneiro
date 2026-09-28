@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=29">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -130,10 +130,11 @@
 
   <!-- Informação -->
   <dialog id="info">
+    <button type="button" class="dlg-x" id="info-x" aria-label="Fechar">×</button>
     <h2>Cancioneiro</h2>
     <p>Procure por título, autor, número, página do livro ou qualquer palavra da letra ou da tradução.</p>
     <p>Marque cânticos com a <b>☆</b> para os encontrar depois em <b>★</b> (preferidos, guardados na sua conta e disponíveis em qualquer dispositivo).</p>
-    <p>Toque em <b>🎤</b> e deixe o telemóvel ouvir alguns segundos de um cântico: a app reconhece a língua, transcreve o que ouve (no próprio telemóvel) e pára sozinha quando encontra o cântico.</p>
+    <p>Toque em <b>🎤</b> e deixe o telemóvel ouvir alguns segundos de um cântico: a app reconhece a língua, transcreve o que ouve e pára sozinha quando encontra o cântico.</p>
     <p>Em cada cântico: <b>A−</b>/<b>A+</b> ajusta o tamanho da letra, <b>♪</b> mostra ou esconde os acordes e os botões de idioma alternam entre o original e a tradução.</p>
     <p>Nos cânticos do Coro CLU há <b>gravações</b> de cada voz (soprano, contralto, tenor, baixo) e partituras.</p>
     <label class="src-row">Mostrar cânticos de:
@@ -144,7 +145,7 @@
     <p class="small" id="info-user"></p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
-    <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button>Fechar</button></form>
+    <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button type="button" id="info-close">Fechar</button></form>
   </dialog>
 
   <!-- Editar letra -->
@@ -163,7 +164,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=29"></script>
-  <script src="app.js?v=29"></script>
+  <script src="config.js?v=30"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
