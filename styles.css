@@ -399,7 +399,9 @@ body.pdf-open { overflow: hidden; }
 /* Direitos de autor e edição de letras */
 .song .rights { font-size: .6em; color: var(--ink-soft); margin: -.3em 0 .7em; line-height: 1.4; }
 .edit-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin: .4em 0 1.2em; font-size: 12px; color: var(--ink-soft); }
-.edit-btn { font-size: 12px; padding: 5px 12px; border-radius: 16px; border: 1px solid var(--green-ink); color: var(--green-ink); }
+.edit-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; background: var(--green-ink); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.edit-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.revert-link { font-size: 12px; color: var(--green-ink); text-decoration: underline; padding: 6px 2px; }
 dialog.editor { width: min(94vw, 640px); max-width: none; }
 .editor textarea { width: 100%; min-height: 45dvh; font: 16px/1.45 ui-monospace, Menlo, monospace; padding: 10px; border: 1px solid #bbb; border-radius: 8px; resize: vertical; box-sizing: border-box; color: #222; background: #fff; }
 .edit-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }

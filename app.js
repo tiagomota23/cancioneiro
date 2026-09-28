@@ -6,7 +6,7 @@
     gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
-  const SOURCES = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', canti2024: 'CANTI 2024', songbook: 'Songbook' };
+  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', canti2024: 'CANTI 2024', songbook: 'Songbook' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => prefs.src !== 'original';
@@ -34,13 +34,13 @@
     { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
     { id: 'gravacoes', label: 'Cânticos com gravações das vozes', test: s => filesOf(s, 'recording').length > 0 },
-    { id: 'coro-missa', head: 'Coro CLU', label: 'Coro CLU — para a Missa', test: s => hasTag(s, 'Coro CLU', 'Para a Missa') },
-    { id: 'coro-gestos', label: 'Coro CLU — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
-    { id: 'coro-outras', label: 'Coro CLU — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
-    ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro CLU — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
+    { id: 'coro-missa', head: 'Coro', label: 'Coro — para a Missa', test: s => hasTag(s, 'Coro CLU', 'Para a Missa') },
+    { id: 'coro-gestos', label: 'Coro — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
+    { id: 'coro-outras', label: 'Coro — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
+    ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
   ];
 
-  const APP_VERSION = '2026-09-28 v30';
+  const APP_VERSION = '2026-09-28 v31';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -664,7 +664,7 @@
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
-    title.textContent = cat.id.startsWith('momento-') ? 'Coro CLU — ' + cat.label : cat.label;
+    title.textContent = cat.id.startsWith('momento-') ? 'Coro — ' + cat.label : cat.label;
     rows.innerHTML = songs.filter(cat.test)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
@@ -712,7 +712,7 @@
     const edited = !!s.lyrics_edit;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
     const editBar = !DEMO && mode === 'orig' && extrasOn()
-      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="edit-btn" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit">Editar letra</button></p>`
+      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button></p>`
       : '';
     $('song').innerHTML = `
       <h1>${esc(s.title)}</h1>
