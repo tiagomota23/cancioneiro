@@ -47,7 +47,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-09-29 v38';
+  const APP_VERSION = '2026-10-01 v39';
   const CACHE_KEY = 'cancioneiro.songs.v1';
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
@@ -733,6 +733,7 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyr.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
+    $('btn-copy').onclick = () => copyLyrics(s, body);
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
@@ -745,6 +746,28 @@
       showSong(slug);
       window.scrollTo(0, y);
     });
+  }
+
+  // ---------- Copiar letra (título, autor e a letra que está a ser mostrada, sem acordes) ----------
+  function toast(msg) {
+    let t = document.querySelector('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 1800);
+  }
+  async function copyLyrics(s, stanzas) {
+    // só as palavras: sem acordes (entre [ ] ou soltos), sem linhas só de acordes, sem sinais de repetição
+    const CH = '(?:Do|Dó|Re|Ré|Mi|Fa|Fá|Sol|La|Lá|Si|[A-G])(?:#|b|♯|♭)?(?:m|-|maj7?|M7|sus\\d?|dim|aug|add\\d|\\+|º|°|\\d)*(?:/(?:Do|Re|Mi|Fa|Sol|La|Si|[A-G])(?:#|b)?)?';
+    const onlyChords = new RegExp('^\\(?\\s*' + CH + '(?:\\s+\\(?' + CH + '\\)?)*\\s*\\)?$'); // sensível a maiúsculas: "la la la" é letra, não acordes
+    const clean = l => stripChords(l).replace(/\|:|:\||[♪♫𝄆𝄇]/g, '').replace(new RegExp('\\(\\s*' + CH + '\\s*\\)', 'g'), '').replace(/\s+/g, ' ').trim();
+    const text = [s.title, s.author || ''].filter(Boolean).join('\n') + '\n\n' +
+      (stanzas || []).map(st => st.lines.map(clean).filter(l => l && !onlyChords.test(l)).join('\n')).filter(Boolean).join('\n\n') + '\n';
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { // alternativa para browsers sem acesso à área de transferência
+      const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } finally { ta.remove(); }
+    }
+    toast('Letra copiada');
   }
 
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
