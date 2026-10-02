@@ -485,3 +485,6 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
 .adm-add input { flex: 1 1 160px; min-width: 0; }
 .admin .small { font-size: 12.5px; color: #666; line-height: 1.5; margin-top: 18px; }
 .admin .note { color: var(--ink-soft); }
+
+/* perfil Cancioneiro: a letra não pode ser selecionada nem copiada */
+body.lvl-1 #song { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

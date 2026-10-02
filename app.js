@@ -62,7 +62,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v43';
+  const APP_VERSION = '2026-10-03 v44';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -863,7 +863,9 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
-    $('btn-copy').onclick = () => { if (data) copyLyrics(s, body); };
+    // o perfil Cancioneiro não pode copiar a letra
+    $('btn-copy').hidden = lvl() < 2;
+    $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
     if ($('btn-promo')) $('btn-promo').onclick = () => promote(slug, $('btn-promo').dataset.on === '1');
     const fb = $('btn-fav');
@@ -1014,6 +1016,9 @@
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = openPerfis;
+  // perfil Cancioneiro: sem selecionar nem copiar o texto da letra
+  for (const ev of ['copy', 'cut']) document.addEventListener(ev, e => { if (lvl() < 2 && e.target.closest && e.target.closest('#song')) e.preventDefault(); });
+  document.addEventListener('contextmenu', e => { if (lvl() < 2 && e.target.closest && e.target.closest('#song')) e.preventDefault(); });
   $('perfis-close').onclick = () => $('perfis').close();
   $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });
 
