@@ -13,14 +13,24 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
+/* Modo escuro: segue o telemóvel, a menos que se escolha claro/escuro no botão das páginas dos cânticos (data-theme) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --paper: #121614;
     --ink: #d8dcd9;
     --ink-soft: #9aa39e;
     --chord: #5fcf90;
     --green-ink: #5fcf90;
+    --song-h1: #eef1ef; --pdf-bg: #222; --pdf-title: #eee;
   }
+}
+:root[data-theme="dark"] {
+    --paper: #121614;
+    --ink: #d8dcd9;
+    --ink-soft: #9aa39e;
+    --chord: #5fcf90;
+    --green-ink: #5fcf90;
+  --song-h1: #eef1ef; --pdf-bg: #222; --pdf-title: #eee;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -72,9 +82,11 @@ body::before {
   padding: calc(10px + var(--safe-top)) 10px 4px;
 }
 .brand {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  /* centrado na mesma linha que o símbolo do perfil e o "i" (botões de 44 px) */
-  top: calc(10px + var(--safe-top)); height: 44px; line-height: 44px; margin: 0;
+  position: absolute; left: 50%;
+  /* centrado na mesma linha que o símbolo do perfil e o "i" (botões de 44 px): a caixa é cortada à altura
+     das maiúsculas (text-box), para o centro ser o das letras e não depender das medidas da fonte em cada telemóvel */
+  top: calc(10px + var(--safe-top) + 22px); transform: translate(-50%, -50%); line-height: 1; margin: 0;
+  text-box: trim-both cap alphabetic;
   font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: .14em;
   white-space: nowrap;
 }
@@ -84,7 +96,7 @@ body::before {
 .icon-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .icon-btn svg circle { fill: currentColor; stroke: none; }
 .search svg circle { fill: none; stroke: currentColor; }
-.icon-btn.info i { font-family: var(--serif); font-weight: 600; font-size: 24px; }
+.icon-btn.info i { font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1; text-box: trim-both cap alphabetic; display: block; }
 .icon-btn:active { background: rgba(255,255,255,.12); }
 .view.white .icon-btn:active { background: rgba(0,0,0,.06); }
 
@@ -181,10 +193,9 @@ body::before {
   max-width: 44em; margin: 0 auto;
 }
 .song h1 {
-  font-family: var(--sans); font-weight: 700; font-size: 1.15em; color: #333; margin: .4em 0 .15em;
+  font-family: var(--sans); font-weight: 700; font-size: 1.15em; color: var(--song-h1, #333); margin: .4em 0 .15em;
   line-height: 1.25;
 }
-@media (prefers-color-scheme: dark) { .song h1 { color: #eef1ef; } }
 .song .author { color: var(--green-ink); font-size: .72em; margin: 0 0 .6em; }
 .song .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: .2em 0 1.2em; }
 .lang-switch { display: inline-flex; border: 1px solid var(--green-ink); border-radius: 16px; overflow: hidden; }
@@ -224,6 +235,9 @@ body::before {
 .song .num { text-align: right; color: var(--ink-soft); font-size: 11px; margin-top: 2em; }
 
 dialog {
+  /* as janelas são sempre claras, mesmo em modo escuro */
+  --paper: #ffffff; --ink: #4a4a4a; --ink-soft: #7d7d7d; --green-ink: #0e7f58; --chord: #0e7f58;
+  background: #fff;
   border: 0; border-radius: 14px; max-width: min(92vw, 420px); padding: 20px 22px;
   color: #333; font-size: 15px; line-height: 1.45;
 }
@@ -389,7 +403,8 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 .pdfpages canvas { display: block; margin: 0 auto 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .pdf-msg { margin-top: 40px; color: #555; }
 body.pdf-open { overflow: hidden; }
-@media (prefers-color-scheme: dark) { .pdfview { background: #222; } .pdf-title { color: #eee; } }
+.pdfview { background: var(--pdf-bg, #f2f2f2); }
+.pdf-title { color: var(--pdf-title, inherit); }
 
 /* Fontes, Coro CLU, gravações */
 .rows li.cat-head { padding: 20px 14px 6px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
@@ -455,9 +470,11 @@ svg.perfil-ic { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-line
 body.lvl-1 .coro-only { display: none; }
 .perfis { width: min(420px, calc(100vw - 32px)); }
 .perfis-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 14px; }
-.perfil-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; background: var(--paper); color: var(--ink); }
-.perfil-opt.on { border-color: var(--green-ink); background: rgba(14,127,88,.09); }
+.perfil-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; background: #fff; color: #333; outline: none; }
+.perfil-opt:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
+.perfil-opt.on { border-color: var(--green-2); background: var(--green-2); color: #fff; }
 .perfil-opt svg { width: 26px; height: 26px; flex: none; color: var(--green-ink); }
+.perfil-opt.on svg, .perfil-opt.on small { color: #fff; }
 .perfil-opt b { display: block; font-size: 15px; }
 .perfil-opt small { display: block; font-size: 12px; color: var(--ink-soft); line-height: 1.35; margin-top: 2px; }
 .perfil-admin { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 10px; background: var(--green-ink); color: #fff; font-weight: 700; text-decoration: none; }
@@ -486,5 +503,14 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
 .admin .small { font-size: 12.5px; color: #666; line-height: 1.5; margin-top: 18px; }
 .admin .note { color: var(--ink-soft); }
 
-/* perfil Cancioneiro: a letra não pode ser selecionada nem copiada */
-body.lvl-1 #song { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Letra: não se pode selecionar nem copiar (todos os perfis) */
+#song { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Botão claro/escuro na barra do cântico: lua em modo claro, sol em modo escuro */
+#btn-theme .sun { display: none; }
+:root[data-theme="dark"] #btn-theme .sun { display: inline; }
+:root[data-theme="dark"] #btn-theme .moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) #btn-theme .sun { display: inline; }
+  :root:not([data-theme="light"]) #btn-theme .moon { display: none; }
+}
+.adm-lock { font-size: 11.5px; color: #999; }

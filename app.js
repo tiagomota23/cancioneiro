@@ -62,7 +62,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v45';
+  const APP_VERSION = '2026-10-03 v46';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -863,7 +863,7 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
-    // o perfil Cancioneiro não pode copiar a letra
+    // o perfil Cancioneiro não pode copiar a letra (botão); ninguém pode selecionar o texto
     $('btn-copy').hidden = lvl() < 2;
     $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
@@ -1016,9 +1016,23 @@
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = openPerfis;
-  // perfil Cancioneiro: sem selecionar nem copiar o texto da letra
-  for (const ev of ['copy', 'cut']) document.addEventListener(ev, e => { if (lvl() < 2 && e.target.closest && e.target.closest('#song')) e.preventDefault(); });
-  document.addEventListener('contextmenu', e => { if (lvl() < 2 && e.target.closest && e.target.closest('#song')) e.preventDefault(); });
+  // ninguém pode selecionar nem copiar o texto da letra (o botão de copiar, do perfil Coro para cima, continua a funcionar)
+  const inSong = e => e.target && e.target.closest && e.target.closest('#song');
+  for (const ev of ['copy', 'cut', 'contextmenu', 'selectstart', 'dragstart']) document.addEventListener(ev, e => { if (inSong(e)) e.preventDefault(); });
+
+  // Modo claro / escuro: segue o telemóvel; o botão nas páginas dos cânticos escolhe o contrário
+  // (se a escolha coincidir com a do telemóvel, volta a segui-lo)
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  function applyTheme() {
+    if (prefs.theme) document.documentElement.dataset.theme = prefs.theme; else delete document.documentElement.dataset.theme;
+  }
+  $('btn-theme').onclick = () => {
+    const dark = prefs.theme ? prefs.theme === 'dark' : darkMq.matches;
+    const want = dark ? 'light' : 'dark';
+    prefs.theme = (want === 'dark') === darkMq.matches ? undefined : want;
+    applyTheme(); store.set('cancioneiro.prefs', prefs);
+  };
+  applyTheme();
   $('perfis-close').onclick = () => $('perfis').close();
   $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });
 
@@ -1044,7 +1058,8 @@
         <li data-email="${esc(u.email)}"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic">${PERFIS[rankOf(u.role) - 1].icon}</svg>
           <b class="adm-name"${gestor && !u.google_name ? ' role="button" tabindex="0" title="Mudar o nome (até a pessoa entrar com o Google)"' : ''}>${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
           <small>${u.last_sign_in_at ? 'Última entrada: ' + fmtDate(u.last_sign_in_at) : 'Ainda não entrou'}${u.email === d.me ? ' · (eu)' : ''}</small></div>
-          <div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"', gestor ? 4 : 3)}${gestor ? '<button class="adm-del" aria-label="Retirar acesso">Retirar</button>' : ''}</div></li>`).join('')}</ul>
+          ${u.role === 'gestor' && !d.owner && u.email !== d.me ? '<div class="adm-act"><small class="adm-lock">Só o administrador muda outro Gestor</small></div>'
+            : `<div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"', gestor ? 4 : 3)}${gestor ? '<button class="adm-del" aria-label="Retirar acesso">Retirar</button>' : ''}</div>`}</li>`).join('')}</ul>
       ${gestor ? `<h2>Acrescentar utilizador</h2>
       <form class="adm-add" id="adm-add">
         <input id="add-name" placeholder="Nome (o Google substitui ao entrar)" autocomplete="off" maxlength="80">
@@ -1062,7 +1077,9 @@
       li.querySelector('.adm-no').onclick = () => { if (confirm('Recusar este pedido? A conta fica bloqueada.')) call('reject', { id: li.dataset.req }, 'Pedido recusado'); };
     });
     box.querySelectorAll('li[data-email]:not([data-req])').forEach(li => {
-      const email = li.dataset.email, sel = li.querySelector('.usr-role'), was = sel.value;
+      const email = li.dataset.email, sel = li.querySelector('.usr-role');
+      if (!sel) return; // Gestor protegido
+      const was = sel.value;
       sel.onchange = () => {
         if (!confirm(`Mudar o perfil de ${email} para ${PERFIS[rankOf(sel.value) - 1].label}?`)) { sel.value = was; return; }
         call('user', { email, role: sel.value }, 'Perfil alterado');

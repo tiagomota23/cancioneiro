@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
       }
       const pending = lvl >= 4 ? reqs.filter(q => !list.some(x => x.email === q.email)) : [];
       return out({
-        me: user.email,
+        me: user.email, owner: user.email === ADMIN,
         users: list.filter(x => lvl >= 4 || x.role !== 'gestor').map(x => { const u = seen.get(x.email); return { ...x, google_name: gname(u), last_sign_in_at: u?.last_sign_in_at || null }; }),
         requests: pending,
       });
@@ -263,10 +263,12 @@ Deno.serve(async (req) => {
       if (!validEmail(email)) return out({ error: 'email inválido' }, 400);
       const role = b.remove ? null : String(b.role || '');
       if (role !== null && !ROLES.includes(role)) return out({ error: 'perfil inválido' }, 400);
+      const [cur] = await rest(`allowed_emails?select=role&email=eq.${encodeURIComponent(email)}`);
       if (lvl < 4) {
-        const [cur] = await rest(`allowed_emails?select=role&email=eq.${encodeURIComponent(email)}`);
         if (!cur || cur.role === 'gestor' || role === null || rank(role) > 3 || b.name !== undefined) return denied();
       }
+      // só o administrador (dono) pode despromover ou retirar outro Gestor
+      if (cur && cur.role === 'gestor' && role !== 'gestor' && email !== user.email && user.email !== ADMIN) return out({ error: 'Só o administrador pode mudar o perfil de outro Gestor.' }, 403);
       if (role !== 'gestor') { // nunca ficar sem nenhum Gestor
         const g = await gestores();
         if (g.length === 1 && g[0] === email) return out({ error: 'Tem de haver pelo menos um Gestor.' }, 400);
