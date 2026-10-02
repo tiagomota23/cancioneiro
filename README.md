@@ -10,10 +10,10 @@ Formato da letra (`lyrics`/`translation`, jsonb): `[{ "type": "verse" | "chorus"
 
 ## Perfis de utilizador
 Cada email autorizado (`allowed_emails.role`) tem um perfil; os perfis são hierárquicos e cada um pode tudo o que os anteriores podem:
-- **Cancioneiro** (○): só os cânticos do Cancioneiro (`songs.cancioneiro`: os do site original e os promovidos), sem acordes, partituras nem gravações, sem copiar a letra; preferidos.
-- **Coro** (□): todos os cânticos e livros, com acordes, partituras e gravações; não edita.
-- **Maestro** (△): edita letras, promove cânticos ao Cancioneiro (ou retira os promovidos) e, na Gestão de utilizadores, muda perfis entre Cancioneiro e Maestro (não vê os Gestores).
-- **Gestor** (⚙): página "Gestão de utilizadores" (`#/gestao`): acrescentar/retirar pessoas, mudar perfis, decidir pedidos de acesso; recebe os emails dos pedidos, que têm um botão para cada perfil.
+- **Cancioneiro** (círculo): só os cânticos do Cancioneiro (`songs.cancioneiro`: os do site original e os promovidos), sem acordes, partituras nem gravações, sem copiar a letra; preferidos.
+- **Coro** (círculo com C): todos os cânticos e livros, com acordes, partituras e gravações; não edita.
+- **Maestro** (círculo com M): edita letras, promove cânticos ao Cancioneiro (ou retira os promovidos) e, na Gestão de utilizadores, muda perfis entre Cancioneiro e Maestro (não vê os Gestores).
+- **Gestor** (círculo cheio): página "Gestão de utilizadores" (`#/gestao`): acrescentar/retirar pessoas, mudar perfis, decidir pedidos de acesso; recebe os emails dos pedidos, que têm um botão para cada perfil.
 
 O símbolo no canto superior direito mostra o perfil ativo; tocando nele escolhe-se outro perfil até ao da pessoa. As regras valem também
 no servidor: RLS (`my_rank()`) na lista de cânticos e ficheiros, e a função `conteudo` usa o menor entre o perfil ativo e o da pessoa.

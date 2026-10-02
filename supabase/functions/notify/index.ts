@@ -68,7 +68,7 @@ async function onSync(id) {
   return { sent: true };
 }
 
-const PERFIS = [['cancioneiro', '○ Cancioneiro'], ['coro', '□ Coro'], ['maestro', '△ Maestro'], ['gestor', '⚙ Gestor']];
+const PERFIS = [['cancioneiro', '○ Cancioneiro'], ['coro', 'Ⓒ Coro'], ['maestro', 'Ⓜ Maestro'], ['gestor', '● Gestor']];
 async function onPeekOrDecide(id, token, action, decide, role) {
   if (!/^[0-9a-f-]{36}$/.test(id || '') || !/^[0-9a-f-]{36}$/.test(token || '')) return json({ error: 'link inválido' }, 400);
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);

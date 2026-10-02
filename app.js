@@ -11,12 +11,14 @@
   // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
   // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior direito
   // (que abre também a informação e o fim de sessão).
-  const GEAR = '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>';
+  // Símbolos: o mesmo círculo; Coro com C, Maestro com M, Gestor preenchido
+  const CIRCLE = '<circle cx="12" cy="12" r="7.5"/>';
+  const letter = c => `<text x="12" y="12.4" text-anchor="middle" dominant-baseline="central" style="fill:currentColor;stroke:none;font:700 9.5px Lato, -apple-system, Helvetica, Arial, sans-serif">${c}</text>`;
   const PERFIS = [
-    { id: 'cancioneiro', label: 'Cancioneiro', desc: 'Os cânticos do Cancioneiro, sem acordes, partituras nem gravações', icon: '<circle cx="12" cy="12" r="7.5"/>' },
-    { id: 'coro', label: 'Coro', desc: 'Todos os cânticos e livros, com acordes, partituras e gravações', icon: '<rect x="5" y="5" width="14" height="14" rx="1.5"/>' },
-    { id: 'maestro', label: 'Maestro', desc: 'Editar letras e promover cânticos ao Cancioneiro', icon: '<path d="M12 4.2l8.4 14.8H3.6z"/>' },
-    { id: 'gestor', label: 'Gestor', desc: 'Gerir os utilizadores e os seus perfis', icon: GEAR },
+    { id: 'cancioneiro', label: 'Cancioneiro', desc: 'Os cânticos do Cancioneiro, sem acordes, partituras nem gravações', icon: CIRCLE },
+    { id: 'coro', label: 'Coro', desc: 'Todos os cânticos e livros, com acordes, partituras e gravações', icon: CIRCLE + letter('C') },
+    { id: 'maestro', label: 'Maestro', desc: 'Editar letras e promover cânticos ao Cancioneiro', icon: CIRCLE + letter('M') },
+    { id: 'gestor', label: 'Gestor', desc: 'Gerir os utilizadores e os seus perfis', icon: '<circle cx="12" cy="12" r="7.5" style="fill:currentColor"/>' },
   ];
   const rankOf = r => PERFIS.findIndex(p => p.id === r) + 1;
   let maxRole = null, perfil = null; // perfil da pessoa e perfil ativo
@@ -63,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v50';
+  const APP_VERSION = '2026-10-03 v51';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -974,9 +976,14 @@
   const perfilKey = () => 'cancioneiro.perfil.' + (session ? session.user.id : 'anon');
   function applyPerfil() {
     const p = PERFIS[lvl() - 1];
+    // quem só tem o perfil Cancioneiro não escolhe perfil: o botão é o "i" da informação
+    const solo = rankOf(maxRole) <= 1;
+    document.body.classList.toggle('solo', solo);
+    $('btn-perfil').classList.toggle('info', solo);
     $('btn-perfil').querySelector('svg').innerHTML = p.icon;
     $('btn-perfil').setAttribute('aria-label', 'Perfil: ' + p.label);
     $('btn-perfil').title = 'Perfil: ' + p.label;
+    if (solo) { $('btn-perfil').setAttribute('aria-label', 'Informação'); $('btn-perfil').title = 'Informação'; }
     for (const x of PERFIS) document.body.classList.toggle('perfil-' + x.id, x === p);
     document.body.classList.toggle('lvl-1', lvl() < 2);
     lyricHits = { q: '', map: new Map() };
@@ -1017,7 +1024,7 @@
     $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
     $('perfis').showModal();
   }
-  $('btn-perfil').onclick = openPerfis;
+  $('btn-perfil').onclick = () => { if (rankOf(maxRole) <= 1) { $('info').showModal(); $('info').scrollTop = 0; } else openPerfis(); };
   // símbolos dos perfis no texto da informação (os mesmos do botão)
   document.querySelectorAll('svg[data-perfil]').forEach(el => { el.innerHTML = PERFIS[rankOf(el.dataset.perfil) - 1].icon; });
   // ninguém pode selecionar nem copiar o texto da letra (o botão de copiar, do perfil Coro para cima, continua a funcionar)
