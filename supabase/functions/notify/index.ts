@@ -65,6 +65,8 @@ async function onPeekOrDecide(id, token, action, decide) {
   if (!/^[0-9a-f-]{36}$/.test(id || '') || !/^[0-9a-f-]{36}$/.test(token || '')) return json({ error: 'link inválido' }, 400);
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);
   if (!req || req.token !== token) return json({ error: 'link inválido' }, 403);
+  // Os links do email só valem 30 dias
+  if (Date.now() - Date.parse(req.created_at) > 30 * 86400000) return json({ error: 'link expirado (mais de 30 dias) — gira o acesso no Supabase' }, 410);
   const info = { email: req.email, name: req.name, status: req.status };
   if (!decide || req.status !== 'pendente') return json(info);
   if (action === 'autorizar') {

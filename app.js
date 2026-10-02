@@ -49,7 +49,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-02 v40';
+  const APP_VERSION = '2026-10-02 v41';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -81,9 +81,14 @@
   let session = null;
   // Modo de teste só em localhost (?demo): sem Google, com a cópia local songs.json
   const DEMO = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
-  async function accessToken() {
+  async function accessToken(renew) {
     if (DEMO) { session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
-    const { data } = await sb.auth.getSession();
+    let { data } = await sb.auth.getSession();
+    // Renova a sessão se já expirou (ou expira dentro de 1 min), ou se o servidor a recusou
+    if (data.session && (renew || (data.session.expires_at || 0) * 1000 < Date.now() + 60000)) {
+      const r = await sb.auth.refreshSession();
+      if (r.data && r.data.session) data = r.data;
+    }
     session = data.session;
     return session ? session.access_token : null;
   }
@@ -171,11 +176,12 @@
   class Limit extends Error {}
   async function api(op, body) {
     if (DEMO) return demoApi(op, body);
-    const token = await accessToken();
-    const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', {
-      method: 'POST', headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    const call = async renew => fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', {
+      method: 'POST', headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + await accessToken(renew), 'Content-Type': 'application/json' },
       body: JSON.stringify({ op, ...body }),
     });
+    let r = await call(false);
+    if (r.status === 401) r = await call(true);
     const d = await r.json().catch(() => ({}));
     if (r.status === 429) throw new Limit(d.message || 'Atingiu o limite de uso por agora. Tente de novo mais tarde.');
     if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
@@ -223,7 +229,7 @@
   // ---------- Dados (Supabase) ----------
   async function fetchSongs() {
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
-    const token = await accessToken();
+    let token = await accessToken();
     if (DEMO) {
       const full = await (await fetch('songs.json')).json();
       demoFull = new Map(full.map(s => [s.slug, s]));
@@ -233,9 +239,11 @@
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
+      const get = () => fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
         headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}`, Range: `${from}-${from + 999}` },
       });
+      let r = await get();
+      if (r.status === 401) { token = await accessToken(true); r = await get(); }
       if (!r.ok) throw new Error(`Supabase ${r.status}`);
       const page = await r.json();
       all.push(...page);
