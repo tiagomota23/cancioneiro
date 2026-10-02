@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ne8W7Dkt0VzCcEEAmNM0KFkPh+q/uEM2IuXy2cRTwk8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src https://hmfjbyiesghqhwhqgnem.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-H0ae87uXGDM4O8m/gNOG3dopPtyyMM6gooLbLQOh7sU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src https://hmfjbyiesghqhwhqgnem.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#1ab07f">
@@ -25,6 +25,7 @@
     button.ok { background: var(--ink); }
     button.no { background: var(--red); }
     button:disabled { opacity: .5; }
+    select { font: 16px Lato, sans-serif; width: 100%; padding: 11px 12px; border: 1px solid #cfe0d8; border-radius: 12px; background: #fff; color: #333; margin: 4px 0 8px; }
     .msg { font-size: 15px; }
     .small { color: #777; font-size: 13px; }
     a { color: var(--ink); }
@@ -41,6 +42,8 @@
     const out = document.getElementById('out');
     const q = new URLSearchParams(location.search);
     const id = q.get('id'), token = q.get('t'), action = q.get('a');
+    const PERFIS = { cancioneiro: '○ Cancioneiro', coro: '□ Coro', maestro: '△ Maestro', gestor: '⚙ Gestor' };
+    const role = PERFIS[q.get('r')] ? q.get('r') : 'cancioneiro';
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CANCIONEIRO_CONFIG;
     const call = async body => {
@@ -53,7 +56,7 @@
     };
     const who = d => `<div class="who"><b>${esc(d.name || '(sem nome)')}</b><span>${esc(d.email)}</span></div>`;
     const done = d => d.status === 'autorizado'
-      ? `<p class="msg">✅ <b>Acesso autorizado.</b></p><p class="small">Na próxima vez que entrar com o Google, esta pessoa verá os cânticos.</p>`
+      ? `<p class="msg">✅ <b>Acesso autorizado${d.role ? ' — perfil ' + esc(PERFIS[d.role]) : ''}.</b></p><p class="small">Na próxima vez que entrar com o Google, esta pessoa verá os cânticos.</p>`
       : `<p class="msg">⛔ <b>Acesso bloqueado.</b></p><p class="small">Esta conta já não consegue entrar no Cancioneiro.</p>`;
     if (!id || !token || !['autorizar', 'bloquear'].includes(action)) { out.innerHTML = '<p>Link inválido.</p>'; return; }
     try {
@@ -61,12 +64,14 @@
       if (d.status !== 'pendente') { out.innerHTML = who(d) + '<p class="small">Este pedido já foi decidido.</p>' + done(d); return; }
       const allow = action === 'autorizar';
       out.innerHTML = who(d) +
-        `<p>${allow ? 'Autorizar esta pessoa a usar o Cancioneiro?' : 'Bloquear esta pessoa? Deixará de conseguir entrar.'}</p>` +
+        (allow
+          ? `<p>Autorizar esta pessoa a usar o Cancioneiro com o perfil:</p><select id="role">${Object.entries(PERFIS).map(([k, v]) => `<option value="${k}"${k === role ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>`
+          : `<p>Bloquear esta pessoa? Deixará de conseguir entrar.</p>`) +
         `<button id="go" class="${allow ? 'ok' : 'no'}">${allow ? 'Sim, autorizar' : 'Sim, bloquear'}</button>` +
         `<p class="small" style="margin-top:14px"><a href="?id=${encodeURIComponent(id)}&t=${encodeURIComponent(token)}&a=${allow ? 'bloquear' : 'autorizar'}">${allow ? 'Prefiro bloquear' : 'Prefiro autorizar'}</a></p>`;
       document.getElementById('go').onclick = async e => {
         e.target.disabled = true; e.target.textContent = 'A guardar…';
-        try { const r = await call({ type: 'decide', id, token, action }); out.innerHTML = who(r) + done(r); }
+        try { const r = await call({ type: 'decide', id, token, action, role: allow ? document.getElementById('role').value : undefined }); out.innerHTML = who(r) + done(r); }
         catch (err) { e.target.disabled = false; e.target.textContent = 'Tentar de novo'; out.insertAdjacentHTML('beforeend', `<p class="small">Erro: ${esc(err.message)}</p>`); }
       };
     } catch (err) {

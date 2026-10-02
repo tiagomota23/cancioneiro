@@ -62,7 +62,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v42';
+  const APP_VERSION = '2026-10-03 v43';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -228,7 +228,7 @@
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
     if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
     if (op === 'users') return { me: 'demo@localhost', requests: [{ id: '00000000-0000-0000-0000-000000000000', email: 'novo@exemplo.pt', name: 'Pessoa Nova', created_at: new Date().toISOString() }],
-      users: [{ email: 'demo@localhost', name: 'Demo', role: 'gestor', last_sign_in_at: new Date().toISOString() }, { email: 'coro@exemplo.pt', name: 'Coralista', role: 'coro', last_sign_in_at: null }] };
+      users: [{ email: 'demo@localhost', name: 'Demo', role: 'gestor', last_sign_in_at: new Date().toISOString() }, { email: 'coro@exemplo.pt', name: 'Coralista', role: 'coro', last_sign_in_at: null }].filter(u => lvl() >= 4 || u.role !== 'gestor') };
     if (op === 'user' || op === 'reject') return { ok: true };
     throw new Error('op');
   }
@@ -1007,7 +1007,7 @@
     const cur = PERFIS[lvl() - 1].id;
     $('perfis-list').innerHTML = PERFIS.slice(0, rankOf(maxRole)).map(p =>
       `<button class="perfil-opt${p.id === cur ? ' on' : ''}" data-p="${p.id}"><svg viewBox="0 0 24 24" class="perfil-ic">${p.icon}</svg><span><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></button>`).join('') +
-      (cur === 'gestor' ? `<a class="perfil-admin" href="#/gestao">Gestão de utilizadores ${chev}</a>` : '') +
+      (rankOf(cur) >= 3 ? `<a class="perfil-admin" href="#/gestao">Gestão de utilizadores ${chev}</a>` : '') +
       (rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '');
     $('perfis-list').querySelectorAll('.perfil-opt').forEach(b => b.onclick = () => { setPerfil(b.dataset.p, true); $('perfis').close(); });
     $('perfis-list').querySelector('.perfil-admin')?.addEventListener('click', () => $('perfis').close());
@@ -1019,11 +1019,12 @@
 
   // ---------- Gestão de utilizadores (perfil Gestor) ----------
   const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-PT') : '';
-  const roleSelect = (cur, attrs) => `<select ${attrs}>${PERFIS.map(p => `<option value="${p.id}"${p.id === cur ? ' selected' : ''}>${esc(p.label)}</option>`).join('')}</select>`;
+  const roleSelect = (cur, attrs, max = 4) => `<select ${attrs}>${PERFIS.slice(0, max).map(p => `<option value="${p.id}"${p.id === cur ? ' selected' : ''}>${esc(p.label)}</option>`).join('')}</select>`;
   async function showAdmin() {
     show('view-admin');
     const box = $('admin');
-    if (lvl() < 4) { box.innerHTML = '<p class="note">Só o perfil Gestor pode gerir utilizadores.</p>'; return; }
+    if (lvl() < 3) { box.innerHTML = '<p class="note">Só os perfis Maestro e Gestor podem gerir utilizadores.</p>'; return; }
+    const gestor = lvl() >= 4; // o Maestro só muda perfis entre Cancioneiro e Maestro (não vê os Gestores)
     if (!box.dataset.ready) box.innerHTML = '<p class="note">A carregar…</p>';
     let d;
     try { d = await api('users', {}); }
@@ -1031,22 +1032,22 @@
     box.dataset.ready = '1';
     const users = d.users.slice().sort((a, b) => rankOf(b.role) - rankOf(a.role) || (a.name || a.email).localeCompare(b.name || b.email, 'pt'));
     box.innerHTML =
-      (d.requests.length ? `<h2>Pedidos de acesso</h2><ul class="adm-list">${d.requests.map(q => `
+      (gestor && d.requests.length ? `<h2>Pedidos de acesso</h2><ul class="adm-list">${d.requests.map(q => `
         <li data-req="${esc(q.id)}" data-email="${esc(q.email)}"><div class="adm-who"><b>${esc(q.name || '(sem nome)')}</b><span>${esc(q.email)}</span><small>${fmtDate(q.created_at)}</small></div>
           <div class="adm-act">${roleSelect('cancioneiro', 'class="req-role" aria-label="Perfil"')}<button class="adm-ok">Autorizar</button><button class="adm-no">Recusar</button></div></li>`).join('')}</ul>` : '') +
       `<h2>Utilizadores (${users.length})</h2><ul class="adm-list">${users.map(u => `
         <li data-email="${esc(u.email)}"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic">${PERFIS[rankOf(u.role) - 1].icon}</svg>
-          <b class="adm-name" role="button" tabindex="0" title="Mudar o nome">${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
+          <b class="adm-name"${gestor ? ' role="button" tabindex="0" title="Mudar o nome"' : ''}>${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
           <small>${u.last_sign_in_at ? 'Última entrada: ' + fmtDate(u.last_sign_in_at) : 'Ainda não entrou'}${u.email === d.me ? ' · (eu)' : ''}</small></div>
-          <div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"')}<button class="adm-del" aria-label="Retirar acesso">Retirar</button></div></li>`).join('')}</ul>
-      <h2>Acrescentar utilizador</h2>
+          <div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"', gestor ? 4 : 3)}${gestor ? '<button class="adm-del" aria-label="Retirar acesso">Retirar</button>' : ''}</div></li>`).join('')}</ul>
+      ${gestor ? `<h2>Acrescentar utilizador</h2>
       <form class="adm-add" id="adm-add">
         <input id="add-name" placeholder="Nome" autocomplete="off" maxlength="80">
         <input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required>
         ${roleSelect('cancioneiro', 'id="add-role" aria-label="Perfil"')}
         <button type="submit">Acrescentar</button>
-      </form>
-      <p class="small">Os perfis são hierárquicos: <b>Cancioneiro</b> (só os cânticos do Cancioneiro, sem acordes, partituras nem gravações) &lt; <b>Coro</b> (tudo, sem editar) &lt; <b>Maestro</b> (edita letras e promove cânticos ao Cancioneiro) &lt; <b>Gestor</b> (gere utilizadores; recebe os pedidos de acesso por email).</p>`;
+      </form>` : ''}
+      <p class="small">Os perfis são hierárquicos: <b>Cancioneiro</b> (só os cânticos do Cancioneiro, sem acordes, partituras nem gravações) &lt; <b>Coro</b> (tudo, sem editar) &lt; <b>Maestro</b> (edita letras, promove cânticos ao Cancioneiro e muda perfis entre Cancioneiro e Maestro) &lt; <b>Gestor</b> (gere todos os utilizadores; recebe os pedidos de acesso por email).</p>`;
     const call = async (op, body, msg) => {
       try { await api(op, body); if (msg) toast(msg); } catch (e) { alert(e instanceof Limit ? e.message : e.message); }
       showAdmin();
@@ -1061,12 +1062,13 @@
         if (!confirm(`Mudar o perfil de ${email} para ${PERFIS[rankOf(sel.value) - 1].label}?`)) { sel.value = was; return; }
         call('user', { email, role: sel.value }, 'Perfil alterado');
       };
+      if (!gestor) return;
       li.querySelector('.adm-del').onclick = () => { if (confirm(`Retirar o acesso de ${email} ao Cancioneiro?`)) call('user', { email, remove: true }, 'Acesso retirado'); };
       const nm = li.querySelector('.adm-name');
       const rename = () => { const v = prompt('Nome:', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
       nm.onclick = rename; nm.onkeydown = e => { if (e.key === 'Enter') rename(); };
     });
-    $('adm-add').onsubmit = e => {
+    if (gestor) $('adm-add').onsubmit = e => {
       e.preventDefault();
       const email = $('add-email').value.trim().toLowerCase();
       if (users.some(u => u.email === email)) { alert('Este email já tem acesso.'); return; }

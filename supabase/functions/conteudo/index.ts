@@ -234,27 +234,31 @@ Deno.serve(async (req) => {
       cache = null;
       return out(r[0]);
     }
-    if (op === 'users') { // Gestor: lista de utilizadores e pedidos de acesso pendentes
-      if (lvl < 4) return denied();
+    if (op === 'users') { // Gestor: lista de utilizadores e pedidos de acesso pendentes; Maestro: só quem não é Gestor
+      if (lvl < 3) return denied();
       const [list, reqs, au] = await Promise.all([
         rest('allowed_emails?select=email,name,role,added_at,added_by&order=email'),
         rest('access_requests?select=id,email,name,created_at,status&status=eq.pendente&order=created_at.desc'),
         fetch(`${SB}/auth/v1/admin/users?per_page=1000`, { headers: HDR }).then(r => r.json()).catch(() => ({})),
       ]);
       const seen = new Map((au.users || []).map(u => [String(u.email || '').toLowerCase(), u]));
-      const pending = reqs.filter(q => !list.some(x => x.email === q.email));
+      const pending = lvl >= 4 ? reqs.filter(q => !list.some(x => x.email === q.email)) : [];
       return out({
         me: user.email,
-        users: list.map(x => { const u = seen.get(x.email); return { ...x, google_name: u?.user_metadata?.full_name || null, last_sign_in_at: u?.last_sign_in_at || null }; }),
+        users: list.filter(x => lvl >= 4 || x.role !== 'gestor').map(x => { const u = seen.get(x.email); return { ...x, google_name: u?.user_metadata?.full_name || null, last_sign_in_at: u?.last_sign_in_at || null }; }),
         requests: pending,
       });
     }
-    if (op === 'user') { // Gestor: acrescentar / alterar perfil / retirar acesso
-      if (lvl < 4) return denied();
+    if (op === 'user') { // Gestor: acrescentar / alterar perfil / retirar acesso. Maestro: só mudar perfis entre Cancioneiro e Maestro
+      if (lvl < 3) return denied();
       const email = String(b.email || '').trim().toLowerCase();
       if (!validEmail(email)) return out({ error: 'email inválido' }, 400);
       const role = b.remove ? null : String(b.role || '');
       if (role !== null && !ROLES.includes(role)) return out({ error: 'perfil inválido' }, 400);
+      if (lvl < 4) {
+        const [cur] = await rest(`allowed_emails?select=role&email=eq.${encodeURIComponent(email)}`);
+        if (!cur || cur.role === 'gestor' || role === null || rank(role) > 3 || b.name !== undefined) return denied();
+      }
       if (role !== 'gestor') { // nunca ficar sem nenhum Gestor
         const g = await gestores();
         if (g.length === 1 && g[0] === email) return out({ error: 'Tem de haver pelo menos um Gestor.' }, 400);

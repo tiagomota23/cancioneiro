@@ -33,13 +33,15 @@ async function sendEmail(subject, html) {
 async function onAccess(id) {
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);
   if (!req || req.notified_at || req.status !== 'pendente') return { skipped: true };
-  const link = a => `${APP}admin.html?id=${req.id}&t=${req.token}&a=${a}`;
+  const link = (a, r = '') => `${APP}admin.html?id=${req.id}&t=${req.token}&a=${a}${r ? '&r=' + r : ''}`;
   const body = `<p>Alguém sem autorização tentou entrar no Cancioneiro:</p>
     <div style="border:1px solid #d8e9e1;background:#f3faf7;border-radius:10px;padding:14px 16px;margin:12px 0">
       <div><b>${esc(req.name || '(sem nome)')}</b></div><div>${esc(req.email)}</div>
       <div style="color:#777;font-size:13px;margin-top:4px">${esc(when(req.created_at))}</div>
-      <div style="margin-top:12px">${btn(link('autorizar'), 'Autorizar', '#12966a')}${btn(link('bloquear'), 'Bloquear', '#c0392b')}</div>
-    </div><p style="color:#777;font-size:13px">Cada botão abre uma página de confirmação. Quem é autorizado fica com o perfil Cancioneiro (pode ser alterado na Gestão de utilizadores, na app). Enquanto não decidir, esta pessoa não vê os cânticos.</p>`;
+      <div style="margin-top:12px;font-size:13px;color:#555">Autorizar com o perfil:</div>
+      <div>${PERFIS.map(([r, label]) => btn(link('autorizar', r), label, '#12966a')).join('')}</div>
+      <div>${btn(link('bloquear'), 'Bloquear', '#c0392b')}</div>
+    </div><p style="color:#777;font-size:13px">Cada botão abre uma página de confirmação.  Enquanto não decidir, esta pessoa não vê os cânticos.</p>`;
   await sendEmail(`Pedido de acesso: ${req.name || req.email}`, wrap('Pedido de acesso', body));
   await rest(`access_requests?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ notified_at: new Date().toISOString() }) });
   return { sent: true };
@@ -66,7 +68,8 @@ async function onSync(id) {
   return { sent: true };
 }
 
-async function onPeekOrDecide(id, token, action, decide) {
+const PERFIS = [['cancioneiro', '○ Cancioneiro'], ['coro', '□ Coro'], ['maestro', '△ Maestro'], ['gestor', '⚙ Gestor']];
+async function onPeekOrDecide(id, token, action, decide, role) {
   if (!/^[0-9a-f-]{36}$/.test(id || '') || !/^[0-9a-f-]{36}$/.test(token || '')) return json({ error: 'link inválido' }, 400);
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);
   if (!req || req.token !== token) return json({ error: 'link inválido' }, 403);
@@ -75,7 +78,9 @@ async function onPeekOrDecide(id, token, action, decide) {
   const info = { email: req.email, name: req.name, status: req.status };
   if (!decide || req.status !== 'pendente') return json(info);
   if (action === 'autorizar') {
-    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email, name: req.name ? String(req.name).split(' ')[0] : null, role: 'cancioneiro', added_by: 'link do email' }) });
+    if (!PERFIS.some(([r]) => r === role)) role = 'cancioneiro';
+    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email, name: req.name ? String(req.name).split(' ')[0] : null, role, added_by: 'link do email' }) });
+    info.role = role;
     info.status = 'autorizado';
   } else if (action === 'bloquear') {
     if (req.user_id) await fetch(`${SB}/auth/v1/admin/users/${req.user_id}`, { method: 'PUT', headers: HDR, body: JSON.stringify({ ban_duration: '876000h' }) });
@@ -111,7 +116,7 @@ Deno.serve(async (req) => {
     if (b.type === 'sync') return json(await onSync(b.id));
     if (b.type === 'health') return json(await onHealth());
     if (b.type === 'peek') return await onPeekOrDecide(b.id, b.token, null, false);
-    if (b.type === 'decide') return await onPeekOrDecide(b.id, b.token, b.action, true);
+    if (b.type === 'decide') return await onPeekOrDecide(b.id, b.token, b.action, true, b.role);
     return json({ error: 'tipo desconhecido' }, 400);
   } catch (e) {
     return json({ error: String(e.message || e) }, 500);
