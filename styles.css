@@ -99,10 +99,12 @@ body::before {
 .icon-btn:active { background: rgba(255,255,255,.12); }
 .view.white .icon-btn:active { background: rgba(0,0,0,.06); }
 
-/* Barra de estado do iPhone: faixa verde fixa por cima da lista quando se desliza */
-#view-list::before {
-  content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top); z-index: 6;
-  background: var(--green-1);
+/* Barra de estado do iPhone: faixa verde fixa (elemento real, opaco, com toda a largura e pelo menos 8 px)
+   por cima da lista. Assim o Safari (iOS 26) trata o topo como uma barra sólida desta cor, em vez de
+   desfocar o conteúdo que fica junto à barra de estado (o título e o símbolo do perfil apareciam desfocados). */
+.topfill {
+  position: fixed; top: 0; left: 0; right: 0; height: max(var(--safe-top), 8px); z-index: 6;
+  background: var(--green-1); pointer-events: none;
 }
 .searchrow {
   position: sticky; top: var(--safe-top); z-index: 5;
