@@ -444,3 +444,43 @@ dialog.editor { width: min(94vw, 640px); max-width: none; }
   background: rgba(20,20,20,.88); color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 22px; opacity: 0; pointer-events: none;
   transition: opacity .2s, transform .2s; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* Perfis: símbolo no canto superior esquerdo (○ Cancioneiro, □ Coro, △ Maestro, ⚙ Gestor) */
+.topbar .perfil-btn:not([hidden]) ~ .topbar-left-spacer { display: none; }
+.topbar .perfil-btn { order: -1; }
+svg.perfil-ic { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn svg.perfil-ic circle { fill: none; stroke: currentColor; }
+.perfil-btn svg.perfil-ic { width: 25px; height: 25px; }
+body.lvl-1 .coro-only { display: none; }
+.perfis { width: min(420px, calc(100vw - 32px)); }
+.perfis-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 14px; }
+.perfil-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; background: var(--paper); color: var(--ink); }
+.perfil-opt.on { border-color: var(--green-ink); background: rgba(14,127,88,.09); }
+.perfil-opt svg { width: 26px; height: 26px; flex: none; color: var(--green-ink); }
+.perfil-opt b { display: block; font-size: 15px; }
+.perfil-opt small { display: block; font-size: 12px; color: var(--ink-soft); line-height: 1.35; margin-top: 2px; }
+.perfil-admin { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 10px; background: var(--green-ink); color: #fff; font-weight: 700; text-decoration: none; }
+.perfil-admin .chev { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.promo-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin: -.6em 0 1.2em; font-size: 12px; color: var(--ink-soft); }
+
+/* Gestão de utilizadores */
+.admin-title { font-family: var(--serif); font-weight: 400; letter-spacing: .1em; font-size: 20px; margin: 0 0 0 4px; color: var(--green-2); }
+.admin { max-width: 720px; margin: 0 auto; padding: 4px calc(16px + var(--safe-right)) calc(32px + var(--safe-bottom)) calc(16px + var(--safe-left)); }
+.admin h2 { font-family: var(--serif); font-weight: 400; letter-spacing: .08em; color: var(--green-2); font-size: 18px; margin: 22px 0 8px; }
+.adm-list { list-style: none; margin: 0; padding: 0; }
+.adm-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+.adm-who { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; min-width: 0; flex: 1 1 220px; }
+.adm-who svg { grid-row: span 3; width: 22px; height: 22px; color: var(--green-ink); align-self: center; }
+.adm-who b, .adm-who span, .adm-who small { grid-column: 2; overflow-wrap: anywhere; }
+li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small { grid-column: 1 / -1; }
+.adm-who span { font-size: 13px; color: var(--ink-soft); }
+.adm-who small { font-size: 11.5px; color: #999; }
+.adm-name { cursor: pointer; }
+.adm-act { display: flex; align-items: center; gap: 8px; }
+.admin select, .admin input { font: inherit; font-size: 14px; padding: 7px 8px; border: 1px solid #ccd8d2; border-radius: 8px; background: var(--paper); color: var(--ink); }
+.admin button { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 8px; background: var(--green-ink); color: #fff; }
+.admin button.adm-del, .admin button.adm-no { background: none; color: #c0392b; border: 1px solid #e3b3ad; }
+.adm-add { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-add input { flex: 1 1 160px; min-width: 0; }
+.admin .small { font-size: 12.5px; color: #666; line-height: 1.5; margin-top: 18px; }
+.admin .note { color: var(--ink-soft); }

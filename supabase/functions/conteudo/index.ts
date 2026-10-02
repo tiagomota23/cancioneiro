@@ -1,6 +1,9 @@
 // Conteúdo protegido do Cancioneiro: letras (um cântico de cada vez), pesquisa na letra, identificação pelo som,
 // gravação de edições e endereços temporários de ficheiros (livros: só as páginas do cântico).
 // Só para emails autorizados, com limites por pessoa para impedir cópias em massa.
+// Perfis (hierárquicos): cancioneiro (só cânticos do Cancioneiro, sem acordes nem ficheiros) < coro (tudo, sem editar)
+// < maestro (edita e promove cânticos ao Cancioneiro) < gestor (gere os utilizadores). A app indica o perfil ativo
+// (pode ser inferior ao da pessoa); vale sempre o menor dos dois.
 const SB = Deno.env.get('SUPABASE_URL'); const SK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); const RESEND = Deno.env.get('RESEND_API_KEY');
 const ADMIN = 'tiago.mota@gmail.com';
 const ORIGINS = ['https://tiagomota23.github.io', 'http://localhost:8765'];
@@ -8,6 +11,8 @@ const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'applic
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
 const LIMITS = { song: [80, 250], file: [80, 250], search: [400, 2000], match: [120, 600], save: [60, 200] };
 const DISTINCT = new Set(['song', 'file']);
+const ROLES = ['cancioneiro', 'coro', 'maestro', 'gestor'];
+const rank = r => ROLES.indexOf(r) + 1;
 
 const cors = (req) => {
   const o = req.headers.get('origin') || '';
@@ -31,8 +36,19 @@ async function who(req) {
   const u = await r.json();
   const email = (u.email || '').toLowerCase();
   if (!email) return null;
-  const ok = await rest(`allowed_emails?select=email&email=eq.${encodeURIComponent(email)}`);
-  return ok.length ? { id: u.id, email } : null;
+  const [a] = await rest(`allowed_emails?select=role&email=eq.${encodeURIComponent(email)}`);
+  return a ? { id: u.id, email, role: a.role, rank: rank(a.role) } : null;
+}
+
+// ---------- emails para os Gestores ----------
+const gestores = async () => (await rest('allowed_emails?select=email&role=eq.gestor')).map(x => x.email);
+async function mailGestores(subject, html) {
+  if (!RESEND) return;
+  const send = to => fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Cancioneiro <onboarding@resend.dev>', to, subject, html }) });
+  const to = await gestores().catch(() => []);
+  // o remetente de teste do Resend só entrega ao dono da conta: se recusar a lista, envia só para o administrador
+  const r = await send(to.length ? to : [ADMIN]).catch(() => null);
+  if ((!r || !r.ok) && !(to.length === 1 && to[0] === ADMIN)) await send([ADMIN]).catch(() => {});
 }
 
 // ---------- limites ----------
@@ -57,10 +73,9 @@ async function alert(user, kind, n) {
   const sent = await rest(`access_log?select=id&user_id=eq.${user.id}&kind=eq.alerta&at=gte.${since}&limit=1`);
   if (sent.length) return;
   await rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: user.id, email: user.email, kind: 'alerta', key: kind }) });
-  if (!RESEND) return;
   const what = { song: 'cânticos abertos', file: 'ficheiros (gravações/partituras)', search: 'pesquisas na letra', match: 'identificações pelo som', save: 'edições de letra' }[kind] || kind;
   const html = `<div style="font-family:Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e3e3e3;border-radius:12px;overflow:hidden"><div style="background:#1ab07f;color:#fff;padding:16px 22px;font-size:20px;letter-spacing:4px">CANCIONEIRO</div><div style="padding:22px;color:#333;font-size:15px;line-height:1.5"><h2 style="margin:0 0 14px;font-size:18px;color:#12966a">Limite de uso atingido</h2><p>A conta <b>${user.email}</b> atingiu o limite de <b>${what}</b> (${n} nas últimas 24 horas). O acesso a mais conteúdo foi travado temporariamente.</p><p style="color:#777;font-size:13px">Se não foi uso normal, pode bloquear a conta retirando o email da lista de autorizados.</p></div></div>`;
-  await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Cancioneiro <onboarding@resend.dev>', to: [ADMIN], subject: `Cancioneiro: limite de uso atingido (${user.email})`, html }) }).catch(() => {});
+  await mailGestores(`Cancioneiro: limite de uso atingido (${user.email})`, html);
 }
 
 // ---------- letras em memória (recarregadas quando há alterações) ----------
@@ -76,7 +91,7 @@ async function songs() {
   const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
-  const list = await all('songs?select=slug,lyrics,lyrics_edit,translation&order=number.asc');
+  const list = await all('songs?select=slug,cancioneiro,lyrics,lyrics_edit,translation&order=number.asc');
   for (const s of list) {
     s.eff = s.lyrics_edit || s.lyrics || [];
     s.lines = s.eff.flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
@@ -88,10 +103,11 @@ async function songs() {
 }
 
 // pesquisa na letra: frase exata numa linha, ou todos os termos na letra (só o trecho de uma linha é devolvido)
-function searchLyrics(c, q) {
+function searchLyrics(c, q, ok) {
   const nq = norm(q).trim(); if (nq.length < 3) return [];
   const terms = nq.split(/\s+/), out = [];
   for (const s of c.list) {
+    if (!ok(s)) continue;
     let li = s.nl.findIndex(l => l.includes(nq)), score = 20;
     if (li < 0 && terms.every(t => s.nl.some(l => l.includes(t)))) { li = s.nl.findIndex(l => l.includes(terms[0])); score = 8; }
     if (li >= 0) out.push({ slug: s.slug, score, snip: s.lines[li] });
@@ -124,7 +140,7 @@ function buildIndex(c) {
   const N = c.list.length;
   c.idx = { items, idf: w => Math.log((N + 1) / (1 + (df.get(w) || 0))) };
 }
-function match(c, text) {
+function match(c, text, ok) {
   if (!c.idx) buildIndex(c);
   const { items, idf } = c.idx;
   const q = tok(text), qset = [...new Set(q)], qbi = new Set(q.slice(1).map((w, i) => q[i] + ' ' + w));
@@ -132,6 +148,7 @@ function match(c, text) {
   if (!total) return [];
   const out = [];
   for (const { slug, wins } of items) {
+    if (!ok(c.bySlug.get(slug))) continue;
     let best = 0, bestLine = null;
     for (const win of wins) {
       let sc = 0;
@@ -154,6 +171,8 @@ async function sign(path) {
 const BOOKS = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' };
 const pageFile = (dir, n) => `${dir}/p${String(n).padStart(3, '0')}.pdf`;
 
+const noChords = v => (v || []).map(st => ({ ...st, lines: st.lines.map(stripChords) }));
+const validEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(e);
 const validLyrics = v => Array.isArray(v) && v.length <= 80 && v.every(st => st && (st.type === 'verse' || st.type === 'chorus') && Array.isArray(st.lines) && st.lines.length <= 80 && st.lines.every(l => typeof l === 'string' && l.length <= 300));
 
 Deno.serve(async (req) => {
@@ -165,27 +184,33 @@ Deno.serve(async (req) => {
     if (!user) return out({ error: 'sem acesso' }, 403);
     const b = await req.json().catch(() => ({}));
     const op = b.op;
+    // perfil ativo escolhido na app (nunca acima do da pessoa)
+    const lvl = ROLES.includes(b.perfil) ? Math.min(user.rank, rank(b.perfil)) : user.rank;
+    const visible = s => !!s && (lvl >= 2 || s.cancioneiro);
+    const denied = () => out({ error: 'sem permissão para este perfil' }, 403);
     const tooMany = () => out({ error: 'limite', message: 'Atingiu o limite de uso por agora. Tente de novo mais tarde.' }, 429);
 
     if (op === 'song') {
       const slug = String(b.slug || '');
       const c = await songs(); const s = c.bySlug.get(slug);
-      if (!s) return out({ error: 'não encontrado' }, 404);
+      if (!visible(s)) return out({ error: 'não encontrado' }, 404);
       if (!(await limit(user, 'song', slug))) return tooMany();
-      return out({ slug, lyrics: s.eff, translation: s.translation || null, edited: !!s.lyrics_edit });
+      // o perfil Cancioneiro não vê acordes
+      return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
     }
     if (op === 'search') {
       const q = String(b.q || '').slice(0, 120);
       if (norm(q).trim().length < 3) return out({ hits: [] });
       if (!(await limit(user, 'search', q))) return tooMany();
-      return out({ hits: searchLyrics(await songs(), q) });
+      return out({ hits: searchLyrics(await songs(), q, visible) });
     }
     if (op === 'match') {
       const text = String(b.text || '').slice(0, 1000);
       if (!(await limit(user, 'match', null))) return tooMany();
-      return out({ matches: match(await songs(), text) });
+      return out({ matches: match(await songs(), text, visible) });
     }
     if (op === 'save') {
+      if (lvl < 3) return denied();
       const slug = String(b.slug || ''); const v = b.lyrics_edit ?? null;
       if (v !== null && !validLyrics(v)) return out({ error: 'letra inválida' }, 400);
       if (!(await limit(user, 'save', slug))) return tooMany();
@@ -194,7 +219,70 @@ Deno.serve(async (req) => {
       cache = null;
       return out(r[0]);
     }
+    if (op === 'promote') { // Maestro: pôr ou tirar um cântico do Cancioneiro (os do site original ficam sempre)
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), on = !!b.on;
+      const [s] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,sources:song_sources(source)`);
+      if (!s) return out({ error: 'não encontrado' }, 404);
+      if (!on && s.sources.some(x => x.source === 'original')) return out({ error: 'Este cântico é do Cancioneiro original e não pode ser retirado.' }, 400);
+      if (!(await limit(user, 'save', 'promote:' + slug))) return tooMany();
+      const r = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=cancioneiro,promoted_by,promoted_at`, { method: 'PATCH', headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ cancioneiro: on, promoted_by: on ? user.email : null, promoted_at: on ? new Date().toISOString() : null }) });
+      cache = null;
+      return out(r[0]);
+    }
+    if (op === 'users') { // Gestor: lista de utilizadores e pedidos de acesso pendentes
+      if (lvl < 4) return denied();
+      const [list, reqs, au] = await Promise.all([
+        rest('allowed_emails?select=email,name,role,added_at,added_by&order=email'),
+        rest('access_requests?select=id,email,name,created_at,status&status=eq.pendente&order=created_at.desc'),
+        fetch(`${SB}/auth/v1/admin/users?per_page=1000`, { headers: HDR }).then(r => r.json()).catch(() => ({})),
+      ]);
+      const seen = new Map((au.users || []).map(u => [String(u.email || '').toLowerCase(), u]));
+      const pending = reqs.filter(q => !list.some(x => x.email === q.email));
+      return out({
+        me: user.email,
+        users: list.map(x => { const u = seen.get(x.email); return { ...x, google_name: u?.user_metadata?.full_name || null, last_sign_in_at: u?.last_sign_in_at || null }; }),
+        requests: pending,
+      });
+    }
+    if (op === 'user') { // Gestor: acrescentar / alterar perfil / retirar acesso
+      if (lvl < 4) return denied();
+      const email = String(b.email || '').trim().toLowerCase();
+      if (!validEmail(email)) return out({ error: 'email inválido' }, 400);
+      const role = b.remove ? null : String(b.role || '');
+      if (role !== null && !ROLES.includes(role)) return out({ error: 'perfil inválido' }, 400);
+      if (role !== 'gestor') { // nunca ficar sem nenhum Gestor
+        const g = await gestores();
+        if (g.length === 1 && g[0] === email) return out({ error: 'Tem de haver pelo menos um Gestor.' }, 400);
+      }
+      if (!(await limit(user, 'save', 'user:' + email))) return tooMany();
+      if (role === null) {
+        await rest(`allowed_emails?email=eq.${encodeURIComponent(email)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      } else {
+        const name = b.name === undefined ? undefined : String(b.name || '').trim().slice(0, 80) || null;
+        const [ex] = await rest(`allowed_emails?select=email&email=eq.${encodeURIComponent(email)}`);
+        if (ex) await rest(`allowed_emails?email=eq.${encodeURIComponent(email)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(name === undefined ? { role } : { role, name }) });
+        else await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ email, role, name: name ?? null, added_by: user.email }) });
+        // um pedido pendente desta pessoa fica resolvido; se a conta tinha sido bloqueada, é desbloqueada
+        const reqs = await rest(`access_requests?email=eq.${encodeURIComponent(email)}&select=user_id,status`);
+        for (const q of reqs) if (q.user_id && q.status === 'bloqueado') await fetch(`${SB}/auth/v1/admin/users/${q.user_id}`, { method: 'PUT', headers: HDR, body: JSON.stringify({ ban_duration: 'none' }) });
+        if (reqs.length) await rest(`access_requests?email=eq.${encodeURIComponent(email)}&status=neq.autorizado`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'autorizado', decided_at: new Date().toISOString() }) });
+      }
+      return out({ ok: true });
+    }
+    if (op === 'reject') { // Gestor: recusar um pedido de acesso (a conta fica bloqueada)
+      if (lvl < 4) return denied();
+      const id = String(b.id || '');
+      if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'pedido inválido' }, 400);
+      const [q] = await rest(`access_requests?id=eq.${id}&select=user_id,status`);
+      if (!q || q.status !== 'pendente') return out({ error: 'pedido já decidido' }, 400);
+      if (q.user_id) await fetch(`${SB}/auth/v1/admin/users/${q.user_id}`, { method: 'PUT', headers: HDR, body: JSON.stringify({ ban_duration: '876000h' }) });
+      await rest(`access_requests?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'bloqueado', decided_at: new Date().toISOString() }) });
+      return out({ ok: true });
+    }
     if (op === 'file') {
+      if (lvl < 2) return denied();
       const raw = String(b.path || '');
       const [path, frag = ''] = raw.split('#');
       const files = await rest(`song_files?select=path&path=eq.${encodeURIComponent(raw)}&limit=1`);

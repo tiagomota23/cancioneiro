@@ -19,9 +19,14 @@ const btn = (href, label, color) => `<a href="${href}" style="display:inline-blo
 const wrap = (title, body) => `<div style="font-family:Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e3e3e3;border-radius:12px;overflow:hidden"><div style="background:#1ab07f;color:#ffffff;padding:16px 22px;font-size:20px;letter-spacing:4px">CANCIONEIRO</div><div style="padding:22px;color:#333333;font-size:15px;line-height:1.5"><h2 style="margin:0 0 14px;font-size:18px;color:#12966a">${title}</h2>${body}</div></div>`;
 const list = items => `<ul style="padding-left:20px;margin:8px 0">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
 const when = d => new Date(d).toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' });
+// Os emails vão para todos os Gestores (perfil "gestor" em allowed_emails)
 async function sendEmail(subject, html) {
   if (!RESEND) throw new Error('RESEND_API_KEY em falta');
-  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Cancioneiro <onboarding@resend.dev>', to: [ADMIN], subject, html }) });
+  const send = to => fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Cancioneiro <onboarding@resend.dev>', to, subject, html }) });
+  const to = (await rest('allowed_emails?select=email&role=eq.gestor').catch(() => [])).map(x => x.email);
+  let r = await send(to.length ? to : [ADMIN]);
+  // o remetente de teste do Resend só entrega ao dono da conta: se recusar a lista, envia só para o administrador
+  if (!r.ok && !(to.length === 1 && to[0] === ADMIN)) r = await send([ADMIN]);
   if (!r.ok) throw new Error('Resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
 
@@ -34,7 +39,7 @@ async function onAccess(id) {
       <div><b>${esc(req.name || '(sem nome)')}</b></div><div>${esc(req.email)}</div>
       <div style="color:#777;font-size:13px;margin-top:4px">${esc(when(req.created_at))}</div>
       <div style="margin-top:12px">${btn(link('autorizar'), 'Autorizar', '#12966a')}${btn(link('bloquear'), 'Bloquear', '#c0392b')}</div>
-    </div><p style="color:#777;font-size:13px">Cada botão abre uma página de confirmação. Enquanto não decidir, esta pessoa não vê os cânticos.</p>`;
+    </div><p style="color:#777;font-size:13px">Cada botão abre uma página de confirmação. Quem é autorizado fica com o perfil Cancioneiro (pode ser alterado na Gestão de utilizadores, na app). Enquanto não decidir, esta pessoa não vê os cânticos.</p>`;
   await sendEmail(`Pedido de acesso: ${req.name || req.email}`, wrap('Pedido de acesso', body));
   await rest(`access_requests?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ notified_at: new Date().toISOString() }) });
   return { sent: true };
@@ -70,7 +75,7 @@ async function onPeekOrDecide(id, token, action, decide) {
   const info = { email: req.email, name: req.name, status: req.status };
   if (!decide || req.status !== 'pendente') return json(info);
   if (action === 'autorizar') {
-    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email }) });
+    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email, name: req.name ? String(req.name).split(' ')[0] : null, role: 'cancioneiro', added_by: 'link do email' }) });
     info.status = 'autorizado';
   } else if (action === 'bloquear') {
     if (req.user_id) await fetch(`${SB}/auth/v1/admin/users/${req.user_id}`, { method: 'PUT', headers: HDR, body: JSON.stringify({ ban_duration: '876000h' }) });

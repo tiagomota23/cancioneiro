@@ -8,15 +8,28 @@
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
   const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
-  // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
-  const extrasOn = () => prefs.src !== 'original';
+  // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
+  // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior esquerdo.
+  const GEAR = '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>';
+  const PERFIS = [
+    { id: 'cancioneiro', label: 'Cancioneiro', desc: 'Os cânticos do Cancioneiro, sem acordes, partituras nem gravações', icon: '<circle cx="12" cy="12" r="7.5"/>' },
+    { id: 'coro', label: 'Coro', desc: 'Todos os cânticos e livros, com acordes, partituras e gravações', icon: '<rect x="5" y="5" width="14" height="14" rx="1.5"/>' },
+    { id: 'maestro', label: 'Maestro', desc: 'Editar letras e promover cânticos ao Cancioneiro', icon: '<path d="M12 4.2l8.4 14.8H3.6z"/>' },
+    { id: 'gestor', label: 'Gestor', desc: 'Gerir os utilizadores e os seus perfis', icon: GEAR },
+  ];
+  const rankOf = r => PERFIS.findIndex(p => p.id === r) + 1;
+  let maxRole = null, perfil = null; // perfil da pessoa e perfil ativo
+  const lvl = () => Math.min(rankOf(perfil), rankOf(maxRole)) || 1;
+  // Com o filtro "Cancioneiro" (ou no perfil Cancioneiro) os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
+  const extrasOn = () => lvl() >= 2 && prefs.src !== 'original';
+  const inCancioneiro = s => s.cancioneiro ?? srcOf(s).includes('original');
   // As letras não vêm com a lista: cada cântico é pedido ao servidor quando se abre (função "conteudo", com limites
   // por pessoa contra cópias em massa). Guardam-se só os cânticos já abertos, para os voltar a mostrar sem rede.
   const lyr = new Map(); // slug -> { lyrics, translation, edited }
   const lyricsOf = s => (lyr.get(s.slug) || {}).lyrics || [];
   const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
   const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
-  const scoresOf = s => [
+  const scoresOf = s => lvl() < 2 ? [] : [
     ...(s.pdf_url ? [/^https?:/.test(s.pdf_url) ? { label: 'Partitura', url: s.pdf_url, mime: 'application/pdf' } : { label: 'Partitura', path: s.pdf_url, mime: 'application/pdf' }] : []),
     ...filesOf(s, 'score'),
   ];
@@ -38,7 +51,7 @@
     { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
     { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw', 'de', 'xx'].includes(s.language) },
     { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.has_translation },
-    { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
+    { id: 'acordes', label: 'Cânticos com acordes', test: s => lvl() >= 2 && s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
     { id: 'gravacoes', label: 'Cânticos com gravações das vozes', test: s => filesOf(s, 'recording').length > 0 },
     { id: 'copyright', label: 'Cânticos com copyright', test: s => extrasOn() && !!s.rights },
@@ -49,7 +62,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-02 v41';
+  const APP_VERSION = '2026-10-03 v42';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -93,7 +106,7 @@
     return session ? session.access_token : null;
   }
   function showLogin(msg) {
-    for (const v of ['view-list', 'view-song']) $(v).hidden = true;
+    for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = true;
     $('view-login').hidden = false;
     $('login-msg').textContent = msg || '';
     splashDone.then(() => $('splash').classList.add('gone'));
@@ -109,7 +122,7 @@
   async function logout(msg) {
     try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
     try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(lyrKey()); } catch (e) {}
-    songs = []; bySlug = new Map(); session = null; favs = []; lyr.clear();
+    songs = []; bySlug = new Map(); session = null; favs = []; lyr.clear(); maxRole = perfil = null;
     if ($('info').open) $('info').close();
     showLogin(msg);
   }
@@ -178,7 +191,7 @@
     if (DEMO) return demoApi(op, body);
     const call = async renew => fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', {
       method: 'POST', headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + await accessToken(renew), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ op, ...body }),
+      body: JSON.stringify({ op, perfil: PERFIS[lvl() - 1].id, ...body }),
     });
     let r = await call(false);
     if (r.status === 401) r = await call(true);
@@ -188,10 +201,11 @@
     return d;
   }
   const pending = new Map();
+  const hasLyrics = slug => lyr.has(slug) && !(lyr.get(slug).nc && lvl() >= 2);
   function getLyrics(slug) {
-    if (lyr.has(slug)) { const v = lyr.get(slug); lyr.delete(slug); lyr.set(slug, v); return Promise.resolve(v); } // mais recente no fim
+    if (hasLyrics(slug)) { const v = lyr.get(slug); lyr.delete(slug); lyr.set(slug, v); return Promise.resolve(v); } // mais recente no fim
     if (!pending.has(slug)) pending.set(slug, api('song', { slug }).then(d => {
-      const v = { lyrics: d.lyrics || [], translation: d.translation || null, edited: !!d.edited };
+      const v = { lyrics: d.lyrics || [], translation: d.translation || null, edited: !!d.edited, nc: lvl() < 2 };
       lyr.set(slug, v); saveLyrCache();
       return v;
     }).finally(() => pending.delete(slug)));
@@ -212,6 +226,10 @@
       return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
     }
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
+    if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
+    if (op === 'users') return { me: 'demo@localhost', requests: [{ id: '00000000-0000-0000-0000-000000000000', email: 'novo@exemplo.pt', name: 'Pessoa Nova', created_at: new Date().toISOString() }],
+      users: [{ email: 'demo@localhost', name: 'Demo', role: 'gestor', last_sign_in_at: new Date().toISOString() }, { email: 'coro@exemplo.pt', name: 'Coralista', role: 'coro', last_sign_in_at: null }] };
+    if (op === 'user' || op === 'reject') return { ok: true };
     throw new Error('op');
   }
   function demoSearch(q) {
@@ -235,7 +253,7 @@
       demoFull = new Map(full.map(s => [s.slug, s]));
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
-    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,' +
+    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -262,16 +280,18 @@
   }
   // Filtro por fonte: "todas", ou só uma (ex.: só o Cancioneiro original, como era antes)
   function applySource() {
-    const f = prefs.src || 'todas';
-    songs = f === 'todas' ? allSongs : allSongs.filter(s => srcOf(s).includes(f));
+    // "Cancioneiro" = cânticos do site original e os promovidos por um Maestro
+    const has = (s, k) => k === 'original' ? inCancioneiro(s) : srcOf(s).includes(k);
+    const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
+    songs = f === 'todas' ? allSongs : allSongs.filter(s => has(s, f));
     lyrIndex = null;
-    bySlug = new Map(allSongs.map(s => [s.slug, s]));
+    bySlug = new Map((lvl() < 2 ? songs : allSongs).map(s => [s.slug, s]));
     const present = new Set(allSongs.flatMap(srcOf));
     const sel = $('src-filter');
     if (sel) {
       sel.innerHTML = `<option value="todas">Tudo (${allSongs.length})</option>` +
         Object.entries(SOURCES).filter(([k]) => present.has(k))
-          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => srcOf(s).includes(k)).length})</option>`).join('');
+          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => has(s, k)).length})</option>`).join('');
       sel.value = present.has(f) ? f : 'todas';
     }
     $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
@@ -687,7 +707,7 @@
   function closeListen() { stopRecording(); heard = ''; $('listen').hidden = true; }
   function showListenResults() {
     show('view-list');
-    $('btn-back-list').hidden = false;
+    $('btn-back-list').hidden = false; $('btn-perfil').hidden = true;
     const title = $('list-title'); title.hidden = false;
     if (!listenResult) { location.hash = '#/'; return; }
     const { text, res } = listenResult;
@@ -711,7 +731,7 @@
 
   // ---------- Vistas ----------
   function show(id) {
-    for (const v of ['view-list', 'view-song']) $(v).hidden = v !== id;
+    for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
   }
 
   function songRow(s, q, snip) {
@@ -728,6 +748,7 @@
     const title = $('list-title');
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
+    $('btn-perfil').hidden = !maxRole || !$('btn-back-list').hidden;
     if (q.trim()) {
       searchLyricsRemote(q);
       const res = search(q);
@@ -779,7 +800,7 @@
     const s = bySlug.get(slug);
     if (!s) { if (songs.length) location.hash = '#/'; return; }
     show('view-song');
-    const data = lyr.get(slug);
+    const data = hasLyrics(slug) ? lyr.get(slug) : null;
     let wait = '';
     if (!data) {
       wait = '<p class="note lyr-wait">A carregar a letra…</p>';
@@ -807,12 +828,22 @@
     const recs = filesOf(s, 'recording');
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
       `<li><button class="rec" data-i="${i}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
-    const lyrics = data ? data.lyrics : [];
-    const body = (mode === 'trad' ? data && data.translation : lyrics) || [];
+    // o perfil Cancioneiro não vê acordes
+    const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
+    const lyrics = plain(data ? data.lyrics : []);
+    const body = plain((mode === 'trad' ? data && data.translation : lyrics) || []);
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
     const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
-    const editBar = !DEMO && data && mode === 'orig' && extrasOn()
+    // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
+    const canEdit = data && mode === 'orig' && lvl() >= 3 && extrasOn();
+    const original = srcOf(s).includes('original');
+    const promo = lvl() >= 3 && extrasOn() && !original
+      ? `<p class="promo-bar">${inCancioneiro(s)
+        ? `<span>No Cancioneiro${s.promoted_by ? ' (promovido por ' + esc(s.promoted_by.split('@')[0]) + ')' : ''}</span><button class="revert-link" id="btn-promo" data-on="0">Retirar do Cancioneiro</button>`
+        : `<button class="edit-btn" id="btn-promo" data-on="1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>Promover ao Cancioneiro</button>`}</p>`
+      : '';
+    const editBar = canEdit
       ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button></p>`
       : '';
     $('song').innerHTML = `
@@ -824,6 +855,7 @@
       ${wait}
       ${renderStanzas(body)}
       ${editBar}
+      ${promo}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
@@ -833,6 +865,7 @@
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
     $('btn-copy').onclick = () => { if (data) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
+    if ($('btn-promo')) $('btn-promo').onclick = () => promote(slug, $('btn-promo').dataset.on === '1');
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => toggleFav(slug);
@@ -919,6 +952,128 @@
     saveLyrics(null);
   }
   $('edit-reset').onclick = () => revertLyrics(editSlug);
+
+  // ---------- Promover ao Cancioneiro (perfil Maestro) ----------
+  async function promote(slug, on) {
+    const s = bySlug.get(slug);
+    if (!on && !confirm('Retirar este cântico do Cancioneiro? Quem tem o perfil Cancioneiro deixa de o ver.')) return;
+    const b = $('btn-promo'); if (b) b.disabled = true;
+    try {
+      const d = await api('promote', { slug, on });
+      Object.assign(s, d);
+      store.set(CACHE_KEY, allSongs.map(({ _t, _a, ...x }) => x));
+      applySource();
+      toast(on ? 'Cântico promovido ao Cancioneiro' : 'Cântico retirado do Cancioneiro');
+    } catch (e) { alert(e instanceof Limit ? e.message : 'Não foi possível guardar: ' + e.message); }
+    if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
+  }
+
+  // ---------- Perfis ----------
+  const perfilKey = () => 'cancioneiro.perfil.' + (session ? session.user.id : 'anon');
+  function applyPerfil() {
+    const p = PERFIS[lvl() - 1];
+    $('btn-perfil').querySelector('svg').innerHTML = p.icon;
+    $('btn-perfil').setAttribute('aria-label', 'Perfil: ' + p.label);
+    $('btn-perfil').title = 'Perfil: ' + p.label;
+    for (const x of PERFIS) document.body.classList.toggle('perfil-' + x.id, x === p);
+    document.body.classList.toggle('lvl-1', lvl() < 2);
+    lyricHits = { q: '', map: new Map() };
+    if (allSongs.length) applySource();
+  }
+  function setPerfil(id, save) {
+    if (!rankOf(id) || rankOf(id) > rankOf(maxRole)) id = maxRole;
+    const changed = id !== perfil;
+    perfil = id;
+    store.set(perfilKey(), { max: maxRole, active: perfil });
+    applyPerfil();
+    if (changed) route();
+    if (save && session && !DEMO) sb.auth.updateUser({ data: { cancioneiro_perfil: id } }).catch(() => {});
+  }
+  // perfil da pessoa: guardado no telemóvel para abrir logo, e confirmado no servidor
+  async function loadPerfil() {
+    const c = store.get(perfilKey(), null);
+    if (c && c.max) { maxRole = c.max; setPerfil(c.active); }
+    let role = null;
+    if (DEMO) role = new URLSearchParams(location.search).get('perfil') || 'gestor';
+    else {
+      try { const { data, error } = await sb.rpc('my_role'); if (error) return; role = data; } catch (e) { return; } // sem rede: fica o guardado
+    }
+    if (!rankOf(role)) return; // sem acesso: a lista vem vazia e load() termina a sessão
+    maxRole = role;
+    const meta = !DEMO && session && session.user.user_metadata || {};
+    setPerfil((c && c.active) || meta.cancioneiro_perfil || maxRole);
+  }
+  function openPerfis() {
+    const cur = PERFIS[lvl() - 1].id;
+    $('perfis-list').innerHTML = PERFIS.slice(0, rankOf(maxRole)).map(p =>
+      `<button class="perfil-opt${p.id === cur ? ' on' : ''}" data-p="${p.id}"><svg viewBox="0 0 24 24" class="perfil-ic">${p.icon}</svg><span><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></button>`).join('') +
+      (cur === 'gestor' ? `<a class="perfil-admin" href="#/gestao">Gestão de utilizadores ${chev}</a>` : '') +
+      (rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '');
+    $('perfis-list').querySelectorAll('.perfil-opt').forEach(b => b.onclick = () => { setPerfil(b.dataset.p, true); $('perfis').close(); });
+    $('perfis-list').querySelector('.perfil-admin')?.addEventListener('click', () => $('perfis').close());
+    $('perfis').showModal();
+  }
+  $('btn-perfil').onclick = openPerfis;
+  $('perfis-close').onclick = () => $('perfis').close();
+  $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });
+
+  // ---------- Gestão de utilizadores (perfil Gestor) ----------
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-PT') : '';
+  const roleSelect = (cur, attrs) => `<select ${attrs}>${PERFIS.map(p => `<option value="${p.id}"${p.id === cur ? ' selected' : ''}>${esc(p.label)}</option>`).join('')}</select>`;
+  async function showAdmin() {
+    show('view-admin');
+    const box = $('admin');
+    if (lvl() < 4) { box.innerHTML = '<p class="note">Só o perfil Gestor pode gerir utilizadores.</p>'; return; }
+    if (!box.dataset.ready) box.innerHTML = '<p class="note">A carregar…</p>';
+    let d;
+    try { d = await api('users', {}); }
+    catch (e) { box.innerHTML = `<p class="note">${esc(e instanceof Limit ? e.message : 'Não foi possível carregar: ' + e.message)}</p>`; return; }
+    box.dataset.ready = '1';
+    const users = d.users.slice().sort((a, b) => rankOf(b.role) - rankOf(a.role) || (a.name || a.email).localeCompare(b.name || b.email, 'pt'));
+    box.innerHTML =
+      (d.requests.length ? `<h2>Pedidos de acesso</h2><ul class="adm-list">${d.requests.map(q => `
+        <li data-req="${esc(q.id)}" data-email="${esc(q.email)}"><div class="adm-who"><b>${esc(q.name || '(sem nome)')}</b><span>${esc(q.email)}</span><small>${fmtDate(q.created_at)}</small></div>
+          <div class="adm-act">${roleSelect('cancioneiro', 'class="req-role" aria-label="Perfil"')}<button class="adm-ok">Autorizar</button><button class="adm-no">Recusar</button></div></li>`).join('')}</ul>` : '') +
+      `<h2>Utilizadores (${users.length})</h2><ul class="adm-list">${users.map(u => `
+        <li data-email="${esc(u.email)}"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic">${PERFIS[rankOf(u.role) - 1].icon}</svg>
+          <b class="adm-name" role="button" tabindex="0" title="Mudar o nome">${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
+          <small>${u.last_sign_in_at ? 'Última entrada: ' + fmtDate(u.last_sign_in_at) : 'Ainda não entrou'}${u.email === d.me ? ' · (eu)' : ''}</small></div>
+          <div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"')}<button class="adm-del" aria-label="Retirar acesso">Retirar</button></div></li>`).join('')}</ul>
+      <h2>Acrescentar utilizador</h2>
+      <form class="adm-add" id="adm-add">
+        <input id="add-name" placeholder="Nome" autocomplete="off" maxlength="80">
+        <input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required>
+        ${roleSelect('cancioneiro', 'id="add-role" aria-label="Perfil"')}
+        <button type="submit">Acrescentar</button>
+      </form>
+      <p class="small">Os perfis são hierárquicos: <b>Cancioneiro</b> (só os cânticos do Cancioneiro, sem acordes, partituras nem gravações) &lt; <b>Coro</b> (tudo, sem editar) &lt; <b>Maestro</b> (edita letras e promove cânticos ao Cancioneiro) &lt; <b>Gestor</b> (gere utilizadores; recebe os pedidos de acesso por email).</p>`;
+    const call = async (op, body, msg) => {
+      try { await api(op, body); if (msg) toast(msg); } catch (e) { alert(e instanceof Limit ? e.message : e.message); }
+      showAdmin();
+    };
+    box.querySelectorAll('li[data-req]').forEach(li => {
+      li.querySelector('.adm-ok').onclick = () => call('user', { email: li.dataset.email, role: li.querySelector('.req-role').value, name: li.querySelector('b').textContent.replace('(sem nome)', '').split(' ')[0] }, 'Acesso autorizado');
+      li.querySelector('.adm-no').onclick = () => { if (confirm('Recusar este pedido? A conta fica bloqueada.')) call('reject', { id: li.dataset.req }, 'Pedido recusado'); };
+    });
+    box.querySelectorAll('li[data-email]:not([data-req])').forEach(li => {
+      const email = li.dataset.email, sel = li.querySelector('.usr-role'), was = sel.value;
+      sel.onchange = () => {
+        if (!confirm(`Mudar o perfil de ${email} para ${PERFIS[rankOf(sel.value) - 1].label}?`)) { sel.value = was; return; }
+        call('user', { email, role: sel.value }, 'Perfil alterado');
+      };
+      li.querySelector('.adm-del').onclick = () => { if (confirm(`Retirar o acesso de ${email} ao Cancioneiro?`)) call('user', { email, remove: true }, 'Acesso retirado'); };
+      const nm = li.querySelector('.adm-name');
+      const rename = () => { const v = prompt('Nome:', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
+      nm.onclick = rename; nm.onkeydown = e => { if (e.key === 'Enter') rename(); };
+    });
+    $('adm-add').onsubmit = e => {
+      e.preventDefault();
+      const email = $('add-email').value.trim().toLowerCase();
+      if (users.some(u => u.email === email)) { alert('Este email já tem acesso.'); return; }
+      call('user', { email, role: $('add-role').value, name: $('add-name').value.trim() }, 'Utilizador acrescentado');
+    };
+  }
+  $('admin-back').onclick = () => { location.hash = '#/'; };
   $('edit-cancel').onclick = () => $('editor').close();
 
   // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
@@ -1102,6 +1257,7 @@
       return;
     }
     closePdf();
+    if (h === '#/gestao') { showAdmin(); window.scrollTo(0, 0); return; }
     if (h === '#/ouvir') { lastListHash = h; showListenResults(); return; }
     lastListHash = h;
     const c = h.match(/^#\/lista\/(.+)$/);
@@ -1222,6 +1378,7 @@
     $('splash').classList.add('gone');
     $('info-user').textContent = 'Sessão: ' + session.user.email;
     loadLyrCache();
+    await Promise.race([loadPerfil(), new Promise(r => setTimeout(r, 1500))]); // sem esperar muito se a rede estiver lenta
     if (!DEMO) restoreSource();
     showList();
     load();

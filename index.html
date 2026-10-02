@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=41">
+  <link rel="stylesheet" href="styles.css?v=42">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -40,6 +40,7 @@
       <button class="icon-btn" id="btn-back-list" aria-label="Voltar" hidden>
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
+      <button class="icon-btn perfil-btn" id="btn-perfil" aria-label="Perfil" title="Perfil" hidden><svg viewBox="0 0 24 24" class="perfil-ic"></svg></button>
       <h1 class="brand" id="list-brand">CANCIONEIRO</h1>
       <span class="topbar-left-spacer" id="topbar-spacer"></span>
       <button class="icon-btn info" id="btn-info" aria-label="Informação"><i>i</i></button>
@@ -79,6 +80,18 @@
       <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra"><span class="a">A</span><span class="s">+</span></button>
     </header>
     <article id="song" class="song"></article>
+  </section>
+
+  <!-- Gestão de utilizadores (perfil Gestor) -->
+  <section id="view-admin" class="view white" hidden>
+    <header class="songbar">
+      <button class="icon-btn" id="admin-back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <h1 class="admin-title">Utilizadores</h1>
+      <div class="spacer"></div>
+    </header>
+    <div id="admin" class="admin"></div>
   </section>
 
   <!-- Índice alfabético (gaveta lateral) -->
@@ -140,8 +153,9 @@
     <p>Marque cânticos com a <b>☆</b> para os encontrar depois em <b>★</b> (preferidos, guardados na sua conta e disponíveis em qualquer dispositivo).</p>
     <p>Toque em <b>🎤</b> e deixe o telemóvel ouvir alguns segundos de um cântico: a app reconhece a língua, transcreve o que ouve e pára sozinha quando encontra o cântico.</p>
     <p>Em cada cântico: <b>A−</b>/<b>A+</b> ajusta o tamanho da letra, <b>♪</b> mostra ou esconde os acordes e os botões de idioma alternam entre o original e a tradução.</p>
-    <p>Nos cânticos do Coro há <b>gravações</b> de cada voz (soprano, contralto, tenor, baixo) e partituras.</p>
-    <label class="src-row">Mostrar cânticos de:
+    <p class="coro-only">Nos cânticos do Coro há <b>gravações</b> de cada voz (soprano, contralto, tenor, baixo) e partituras.</p>
+    <p>O símbolo no canto superior esquerdo mostra o perfil ativo (○ Cancioneiro, □ Coro, △ Maestro, ⚙ Gestor); toque nele para mudar de perfil.</p>
+    <label class="src-row coro-only">Mostrar cânticos de:
       <select id="src-filter"><option value="todas">Todas as fontes</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
@@ -151,6 +165,13 @@
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
     </div>
     <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button type="button" id="info-close">Fechar</button></form>
+  </dialog>
+
+  <!-- Escolher perfil -->
+  <dialog id="perfis" class="perfis">
+    <h2>Perfil</h2>
+    <div id="perfis-list" class="perfis-list"></div>
+    <form method="dialog" class="info-actions"><button type="button" id="perfis-close">Fechar</button></form>
   </dialog>
 
   <!-- Editar letra -->
@@ -169,7 +190,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=41"></script>
-  <script src="app.js?v=41"></script>
+  <script src="config.js?v=42"></script>
+  <script src="app.js?v=42"></script>
 </body>
 </html>
