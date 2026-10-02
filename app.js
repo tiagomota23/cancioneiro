@@ -9,7 +9,8 @@
   const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
-  // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior esquerdo.
+  // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior direito
+  // (que abre também a informação e o fim de sessão).
   const GEAR = '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>';
   const PERFIS = [
     { id: 'cancioneiro', label: 'Cancioneiro', desc: 'Os cânticos do Cancioneiro, sem acordes, partituras nem gravações', icon: '<circle cx="12" cy="12" r="7.5"/>' },
@@ -62,7 +63,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v46';
+  const APP_VERSION = '2026-10-03 v47';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -707,7 +708,7 @@
   function closeListen() { stopRecording(); heard = ''; $('listen').hidden = true; }
   function showListenResults() {
     show('view-list');
-    $('btn-back-list').hidden = false; $('btn-perfil').hidden = true;
+    $('btn-back-list').hidden = false;
     const title = $('list-title'); title.hidden = false;
     if (!listenResult) { location.hash = '#/'; return; }
     const { text, res } = listenResult;
@@ -748,7 +749,6 @@
     const title = $('list-title');
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
-    $('btn-perfil').hidden = !maxRole || !$('btn-back-list').hidden;
     if (q.trim()) {
       searchLyricsRemote(q);
       const res = search(q);
@@ -1010,9 +1010,11 @@
     $('perfis-list').innerHTML = PERFIS.slice(0, rankOf(maxRole)).map(p =>
       `<button class="perfil-opt${p.id === cur ? ' on' : ''}" data-p="${p.id}"><svg viewBox="0 0 24 24" class="perfil-ic">${p.icon}</svg><span><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></button>`).join('') +
       (rankOf(cur) >= 3 ? `<a class="perfil-admin" href="#/gestao">Gestão de utilizadores ${chev}</a>` : '') +
-      (rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '');
+      (rankOf(maxRole) && rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '') +
+      `<button class="perfil-info" id="perfil-info"><i>i</i><span>Informação e ajuda</span></button>`;
     $('perfis-list').querySelectorAll('.perfil-opt').forEach(b => b.onclick = () => { setPerfil(b.dataset.p, true); $('perfis').close(); });
     $('perfis-list').querySelector('.perfil-admin')?.addEventListener('click', () => $('perfis').close());
+    $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = openPerfis;
@@ -1334,7 +1336,6 @@
   $('drawer-search').addEventListener('input', () => { clearTimeout(tz); tz = setTimeout(() => { renderAZ(); $('az').scrollTop = 0; }, 120); });
   $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-  $('btn-info').onclick = () => { $('info').showModal(); $('info').scrollTop = 0; };
   const closeInfo = () => $('info').close();
   $('info-x').onclick = closeInfo;
   $('info-close').onclick = closeInfo;

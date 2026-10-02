@@ -15,7 +15,7 @@ Cada email autorizado (`allowed_emails.role`) tem um perfil; os perfis são hier
 - **Maestro** (△): edita letras, promove cânticos ao Cancioneiro (ou retira os promovidos) e, na Gestão de utilizadores, muda perfis entre Cancioneiro e Maestro (não vê os Gestores).
 - **Gestor** (⚙): página "Gestão de utilizadores" (`#/gestao`): acrescentar/retirar pessoas, mudar perfis, decidir pedidos de acesso; recebe os emails dos pedidos, que têm um botão para cada perfil.
 
-O símbolo no canto superior esquerdo mostra o perfil ativo; tocando nele escolhe-se outro perfil até ao da pessoa. As regras valem também
+O símbolo no canto superior direito mostra o perfil ativo; tocando nele escolhe-se outro perfil até ao da pessoa. As regras valem também
 no servidor: RLS (`my_rank()`) na lista de cânticos e ficheiros, e a função `conteudo` usa o menor entre o perfil ativo e o da pessoa.
 SQL em `supabase/perfis.sql`. Os emails para os Gestores usam o remetente de teste do Resend, que só entrega ao dono da conta Resend;
 para outros Gestores receberem é preciso verificar um domínio no Resend.

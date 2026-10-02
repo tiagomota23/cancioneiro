@@ -461,9 +461,7 @@ dialog.editor { width: min(94vw, 640px); max-width: none; }
   transition: opacity .2s, transform .2s; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 
-/* Perfis: símbolo no canto superior esquerdo (○ Cancioneiro, □ Coro, △ Maestro, ⚙ Gestor) */
-.topbar .perfil-btn:not([hidden]) ~ .topbar-left-spacer { display: none; }
-.topbar .perfil-btn { order: -1; }
+/* Perfis: símbolo no canto superior direito (○ Cancioneiro, □ Coro, △ Maestro, ⚙ Gestor) */
 svg.perfil-ic { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .icon-btn svg.perfil-ic circle { fill: none; stroke: currentColor; }
 .perfil-btn svg.perfil-ic { width: 25px; height: 25px; }
@@ -514,3 +512,5 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
   :root:not([data-theme="light"]) #btn-theme .moon { display: none; }
 }
 .adm-lock { font-size: 11.5px; color: #999; }
+.perfil-info { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 12px; margin-top: 2px; border: 1px solid #dde7e2; border-radius: 10px; background: #fff; color: #333; font-weight: 700; outline: none; }
+.perfil-info i { width: 26px; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 22px; color: var(--green-ink); line-height: 1; }
