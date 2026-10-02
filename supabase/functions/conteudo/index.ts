@@ -88,7 +88,10 @@ async function songs() {
   const [a] = await rest('songs?select=updated_at&order=updated_at.desc.nullslast&limit=1');
   const [b] = await rest('songs?select=edited_at&order=edited_at.desc.nullslast&limit=1');
   const [c] = await rest('songs?select=number&order=number.desc&limit=1');
-  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}`;
+  // cânticos promovidos / retirados do Cancioneiro (mudam o número de cânticos do Cancioneiro)
+  const r = await fetch(`${SB}/rest/v1/songs?select=slug&cancioneiro=eq.true`, { method: 'HEAD', headers: { ...HDR, Prefer: 'count=exact', Range: '0-0' } });
+  const nc = (r.headers.get('content-range') || '').split('/')[1];
+  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
   const list = await all('songs?select=slug,cancioneiro,lyrics,lyrics_edit,translation&order=number.asc');
