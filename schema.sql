@@ -134,3 +134,5 @@ drop policy if exists "canticos editar letra" on public.songs;
 drop policy if exists "coro ler" on storage.objects; -- ficheiros do bucket `coro` só por URL assinado pela função `conteudo`
 -- Partituras (antes em /partituras no site público) estão agora no bucket privado `coro`, em partituras/<nome>.pdf
 update public.songs set pdf_url = lower(pdf_url) where pdf_url like 'partituras/%';
+
+-- Perfis de utilizador (v42): ver supabase/perfis.sql

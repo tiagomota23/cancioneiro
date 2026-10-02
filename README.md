@@ -8,6 +8,18 @@ Webapp móvel (PWA) do cancioneiro: pesquisa por título, autor, número ou pala
 
 Formato da letra (`lyrics`/`translation`, jsonb): `[{ "type": "verse" | "chorus", "lines": ["Texto com [Acorde]sílaba", ...] }]`
 
+## Perfis de utilizador
+Cada email autorizado (`allowed_emails.role`) tem um perfil; os perfis são hierárquicos e cada um pode tudo o que os anteriores podem:
+- **Cancioneiro** (○): só os cânticos do Cancioneiro (`songs.cancioneiro`: os do site original e os promovidos), sem acordes, partituras nem gravações; preferidos.
+- **Coro** (□): todos os cânticos e livros, com acordes, partituras e gravações; não edita.
+- **Maestro** (△): edita letras e promove cânticos ao Cancioneiro (ou retira os promovidos).
+- **Gestor** (⚙): página "Gestão de utilizadores" (`#/gestao`): acrescentar/retirar pessoas, mudar perfis, decidir pedidos de acesso; recebe os emails dos pedidos.
+
+O símbolo no canto superior esquerdo mostra o perfil ativo; tocando nele escolhe-se outro perfil até ao da pessoa. As regras valem também
+no servidor: RLS (`my_rank()`) na lista de cânticos e ficheiros, e a função `conteudo` usa o menor entre o perfil ativo e o da pessoa.
+SQL em `supabase/perfis.sql`. Os emails para os Gestores usam o remetente de teste do Resend, que só entrega ao dono da conta Resend;
+para outros Gestores receberem é preciso verificar um domínio no Resend.
+
 ## Proteção do conteúdo
 A letra, as gravações e as partituras nunca são lidas diretamente da base de dados: passam pela função `supabase/functions/conteudo`
 (`song`, `search`, `match`, `save`, `file`), um cântico de cada vez, com limites por conta registados em `access_log`
