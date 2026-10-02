@@ -82,11 +82,10 @@ body::before {
   padding: calc(10px + var(--safe-top)) 10px 4px;
 }
 .brand {
-  position: absolute; left: 50%;
-  /* centrado na mesma linha que o símbolo do perfil e o "i" (botões de 44 px): a caixa é cortada à altura
-     das maiúsculas (text-box), para o centro ser o das letras e não depender das medidas da fonte em cada telemóvel */
-  top: calc(10px + var(--safe-top) + 22px); transform: translate(-50%, -50%); line-height: 1; margin: 0;
-  text-box: trim-both cap alphabetic;
+  /* centrado na mesma linha que os botões de 44 px, sem transform (que deixava as letras desfocadas):
+     a palavra é cortada à altura das maiúsculas (text-box) só para o alinhamento, sem esconder nada */
+  position: absolute; left: 60px; right: 60px; top: calc(10px + var(--safe-top)); height: 44px; margin: 0;
+  display: flex; align-items: center; justify-content: center; line-height: 1; pointer-events: none;
   font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: .14em;
   white-space: nowrap;
 }
@@ -359,7 +358,8 @@ dialog form button.ghost { background: none; color: var(--green-ink); border: 1p
 .searchrow { padding-left: calc(6px + var(--safe-left)); padding-right: calc(14px + var(--safe-right)); }
 .searchrow > .icon-btn { flex: none; }
 .topbar { padding-left: calc(10px + var(--safe-left)); padding-right: calc(10px + var(--safe-right)); }
-.brand { font-size: clamp(17px, 5.8vw, 24px); max-width: calc(100% - 120px); overflow: hidden; text-overflow: clip; }
+.brand { font-size: clamp(17px, 5.8vw, 24px); }
+.brand span { text-box: trim-both cap alphabetic; margin-right: -.14em; } /* o espaçamento depois da última letra não conta para o centro */
 .rows { padding-left: calc(4px + var(--safe-left)); padding-right: var(--safe-right); }
 .list-title { margin-left: calc(18px + var(--safe-left)); margin-right: calc(18px + var(--safe-right)); overflow-wrap: anywhere; }
 .rows .t { overflow-wrap: anywhere; }
