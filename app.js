@@ -10,12 +10,14 @@
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Com o filtro "Cancioneiro original" os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => prefs.src !== 'original';
-  // Letra editada pela família (lyrics_edit) aparece em todos os modos; a original (site / Drive) fica guardada em lyrics
-  const lyricsOf = s => s.lyrics_edit || s.lyrics || [];
+  // As letras não vêm com a lista: cada cântico é pedido ao servidor quando se abre (função "conteudo", com limites
+  // por pessoa contra cópias em massa). Guardam-se só os cânticos já abertos, para os voltar a mostrar sem rede.
+  const lyr = new Map(); // slug -> { lyrics, translation, edited }
+  const lyricsOf = s => (lyr.get(s.slug) || {}).lyrics || [];
   const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
   const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
   const scoresOf = s => [
-    ...(s.pdf_url ? [{ label: 'Partitura', url: s.pdf_url, mime: 'application/pdf' }] : []),
+    ...(s.pdf_url ? [/^https?:/.test(s.pdf_url) ? { label: 'Partitura', url: s.pdf_url, mime: 'application/pdf' } : { label: 'Partitura', path: s.pdf_url, mime: 'application/pdf' }] : []),
     ...filesOf(s, 'score'),
   ];
   // Momentos da missa (índice do Word "Músicas Coro" do Coro CLU)
@@ -35,7 +37,7 @@
     { id: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
     { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
     { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw', 'de', 'xx'].includes(s.language) },
-    { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.translation },
+    { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.has_translation },
     { id: 'acordes', label: 'Cânticos com acordes', test: s => s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
     { id: 'gravacoes', label: 'Cânticos com gravações das vozes', test: s => filesOf(s, 'recording').length > 0 },
@@ -47,8 +49,9 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-01 v39';
-  const CACHE_KEY = 'cancioneiro.songs.v1';
+  const APP_VERSION = '2026-10-02 v40';
+  const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
+  try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
   const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -100,8 +103,8 @@
   };
   async function logout(msg) {
     try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
-    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
-    songs = []; bySlug = new Map(); session = null; favs = [];
+    try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(lyrKey()); } catch (e) {}
+    songs = []; bySlug = new Map(); session = null; favs = []; lyr.clear();
     if ($('info').open) $('info').close();
     showLogin(msg);
   }
@@ -160,12 +163,73 @@
     } catch (e) { /* sem rede */ }
   }
 
+  // ---------- Conteúdo protegido (função "conteudo" no Supabase) ----------
+  const lyrKey = () => 'cancioneiro.letras.' + (session ? session.user.id : 'anon');
+  const LYR_MAX = 150;
+  function loadLyrCache() { lyr.clear(); for (const [k, v] of store.get(lyrKey(), [])) lyr.set(k, v); }
+  function saveLyrCache() { store.set(lyrKey(), [...lyr.entries()].slice(-LYR_MAX)); }
+  class Limit extends Error {}
+  async function api(op, body) {
+    if (DEMO) return demoApi(op, body);
+    const token = await accessToken();
+    const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', {
+      method: 'POST', headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op, ...body }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 429) throw new Limit(d.message || 'Atingiu o limite de uso por agora. Tente de novo mais tarde.');
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    return d;
+  }
+  const pending = new Map();
+  function getLyrics(slug) {
+    if (lyr.has(slug)) { const v = lyr.get(slug); lyr.delete(slug); lyr.set(slug, v); return Promise.resolve(v); } // mais recente no fim
+    if (!pending.has(slug)) pending.set(slug, api('song', { slug }).then(d => {
+      const v = { lyrics: d.lyrics || [], translation: d.translation || null, edited: !!d.edited };
+      lyr.set(slug, v); saveLyrCache();
+      return v;
+    }).finally(() => pending.delete(slug)));
+    return pending.get(slug);
+  }
+  // Modo de teste local (?demo): o mesmo, mas com a cópia songs.json e sem limites
+  let demoFull = new Map();
+  async function demoApi(op, b) {
+    if (op === 'song') { const s = demoFull.get(b.slug); return { lyrics: s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit }; }
+    if (op === 'search') return { hits: demoSearch(b.q) };
+    if (op === 'match') return { matches: matchLyrics(b.text) };
+    if (op === 'file') {
+      const [path, frag = ''] = b.path.split('#');
+      const book = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' }[path];
+      if (!book) return { url: 'drive-coro-clu/out/' + path };
+      const p = +(frag.match(/(?:^|&)p=(\d+)/) || [])[1] || 1, c = (frag.match(/(?:^|&)c=([^&]+)/) || [])[1];
+      const pages = c ? [...new Set(c.split('|').map(r => +r.split(':')[0]))] : [p, p + 1];
+      return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
+    }
+    if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
+    throw new Error('op');
+  }
+  function demoSearch(q) {
+    const nq = norm(q).trim(), terms = nq.split(/\s+/), out = [];
+    for (const s of demoFull.values()) {
+      const lines = (s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
+      const nl = lines.map(norm);
+      let li = nl.findIndex(l => l.includes(nq)), score = 20;
+      if (li < 0 && terms.every(t => nl.some(l => l.includes(t)))) { li = nl.findIndex(l => l.includes(terms[0])); score = 8; }
+      if (li >= 0) out.push({ slug: s.slug, score, snip: lines[li] });
+    }
+    return out.slice(0, 60);
+  }
+
   // ---------- Dados (Supabase) ----------
   async function fetchSongs() {
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
     const token = await accessToken();
-    if (DEMO) return (await fetch('songs.json')).json();
-    const cols = 'slug,number,book_page,title,author,language,lyrics,translation,translation_language,has_chords,pdf_url,rights,lyrics_edit,edited_by,edited_at,' +
+    if (DEMO) {
+      const full = await (await fetch('songs.json')).json();
+      demoFull = new Map(full.map(s => [s.slug, s]));
+      return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
+    }
+    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -188,17 +252,10 @@
     }
     applySource();
   }
-  function indexLyrics(s) {
-    const lyr = lyricsOf(s).flatMap(st => st.lines.map(stripChords));
-    const tr = (s.translation || []).flatMap(st => st.lines);
-    s._lines = lyr.concat(tr);
-    s._l = s._lines.map(norm);
-  }
   // Filtro por fonte: "todas", ou só uma (ex.: só o Cancioneiro original, como era antes)
   function applySource() {
     const f = prefs.src || 'todas';
     songs = f === 'todas' ? allSongs : allSongs.filter(s => srcOf(s).includes(f));
-    allSongs.forEach(indexLyrics);
     lyrIndex = null;
     bySlug = new Map(allSongs.map(s => [s.slug, s]));
     const present = new Set(allSongs.flatMap(srcOf));
@@ -247,16 +304,28 @@
       const inAuthor = terms.every(t => s._a.includes(t));
       if (s._t.startsWith(nq)) score += 60; else if (inTitle) score += 40;
       if (inAuthor) score += 25;
-      // frase exata numa linha, ou todos os termos na letra
-      let li = s._l.findIndex(l => l.includes(nq));
-      if (li >= 0) score += 20;
-      else if (!inTitle && !inAuthor && terms.every(t => s._l.some(l => l.includes(t)))) {
-        score += 8; li = s._l.findIndex(l => l.includes(terms[0]));
-      }
-      if (li >= 0 && !inTitle) snip = s._lines[li];
+      // palavras da letra: resultados do servidor (lyricHits), com o trecho da linha encontrada
+      const h = lyricHits.q === nq && lyricHits.map.get(s.slug);
+      if (h) { score += h.score; if (!inTitle) snip = h.snip; }
       if (score) out.push({ s, score, snip });
     }
     return out.sort((a, b) => b.score - a.score || a.s.title.localeCompare(b.s.title, 'pt'));
+  }
+  let lyricHits = { q: '', map: new Map() };
+  let lyricTimer = null;
+  function searchLyricsRemote(q) {
+    const nq = norm(q).trim();
+    clearTimeout(lyricTimer);
+    if (nq.length < 3 || lyricHits.q === nq) return;
+    lyricTimer = setTimeout(async () => {
+      try {
+        const d = await api('search', { q });
+        lyricHits = { q: nq, map: new Map(d.hits.map(h => [h.slug, h])) };
+        if (norm($('search').value).trim() === nq && !$('view-list').hidden) showList((lastListHash.match(/^#\/lista\/(.+)$/) || [])[1]);
+      } catch (e) {
+        if (e instanceof Limit) $('status').textContent = e.message;
+      }
+    }, 350);
   }
 
   function highlight(text, q) {
@@ -278,11 +347,12 @@
 
   // ---------- Identificar pela letra ouvida ----------
   const tok = s => norm(s).split(/[^a-z0-9]+/).filter(w => w.length > 1);
+  // (no modo de teste local; em produção a correspondência é feita no servidor, ver matchRemote)
   let lyrIndex = null; // [{s, wins:[{words:Set, bigrams:Set, line}]}], idf
   function buildLyricIndex() {
     const df = new Map(), items = [];
-    for (const s of songs) {
-      const sources = [lyricsOf(s).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
+    for (const s of demoFull.values()) {
+      const sources = [(s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
       const wins = [], seen = new Set();
       for (const lines of sources) {
         const lt = lines.map(tok);
@@ -300,7 +370,7 @@
       seen.forEach(w => df.set(w, (df.get(w) || 0) + 1));
       items.push({ s, wins });
     }
-    const N = songs.length;
+    const N = demoFull.size;
     lyrIndex = { items, idf: w => Math.log((N + 1) / (1 + (df.get(w) || 0))) };
   }
   function matchLyrics(text) {
@@ -320,9 +390,13 @@
         for (const b of qbi) if (win.bigrams.has(b)) sc += 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0);
         if (sc > best) { best = sc; bestLine = win.line; }
       }
-      if (best) out.push({ s, score: best / total, snip: bestLine });
+      if (best) out.push({ slug: s.slug, score: best / total, snip: bestLine });
     }
     return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
+  }
+  async function matchRemote(text) {
+    const d = await api('match', { text });
+    return (d.matches || []).map(m => ({ s: bySlug.get(m.slug), score: m.score, snip: m.snip })).filter(m => m.s);
   }
 
   // Gravação: microfone -> PCM 16 kHz -> Whisper (worker) a cada ~2,5 s -> correspondência.
@@ -554,13 +628,17 @@
       getWorker().postMessage({ type: 'transcribe', id: rec.id, audio: normalize(pcm), language });
     }
   }
-  function onTranscript(raw, language) {
+  async function onTranscript(raw, language) {
     const t = cleanText(raw || '');
     if (!t || HALLUCINATIONS.test(t)) return;
-    const res = matchLyrics(t), words = tok(t).length;
+    let res = [];
+    try { res = await matchRemote(t); }
+    catch (e) { if (e instanceof Limit) { listenMsg(e.message); stopRecording(); return; } }
+    if (!rec) { if (!heard || (res[0] && res[0].score >= (lastMatch.score || 0))) { heard = t; lastMatch = { text: t, res, score: res[0] ? res[0].score : 0 }; } return; }
+    const words = tok(t).length;
     const top = res[0], second = res[1];
     const score = top ? top.score : 0;
-    if (!rec.best || score >= rec.best.score) rec.best = { text: t, score, language };
+    if (!rec.best || score >= rec.best.score) { rec.best = { text: t, score, language }; lastMatch = { text: t, res, score }; }
     if (score >= 0.3 && rec.lang === undefined) rec.lang = language; // esta língua funciona: fica
     heard = rec.best.text;
     $('listen-text').textContent = `“${heard}”`;
@@ -588,8 +666,11 @@
     }
     finishListening();
   }
-  function finishListening() {
-    listenResult = { text: heard, res: matchLyrics(heard) };
+  let lastMatch = { text: '', res: [], score: 0 };
+  async function finishListening() {
+    let res = lastMatch.text === heard ? lastMatch.res : null;
+    if (!res) { try { res = await matchRemote(heard); } catch (e) { res = []; } }
+    listenResult = { text: heard, res };
     heard = '';
     $('listen').hidden = true;
     $('search').value = ''; $('search-clear').hidden = true;
@@ -613,7 +694,7 @@
     }).join('');
     $('status').textContent = `Ouvido: “${text}”`;
   }
-  window.cancioneiroMatch = matchLyrics; // útil para testes
+  window.cancioneiroMatch = matchRemote; // útil para testes
   window.cancioneiroHeard = t => { heard = t; finishListening(); };
   $('btn-mic').onclick = openListen;
   $('listen-cancel').onclick = closeListen;
@@ -640,6 +721,7 @@
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
     if (q.trim()) {
+      searchLyricsRemote(q);
       const res = search(q);
       title.hidden = false;
       title.textContent = `${res.length} resultado${res.length === 1 ? '' : 's'}`;
@@ -689,10 +771,17 @@
     const s = bySlug.get(slug);
     if (!s) { if (songs.length) location.hash = '#/'; return; }
     show('view-song');
-    const mode = s.translation ? (songView[slug] || 'orig') : 'orig';
+    const data = lyr.get(slug);
+    let wait = '';
+    if (!data) {
+      wait = '<p class="note lyr-wait">A carregar a letra…</p>';
+      getLyrics(slug).then(() => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } })
+        .catch(e => { const w = $('song').querySelector('.lyr-wait'); if (w) w.textContent = e instanceof Limit ? e.message : 'Não foi possível carregar a letra. Verifique a ligação à internet.'; });
+    }
+    const mode = s.has_translation ? (songView[slug] || 'orig') : 'orig';
     const langName = LANGS[s.language] || s.language;
     const trName = LANGS[s.translation_language] || 'Português';
-    const sw = s.translation
+    const sw = s.has_translation
       ? `<div class="lang-switch" role="group" aria-label="Idioma">
            <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(langName)}</button>
            <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(trName)}</button>
@@ -710,12 +799,12 @@
     const recs = filesOf(s, 'recording');
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
       `<li><button class="rec" data-i="${i}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
-    const lyr = lyricsOf(s);
-    const body = mode === 'trad' ? s.translation : lyr;
+    const lyrics = data ? data.lyrics : [];
+    const body = (mode === 'trad' ? data && data.translation : lyrics) || [];
     const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
-    const edited = !!s.lyrics_edit;
+    const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
-    const editBar = !DEMO && mode === 'orig' && extrasOn()
+    const editBar = !DEMO && data && mode === 'orig' && extrasOn()
       ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button></p>`
       : '';
     $('song').innerHTML = `
@@ -724,6 +813,7 @@
       ${rights}
       <div class="meta">${sw}${pdf}</div>
       ${note}
+      ${wait}
       ${renderStanzas(body)}
       ${editBar}
       ${recHtml}
@@ -731,9 +821,9 @@
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
-    $('btn-chords').hidden = !(lyr.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
+    $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
-    $('btn-copy').onclick = () => copyLyrics(s, body);
+    $('btn-copy').onclick = () => { if (data) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
@@ -788,7 +878,7 @@
     $('edit-title').textContent = s.title;
     $('edit-text').value = toText(lyricsOf(s));
     $('edit-msg').textContent = '';
-    $('edit-reset').hidden = !s.lyrics_edit;
+    $('edit-reset').hidden = !s.is_edited;
     $('editor').showModal();
   }
   async function saveLyrics(value) {
@@ -796,13 +886,11 @@
     $('edit-msg').textContent = 'A guardar…';
     for (const b of document.querySelectorAll('#editor button')) b.disabled = true;
     try {
-      const { data, error } = await sb.from('songs').update({ lyrics_edit: value }).eq('slug', editSlug)
-        .select('lyrics_edit,edited_by,edited_at');
-      if (error) throw error;
-      if (!data || !data.length) throw new Error('sem permissão');
-      Object.assign(s, data[0]);
-      store.set(CACHE_KEY, allSongs.map(({ _t, _a, _lines, _l, ...x }) => x));
-      indexLyrics(s); lyrIndex = null;
+      const d = await api('save', { slug: editSlug, lyrics_edit: value });
+      Object.assign(s, { edited_by: d.edited_by, edited_at: d.edited_at, is_edited: !!d.is_edited });
+      store.set(CACHE_KEY, allSongs.map(({ _t, _a, ...x }) => x));
+      lyr.delete(editSlug); saveLyrCache(); // volta a pedir a letra (editada ou original)
+      lyrIndex = null;
       $('editor').close();
       showSong(editSlug);
     } catch (e) {
@@ -827,16 +915,14 @@
 
   // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
   const signed = new Map();
-  async function fileUrl(f) {
-    if (f.url) return f.url;
-    const path = f.path.split('#')[0]; // livros: "livros/x.pdf#p=41" (várias páginas do mesmo PDF)
-    if (DEMO) return 'drive-coro-clu/out/' + path; // modo de teste local
-    const hit = signed.get(path);
-    if (hit && hit.until > Date.now()) return hit.url;
-    const { data, error } = await sb.storage.from('coro').createSignedUrl(path, 3600);
-    if (error) throw error;
-    signed.set(path, { url: data.signedUrl, until: Date.now() + 3500e3 });
-    return data.signedUrl;
+  // devolve { url } ou, nos livros, { pages: [{ n, url }] } (só as páginas do cântico)
+  async function fileSrc(f) {
+    if (f.url) return { url: f.url };
+    const hit = signed.get(f.path);
+    if (hit && hit.until > Date.now()) return hit.src;
+    const src = await api('file', { path: f.path });
+    signed.set(f.path, { src, until: Date.now() + 3300e3 });
+    return src;
   }
   async function playRec(btn, f) {
     const li = btn.closest('li');
@@ -847,13 +933,13 @@
     try {
       a = document.createElement('audio');
       a.controls = true; a.preload = 'auto';
-      a.src = await fileUrl(f);
+      a.src = (await fileSrc(f)).url;
       li.appendChild(a);
       a.addEventListener('play', () => { document.querySelectorAll('.recs audio').forEach(x => { if (x !== a) x.pause(); }); btn.classList.add('on'); });
       a.addEventListener('pause', () => btn.classList.remove('on'));
       await a.play().catch(() => {});
     } catch (e) {
-      li.insertAdjacentHTML('beforeend', '<span class="rec-err">Não foi possível abrir a gravação.</span>');
+      li.insertAdjacentHTML('beforeend', `<span class="rec-err">${esc(e instanceof Limit ? e.message : 'Não foi possível abrir a gravação.')}</span>`);
     }
     btn.classList.remove('busy');
   }
@@ -861,8 +947,8 @@
   // ---------- Partitura (PDF) dentro da app ----------
   // No iPhone, com a app no ecrã principal, abrir o PDF diretamente não deixa voltar atrás;
   // por isso os PDFs guardados no site são mostrados aqui, com botão "Voltar".
-  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/';
-  let pdfjs = null, pdfDoc = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null, pdfPage = 0;
+  const PDFJS = new URL('vendor/pdfjs/', location.href).href; // pdf.js 4.10.38 (cópia local)
+  let pdfjs = null, pdfDoc = null, pdfBook = null, pdfZoom = 1, pdfRender = 0, pdfSlug = null, pdfUrl = null, pdfPage = 0;
   const pageOf = f => { const m = (f.path || '').match(/#p=(\d+)/); return m ? +m[1] : 0; };
   // Recortes do cântico no livro: "&c=364:0,0.044,0.5,0.47|365:…" (frações da página: x0,y0,x1,y1)
   const cropsOf = f => { const m = (f.path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : null; };
@@ -875,30 +961,40 @@
     }
     return pdfjs;
   }
-  async function openPdf(url, title, slug, mime, page = 0, crops = null) {
+  // src: { url } (um PDF ou imagem) ou { pages: [{ n, url }] } (páginas soltas de um livro, cada uma um PDF de 1 página)
+  async function openPdf(src, title, slug, mime, page = 0, crops = null) {
+    const key = JSON.stringify(src.pages ? src.pages.map(p => p.n) : src.url);
     const sameCrops = JSON.stringify(crops) === JSON.stringify(pdfCrops);
     pdfCrops = crops; pdfWhole = false;
     pdfSlug = slug;
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
     $('pdf-title').textContent = title;
-    if (pdfUrl === url && pdfDoc) { if (pdfPage !== page || !sameCrops) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
-    pdfUrl = url; pdfDoc = null; pdfZoom = 1; pdfPage = page;
+    if (pdfUrl === key && (pdfDoc || pdfBook)) { if (pdfPage !== page || !sameCrops) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
+    pdfUrl = key; pdfDoc = null; pdfBook = null; pdfZoom = 1; pdfPage = page;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
     try {
-      if (/^image\//.test(mime || '')) {
-        $('pdfpages').innerHTML = `<img class="score-img" alt="" src="${esc(url)}">`;
+      if (!src.pages && /^image\//.test(mime || '')) {
+        $('pdfpages').innerHTML = `<img class="score-img" alt="" src="${esc(src.url)}">`;
         return;
       }
       const lib = await loadPdfJs();
-      pdfDoc = await lib.getDocument({ url, disableAutoFetch: !!pdfPage }).promise; // livros grandes: só descarrega as páginas pedidas
+      if (src.pages) {
+        const docs = await Promise.all(src.pages.map(p => lib.getDocument({ url: p.url, isEvalSupported: false }).promise));
+        pdfBook = new Map(src.pages.map((p, i) => [p.n, docs[i]]));
+      } else pdfDoc = await lib.getDocument({ url: src.url, isEvalSupported: false }).promise;
       await renderPdf();
     } catch (e) {
-      $('pdfpages').innerHTML = `<p class="pdf-msg">Não foi possível mostrar a partitura.<br><a href="${esc(url)}" target="_blank" rel="noopener">Abrir o ficheiro</a></p>`;
+      $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a partitura.</p>';
     }
   }
+  // página n: num livro cada página é um PDF à parte (página 1 desse PDF)
+  const pdfPageN = async n => pdfBook ? (pdfBook.has(n) ? pdfBook.get(n).getPage(1) : null) : (n >= 1 && n <= pdfDoc.numPages ? pdfDoc.getPage(n) : null);
   async function renderPdf() {
-    if (!pdfDoc) return;
+    try { await renderPdfInner(); } catch (e) { console.error('renderPdf', e); }
+  }
+  async function renderPdfInner() {
+    if (!pdfDoc && !pdfBook) return;
     const id = ++pdfRender, box = $('pdfpages');
     box.innerHTML = '';
     const width = Math.min(box.clientWidth - 16, 900);
@@ -906,9 +1002,9 @@
     if (pdfCrops && !pdfWhole) {
       // só a parte da página (ou páginas) onde está o cântico
       for (const [pg, x0, y0, x1, y1] of pdfCrops) {
-        if (pg < 1 || pg > pdfDoc.numPages) continue;
-        const page = await pdfDoc.getPage(pg);
+        const page = await pdfPageN(pg);
         if (id !== pdfRender) return;
+        if (!page) continue;
         const v1 = page.getViewport({ scale: 1 });
         const cw = (x1 - x0) * v1.width, chh = (y1 - y0) * v1.height;
         const scale = width / cw * pdfZoom;
@@ -929,12 +1025,12 @@
       box.appendChild(more);
       return;
     }
-    // num livro (#p=N) mostra só a página do cântico e a seguinte
-    const first = pdfPage ? Math.min(pdfPage, pdfDoc.numPages) : 1;
-    const last = pdfPage ? Math.min(pdfPage + 1, pdfDoc.numPages) : pdfDoc.numPages;
-    for (let i = first; i <= last; i++) {
-      const page = await pdfDoc.getPage(i);
+    // num livro mostra só as páginas do cântico (as que o servidor enviou)
+    const list = pdfBook ? [...pdfBook.keys()].sort((a, b) => a - b) : Array.from({ length: pdfDoc.numPages }, (_, i) => i + 1);
+    for (const i of list) {
+      const page = await pdfPageN(i);
       if (id !== pdfRender) return;
+      if (!page) continue;
       const v1 = page.getViewport({ scale: 1 });
       const scale = width / v1.width * pdfZoom;
       let r = dpr;
@@ -981,11 +1077,11 @@
           const key = h;
           (async () => {
             try {
-              const url = await fileUrl(sc);
-              if (location.hash === key) openPdf(url, s.title, slug, sc.mime, pageOf(sc), cropsOf(sc));
+              const src = await fileSrc(sc);
+              if (location.hash === key) openPdf(src, s.title, slug, sc.mime, pageOf(sc), cropsOf(sc));
             } catch (e) {
               $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = s.title;
-              $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível abrir a partitura.</p>';
+              $('pdfpages').innerHTML = `<p class="pdf-msg">${esc(e instanceof Limit ? e.message : 'Não foi possível abrir a partitura.')}</p>`;
             }
           })();
         }
@@ -1117,6 +1213,7 @@
     $('view-login').hidden = true;
     $('splash').classList.add('gone');
     $('info-user').textContent = 'Sessão: ' + session.user.email;
+    loadLyrCache();
     if (!DEMO) restoreSource();
     showList();
     load();
