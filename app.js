@@ -63,7 +63,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v47';
+  const APP_VERSION = '2026-10-03 v48';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1018,6 +1018,8 @@
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = openPerfis;
+  // símbolos dos perfis no texto da informação (os mesmos do botão)
+  document.querySelectorAll('svg[data-perfil]').forEach(el => { el.innerHTML = PERFIS[rankOf(el.dataset.perfil) - 1].icon; });
   // ninguém pode selecionar nem copiar o texto da letra (o botão de copiar, do perfil Coro para cima, continua a funcionar)
   const inSong = e => e.target && e.target.closest && e.target.closest('#song');
   for (const ev of ['copy', 'cut', 'contextmenu', 'selectstart', 'dragstart']) document.addEventListener(ev, e => { if (inSong(e)) e.preventDefault(); });
