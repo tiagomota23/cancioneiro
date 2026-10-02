@@ -62,7 +62,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v44';
+  const APP_VERSION = '2026-10-03 v45';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1042,12 +1042,12 @@
           <div class="adm-act">${roleSelect('cancioneiro', 'class="req-role" aria-label="Perfil"')}<button class="adm-ok">Autorizar</button><button class="adm-no">Recusar</button></div></li>`).join('')}</ul>` : '') +
       `<h2>Utilizadores (${users.length})</h2><ul class="adm-list">${users.map(u => `
         <li data-email="${esc(u.email)}"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic">${PERFIS[rankOf(u.role) - 1].icon}</svg>
-          <b class="adm-name"${gestor ? ' role="button" tabindex="0" title="Mudar o nome"' : ''}>${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
+          <b class="adm-name"${gestor && !u.google_name ? ' role="button" tabindex="0" title="Mudar o nome (até a pessoa entrar com o Google)"' : ''}>${esc(u.name || u.google_name || '(sem nome)')}</b><span>${esc(u.email)}</span>
           <small>${u.last_sign_in_at ? 'Última entrada: ' + fmtDate(u.last_sign_in_at) : 'Ainda não entrou'}${u.email === d.me ? ' · (eu)' : ''}</small></div>
           <div class="adm-act">${roleSelect(u.role, 'class="usr-role" aria-label="Perfil"', gestor ? 4 : 3)}${gestor ? '<button class="adm-del" aria-label="Retirar acesso">Retirar</button>' : ''}</div></li>`).join('')}</ul>
       ${gestor ? `<h2>Acrescentar utilizador</h2>
       <form class="adm-add" id="adm-add">
-        <input id="add-name" placeholder="Nome" autocomplete="off" maxlength="80">
+        <input id="add-name" placeholder="Nome (o Google substitui ao entrar)" autocomplete="off" maxlength="80">
         <input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required>
         ${roleSelect('cancioneiro', 'id="add-role" aria-label="Perfil"')}
         <button type="submit">Acrescentar</button>
@@ -1058,7 +1058,7 @@
       showAdmin();
     };
     box.querySelectorAll('li[data-req]').forEach(li => {
-      li.querySelector('.adm-ok').onclick = () => call('user', { email: li.dataset.email, role: li.querySelector('.req-role').value, name: li.querySelector('b').textContent.replace('(sem nome)', '').split(' ')[0] }, 'Acesso autorizado');
+      li.querySelector('.adm-ok').onclick = () => call('user', { email: li.dataset.email, role: li.querySelector('.req-role').value, name: li.querySelector('b').textContent.replace('(sem nome)', '') }, 'Acesso autorizado');
       li.querySelector('.adm-no').onclick = () => { if (confirm('Recusar este pedido? A conta fica bloqueada.')) call('reject', { id: li.dataset.req }, 'Pedido recusado'); };
     });
     box.querySelectorAll('li[data-email]:not([data-req])').forEach(li => {
@@ -1069,7 +1069,8 @@
       };
       if (!gestor) return;
       li.querySelector('.adm-del').onclick = () => { if (confirm(`Retirar o acesso de ${email} ao Cancioneiro?`)) call('user', { email, remove: true }, 'Acesso retirado'); };
-      const nm = li.querySelector('.adm-name');
+      const nm = li.querySelector('.adm-name[role=button]');
+      if (!nm) return; // o nome vem do Google
       const rename = () => { const v = prompt('Nome:', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
       nm.onclick = rename; nm.onkeydown = e => { if (e.key === 'Enter') rename(); };
     });

@@ -242,10 +242,18 @@ Deno.serve(async (req) => {
         fetch(`${SB}/auth/v1/admin/users?per_page=1000`, { headers: HDR }).then(r => r.json()).catch(() => ({})),
       ]);
       const seen = new Map((au.users || []).map(u => [String(u.email || '').toLowerCase(), u]));
+      // nome e apelido dados pelo Google ao entrar (guardados como nome da pessoa)
+      const gname = u => { const m = u?.user_metadata || {}, id = (u?.identities || [])[0]?.identity_data || {};
+        const gf = [m.given_name || id.given_name, m.family_name || id.family_name].filter(Boolean).join(' ');
+        return (gf || m.full_name || m.name || id.full_name || id.name || '').trim() || null; };
+      for (const x of list) {
+        const g = gname(seen.get(x.email));
+        if (g && g !== x.name) { x.name = g; await rest(`allowed_emails?email=eq.${encodeURIComponent(x.email)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: g }) }); }
+      }
       const pending = lvl >= 4 ? reqs.filter(q => !list.some(x => x.email === q.email)) : [];
       return out({
         me: user.email,
-        users: list.filter(x => lvl >= 4 || x.role !== 'gestor').map(x => { const u = seen.get(x.email); return { ...x, google_name: u?.user_metadata?.full_name || null, last_sign_in_at: u?.last_sign_in_at || null }; }),
+        users: list.filter(x => lvl >= 4 || x.role !== 'gestor').map(x => { const u = seen.get(x.email); return { ...x, google_name: gname(u), last_sign_in_at: u?.last_sign_in_at || null }; }),
         requests: pending,
       });
     }

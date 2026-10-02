@@ -79,7 +79,7 @@ async function onPeekOrDecide(id, token, action, decide, role) {
   if (!decide || req.status !== 'pendente') return json(info);
   if (action === 'autorizar') {
     if (!PERFIS.some(([r]) => r === role)) role = 'cancioneiro';
-    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email, name: req.name ? String(req.name).split(' ')[0] : null, role, added_by: 'link do email' }) });
+    await rest('allowed_emails', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ email: req.email, name: req.name || null, role, added_by: 'link do email' }) });
     info.role = role;
     info.status = 'autorizado';
   } else if (action === 'bloquear') {
