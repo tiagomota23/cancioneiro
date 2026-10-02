@@ -103,3 +103,34 @@ revoke insert, update, delete on public.songs from anon, authenticated;
 grant update (lyrics_edit) on public.songs to authenticated;
 drop policy if exists "canticos editar letra" on public.songs;
 create policy "canticos editar letra" on public.songs for update to authenticated using (public.is_allowed()) with check (public.is_allowed());
+
+-- Proteção contra cópias em massa (v40): a letra e os ficheiros só saem pela função `conteudo`, um cântico de cada vez e com limites
+create table if not exists public.access_log (
+  id bigint generated always as identity primary key,
+  user_id uuid not null, email text, kind text not null, key text, at timestamptz not null default now());
+create index if not exists access_log_user_kind_at on public.access_log (user_id, kind, at desc);
+alter table public.access_log enable row level security; -- sem políticas: só service_role
+alter table public.songs add column if not exists has_translation boolean generated always as (translation is not null) stored;
+alter table public.songs add column if not exists is_edited boolean generated always as (lyrics_edit is not null) stored;
+-- As edições passam a ser gravadas pela função `conteudo` (service_role), que indica o autor em edited_by
+create or replace function public.song_edit_stamp() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.lyrics_edit is distinct from old.lyrics_edit then
+    new.edited_by := coalesce(auth.jwt() ->> 'email', new.edited_by);
+    new.edited_at := now();
+    insert into public.song_edits (song_slug, old_lyrics, new_lyrics, edited_by)
+      values (new.slug, coalesce(old.lyrics_edit, old.lyrics), new.lyrics_edit, new.edited_by);
+  end if;
+  return new;
+end $$;
+-- Permissões mínimas: o browser só lê o índice (sem letra) e gere os favoritos
+revoke all on all tables in schema public from anon, authenticated;
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+grant select (id, slug, number, book_page, title, author, language, translation_language, has_chords, has_translation,
+  pdf_url, rights, is_edited, edited_by, edited_at) on public.songs to authenticated;
+grant select on public.song_sources, public.song_tags, public.song_files, public.sync_log to authenticated;
+grant select, insert, delete on public.favorites to authenticated;
+drop policy if exists "canticos editar letra" on public.songs;
+drop policy if exists "coro ler" on storage.objects; -- ficheiros do bucket `coro` só por URL assinado pela função `conteudo`
+-- Partituras (antes em /partituras no site público) estão agora no bucket privado `coro`, em partituras/<nome>.pdf
+update public.songs set pdf_url = lower(pdf_url) where pdf_url like 'partituras/%';
