@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v122';
+  const APP_VERSION = '2026-10-03 v125';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1878,50 +1878,88 @@
   // no menu do canto superior direito (Perfil, ou o "i" para quem só tem o perfil Cancioneiro). Depois não volta a insistir.
   // ---------- Tutorial: corre na 1.ª vez (adaptado ao perfil); pode ver-se de novo no "i" ----------
   const TOUR_KEY = 'cancioneiro.tutorial';
+  // cada passo pode abrir a página de que fala (go) e destacar um elemento dela (el); diz também como lá chegar
+  const closeAllDialogs = () => document.querySelectorAll('dialog[open]:not(.tour)').forEach(d => d.close());
+  const waitFor = async (sel, ms = 2500) => { for (let t = 0; t < ms; t += 100) { const e = document.querySelector(sel); if (e && e.offsetParent) return e; await new Promise(r => setTimeout(r, 100)); } return null; };
+  const goHome = async () => { closeAllDialogs(); closeDrawer(); if ((location.hash || '#/') !== '#/') { location.hash = '#/'; await new Promise(r => setTimeout(r, 400)); } window.scrollTo(0, 0); };
+  function tourSong(L) {
+    const pool = allSongs.filter(s => s.approved !== false && (L >= 2 || inCancioneiro(s)));
+    return (L >= 2 && (pool.find(s => s.has_chords && filesOf(s, 'recording').length && scoresOf(s).length) || pool.find(s => filesOf(s, 'recording').length)))
+      || pool.find(s => s.has_translation) || pool[0];
+  }
   function tourSteps() {
-    const L = rankOf(maxRole) || 1, solo = document.body.classList.contains('solo');
+    const L = rankOf(maxRole) || 1, solo = document.body.classList.contains('solo'), song = tourSong(L);
+    const openSong = async () => { closeAllDialogs(); closeDrawer(); if (song) { location.hash = '#/cantico/' + encodeURIComponent(song.slug); await waitFor('#song h1'); window.scrollTo(0, 0); } };
     const st = [
-      { msg: L >= 2 ? 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer (menos de um minuto).' : 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer.' },
-      { el: '.search', msg: 'Procure qualquer cântico pelo título, autor, número ou por palavras da letra.' },
-      { el: '#btn-mic', msg: 'Toque no microfone e deixe o telemóvel ouvir uns segundos de um cântico: a app descobre qual é.' },
-      { el: '#btn-menu', msg: L >= 2 ? 'As coleções: os seus Preferidos, o Cancioneiro, o Coro, o Songbook, o CANTI 2024, os Novos Cânticos e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
-      { msg: 'Em cada cântico: ☆ guarda-o nos Preferidos, A− / A+ muda o tamanho da letra, ☾ alterna entre claro e escuro, e o botão de partilhar envia-o a alguém (o endereço vale 24 horas).' + (L >= 2 ? ' Também pode ver os acordes, abrir as partituras e ouvir as gravações de cada voz.' : '') },
+      { go: goHome, msg: 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer: vamos abrir as várias páginas da app.' },
+      { go: goHome, el: '.search', msg: 'Na página inicial, procure qualquer cântico pelo título, autor, número ou por palavras da letra.' },
+      { go: goHome, el: '#btn-mic', msg: 'Toque no microfone e deixe o telemóvel ouvir uns segundos de um cântico: a app descobre qual é.' },
+      { go: goHome, el: '#btn-menu', msg: 'Este botão, à esquerda da pesquisa, abre as coleções. Vamos abri-las…' },
+      { go: async () => { closeAllDialogs(); openDrawer(); await new Promise(r => setTimeout(r, 450)); }, el: '.drawer-panel',
+        msg: L >= 2 ? 'As coleções: os seus Preferidos, o Cancioneiro, o Coro, o Songbook, o CANTI 2024, os Novos Cânticos e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
     ];
-    if (L >= 2) st.push({ msg: 'Conhece um cântico que falta? Acrescente-o no Perfil → «Acrescentar um cântico»: pode escrevê-lo ou gerá-lo de uma página da internet ou de um PDF.' + (L >= 3 ? '' : ' Um Maestro aprova-o.') });
-    if (L >= 3) st.push({ msg: 'Como Maestro: «Editar cântico» muda letra, título, categoria, gravações e partituras; o livro no topo de um cântico põe-no no Cancioneiro, no Coro ou numa folha. Nas folhas organiza a Missa por secções (ou com um template), partilha-as e gera o PDF. Os cânticos novos esperam pela sua aprovação.' });
-    if (L >= 4) st.push({ msg: 'Como Gestor: no Perfil, «Gestão de utilizadores» deixa autorizar pedidos de acesso, mudar perfis e retirar acessos.' });
-    st.push({ el: '#btn-perfil', msg: solo ? 'Aqui, no «i», tem a ajuda, pode instalar a app no ecrã principal e partilhá-la. O tutorial também se pode ver de novo aqui.'
-      : 'Aqui está o seu perfil: pode usar um perfil mais simples, instalar a app no ecrã principal, partilhá-la com convite e ver a ajuda no «i» (onde também pode rever este tutorial).' });
+    if (song) {
+      st.push({ go: openSong, el: '#view-song .songbar', msg: `Toque num cântico de qualquer lista para o abrir — por exemplo, «${song.title}». No topo: ${L >= 3 ? 'o livro põe-no nos Preferidos, no Cancioneiro, no Coro ou numa folha' : '☆ guarda-o nos Preferidos'}; partilhar envia-o a alguém (o endereço vale 24 horas); ☾ alterna claro / escuro; A− / A+ muda o tamanho da letra.` });
+      if (L >= 2) {
+        st.push({ go: openSong, el: '#btn-chords', msg: 'Mostra ou esconde os acordes por cima da letra.' });
+        st.push({ go: openSong, el: '#song .meta a.pdf', msg: 'As partituras (e as páginas dos livros) abrem aqui, por baixo do título; dentro, amplie com dois dedos.' });
+        st.push({ go: async () => { await openSong(); const r = await waitFor('#song .recs'); if (r) r.scrollIntoView({ block: 'center' }); }, el: '#song .recs', msg: 'As gravações de cada voz: toque para ouvir. Pode sair do cântico que a gravação continua, com um botão por cima da app para a parar.' });
+      }
+      if (L >= 3) st.push({ go: async () => { await openSong(); const e = await waitFor('#btn-edit'); if (e) e.scrollIntoView({ block: 'center' }); }, el: '#btn-edit', msg: 'No fim de cada cântico, «Editar cântico» muda a letra, o título, a categoria, as gravações e as partituras.' });
+    }
+    st.push({ go: goHome, el: '#btn-perfil', msg: solo ? 'Este símbolo, no canto superior direito, abre a ajuda («i»). Vamos abri-la…' : 'Este símbolo, no canto superior direito, abre o seu Perfil. Vamos abri-lo…' });
+    if (solo) {
+      st.push({ go: async () => { await goHome(); $('btn-perfil').click(); await waitFor('#info-install'); }, el: '#info-install', msg: 'Aqui pode instalar a app no ecrã principal…' });
+      st.push({ go: async () => { if (!$('info').open) { await goHome(); $('btn-perfil').click(); } await waitFor('#info-share-app'); }, el: '#info-share-app', msg: '…partilhá-la com quem quiser, e rever este tutorial («Ver o tutorial»).' });
+    } else {
+      const openPerfil = async () => { if (!$('perfis').open) { await goHome(); $('btn-perfil').click(); } await waitFor('#perfis-list'); };
+      st.push({ go: openPerfil, el: '#perfis-list', msg: 'No Perfil pode usar um perfil mais simples (por exemplo, ver só o Cancioneiro).' });
+      st.push({ go: openPerfil, el: '#perfis-install', msg: 'Instalar a app no ecrã principal do telemóvel.' });
+      if (L >= 2) st.push({ go: openPerfil, el: '#perfis-newsong', msg: 'Acrescentar um cântico que falta: escreva-o ou gere-o de uma página da internet ou de um PDF.' + (L >= 3 ? '' : ' Um Maestro aprova-o.') });
+      if (L >= 3) st.push({ go: openPerfil, el: '.perfil-admin', msg: L >= 4 ? '«Gestão de utilizadores»: autorizar pedidos de acesso, mudar perfis e retirar acessos.' : '«Gestão de utilizadores»: mudar o perfil das pessoas entre Cancioneiro, Coro e Maestro.' });
+      st.push({ go: openPerfil, el: '#perfil-info', msg: 'O «i» tem a ajuda, partilhar a app (com convite para um perfil) e «Ver o tutorial», para rever esta volta.' });
+    }
+    if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe cânticos (pelo livro no topo de cada cântico), organiza-os por secções ou com um template, partilha-a e gera o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
+    st.push({ go: goHome, msg: 'Pronto! Pode rever este tutorial quando quiser no «i» → «Ver o tutorial».' });
     return st;
   }
   function startTour(force) {
     if (!force && store.get(TOUR_KEY, 0)) { installCoach(); return; }
-    if ($('view-list').hidden || document.querySelector('dialog[open]')) {
-      if (force) { location.hash = '#/'; setTimeout(() => startTour(true), 500); } else installCoach();
-      return;
-    }
-    const steps = tourSteps(); let i = 0;
-    const ov = document.createElement('div'); ov.className = 'tour'; ov.innerHTML = '<div class="tour-hole"></div><div class="tour-box" role="dialog" aria-live="polite"><p class="tour-msg"></p><div class="tour-nav"><span class="tour-n"></span><button type="button" class="tour-skip">Saltar</button><button type="button" class="tour-next">Seguinte</button></div></div>';
+    if (!force && ($('view-list').hidden || document.querySelector('dialog[open]'))) { installCoach(); return; }
+    const steps = tourSteps(); let i = 0, busy = false;
+    // o tutorial é ele próprio uma janela (fica por cima das janelas que abre, como o Perfil)
+    const ov = document.createElement('dialog'); ov.className = 'tour';
+    ov.innerHTML = '<div class="tour-hole"></div><div class="tour-box" aria-live="polite"><p class="tour-msg"></p><div class="tour-nav"><span class="tour-n"></span><button type="button" class="tour-skip">Saltar</button><button type="button" class="tour-next">Seguinte</button></div></div>';
     document.body.appendChild(ov);
     const hole = ov.querySelector('.tour-hole'), box = ov.querySelector('.tour-box');
-    const end = () => { ov.remove(); removeEventListener('resize', show); store.set(TOUR_KEY, 1); if (!force) installCoach(); };
-    function show() {
+    const end = async () => { ov.close(); ov.remove(); removeEventListener('resize', place); store.set(TOUR_KEY, 1); await goHome(); if (!force) installCoach(); };
+    function place() {
       const st = steps[i], t = st.el && document.querySelector(st.el);
-      ov.querySelector('.tour-msg').textContent = st.msg;
-      ov.querySelector('.tour-n').textContent = `${i + 1} / ${steps.length}`;
-      ov.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'Terminar' : 'Seguinte';
       if (t && t.offsetParent) {
         const r = t.getBoundingClientRect(), pad = 6;
         Object.assign(hole.style, { display: 'block', left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
         ov.classList.remove('center');
-        const below = r.bottom + 16 + 180 < innerHeight;
-        box.style.top = below ? r.bottom + 14 + 'px' : ''; box.style.bottom = below ? '' : innerHeight - r.top + 14 + 'px';
+        const below = r.bottom + 200 < innerHeight;
+        box.style.top = below ? Math.min(r.bottom + 14, innerHeight - 190) + 'px' : ''; box.style.bottom = below ? '' : Math.max(innerHeight - r.top + 14, 12) + 'px';
+        if (!below && r.top < 200) { box.style.bottom = '16px'; }
       } else { hole.style.display = 'none'; ov.classList.add('center'); box.style.top = box.style.bottom = ''; }
     }
-    ov.querySelector('.tour-next').onclick = () => { if (++i >= steps.length) end(); else show(); };
-    ov.querySelector('.tour-skip').onclick = end;
-    addEventListener('resize', show);
-    window.scrollTo(0, 0); show();
+    async function show() {
+      if (busy) return; busy = true;
+      const st = steps[i];
+      if (ov.open) ov.close();
+      try { if (st.go) await st.go(); } catch (e) { console.warn('tutorial', e); }
+      if (st.el) await waitFor(st.el, 1500);
+      ov.querySelector('.tour-msg').textContent = st.msg;
+      ov.querySelector('.tour-n').textContent = `${i + 1} / ${steps.length}`;
+      ov.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'Terminar' : 'Seguinte';
+      ov.showModal(); place(); busy = false;
+    }
+    ov.querySelector('.tour-next').onclick = () => { if (busy) return; if (++i >= steps.length) end(); else show(); };
+    ov.querySelector('.tour-skip').onclick = () => { if (!busy) end(); };
+    ov.addEventListener('cancel', e => { e.preventDefault(); if (!busy) end(); });
+    addEventListener('resize', place);
+    show();
   }
   function installCoach() {
     if (standalone()) { store.set('cancioneiro.instalada', 1); return; }
@@ -2494,7 +2532,7 @@
       .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
   }
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
-  const actions = (upOff, downOff, what, sec) => `<div class="sw-actions"><button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>${sec ? '⇈' : '↑'}</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>${sec ? '⇊' : '↓'}</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
+  const actions = (upOff, downOff, what, sec) => `<div class="sw-actions">${sec ? '<button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button>' : ''}<button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>${sec ? '⇈' : '↑'}</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>${sec ? '⇊' : '↓'}</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
   function showCollection(id) {
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
@@ -2509,7 +2547,7 @@
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
-        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, n === items.length - 1, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
+        return `<li class="col-sec${can ? ' swipe sec4' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, n === items.length - 1, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
       }
       const row = songRow(bySlug.get(it.key));
       return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
@@ -2531,10 +2569,19 @@
   }
   // deslizar para a esquerda mostra: Subir, Descer, Remover (no computador: botão ⋯)
   function bindSwipe(li, c) {
-    const a = li.querySelector('a'); let x0 = null, dx = 0;
+    const a = li.querySelector('a'); let x0 = null, y0 = 0, dx = 0, dir = null;
     const close = () => li.classList.remove('open');
-    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; dx = 0; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
-    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-144, Math.min(0, dx + (li.classList.contains('open') ? -144 : 0)))}px)`; }, { passive: true });
+    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dir = null; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
+    // só conta como deslizar se o gesto for sobretudo para o lado (a deslizar a lista para cima/baixo não abre)
+    a.addEventListener('touchmove', e => {
+      if (x0 == null) return;
+      const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+      if (!dir && Math.hypot(mx, my) > 8) dir = Math.abs(mx) > Math.abs(my) * 1.5 ? 'x' : 'y';
+      if (dir !== 'x') { dx = 0; return; }
+      dx = mx;
+      const W = (li.querySelector('.sw-actions') || {}).offsetWidth || 144;
+      if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-W, Math.min(0, dx + (li.classList.contains('open') ? -W : 0)))}px)`;
+    }, { passive: true });
     a.addEventListener('touchend', () => { a.dataset.moved = Math.abs(dx) > 10 ? '1' : ''; a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
     a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); if (Math.abs(dx) <= 10) close(); } }, true);
     li.querySelector('.sw-more').onclick = e => { e.stopPropagation(); li.classList.toggle('open'); };
@@ -2547,6 +2594,7 @@
         setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = TRASH; } }, 4000);
         return;
       }
+      if (b.dataset.a === 'add') { li.classList.remove('open'); openSectionAdd(c, li.dataset.key.slice(4)); return; }
       colAction(c, li.dataset.key, b.dataset.a);
     });
   }
@@ -2675,6 +2723,34 @@
   $('tpl-del').onclick = deleteTemplate;
 
   // põe um cântico (acabado de acrescentar no fim) no fim da secção escolhida ('' = antes da primeira secção)
+  // "+" numa secção da folha: procurar um cântico e acrescentá-lo no fim dessa secção
+  function openSectionAdd(c, secId) {
+    const sec = (c.sections || []).find(x => x.id === secId); if (!sec) return;
+    $('sa-title').textContent = 'Acrescentar a «' + sec.title + '»';
+    $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
+    const pool = allSongs.filter(s => s.approved !== false && (lvl() >= 2 || inCancioneiro(s)));
+    const render = () => {
+      const q = norm($('sa-q').value).trim();
+      if (q.length < 2) { $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.'; return; }
+      const inCol = new Set((c.songs || []).map(x => x.song_slug));
+      const hits = pool.filter(s => s._t.includes(q) || (s._a || '').includes(q) || String(s.number) === q)
+        .sort((a, b) => (a._t.startsWith(q) ? 0 : 1) - (b._t.startsWith(q) ? 0 : 1) || a.title.localeCompare(b.title, 'pt')).slice(0, 40);
+      $('sa-msg').textContent = hits.length ? '' : 'Nenhum cântico encontrado.';
+      $('sa-list').innerHTML = hits.map(s => `<li><button type="button" data-slug="${esc(s.slug)}"${inCol.has(s.slug) ? ' disabled' : ''}><b>${esc(s.title)}</b>${s.author ? `<small>${esc(s.author)}</small>` : ''}${inCol.has(s.slug) ? '<small>já está na folha</small>' : ''}</button></li>`).join('');
+      $('sa-list').querySelectorAll('button:not([disabled])').forEach(b => b.onclick = async () => {
+        b.disabled = true;
+        try {
+          await toggleInCollection(c, b.dataset.slug, true);
+          await placeInSection(c, b.dataset.slug, secId);
+          $('sec-add').close(); toast('Acrescentado a «' + sec.title + '»');
+          if (location.hash === '#/lista/colecao-' + c.id) showCollection(c.id);
+        } catch (e) { b.disabled = false; appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível acrescentar: ' + (e.message || e)); }
+      });
+    };
+    $('sa-q').oninput = render;
+    $('sa-close').onclick = () => $('sec-add').close();
+    $('sec-add').showModal(); setTimeout(() => $('sa-q').focus(), 50);
+  }
   async function placeInSection(c, slug, secId) {
     let items = colItems(c);
     const me = items.find(it => it.key === slug); items = items.filter(it => it !== me);
@@ -2849,7 +2925,12 @@
     };
     $('col-pick').showModal();
   }
-  document.addEventListener('click', e => { if (!e.target.closest('li.swipe')) document.querySelectorAll('#rows li.open').forEach(x => x.classList.remove('open')); });
+  const closeSwipes = e => { if (!e || !e.target.closest || !e.target.closest('li.swipe.open')) document.querySelectorAll('#rows li.open').forEach(x => x.classList.remove('open')); };
+  document.addEventListener('click', closeSwipes);
+  document.addEventListener('pointerdown', closeSwipes, { passive: true });
+  document.addEventListener('touchstart', closeSwipes, { passive: true });
+  addEventListener('scroll', () => closeSwipes(), { passive: true });
+  addEventListener('hashchange', () => closeSwipes());
 
   // Gaveta: os livros (Preferidos, Cancioneiro e, do perfil Coro para cima, Coro, Songbook e CANTI 2024)
   const BOOKS_LIST = [
