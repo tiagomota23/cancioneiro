@@ -532,3 +532,13 @@ svg.ic.star-f { fill: var(--green-ink); }
 .perfil-btn.info > i { display: block; }
 .perfil-btn.info > svg { display: none; }
 body.solo .perfil-help { display: none; }
+
+/* Puxar para atualizar */
+.ptr { position: fixed; left: 50%; top: calc(var(--top) + 118px); z-index: 40; transform: translate(-50%, -12px); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 18px; background: rgba(255,255,255,.96); color: #0e7f58;
+  font: 700 13px var(--sans); box-shadow: 0 2px 10px rgba(0,0,0,.18); transition: opacity .15s, transform .15s; }
+.ptr.on { opacity: 1; transform: translate(-50%, calc(var(--p, 0) * 14px)); }
+.ptr svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
+.ptr.ready svg { transform: rotate(180deg); }
+.ptr.busy svg { animation: ptr-spin .8s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }

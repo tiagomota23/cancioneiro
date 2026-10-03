@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v51';
+  const APP_VERSION = '2026-10-03 v52';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1422,4 +1422,33 @@
   })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // ---------- Puxar para baixo e largar: atualiza a app para a versão mais recente ----------
+  // (o service worker vai sempre primeiro à rede, por isso recarregar traz a última versão publicada)
+  const ptr = document.createElement('div');
+  ptr.className = 'ptr'; ptr.setAttribute('aria-hidden', 'true');
+  ptr.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg><span></span>';
+  document.body.appendChild(ptr);
+  const PULL = 80; // px a puxar para atualizar
+  let pullY = null, pulled = 0, refreshing = false;
+  const blocked = () => refreshing || document.querySelector('dialog[open]') || !$('pdfview').hidden || !$('listen').hidden || $('drawer').classList.contains('open') || !$('splash').classList.contains('gone');
+  addEventListener('touchstart', e => { pullY = window.scrollY <= 0 && e.touches.length === 1 && !blocked() ? e.touches[0].clientY : null; pulled = 0; }, { passive: true });
+  addEventListener('touchmove', e => {
+    if (pullY == null) return;
+    if (window.scrollY > 0) { pullY = null; ptr.classList.remove('on', 'ready'); return; }
+    pulled = Math.max(0, e.touches[0].clientY - pullY);
+    const ready = pulled >= PULL;
+    ptr.classList.toggle('on', pulled > 15); ptr.classList.toggle('ready', ready);
+    ptr.querySelector('span').textContent = ready ? 'Solte para atualizar' : 'Puxe para atualizar';
+    ptr.style.setProperty('--p', Math.min(1, pulled / PULL));
+  }, { passive: true });
+  addEventListener('touchend', async () => {
+    if (pullY == null) return;
+    pullY = null;
+    if (pulled < PULL) { ptr.classList.remove('on', 'ready'); return; }
+    refreshing = true;
+    ptr.classList.add('busy'); ptr.querySelector('span').textContent = 'A atualizar…';
+    try { const r = await navigator.serviceWorker?.getRegistration(); await r?.update(); } catch (e) { /* sem rede */ }
+    location.reload();
+  });
 })();
