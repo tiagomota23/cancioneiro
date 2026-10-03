@@ -17,7 +17,7 @@
   const PERFIS = [
     { id: 'cancioneiro', label: 'Cancioneiro', desc: 'Os cânticos do Cancioneiro, sem acordes, partituras nem gravações', icon: CIRCLE },
     { id: 'coro', label: 'Coro', desc: 'Todos os cânticos e livros, com acordes, partituras e gravações', icon: CIRCLE + letter('C') },
-    { id: 'maestro', label: 'Maestro', desc: 'Editar letras e promover cânticos ao Cancioneiro', icon: CIRCLE + letter('M') },
+    { id: 'maestro', label: 'Maestro', desc: 'Editar letras e promover cânticos ao Cancioneiro', icon: '<circle cx="12" cy="12" r="7.5" style="fill:currentColor"/>' + letter('M').replace('fill:currentColor', 'fill:var(--ic-bg)') },
     { id: 'gestor', label: 'Gestor', desc: 'Gerir os utilizadores e os seus perfis', icon: '<circle cx="12" cy="12" r="7.5" style="fill:currentColor"/>' },
   ];
   const rankOf = r => PERFIS.findIndex(p => p.id === r) + 1;
@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v85';
+  const APP_VERSION = '2026-10-03 v86';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
