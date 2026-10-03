@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=115">
+  <link rel="stylesheet" href="styles.css?v=116">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -214,6 +214,13 @@
     <form method="dialog" class="info-actions perfis-actions"><button type="button" id="perfis-close">Fechar</button><i class="perfil-i" id="perfil-info" role="button" tabindex="0" aria-label="Informação e ajuda" title="Informação e ajuda">i</i></form>
   </dialog>
 
+  <!-- Gravação a tocar (fica por cima da app) -->
+  <div id="mini-player" class="mini-player" hidden>
+    <button type="button" id="mini-play" class="mini-btn" aria-label="Pausa"><svg viewBox="0 0 24 24" class="i-play"><path d="M8 5v14l11-7z"/></svg><svg viewBox="0 0 24 24" class="i-pause"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+    <a href="#" id="mini-info" class="mini-info"><b id="mini-title"></b><small id="mini-label"></small></a>
+    <button type="button" id="mini-stop" class="mini-btn" aria-label="Parar"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button>
+  </div>
+
   <!-- Novo cântico: escrever, ler de um endereço ou de um PDF -->
   <dialog id="song-new" class="editor song-new">
     <h2 tabindex="-1" autofocus id="sn-h2">Novo cântico</h2>
@@ -253,7 +260,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=115"></script>
-  <script src="app.js?v=115"></script>
+  <script src="config.js?v=116"></script>
+  <script src="app.js?v=116"></script>
 </body>
 </html>

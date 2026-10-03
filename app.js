@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v115';
+  const APP_VERSION = '2026-10-03 v116';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -926,7 +926,7 @@
     const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
     const recs = filesOf(s, 'recording');
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
-      `<li><button class="rec" data-i="${i}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
+      `<li><button class="rec" data-i="${i}" data-path="${esc(f.path || '')}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
     // o perfil Cancioneiro não vê acordes
     const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
     const lyrics = plain(data ? data.lyrics : []);
@@ -969,6 +969,8 @@
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
+    if (nowRec && nowRec.slug === slug) { const b = [...$('song').querySelectorAll('button.rec')].find(x => x.dataset.path === nowRec.path); if (b) b.closest('li').appendChild(nowRec.a); }
+    miniUpdate();
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openSongEdit(slug);
@@ -1973,26 +1975,46 @@
     signed.set(f.path, { src, until: Date.now() + 3300e3 });
     return src;
   }
+  // Gravação a tocar: um só leitor; um painel por cima da app deixa pausar / parar mesmo depois de sair do cântico
+  let nowRec = null; // { a, path, slug, title, label }
+  function miniUpdate() {
+    const on = !!nowRec;
+    $('mini-player').hidden = !on; document.body.classList.toggle('has-mini', on);
+    document.querySelectorAll('.recs button.rec').forEach(b => b.classList.toggle('on', on && b.dataset.path === nowRec.path && !nowRec.a.paused));
+    if (!on) return;
+    $('mini-title').textContent = nowRec.title; $('mini-label').textContent = nowRec.label || 'Gravação';
+    const playing = !nowRec.a.paused;
+    $('mini-play').classList.toggle('playing', playing); $('mini-play').setAttribute('aria-label', playing ? 'Pausa' : 'Tocar');
+  }
+  function stopRec() {
+    if (!nowRec) return;
+    const a = nowRec.a; nowRec = null;
+    a.pause(); a.remove(); a.removeAttribute('src'); try { a.load(); } catch (e) {}
+    miniUpdate();
+  }
   async function playRec(btn, f) {
-    const li = btn.closest('li');
-    let a = li.querySelector('audio');
-    if (a) { if (a.paused) a.play(); else a.pause(); return; }
-    document.querySelectorAll('.recs audio').forEach(x => x.pause());
+    const li = btn.closest('li'), s = bySlug.get(lastSongSlug) || {};
+    if (nowRec && nowRec.path === f.path) { if (nowRec.a.parentNode !== li) li.appendChild(nowRec.a); if (nowRec.a.paused) nowRec.a.play().catch(() => {}); else nowRec.a.pause(); return; }
+    stopRec();
     btn.classList.add('busy');
     try {
-      a = document.createElement('audio');
+      const a = document.createElement('audio');
       a.controls = true; a.preload = 'auto';
       const src = await fileSrc(f);
       a.src = src.blob ? URL.createObjectURL(src.blob) : src.url;
       li.appendChild(a);
-      a.addEventListener('play', () => { document.querySelectorAll('.recs audio').forEach(x => { if (x !== a) x.pause(); }); btn.classList.add('on'); });
-      a.addEventListener('pause', () => btn.classList.remove('on'));
+      nowRec = { a, path: f.path, slug: s.slug, title: s.title || '', label: f.label };
+      for (const ev of ['play', 'pause', 'ended']) a.addEventListener(ev, miniUpdate);
       await a.play().catch(() => {});
+      miniUpdate();
     } catch (e) {
       li.insertAdjacentHTML('beforeend', `<span class="rec-err">${esc(e instanceof Limit ? e.message : 'Não foi possível abrir a gravação.')}</span>`);
     }
     btn.classList.remove('busy');
   }
+  $('mini-play').onclick = () => { if (!nowRec) return; if (nowRec.a.paused) nowRec.a.play().catch(() => {}); else nowRec.a.pause(); };
+  $('mini-stop').onclick = stopRec;
+  $('mini-info').onclick = e => { e.preventDefault(); if (nowRec && nowRec.slug) location.hash = '#/cantico/' + encodeURIComponent(nowRec.slug); };
 
   // ---------- Partitura (PDF) dentro da app ----------
   // No iPhone, com a app no ecrã principal, abrir o PDF diretamente não deixa voltar atrás;
@@ -2199,7 +2221,36 @@
     else location.hash = '#/cantico/' + encodeURIComponent(pdfSlug);
   };
   const zoomImg = () => { const im = $('pdfpages').querySelector('.score-img'); if (im) im.style.width = (pdfZoom * 100) + '%'; };
-  $('pdf-zoom-in').onclick = () => { pdfZoom = Math.min(3, pdfZoom + 0.5); renderPdf(); zoomImg(); };
+  $('pdf-zoom-in').onclick = () => { pdfZoom = Math.min(4, pdfZoom + 0.5); renderPdf(); zoomImg(); };
+  // dois dedos: amplia / reduz à volta do ponto entre os dedos (pré-visualização imediata, depois desenha nítido)
+  (() => {
+    const pp = $('pdfpages'); let P = null;
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    pp.addEventListener('touchstart', e => {
+      if (e.touches.length !== 2) return;
+      const r = pp.getBoundingClientRect();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      P = { d0: dist(e.touches), z0: pdfZoom, k: 1, mx, my, ox: pp.scrollLeft + mx, oy: pp.scrollTop + my };
+      pp.style.transformOrigin = `${mx}px ${my}px`;
+    }, { passive: true });
+    pp.addEventListener('touchmove', e => {
+      if (!P || e.touches.length !== 2) return;
+      e.preventDefault();
+      P.k = Math.max(1 / P.z0, Math.min(4 / P.z0, dist(e.touches) / P.d0));
+      pp.style.transform = `scale(${P.k})`;
+    }, { passive: false });
+    const end = async () => {
+      if (!P) return;
+      const p = P; P = null;
+      const z = Math.max(1, Math.min(4, p.z0 * p.k));
+      pp.style.transform = ''; pp.style.transformOrigin = '';
+      if (Math.abs(z - p.z0) < 0.02) return;
+      pdfZoom = z; zoomImg(); await renderPdf();
+      const f = z / p.z0; pp.scrollLeft = p.ox * f - p.mx; pp.scrollTop = p.oy * f - p.my;
+    };
+    pp.addEventListener('touchend', e => { if (e.touches.length < 2) end(); });
+    pp.addEventListener('touchcancel', end);
+  })();
   $('pdf-zoom-out').onclick = () => { pdfZoom = Math.max(1, pdfZoom - 0.5); renderPdf(); zoomImg(); };
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pdfview').hidden) $('pdf-back').click(); });
   let pdfResize;
@@ -2818,7 +2869,7 @@
   });
 
   // Sem zoom com dois dedos nas páginas da app (só nas partituras); o iPhone ignora user-scalable, por isso trava-se o gesto
-  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => { if ($('pdfview').hidden) e.preventDefault(); }, { passive: false });
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false }); // no visor de partituras há o zoom da app
   document.addEventListener('touchmove', e => { if (e.touches.length > 1 && $('pdfview').hidden) e.preventDefault(); }, { passive: false });
 
 })();
