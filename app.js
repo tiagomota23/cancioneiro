@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v119';
+  const APP_VERSION = '2026-10-03 v120';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1925,6 +1925,8 @@
   function installCoach() {
     if (standalone()) { store.set('cancioneiro.instalada', 1); return; }
     if (!matchMedia('(pointer: coarse)').matches || store.get('cancioneiro.instalada', 0)) return;
+    // quem já usava a app antes desta proposta também a vê uma vez (recomeça a contagem, só uma vez)
+    if (!store.get('cancioneiro.instalar.v2', 0)) { store.set('cancioneiro.instalar.v2', 1); store.set('cancioneiro.aberturas', 0); }
     const n = store.get('cancioneiro.aberturas', 0) + 1;
     store.set('cancioneiro.aberturas', n);
     if (n === 1) setTimeout(async () => {
