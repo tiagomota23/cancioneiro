@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v120';
+  const APP_VERSION = '2026-10-03 v121';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1743,11 +1743,12 @@
   $('edit-reset').onclick = () => revertLyrics(editSlug, $('edit-reset'));
 
   // ---------- Janelas da app (em vez de alert/confirm/prompt do sistema, para manter o aspeto) ----------
-  function appDialog({ title = '', msg = '', input = null, list = null, ok = 'OK', cancel = 'Cancelar' }) {
+  function appDialog({ title = '', msg = '', html = '', input = null, list = null, ok = 'OK', cancel = 'Cancelar' }) {
     return new Promise(resolve => {
       const d = $('app-dlg');
       $('app-dlg-title').textContent = title; $('app-dlg-title').hidden = !title;
-      $('app-dlg-msg').textContent = msg; $('app-dlg-msg').hidden = !msg;
+      if (html) $('app-dlg-msg').innerHTML = html; else $('app-dlg-msg').textContent = msg; // html: só texto da própria app
+      $('app-dlg-msg').hidden = !msg && !html;
       const inp = $('app-dlg-input'); inp.hidden = input === null; inp.value = input ?? '';
       const lst = $('app-dlg-list'); lst.hidden = !list;
       lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
@@ -1931,7 +1932,8 @@
     store.set('cancioneiro.aberturas', n);
     if (n === 1) setTimeout(async () => {
       if (document.querySelector('dialog[open]')) return;
-      if (await appConfirm('Pode instalar o Cancioneiro no ecrã principal do telemóvel ou do tablet: passa a abrir como uma app, em ecrã inteiro e mais depressa.', 'Instalar', 'Instalar a app')) installApp();
+      const plus = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>';
+      if (await appDialog({ title: 'Instalar a app', ok: 'Instalar', html: `${plus} Pode instalar o Cancioneiro no ecrã principal do telemóvel ou do tablet: passa a abrir como uma app, em ecrã inteiro e mais depressa. Pode fazê-lo também mais tarde, no menu do canto superior direito (${plus} «Adicionar a app ao ecrã principal»).` })) installApp();
     }, 1500);
     else if (n === 2) setTimeout(() => {
       if (document.querySelector('dialog[open]')) return;
