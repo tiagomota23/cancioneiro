@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2cKhHZwikbBGiuXALpXQu1H+QWrOzQYrkncwY1R5Rfo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src https://hmfjbyiesghqhwhqgnem.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/CSEDuhOYHXbUInWRvy5to6rChkMirwe602CfHMbUg8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src https://hmfjbyiesghqhwhqgnem.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#1ab07f">
@@ -55,7 +55,7 @@ if (window.top !== window.self) { document.documentElement.style.display = 'none
       if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
       return d;
     };
-    const who = d => `<div class="who"><b>${esc(d.name || '(sem nome)')}</b><span>${esc(d.email)}</span></div>`;
+    const who = d => `<div class="who"><b>${esc(d.name || '(sem nome)')}</b><span>${esc(d.email)}</span>${d.invited_by ? `<span>Convidado por <b>${esc(d.invited_by)}</b> para o perfil <b>${esc(({ cancioneiro: 'Cancioneiro', coro: 'Coro', maestro: 'Maestro', gestor: 'Gestor' })[d.invited_role] || d.invited_role || '')}</b></span>` : ''}</div>`;
     const done = d => d.status === 'autorizado'
       ? `<p class="msg">✅ <b>Acesso autorizado${d.role ? ' — perfil ' + esc(PERFIS[d.role]) : ''}.</b></p><p class="small">Na próxima vez que entrar com o Google, esta pessoa verá os cânticos.</p>`
       : `<p class="msg">⛔ <b>Acesso bloqueado.</b></p><p class="small">Esta conta já não consegue entrar no Cancioneiro.</p>`;

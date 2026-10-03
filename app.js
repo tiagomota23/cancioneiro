@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v116';
+  const APP_VERSION = '2026-10-03 v117';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -105,6 +105,12 @@
   let session = null;
   // Modo de teste só em localhost (?demo): sem Google, com a cópia local songs.json
   const DEMO = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
+  // convite ("Partilhar a app"): guarda-se até a pessoa entrar, para ficar junto ao seu pedido de acesso
+  const INV_KEY = 'cancioneiro.convite';
+  try {
+    const q = new URLSearchParams(location.search), cv = q.get('convite');
+    if (cv && /^[A-Za-z0-9_-]{16,64}$/.test(cv)) { localStorage.setItem(INV_KEY, cv); q.delete('convite'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+  } catch (e) {}
   async function accessToken(renew) {
     if (DEMO) { if (new URLSearchParams(location.search).has('semconta')) return ''; session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
     // nunca fica à espera para sempre (rede lenta ao abrir no iPhone): ao fim de 6 s usa a sessão guardada
@@ -123,7 +129,8 @@
   function showLogin(msg) {
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = true;
     $('view-login').hidden = false;
-    $('login-msg').textContent = msg || '';
+    let inv = null; try { inv = localStorage.getItem(INV_KEY); } catch (e) {}
+    $('login-msg').textContent = msg || (inv ? 'Recebeu um convite para o Cancioneiro. Entre com a sua conta Google; um Gestor confirma o acesso.' : '');
     splashDone.then(() => $('splash').classList.add('gone'));
   }
   $('btn-google').onclick = async () => {
@@ -268,6 +275,7 @@
       return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
     }
     if (op === 'upload') return { path: 'demo', url: null };
+    if (op === 'invite') return { token: 'democonvite' + b.role.padEnd(10, 'x'), role: b.role };
     if (op === 'editsong') { const x = demoFull.get(b.slug); if (x) Object.assign(x, { title: b.title, author: b.author || null, language: b.language }); return { ok: true }; }
     if (op === 'scrape') throw new Error('No modo de demonstração não se leem páginas.');
     if (op === 'similar') { const n = norm(b.title); return { similar: [...demoFull.values()].filter(x => n && norm(x.title).includes(n)).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })) }; }
@@ -358,6 +366,17 @@
     $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
   }
 
+  async function claimInvite() {
+    let inv = null; try { inv = localStorage.getItem(INV_KEY); } catch (e) {}
+    if (!inv || DEMO) return null;
+    try {
+      const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/notify', { method: 'POST',
+        headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + await accessToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'claim', invite: inv }) });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok || r.status === 410) localStorage.removeItem(INV_KEY);
+      return d.ok ? d : null;
+    } catch (e) { return null; }
+  }
   async function load() {
     try { const h = sessionStorage.getItem('cancioneiro.depois'); if (h) { sessionStorage.removeItem('cancioneiro.depois'); history.replaceState(null, '', location.pathname + h); } } catch (e) {}
     const cached = store.get(CACHE_KEY, null);
@@ -365,9 +384,11 @@
     try {
       const fresh = await fetchSongs();
       if (!fresh.length) { // a base de dados só devolve cânticos a emails autorizados
-        await logout(`A conta ${session && session.user.email || ''} ainda não tem acesso ao Cancioneiro. O pedido foi enviado ao administrador; tente de novo depois de ser autorizado.`);
+        const inv = await claimInvite();
+        await logout(`A conta ${session && session.user.email || ''} ainda não tem acesso ao Cancioneiro. ${inv ? `O pedido (convite de ${inv.inviter}) foi enviado aos Gestores` : 'O pedido foi enviado ao administrador'}; tente de novo depois de ser autorizado.`);
         return;
       }
+      try { localStorage.removeItem(INV_KEY); } catch (e) {} // já tem acesso: o convite não é preciso
       store.set(CACHE_KEY, fresh);
       const changed = !cached || JSON.stringify(cached) !== JSON.stringify(fresh);
       setSongs(fresh);
@@ -1033,6 +1054,9 @@
     let u;
     try { u = location.origin + location.pathname + '#/p/' + (await req).token; }
     catch (e) { appAlert(e instanceof Limit ? e.message : (e.message && !/fetch|HTTP/i.test(e.message) ? e.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.')); return; }
+    return shareOrCopy(u, until, title);
+  }
+  async function shareOrCopy(u, until, title) {
     const share = () => navigator.share({ title: title || 'Cancioneiro', text: (title ? title + ' — ' : '') + 'Cancioneiro (' + until + ')', url: u });
     if (canShare()) {
       try { await share(); return; }
@@ -1857,12 +1881,19 @@
       : 'No telemóvel ou tablet, abra este endereço no browser e escolha «Adicionar ao ecrã principal» (iPhone/iPad: no menu Partilhar; Android: no menu ⋮).', 'Adicionar ao ecrã principal');
   }
   // Partilhar a app: o endereço da página de entrada (quem não tem acesso pode pedi-lo lá)
+  // com um convite para um perfil até ao de quem partilha (o perfil Cancioneiro só convida para Cancioneiro)
   $('info-share-app').onclick = async () => {
-    const url = location.origin + location.pathname;
-    if (canShare()) {
-      try { await navigator.share({ title: 'Cancioneiro', text: 'Cancioneiro — cânticos com letra, partituras e gravações', url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    const mine = rankOf(maxRole) || 1;
+    let role = 'cancioneiro';
+    if (mine > 1) {
+      role = await appChoose('Partilhar a app', PERFIS.slice(0, mine).reverse().map(p => ({ value: p.id, label: p.label, sub: p.desc })), 'Para que perfil é o convite? Quem o receber pede acesso e um Gestor confirma.');
+      if (!role) return;
     }
-    await copyText(url); appAlert('O endereço da app foi copiado para a área de transferência. Cole-o onde o quiser enviar.', 'Endereço copiado');
+    let url;
+    try { url = location.origin + location.pathname + '?convite=' + (await api('invite', { role })).token; }
+    catch (e) { appAlert(e instanceof Limit ? e.message : 'Não foi possível criar o convite. Verifique a ligação à internet.'); return; }
+    const label = (PERFIS.find(p => p.id === role) || {}).label || role;
+    await shareOrCopy(url, 'convite para o perfil ' + label + ', válido 30 dias', 'Cancioneiro');
   };
   $('perfis-install').onclick = installApp;
   $('perfis-newsong').onclick = () => { $('perfis').close(); openNewSong(); }; $('info-install').onclick = installApp;

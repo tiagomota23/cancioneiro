@@ -345,6 +345,15 @@ Deno.serve(async (req) => {
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
     }
+    if (op === 'invite') { // "Partilhar a app": convite para um perfil até ao de quem convida (o acesso continua a precisar de aprovação)
+      const role = String(b.role || 'cancioneiro');
+      if (!ROLES.includes(role) || rank(role) > user.rank) return denied();
+      if (!(await limit(user, 'share', 'invite:' + role))) return tooMany();
+      const [me] = await rest(`allowed_emails?select=name&email=eq.${encodeURIComponent(user.email)}`);
+      const token = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18)))).replace(/\+/g, '-').replace(/\//g, '_');
+      await rest('invites', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token, role, invited_by: user.email, inviter_name: me?.name || null, expires_at: new Date(Date.now() + 30 * 864e5).toISOString() }) });
+      return out({ token, role });
+    }
     if (op === 'share' && b.collection) { // endereço de uma coleção (só Maestro e Gestor; expira com a coleção)
       if (lvl < 3) return denied();
       const id = String(b.collection);

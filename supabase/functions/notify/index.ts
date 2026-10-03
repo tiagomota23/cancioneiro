@@ -30,19 +30,24 @@ async function sendEmail(subject, html) {
   if (!r.ok) throw new Error('Resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
 
-async function onAccess(id) {
+async function onAccess(id, force = false) {
+  // espera um pouco: se a pessoa veio por um convite, a app junta-o ao pedido logo a seguir a entrar
+  if (!force) await new Promise(r => setTimeout(r, 12000));
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);
-  if (!req || req.notified_at || req.status !== 'pendente') return { skipped: true };
+  if (!req || (req.notified_at && !force) || req.status !== 'pendente') return { skipped: true };
+  const perfis = req.invited_role ? [...PERFIS.filter(([r]) => r === req.invited_role), ...PERFIS.filter(([r]) => r !== req.invited_role)] : PERFIS;
+  const label = r => (PERFIS.find(([x]) => x === r) || [, r])[1];
   const link = (a, r = '') => `${APP}admin.html?id=${req.id}&t=${req.token}&a=${a}${r ? '&r=' + r : ''}`;
   const body = `<p>Alguém sem autorização tentou entrar no Cancioneiro:</p>
     <div style="border:1px solid #d8e9e1;background:#f3faf7;border-radius:10px;padding:14px 16px;margin:12px 0">
       <div><b>${esc(req.name || '(sem nome)')}</b></div><div>${esc(req.email)}</div>
       <div style="color:#777;font-size:13px;margin-top:4px">${esc(when(req.created_at))}</div>
+      ${req.invited_by ? `<div style="margin-top:10px;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #d8e9e1">Convidado por <b>${esc(req.invited_by)}</b> para o perfil <b>${esc(label(req.invited_role))}</b></div>` : ''}
       <div style="margin-top:12px;font-size:13px;color:#555">Autorizar com o perfil:</div>
-      <div>${PERFIS.map(([r, label]) => btn(link('autorizar', r), label, '#12966a')).join('')}</div>
+      <div>${perfis.map(([r, l]) => btn(link('autorizar', r), l + (r === req.invited_role ? ' (convite)' : ''), '#12966a')).join('')}</div>
       <div>${btn(link('bloquear'), 'Bloquear', '#c0392b')}</div>
     </div><p style="color:#777;font-size:13px">Cada botão abre uma página de confirmação.  Enquanto não decidir, esta pessoa não vê os cânticos.</p>`;
-  await sendEmail(`Pedido de acesso: ${req.name || req.email}`, wrap('Pedido de acesso', body));
+  await sendEmail(`Pedido de acesso: ${req.name || req.email}${req.invited_by ? ' (convite)' : ''}`, wrap('Pedido de acesso', body));
   await rest(`access_requests?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ notified_at: new Date().toISOString() }) });
   return { sent: true };
 }
@@ -69,13 +74,31 @@ async function onSync(id) {
 }
 
 const PERFIS = [['cancioneiro', '○ Cancioneiro'], ['coro', 'Ⓒ Coro'], ['maestro', 'Ⓜ Maestro'], ['gestor', '● Gestor']];
+// convite: a app (já com a sessão da pessoa) junta o convite ao seu pedido de acesso pendente
+async function onClaim(req0, invite) {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(invite || '')) return json({ error: 'convite inválido' }, 400);
+  const u = await fetch(`${SB}/auth/v1/user`, { headers: { apikey: SK, Authorization: req0.headers.get('authorization') || '' } });
+  if (!u.ok) return json({ error: 'sem sessão' }, 401);
+  const email = String((await u.json()).email || '').toLowerCase();
+  if (!email) return json({ error: 'sem sessão' }, 401);
+  const [inv] = await rest(`invites?token=eq.${invite}&expires_at=gt.${new Date().toISOString()}&select=role,invited_by,inviter_name`);
+  if (!inv) return json({ error: 'convite expirado' }, 410);
+  const [ar] = await rest(`access_requests?email=eq.${encodeURIComponent(email)}&status=eq.pendente&select=id,notified_at,invited_by&order=created_at.desc&limit=1`);
+  if (!ar) return json({ ok: false });
+  const by = inv.inviter_name ? `${inv.inviter_name} (${inv.invited_by})` : inv.invited_by;
+  if (!ar.invited_by) {
+    await rest(`access_requests?id=eq.${ar.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ invited_by: by, invited_role: inv.role }) });
+    if (ar.notified_at) await onAccess(ar.id, true); // o email já tinha seguido sem o convite: segue outro, com ele
+  }
+  return json({ ok: true, inviter: inv.inviter_name || inv.invited_by, role: inv.role });
+}
 async function onPeekOrDecide(id, token, action, decide, role) {
   if (!/^[0-9a-f-]{36}$/.test(id || '') || !/^[0-9a-f-]{36}$/.test(token || '')) return json({ error: 'link inválido' }, 400);
   const [req] = await rest(`access_requests?id=eq.${id}&select=*`);
   if (!req || req.token !== token) return json({ error: 'link inválido' }, 403);
   // Os links do email só valem 30 dias
   if (Date.now() - Date.parse(req.created_at) > 30 * 86400000) return json({ error: 'link expirado (mais de 30 dias) — gira o acesso no Supabase' }, 410);
-  const info = { email: req.email, name: req.name, status: req.status };
+  const info = { email: req.email, name: req.name, status: req.status, invited_by: req.invited_by || null, invited_role: req.invited_role || null };
   if (!decide || req.status !== 'pendente') return json(info);
   if (action === 'autorizar') {
     if (!PERFIS.some(([r]) => r === role)) role = 'cancioneiro';
@@ -120,7 +143,13 @@ Deno.serve(async (req) => {
   let b = {};
   try { b = await req.json(); } catch (e) { /* sem corpo */ }
   try {
-    if (b.type === 'access') return json(await onAccess(b.id));
+    if (b.type === 'access') { // corre em segundo plano (espera ~12 s pelo convite) e responde já a quem chamou
+      const job = onAccess(b.id).catch(e => console.error('access', e));
+      // @ts-ignore EdgeRuntime existe nas funções do Supabase
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) { EdgeRuntime.waitUntil(job); return json({ queued: true }); }
+      return json(await job);
+    }
+    if (b.type === 'claim') return await onClaim(req, b.invite);
     if (b.type === 'sync') return json(await onSync(b.id));
     if (b.type === 'health') return (await claimJob('health').catch(() => false)) ? json(await onHealth()) : json({ error: 'sem pedido do agendamento' }, 403);
     if (b.type === 'peek') return await onPeekOrDecide(b.id, b.token, null, false);
