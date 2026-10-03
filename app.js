@@ -67,7 +67,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v107';
+  const APP_VERSION = '2026-10-03 v108';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -835,14 +835,21 @@
       title.textContent = bk.label;
       // livros pela ordem das páginas; os outros por título
       const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
-      const list = pool.filter(bk.test).sort(bk.book
+      const NF = { todos: () => true, aprovados: s => s.approved !== false, pendentes: s => s.approved === false,
+        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s), coro: s => srcOf(s).includes('coro_clu'), 'nao-coro': s => !srcOf(s).includes('coro_clu') };
+      const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
+      const list = pool.filter(bk.test).filter(bk.novos ? NF[nf] : () => true).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
         : (a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }));
       rows.innerHTML = list.map(s => bk.book ? songRow({ ...s, book_page: pageIn(s, bk.book) || null }) : songRow(s)).join('') +
         (bk.novos && lvl() >= 2 ? '<li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li>' : '');
       if (bk.novos) {
-        const pend = list.filter(s => s.approved === false).length;
-        if (pend) title.innerHTML = `${esc(bk.label)}<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>`;
+        const pend = pool.filter(bk.test).filter(s => s.approved === false).length;
+        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro'], ['coro', 'No Coro'], ['nao-coro', 'Ainda não no Coro']];
+        title.innerHTML = `${esc(bk.label)}${pend ? `<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>` : ''}` +
+          `<select class="novos-filtro" id="novos-filtro" aria-label="Mostrar">${opts.map(([v, l]) => `<option value="${v}"${v === nf ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+        $('novos-filtro').onchange = e => { prefs.novosFiltro = e.target.value; store.set('cancioneiro.prefs', prefs); showList('livro-novos'); };
+        if (!list.length) $('status').textContent = 'Nenhum cântico novo com este filtro.';
         if ($('novo-cantico')) $('novo-cantico').onclick = () => openNewSong();
       }
       return;
@@ -923,7 +930,10 @@
     const original = srcOf(s).includes('original');
     // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
     const mine = session && s.added_by === session.user.email;
-    const pendHtml = s.approved === false ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p><p>${lvl() >= 3 ? '<button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button>' : mine ? '<button class="ghost-btn" id="song-reject">Retirar</button>' : ''}</p></div>` : '';
+    // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
+    const pendHtml = s.approved === false
+      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
+      : srcOf(s).includes('novos') && lvl() >= 3 && extrasOn() ? '<p class="edit-bar"><button class="ghost-btn" id="song-reject">Apagar cântico novo</button></p>' : '';
     // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra"); Coro: nos cânticos novos que acrescentou
     const canFiles = (lvl() >= 3 || (lvl() >= 2 && mine && srcOf(s).includes('novos'))) && extrasOn();
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
@@ -952,7 +962,7 @@
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
     if ($('song-approve')) $('song-approve').onclick = () => decideSong(s, true, $('song-approve'));
-    if ($('song-reject')) $('song-reject').onclick = () => { if (tapConfirm($('song-reject'), 'Confirmar?')) decideSong(s, false, $('song-reject')); };
+    if ($('song-reject')) $('song-reject').onclick = () => { if (tapConfirm($('song-reject'), 'Confirmar: apagar')) decideSong(s, false, $('song-reject')); };
     $('song').querySelectorAll('.up-del').forEach(b => b.onclick = () => { if (tapConfirm(b, 'Apagar?')) delFile(s, b.dataset.path); });
     if ($('btn-add-rec')) { $('btn-add-rec').onclick = () => addFiles(s, 'recording', $('btn-add-rec')); $('btn-add-score').onclick = () => addFiles(s, 'score', $('btn-add-score')); }
     // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
@@ -1447,7 +1457,7 @@
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
-      toast(ok ? 'Cântico aprovado' : 'Cântico retirado');
+      toast(ok ? 'Cântico aprovado' : 'Cântico apagado');
       await load();
       location.hash = ok ? '#/cantico/' + encodeURIComponent(s.slug) : '#/lista/livro-novos';
       if (ok) route();
