@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v77';
+  const APP_VERSION = '2026-10-03 v78';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -99,11 +99,15 @@
   const DEMO = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
   async function accessToken(renew) {
     if (DEMO) { session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
-    let { data } = await sb.auth.getSession();
+    // nunca fica à espera para sempre (rede lenta ao abrir no iPhone): ao fim de 6 s usa a sessão guardada
+    const slow = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+    const saved = () => { try { const v = JSON.parse(localStorage.getItem(`sb-${new URL(CFG.SUPABASE_URL).hostname.split('.')[0]}-auth-token`)); return v && v.access_token ? v : null; } catch (e) { return null; } };
+    let res = await slow(sb.auth.getSession(), 6000);
+    let data = res && res.data ? res.data : { session: saved() };
     // Renova a sessão se já expirou (ou expira dentro de 1 min), ou se o servidor a recusou
     if (data.session && (renew || (data.session.expires_at || 0) * 1000 < Date.now() + 60000)) {
-      const r = await sb.auth.refreshSession();
-      if (r.data && r.data.session) data = r.data;
+      const r = await slow(sb.auth.refreshSession(), 6000);
+      if (r && r.data && r.data.session) data = r.data;
     }
     session = data.session;
     return session ? session.access_token : null;
@@ -1772,7 +1776,18 @@
     session = s;
     if (event === 'SIGNED_OUT' && $('view-login').hidden) showLogin();
   });
-  (async () => {
+  // Se algo falhar ou demorar ao abrir, a capa sai na mesma (nunca fica presa na capa verde)
+  let started = false;
+  function rescue(msg) {
+    if (started) return; started = true;
+    $('splash').classList.add('gone');
+    if (!session) { showLogin(msg || ''); return; }
+    $('view-login').hidden = true;
+    showList(); load(); loadFavs(); loadCollections();
+    if (msg) $('status').textContent = msg;
+  }
+  setTimeout(() => rescue(), 10000);
+  (async () => { try {
     await accessToken(); // também troca o ?code= do regresso do Google pela sessão
     if (location.search.includes('code=') || location.search.includes('error')) {
       const err = new URLSearchParams(location.search).get('error_description');
@@ -1782,7 +1797,7 @@
     await splashDone;
     if (!session) { showLogin(); return; }
     $('view-login').hidden = true;
-    $('splash').classList.add('gone');
+    $('splash').classList.add('gone'); started = true;
     $('info-user').textContent = 'Sessão: ' + session.user.email;
     loadLyrCache();
     await Promise.race([loadPerfil(), new Promise(r => setTimeout(r, 1500))]); // sem esperar muito se a rede estiver lenta
@@ -1792,7 +1807,8 @@
     loadFavs();
     loadCollections();
     loadSyncInfo();
-  })();
+    started = true;
+  } catch (e) { console.error(e); rescue('Houve um problema ao abrir. Se a lista não aparecer, feche e volte a abrir a app.'); } })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   // se a folha de estilos falhou (página sem formatação), recarrega uma vez

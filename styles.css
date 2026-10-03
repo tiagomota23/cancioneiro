@@ -609,3 +609,8 @@ html, body { touch-action: pan-x pan-y; }
 .col-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; resize: vertical; }
 .list-title .col-btns { display: flex; gap: 6px; margin: 8px 0 2px; }
 .list-title .col-btns .col-edit { margin-left: 0; }
+
+/* Se a app não arrancar (ficheiro não chegou), ao fim de 10 s a capa explica o que fazer */
+.splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: #fff; font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
+.splash.gone::after { display: none; }
+@keyframes splash-help { to { opacity: .9; } }
