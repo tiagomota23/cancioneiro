@@ -240,8 +240,8 @@ async function scrape(raw) {
   if (/\.(com|org|net|it|pt|es|fr)\b/i.test(author) || norm(author).replace(/[^a-z]/g, '').includes(norm(host).replace(/[^a-z]/g, ''))) author = '';
   // «Título – Autor», «Título — Testo e accordi», «Título | Site» nos títulos das páginas
   const WORDS = /\b(letra|letras|lyrics|testo|testi|accordi|chords|cifra|cifras|paroles|songtext|e|and|y|et)\b/ig;
-  const parts = title.split(/\s[-–—|]\s/).map(x => x.trim()).filter(x => x && x.replace(WORDS, '').trim() && !norm(x).includes(norm(host)));
-  if (parts.length) { title = parts[0]; if (!author && parts.length > 1) author = parts[parts.length - 1].replace(WORDS, '').trim(); }
+  const tparts = title.split(/\s[-–—|]\s/).map(x => x.trim()).filter(x => x && x.replace(WORDS, '').trim() && !norm(x).includes(norm(host)));
+  if (tparts.length) { title = tparts[0]; if (!author && tparts.length > 1) author = tparts[tparts.length - 1].replace(WORDS, '').trim(); }
   return { title: title.slice(0, 120), author: author.slice(0, 120), text: text.slice(0, 20000), url: url.href };
 }
 // apagar um ficheiro do Storage (a API só apaga com a lista de caminhos)
@@ -461,11 +461,12 @@ Deno.serve(async (req) => {
       cache = null;
       return out({ ok: true });
     }
-    if (op === 'delsong') { // recusar / retirar um cântico novo ainda pendente (Maestro, ou quem o acrescentou)
+    if (op === 'delsong') { // Maestro: recusar / apagar um cântico novo (por aprovar ou já aprovado)
+      if (lvl < 3) return denied();
       const slug = String(b.slug || '');
-      const [sg] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,approved,added_by`);
-      if (!sg || sg.approved !== false) return out({ error: 'Só se podem retirar cânticos novos ainda por aprovar.' }, 400);
-      if (lvl < 3 && sg.added_by !== user.email) return denied();
+      const [sg] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,sources:song_sources(source)`);
+      if (!sg) return out({ error: 'não encontrado' }, 404);
+      if (!sg.sources.some(x => x.source === 'novos')) return out({ error: 'Só se podem apagar cânticos novos.' }, 400);
       for (const f of await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&select=path`)) if (/^enviados\//.test(f.path)) await removeObject(f.path);
       await rest(`songs?slug=eq.${encodeURIComponent(slug)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
       cache = null;
