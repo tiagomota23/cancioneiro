@@ -583,3 +583,13 @@ html, body { touch-action: pan-x pan-y; }
 .rows li.col-sec { border-bottom: 1px solid rgba(255,255,255,.35); }
 .rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; opacity: .9; }
 .rows li.col-add-sec button { width: 100%; text-align: left; padding: 14px; color: #fff; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+
+/* Coleções do cântico: ☆/★ e "+ Cancioneiro" na mesma linha */
+.pick-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.pick-star { width: 48px; height: 44px; display: grid; place-items: center; border: 1px solid #dde7e2; border-radius: 10px; color: #0e7f58; }
+.pick-star svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.pick-star.on { color: #e3a008; }
+.pick-star.on svg { fill: currentColor; }
+.pick-canc { flex: 1; height: 44px; border-radius: 22px; border: 1.5px solid #0e7f58; color: #0e7f58; font-weight: 700; font-size: 15px; background: #fff; }
+.pick-canc.on { background: #0e7f58; color: #fff; }
+.pick-canc:disabled { opacity: 1; }
