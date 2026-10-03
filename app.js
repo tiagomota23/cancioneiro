@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v84';
+  const APP_VERSION = '2026-10-03 v85';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1465,7 +1465,7 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${esc(c.title)}${expired(c) ? ' <small>(expirada)</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
