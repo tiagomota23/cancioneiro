@@ -201,7 +201,8 @@ Deno.serve(async (req) => {
         const meta = new Map((await rest(`songs?slug=in.(${col.songs.map(x => `"${x.song_slug}"`).join(',') || '""'})&select=slug,title,author,number`)).map(x => [x.slug, x]));
         const items = [...col.sections.map(x => ({ k: 'sec', title: x.title, pos: x.position })),
           ...col.songs.filter(x => meta.has(x.song_slug)).map(x => ({ k: 'song', ...meta.get(x.song_slug), pos: x.position }))]
-          .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
+          .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1))
+          .filter((it, i, all) => it.k !== 'sec' || all[i + 1]?.k === 'song'); // só secções com cânticos
         return out({ collection: { id: col.id, title: col.title, audience: col.audience }, items, expires_at: until });
       }
       const slug = col ? String(b.slug) : sh.song_slug;

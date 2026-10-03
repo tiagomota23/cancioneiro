@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v94';
+  const APP_VERSION = '2026-10-03 v95';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -241,7 +241,7 @@
       if (!c) throw new Error('Esta coleção já não está disponível.');
       if (b.slug) return demoApi('shared', { token: 'demo_' + b.slug });
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
-      return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items: colItems(c).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number }) };
+      return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items: withSongs(colItems(c)).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number }) };
     }
     if (op === 'shared') {
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
@@ -1080,7 +1080,7 @@
     msg('A gerar o PDF…');
     try {
       const L = await loadPdfLib();
-      const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
+      const items = withSongs(colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key)));
       const songsIn = items.filter(it => it.k === 'song').map(it => bySlug.get(it.key));
       let n = 0;
       for (const s of songsIn) { msg(`A preparar as letras… (${++n}/${songsIn.length})`); try { await getLyrics(s.slug); } catch (e) { if (e instanceof Limit) throw e; } }
@@ -1918,6 +1918,7 @@
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
+  const withSongs = items => items.filter((it, i) => it.k !== 'sec' || (items[i + 1] && items[i + 1].k === 'song'));
   function colItems(c) {
     return [...(c.songs || []).map(x => ({ k: 'song', key: x.song_slug, pos: x.position, ref: x })),
             ...(c.sections || []).map(x => ({ k: 'sec', key: 'sec:' + x.id, pos: x.position, ref: x }))]
@@ -1934,7 +1935,7 @@
     const fim = new Date(c.expires_at);
     // público e prazo só para quem gere (Maestro / Gestor)
     // partilhar a coleção: só Maestro e Gestor
-    const shareBtn = can ? '<button class="col-share" id="col-share" aria-label="Partilhar coleção" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    const shareBtn = can && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar coleção" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
     title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
