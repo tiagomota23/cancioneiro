@@ -485,6 +485,31 @@ Deno.serve(async (req) => {
       cache = null;
       return out({ ok: true });
     }
+    if (op === 'editsong') { // Maestro: título, autor, idioma e categoria de um cântico (a letra vai por "save")
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), title = String(b.title || '').trim().slice(0, 120), author = String(b.author || '').trim().slice(0, 120) || null;
+      const language = /^[a-z]{2,3}$/.test(b.language || '') ? b.language : null;
+      if (!title || !language) return out({ error: 'Faltam o título ou o idioma.' }, 400);
+      if (!(await limit(user, 'save', 'edit:' + slug))) return tooMany();
+      const r = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ title, author, language }) });
+      if (!r.length) return out({ error: 'não encontrado' }, 404);
+      const GRPS = ['Categoria', 'Coro CLU', 'Coro CLU — momento', 'Songbook', 'CANTI 2024'];
+      const tg = x => x && GRPS.includes(String(x.grp)) && String(x.tag || '').trim() ? { grp: String(x.grp), tag: String(x.tag).replace(/\s+/g, ' ').trim().slice(0, 60) } : null;
+      const rm = tg(b.removeTag), add = tg(b.addTag);
+      if (rm) await rest(`song_tags?song_slug=eq.${encodeURIComponent(slug)}&grp=eq.${encodeURIComponent(rm.grp)}&tag=eq.${encodeURIComponent(rm.tag)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      if (add) await rest('song_tags', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ song_slug: slug, ...add }) });
+      cache = null;
+      return out({ ok: true });
+    }
+    if (op === 'unlinkfile') { // Maestro: tirar um ficheiro de um cântico (os enviados pela app são apagados; os importados só deixam de estar ligados)
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), path = String(b.path || '');
+      if (!(await limit(user, 'save', 'unlink:' + path))) return tooMany();
+      const r = await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&path=eq.${encodeURIComponent(path)}&select=path`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+      if (!r.length) return out({ error: 'não encontrado' }, 404);
+      if (/^enviados\//.test(path)) await removeObject(path);
+      return out({ ok: true });
+    }
     if (op === 'approvesong') { // Maestro: aprovar um cântico novo
       if (lvl < 3) return denied();
       const slug = String(b.slug || '');
