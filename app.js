@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v76';
+  const APP_VERSION = '2026-10-03 v77';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1662,8 +1662,8 @@
     // primeira linha: ☆/★ preferido e "+ Cancioneiro" (cheio se já está no Cancioneiro; só "Cancioneiro" se é do original)
     const inC = inCancioneiro(s);
     $('col-pick-list').innerHTML =
-      `<div class="pick-top"><button class="pick-star${isFav(slug) ? ' on' : ''}" id="pick-fav" aria-label="${isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'}" aria-pressed="${isFav(slug)}"><svg viewBox="0 0 24 24">${ICON_STAR}</svg></button>` +
-      `<button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button></div>` +
+      `<div class="pick-top"><button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button>` +
+      `<button class="pick-star${isFav(slug) ? ' on' : ''}" id="pick-fav" aria-label="${isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'}" aria-pressed="${isFav(slug)}"><svg viewBox="0 0 24 24">${ICON_STAR}</svg></button></div>` +
       act.map(c => item('c:' + c.id, c.title, `${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false)).join('') +
       `<button class="col-pick-new" id="col-pick-new">+ Nova coleção</button>`;
     const refresh = () => { refreshFavUI(); if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
