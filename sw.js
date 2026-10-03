@@ -1,5 +1,5 @@
 // Cache da aplicação para funcionar offline (os cânticos ficam em localStorage)
-const CACHE = 'cancioneiro-v64';
+const CACHE = 'cancioneiro-v65';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.json', 'worker.js', 'icons/icon-192.png', 'icons/icon-180.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(
@@ -10,7 +10,13 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   // rede primeiro, cache como alternativa
   // no-cache: revalida sempre no servidor (o GitHub Pages guarda 10 min em cache)
-  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => {
-    const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r;
-  }).catch(() => caches.match(e.request)));
+  // (pedidos de navegação não aceitam opções no fetch: vão tal como estão)
+  const net = e.request.mode === 'navigate' ? fetch(e.request) : fetch(e.request, { cache: 'no-cache' });
+  e.respondWith(net.then(r => {
+    if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
+    return r;
+  }).catch(async () =>
+    // sem rede: a cópia guardada (mesmo com outro ?v=), e para páginas a app guardada
+    (await caches.match(e.request)) || (await caches.match(e.request, { ignoreSearch: true })) ||
+    (e.request.mode === 'navigate' ? await caches.match('./') : undefined) || Response.error()));
 });

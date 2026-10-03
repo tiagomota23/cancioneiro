@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v64';
+  const APP_VERSION = '2026-10-03 v65';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1633,6 +1633,14 @@
   })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // se a folha de estilos falhou (página sem formatação), recarrega uma vez
+  addEventListener('load', () => {
+    const styled = getComputedStyle(document.body).backgroundColor !== 'rgba(0, 0, 0, 0)';
+    try {
+      if (!styled && !sessionStorage.getItem('cancioneiro.reload')) { sessionStorage.setItem('cancioneiro.reload', '1'); location.reload(); }
+      else if (styled) sessionStorage.removeItem('cancioneiro.reload');
+    } catch (e) {}
+  });
 
   // Sem zoom com dois dedos nas páginas da app (só nas partituras); o iPhone ignora user-scalable, por isso trava-se o gesto
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => { if ($('pdfview').hidden) e.preventDefault(); }, { passive: false });
@@ -1663,7 +1671,11 @@
     pullY = null;
     if (!ready) { resetPull(); return; }
     refreshing = true;
-    try { const r = await navigator.serviceWorker?.getRegistration(); await r?.update(); } catch (e) { /* sem rede */ }
+    // procura a versão nova; se houver, espera que fique ativa antes de recarregar (senão os ficheiros podem falhar a meio da troca)
+    try {
+      const r = await navigator.serviceWorker?.getRegistration(); await r?.update();
+      if (r && (r.installing || r.waiting)) await new Promise(res => { navigator.serviceWorker.addEventListener('controllerchange', res, { once: true }); setTimeout(res, 4000); });
+    } catch (e) { /* sem rede */ }
     location.reload();
   });
 })();
