@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v66';
+  const APP_VERSION = '2026-10-03 v67';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1647,36 +1647,4 @@
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => { if ($('pdfview').hidden) e.preventDefault(); }, { passive: false });
   document.addEventListener('touchmove', e => { if (e.touches.length > 1 && $('pdfview').hidden) e.preventDefault(); }, { passive: false });
 
-  // ---------- Puxar para baixo, segurar 5 s e largar: atualiza a app para a versão mais recente ----------
-  // (o service worker vai sempre primeiro à rede, por isso recarregar traz a última versão publicada)
-  const ptr = document.createElement('div');
-  ptr.className = 'ptr'; ptr.setAttribute('aria-hidden', 'true');
-  ptr.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
-  document.body.appendChild(ptr);
-  const PULL = 80, HOLD = 5000; // px a puxar e tempo a segurar
-  let pullY = null, pulled = 0, holdTimer = null, ready = false, refreshing = false;
-  const blocked = () => refreshing || document.querySelector('dialog[open]') || !$('pdfview').hidden || !$('listen').hidden || $('drawer').classList.contains('open') || !$('splash').classList.contains('gone');
-  const resetPull = () => { clearTimeout(holdTimer); holdTimer = null; ready = false; ptr.classList.remove('on'); };
-  addEventListener('touchstart', e => { resetPull(); pullY = window.scrollY <= 0 && e.touches.length === 1 && !blocked() ? e.touches[0].clientY : null; pulled = 0; }, { passive: true });
-  addEventListener('touchmove', e => {
-    if (pullY == null) return;
-    if (window.scrollY > 0) { pullY = null; resetPull(); return; }
-    pulled = Math.max(0, e.touches[0].clientY - pullY);
-    if (pulled >= PULL && !holdTimer && !ready) holdTimer = setTimeout(() => { if (pullY != null) { ready = true; ptr.classList.add('on'); } }, HOLD);
-    else if (pulled < PULL && !ready) { clearTimeout(holdTimer); holdTimer = null; }
-  }, { passive: true });
-  // o iPhone cancela o toque quando a página passa a deslizar: nesse caso não há atualização
-  addEventListener('touchcancel', () => { pullY = null; resetPull(); }, { passive: true });
-  addEventListener('touchend', async () => {
-    if (pullY == null) { resetPull(); return; }
-    pullY = null;
-    if (!ready) { resetPull(); return; }
-    refreshing = true;
-    // procura a versão nova; se houver, espera que fique ativa antes de recarregar (senão os ficheiros podem falhar a meio da troca)
-    try {
-      const r = await navigator.serviceWorker?.getRegistration(); await r?.update();
-      if (r && (r.installing || r.waiting)) await new Promise(res => { navigator.serviceWorker.addEventListener('controllerchange', res, { once: true }); setTimeout(res, 4000); });
-    } catch (e) { /* sem rede */ }
-    location.reload();
-  });
 })();
