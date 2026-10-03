@@ -586,12 +586,14 @@ html, body { touch-action: pan-x pan-y; }
 .rows li.col-sec .sw-actions button { font-size: 20px; }
 .rows li.col-add-sec button { width: 100%; text-align: left; padding: 14px; color: #fff; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
 
-/* Coleções do cântico: ☆/★ e "+ Cancioneiro" na mesma linha */
-.pick-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.pick-star { width: 48px; height: 44px; display: grid; place-items: center; border: 1px solid #dde7e2; border-radius: 10px; color: #0e7f58; }
-.pick-star svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+/* Coleções do cântico: ☆/★ à esquerda e "+ Cancioneiro" à direita, pequenos */
+.pick-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.pick-star { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #dde7e2; border-radius: 8px; color: #0e7f58; }
+.pick-star svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
 .pick-star.on { color: #e3a008; }
 .pick-star.on svg { fill: currentColor; }
-.pick-canc { flex: 1; height: 44px; border-radius: 22px; border: 1.5px solid #0e7f58; color: #0e7f58; font-weight: 700; font-size: 15px; background: #fff; }
+.pick-canc { margin-left: auto; height: 30px; padding: 0 14px; border-radius: 15px; border: 1.5px solid #0e7f58; color: #0e7f58; font-weight: 700; font-size: 13px; background: #fff; }
 .pick-canc.on { background: #0e7f58; color: #fff; }
 .pick-canc:disabled { opacity: 1; }
+.col-dlg button, .col-dlg h2, .col-pick input { outline: none; }
+.col-dlg button:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
