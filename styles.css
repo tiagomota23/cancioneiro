@@ -537,10 +537,12 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .drawer-title { margin: 6px 0 4px 60px; font-family: var(--serif); font-weight: 400; letter-spacing: .14em; font-size: 20px; color: #fff; }
 .books a { gap: 10px; align-items: center; }
 .books .book-ic { width: 18px; height: 18px; flex: none; fill: currentColor; stroke: none; }
+.books .book-ic.outline { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
 .books .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
 
 /* Coleções */
-.books .col-new { width: 100%; text-align: left; padding: 12px 14px; color: #fff; font: inherit; font-size: 15px; letter-spacing: .03em; text-transform: uppercase; opacity: .9; }
+.books .col-new { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; color: #fff; font: inherit; font-size: 15px; letter-spacing: .03em; text-transform: uppercase; opacity: .9; }
+.books .col-new .t { flex: none; }
 .books .t small { font-size: 11px; opacity: .8; text-transform: none; }
 .list-title .col-edit { margin-left: 10px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: none; padding: 4px 10px; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; color: #fff; vertical-align: middle; }
 .list-title .col-meta { display: block; font-size: 11px; font-weight: 400; letter-spacing: .04em; text-transform: none; opacity: .8; margin-top: 4px; }
