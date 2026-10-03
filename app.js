@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v90';
+  const APP_VERSION = '2026-10-03 v94';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -260,7 +260,7 @@
       return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
     }
     if (op === 'upload') return { path: 'demo', url: null };
-    if (op === 'addfile') return { kind: b.kind, label: b.label, path: 'demo-' + Date.now(), _blob: b._blob, mime: b.mime, sort: 99 };
+    if (op === 'addfile') return { kind: b.kind, label: b.label, path: 'enviados/demo/' + Date.now() + '-abcdef12.pdf', _blob: b._blob, mime: b.mime, sort: 99 };
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
     if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
     if (op === 'users') return { me: 'demo@localhost', requests: [{ id: '00000000-0000-0000-0000-000000000000', email: 'novo@exemplo.pt', name: 'Pessoa Nova', created_at: new Date().toISOString() }],
@@ -899,8 +899,11 @@
     // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra")
     const canFiles = lvl() >= 3 && extrasOn();
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
+    // ficheiros enviados pela app: o Maestro / Gestor pode apagá-los (os importados ficam)
+    const ups = canFiles ? (s.files || []).filter(f => /^enviados\//.test(f.path || '')) : [];
+    const upHtml = ups.length ? `<ul class="up-files">${ups.map(f => `<li><span>${f.kind === 'recording' ? 'Gravação' : 'Partitura'}: ${esc(f.label || '')}</span><button class="up-del" data-path="${esc(f.path)}" aria-label="Apagar ${esc(f.label || '')}">${TRASH}</button></li>`).join('')}</ul>` : '';
     const editBar = canEdit || canFiles
-      ? `<p class="edit-bar">${canEdit && edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}${fileBtns}${canEdit ? '<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button>' : ''}</p>`
+      ? `<p class="edit-bar">${canEdit && edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}${canEdit ? '<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button>' : ''}${fileBtns ? `<span class="file-btns">${fileBtns}</span>` : ''}</p>`
       : '';
     $('song').innerHTML = `
       <h1>${esc(s.title)}</h1>
@@ -911,6 +914,7 @@
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
       ${editBar}
+      ${upHtml}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
@@ -918,6 +922,7 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
+    $('song').querySelectorAll('.up-del').forEach(b => b.onclick = () => { if (tapConfirm(b, 'Apagar?')) delFile(s, b.dataset.path); });
     if ($('btn-add-rec')) { $('btn-add-rec').onclick = () => addFiles(s, 'recording', $('btn-add-rec')); $('btn-add-score').onclick = () => addFiles(s, 'score', $('btn-add-score')); }
     // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
     $('btn-share').onclick = () => shareSong(s, data ? body : null);
@@ -1199,9 +1204,16 @@
       }
       return { out, pages: page + 1 };
     };
+    // a maior letra que cabe em 2 páginas (no máximo 2 páginas, sempre); com 6 ou mais cânticos experimenta
+    // também 3 e 4 colunas e fica com o número de colunas que dá a letra maior (em empate, menos colunas)
+    const nSongs = items.filter(it => it.k === 'song').length;
     let best = null;
-    for (let fs = 11; fs >= 6.5; fs -= 0.5) { const p = place(fs, 2); best = p; best.fs = fs; if (p.pages <= 2) break; }
-    if (best.pages > 2) { const p = place(7.5, 2); best = p; } // não fica demasiado pequeno: aceita mais páginas
+    for (const ncol of nSongs >= 6 ? [2, 3, 4] : [2]) {
+      let fit = null;
+      for (let fs = 11; fs >= 2.5; fs -= 0.25) { const p = place(fs, ncol); if (p.pages <= 2) { fit = { ...p, fs, ncol }; break; } }
+      if (fit && (!best || fit.fs > best.fs || (best.pages > 2 && fit.pages <= 2))) best = fit;
+    }
+    if (!best) best = { ...place(2.5, 2), fs: 2.5, ncol: 2 };
     const pages = Array.from({ length: best.pages }, () => doc.addPage([W, H]));
     tLines.forEach((t, i) => pages[0].drawText(t, { x: (W - F.b.widthOfTextAtSize(t, TS)) / 2, y: H - M - TS - i * TS * 1.2, size: TS, font: F.b, color: green }));
     pages[0].drawLine({ start: { x: M, y: H - M - headH + 8 }, end: { x: W - M, y: H - M - headH + 8 }, thickness: 1, color: green });
@@ -1342,6 +1354,17 @@
     } catch (e) {
       appAlert(e instanceof Limit ? e.message : (e.message || 'Não foi possível acrescentar o ficheiro.'));
     } finally { if (document.body.contains(btn)) { btn.innerHTML = orig; btn.disabled = false; } }
+  }
+
+  async function delFile(s, path) {
+    try {
+      if (!DEMO) await api('delfile', { path });
+      s.files = (s.files || []).filter(f => f.path !== path);
+      signed.delete(path); store.set(CACHE_KEY, allSongs);
+      try { const c = await caches.open(MEDIA); await c.delete(mkey(path)); } catch (e) {}
+      toast('Ficheiro apagado');
+      if (lastSongSlug === s.slug && !$('view-song').hidden) { const y = window.scrollY; showSong(s.slug); window.scrollTo(0, y); }
+    } catch (e) { appAlert(e instanceof Limit ? e.message : (e.message || 'Não foi possível apagar o ficheiro.')); }
   }
 
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
@@ -2161,7 +2184,11 @@
     if (f.length === 1) return inn.length ? `Na coleção «${esc(f[0].title)}» ✓ — retirar` : `Adicionar à coleção «${esc(f[0].title)}»`;
     return inn.length ? `Em ${inn.length} coleç${inn.length > 1 ? 'ões' : 'ão'} ✓ — gerir` : 'Adicionar a uma coleção';
   }
+  const COL_MAX = 10; // máximo de cânticos numa coleção (também travado na base de dados)
+  const colFull = c => (c.songs || []).length >= COL_MAX;
+  const fullMsg = c => `A coleção «${c.title}» já tem ${COL_MAX} cânticos (o máximo). Retire um antes de acrescentar outro.`;
   async function toggleInCollection(c, slug, on) {
+    if (on && colFull(c) && !(c.songs || []).some(x => x.song_slug === slug)) throw new Error(fullMsg(c));
     if (on) {
       const pos = Math.max(0, ...colItems(c).map(x => x.pos)) + 1;
       if (!DEMO) { const { error } = await sb.from('collection_songs').insert({ collection_id: c.id, song_slug: slug, position: pos }); if (error && !/duplicate/i.test(error.message)) throw error; }
@@ -2178,12 +2205,12 @@
     if (!f.length) { if (await appConfirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova coleção?', 'Criar')) openCollectionDlg(null); return; }
     if (f.length === 1) {
       const on = !(f[0].songs || []).some(x => x.song_slug === slug);
-      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { appAlert('Não foi possível guardar: ' + (e.message || e)); }
+      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível guardar: ' + (e.message || e)); }
       refresh(); return;
     }
     $('col-pick-list').innerHTML = f.map(c => `<label class="col-pick"><input type="checkbox" data-id="${esc(c.id)}"${(c.songs || []).some(x => x.song_slug === slug) ? ' checked' : ''}><span>${esc(c.title)}<small>${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'}</small></span></label>`).join('');
     $('col-pick-list').querySelectorAll('input').forEach(i => i.onchange = async () => {
-      try { await toggleInCollection(cols.find(c => c.id === i.dataset.id), slug, i.checked); } catch (e) { i.checked = !i.checked; appAlert('Não foi possível guardar: ' + (e.message || e)); }
+      try { await toggleInCollection(cols.find(c => c.id === i.dataset.id), slug, i.checked); } catch (e) { i.checked = !i.checked; appAlert(/máximo|max/.test(e.message) ? fullMsg(cols.find(c => 'c:' + c.id === i.dataset.k || c.id === i.dataset.id) || { title: '' }) : 'Não foi possível guardar: ' + (e.message || e)); }
       refresh();
     });
     $('col-pick').showModal();
@@ -2212,6 +2239,7 @@
           const col = cols.find(c => c.id === k.slice(2));
           // com secções: escolher em que secção fica o cântico
           let sec;
+          if (i.checked && colFull(col)) { i.checked = false; appAlert(fullMsg(col)); return; }
           if (i.checked && (col.sections || []).length) {
             const secs = colItems(col).filter(it => it.k === 'sec').map(it => it.ref);
             sec = await appChoose('Em que secção?', [{ value: '', label: 'No início (sem secção)' }, ...secs.map(x => ({ value: x.id, label: x.title }))]);
@@ -2222,7 +2250,7 @@
           // ao acrescentar a uma coleção, abre a lista dessa coleção
           if (i.checked) { $('col-pick').close(); toast('Adicionado à coleção'); location.hash = '#/lista/colecao-' + k.slice(2); return; }
         }
-      } catch (e) { i.checked = !i.checked; appAlert('Não foi possível guardar: ' + (e.message || e)); }
+      } catch (e) { i.checked = !i.checked; appAlert(/máximo|max/.test(e.message) ? fullMsg(cols.find(c => 'c:' + c.id === i.dataset.k || c.id === i.dataset.id) || { title: '' }) : 'Não foi possível guardar: ' + (e.message || e)); }
       refresh();
     });
     $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(null); };

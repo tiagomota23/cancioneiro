@@ -640,3 +640,9 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 .list-title .col-share { display: inline-flex; vertical-align: middle; margin-left: 8px; padding: 2px; color: #fff; }
 .list-title .col-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #pdf-download svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
+.up-files li { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 2px 0; }
+.up-del { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.up-del svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.up-del.armed { background: #c0392b; color: #fff; }
+.edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }

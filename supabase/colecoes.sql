@@ -80,3 +80,14 @@ grant select, insert, update, delete on public.collection_templates to authentic
 insert into public.collection_templates (title, sections, created_by)
   select 'Missa', array['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora'], 'tiago.mota@gmail.com'
   where not exists (select 1 from public.collection_templates where title = 'Missa');
+
+-- Máximo de 10 cânticos por coleção
+create or replace function public.colecao_max_canticos() returns trigger language plpgsql as $$
+begin
+  if (select count(*) from public.collection_songs where collection_id = new.collection_id and song_slug <> new.song_slug) >= 10 then
+    raise exception 'Uma coleção pode ter no máximo 10 cânticos.' using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+drop trigger if exists colecao_max_canticos on public.collection_songs;
+create trigger colecao_max_canticos before insert on public.collection_songs for each row execute function public.colecao_max_canticos();

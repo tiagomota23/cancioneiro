@@ -278,6 +278,15 @@ Deno.serve(async (req) => {
       cache = null;
       return out(r[0]);
     }
+    if (op === 'delfile') { // Maestro: apagar um ficheiro enviado pela app (os importados não se apagam)
+      if (lvl < 3) return denied();
+      const path = String(b.path || '');
+      if (!/^enviados\/[a-z0-9_]+\/\d+-[0-9a-f]{8}\.[a-z0-9]+$/.test(path)) return out({ error: 'Só se podem apagar ficheiros enviados pela app.' }, 400);
+      if (!(await limit(user, 'save', 'del:' + path))) return tooMany();
+      await rest(`song_files?path=eq.${encodeURIComponent(path)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      await fetch(`${SB}/storage/v1/object/coro/${path}`, { method: 'DELETE', headers: HDR }).catch(() => {});
+      return out({ ok: true });
+    }
     if (op === 'upload' || op === 'addfile') { // Maestro: acrescentar gravações e partituras a um cântico
       if (lvl < 3) return denied();
       const slug = String(b.slug || ''), kind = String(b.kind || '');
