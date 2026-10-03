@@ -475,7 +475,7 @@ body.lvl-1 .coro-only { display: none; }
 .perfis { width: min(420px, calc(100vw - 32px)); }
 .perfis-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 14px; }
 .perfil-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; background: #fff; color: #333; outline: none; }
-.perfil-opt:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
+.perfil-opt:focus, .perfil-opt:focus-visible, .perfis h2:focus { outline: none; box-shadow: none; }
 .perfil-opt.on { border-color: var(--green-2); background: var(--green-2); color: #fff; }
 .perfil-opt svg { width: 26px; height: 26px; flex: none; color: var(--green-ink); }
 .perfil-opt.on svg, .perfil-opt.on small { color: #fff; }
