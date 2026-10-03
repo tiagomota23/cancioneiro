@@ -185,6 +185,8 @@ async function sign(path) {
 const BOOKS = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' };
 const pageFile = (dir, n) => `${dir}/p${String(n).padStart(3, '0')}.pdf`;
 
+// apagar um ficheiro do Storage (a API só apaga com a lista de caminhos)
+const removeObject = path => fetch(`${SB}/storage/v1/object/coro`, { method: 'DELETE', headers: HDR, body: JSON.stringify({ prefixes: [path] }) }).catch(() => {});
 // assinaturas dos tipos aceites (primeiros bytes do ficheiro)
 function fileOk(b, mime) {
   const at = (i, ...v) => v.every((x, k) => b[i + k] === x), str = (i, t) => [...t].every((c, k) => b[i + k] === c.charCodeAt(0));
@@ -311,7 +313,7 @@ Deno.serve(async (req) => {
       if (!/^enviados\/[a-z0-9_]+\/\d+-[0-9a-f]{8}\.[a-z0-9]+$/.test(path)) return out({ error: 'Só se podem apagar ficheiros enviados pela app.' }, 400);
       if (!(await limit(user, 'save', 'del:' + path))) return tooMany();
       await rest(`song_files?path=eq.${encodeURIComponent(path)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
-      await fetch(`${SB}/storage/v1/object/coro/${path}`, { method: 'DELETE', headers: HDR }).catch(() => {});
+      await removeObject(path);
       return out({ ok: true });
     }
     if (op === 'upload' || op === 'addfile') { // Maestro: acrescentar gravações e partituras a um cântico
@@ -341,7 +343,7 @@ Deno.serve(async (req) => {
       const sig = new Uint8Array(await head.arrayBuffer());
       const total = +((head.headers.get('content-range') || '').split('/')[1] || head.headers.get('content-length') || 0);
       if (!fileOk(sig, mime) || !total || total > 40e6) {
-        await fetch(obj, { method: 'DELETE', headers: HDR }).catch(() => {});
+        await removeObject(path);
         return out({ error: total > 40e6 ? 'O ficheiro é demasiado grande (máximo 40 MB).' : 'O conteúdo do ficheiro não corresponde ao tipo indicado.' }, 400);
       }
       const [last] = await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&kind=eq.${kind}&select=sort&order=sort.desc&limit=1`);
