@@ -735,3 +735,6 @@ dialog.tour.center { background: rgba(0,0,0,.55); }
 .sec-add .sa-sec { display: grid; gap: 4px; margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
 .sec-add .sa-sec[hidden] { display: none; }
 .sec-add .sa-sec select { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid #cfdcd6; border-radius: 10px; background: #fff; color: #222; }
+.sec-add .sa-search { position: relative; margin: 4px 0 6px; }
+.sec-add .sa-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: #888; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.sec-add .sa-search #sa-q { margin: 0; padding-left: 38px; }
