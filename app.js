@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v74';
+  const APP_VERSION = '2026-10-03 v75';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1387,7 +1387,8 @@
     if (!c || !colVisible(c)) { title.textContent = 'Coleção'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta coleção já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
     const can = lvl() >= 3;
     const fim = new Date(c.expires_at);
-    title.innerHTML = `${esc(c.title)}${can ? ' <button class="col-edit" id="col-edit">Editar</button>' : ''}<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
+    // público e prazo só para quem gere (Maestro / Gestor)
+    title.innerHTML = `${esc(c.title)}${can ? ` <button class="col-edit" id="col-edit">Editar</button><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
