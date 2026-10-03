@@ -278,6 +278,32 @@ Deno.serve(async (req) => {
       cache = null;
       return out(r[0]);
     }
+    if (op === 'upload' || op === 'addfile') { // Maestro: acrescentar gravações e partituras a um cântico
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), kind = String(b.kind || '');
+      const mime = String(b.mime || '').toLowerCase(), size = +b.size || 0;
+      const okMime = kind === 'recording' ? /^audio\/(mpeg|mp4|x-m4a|m4a|aac|wav|x-wav|ogg|webm)$/.test(mime) : /^(application\/pdf|image\/(jpeg|png))$/.test(mime);
+      if (!['recording', 'score'].includes(kind) || !okMime) return out({ error: 'Tipo de ficheiro não aceite.' }, 400);
+      if (!size || size > 40e6) return out({ error: 'O ficheiro é demasiado grande (máximo 40 MB).' }, 400);
+      const [s] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug`);
+      if (!s) return out({ error: 'não encontrado' }, 404);
+      if (op === 'upload') {
+        if (!(await limit(user, 'save', 'upload:' + slug + ':' + Date.now()))) return tooMany();
+        const ext = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/ogg': 'ogg', 'audio/webm': 'webm', 'audio/aac': 'aac' }[mime] || 'm4a';
+        const path = `enviados/${slug}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+        const r = await fetch(`${SB}/storage/v1/object/upload/sign/coro/${path}`, { method: 'POST', headers: HDR, body: '{}' });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.url) return out({ error: 'Não foi possível preparar o envio.' }, 500);
+        return out({ path, url: `${SB}/storage/v1${d.url}` });
+      }
+      const path = String(b.path || ''), label = String(b.label || '').trim().slice(0, 80) || (kind === 'score' ? 'Partitura' : 'Gravação');
+      if (!new RegExp(`^enviados/${slug.replace(/[^a-z0-9_]/g, '')}/\\d+-[0-9a-f]{8}\\.[a-z0-9]+$`).test(path)) return out({ error: 'ficheiro inválido' }, 400);
+      try { await sign(path); } catch (e) { return out({ error: 'O ficheiro não chegou ao servidor.' }, 400); }
+      const [last] = await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&kind=eq.${kind}&select=sort&order=sort.desc&limit=1`);
+      const [row] = await rest('song_files?select=kind,label,path,mime,sort', { method: 'POST', headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ song_slug: slug, kind, label, path, mime, size, sort: (last?.sort ?? 0) + 1 }) });
+      return out(row);
+    }
     if (op === 'promote') { // Maestro: pôr ou tirar um cântico do Cancioneiro (os do site original ficam sempre)
       if (lvl < 3) return denied();
       const slug = String(b.slug || ''), on = !!b.on;

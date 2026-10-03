@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v89';
+  const APP_VERSION = '2026-10-03 v90';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -259,6 +259,8 @@
       const pages = c ? [...new Set(c.split('|').map(r => +r.split(':')[0]))] : [p, p + 1];
       return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
     }
+    if (op === 'upload') return { path: 'demo', url: null };
+    if (op === 'addfile') return { kind: b.kind, label: b.label, path: 'demo-' + Date.now(), _blob: b._blob, mime: b.mime, sort: 99 };
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
     if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
     if (op === 'users') return { me: 'demo@localhost', requests: [{ id: '00000000-0000-0000-0000-000000000000', email: 'novo@exemplo.pt', name: 'Pessoa Nova', created_at: new Date().toISOString() }],
@@ -894,8 +896,11 @@
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
     const canEdit = data && mode === 'orig' && lvl() >= 3 && extrasOn();
     const original = srcOf(s).includes('original');
-    const editBar = canEdit
-      ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button></p>`
+    // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra")
+    const canFiles = lvl() >= 3 && extrasOn();
+    const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
+    const editBar = canEdit || canFiles
+      ? `<p class="edit-bar">${canEdit && edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}${fileBtns}${canEdit ? '<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button>' : ''}</p>`
       : '';
     $('song').innerHTML = `
       <h1>${esc(s.title)}</h1>
@@ -913,6 +918,7 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
+    if ($('btn-add-rec')) { $('btn-add-rec').onclick = () => addFiles(s, 'recording', $('btn-add-rec')); $('btn-add-score').onclick = () => addFiles(s, 'score', $('btn-add-score')); }
     // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
     $('btn-share').onclick = () => shareSong(s, data ? body : null);
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug, $('btn-revert'));
@@ -1275,6 +1281,69 @@
     }
   }
 
+  // ---------- Acrescentar gravações e partituras (Maestro / Gestor) ----------
+  // Partitura: um PDF, ou fotografias/imagens das páginas, que são juntas num só PDF (uma página por imagem)
+  function pickFiles(accept, multiple) {
+    return new Promise(res => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = accept; inp.multiple = multiple;
+      inp.style.display = 'none'; document.body.appendChild(inp);
+      inp.onchange = () => { res([...inp.files]); inp.remove(); };
+      addEventListener('focus', () => setTimeout(() => { if (!inp.files.length) { res([]); inp.remove(); } }, 1500), { once: true });
+      inp.click();
+    });
+  }
+  // imagem (também HEIC/WebP, se o browser a abrir) → JPEG com no máximo 2400 px
+  async function toJpeg(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = url; });
+      const k = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+      return { w: c.width, h: c.height, bytes: new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85))).arrayBuffer()) };
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function imagesToPdf(files) {
+    const L = await loadPdfLib(), doc = await L.PDFDocument.create();
+    for (const f of files) {
+      const j = await toJpeg(f), img = await doc.embedJpg(j.bytes);
+      const W = 595.28, H = 841.89, M = 18, sc = Math.min((W - 2 * M) / j.w, (H - 2 * M) / j.h);
+      doc.addPage([W, H]).drawImage(img, { x: (W - j.w * sc) / 2, y: H - M - j.h * sc, width: j.w * sc, height: j.h * sc });
+    }
+    return new Blob([await doc.save()], { type: 'application/pdf' });
+  }
+  const audioMime = f => f.type || ({ mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg' }[(f.name.split('.').pop() || '').toLowerCase()] || '');
+  async function addFiles(s, kind, btn) {
+    const rec = kind === 'recording';
+    const files = await pickFiles(rec ? 'audio/*,.mp3,.m4a,.wav' : 'application/pdf,image/*', !rec);
+    if (!files.length) return;
+    let blob, mime;
+    const orig = btn.innerHTML; btn.disabled = true; btn.textContent = 'A preparar…';
+    try {
+      if (rec) { blob = files[0]; mime = audioMime(files[0]).replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4'); }
+      else if (files.length === 1 && files[0].type === 'application/pdf') { blob = files[0]; mime = 'application/pdf'; }
+      else { const imgs = files.filter(f => f.type !== 'application/pdf'); if (!imgs.length) throw new Error('Escolha um PDF ou fotografias das páginas.'); blob = await imagesToPdf(imgs); mime = 'application/pdf'; }
+      btn.innerHTML = orig; btn.disabled = false;
+      const def = rec ? (files[0].name.replace(/\.[^.]+$/, '').slice(0, 60) || 'Gravação') : 'Partitura';
+      const label = await appPrompt(rec ? 'Nome da gravação' : 'Nome da partitura', def, rec ? 'Por exemplo: Sopranos, Tenores, Todas as vozes' : (files.length > 1 ? `${files.length} páginas, juntas num PDF` : ''));
+      if (label === null) return;
+      btn.disabled = true; btn.textContent = 'A enviar…';
+      const up = await api('upload', { slug: s.slug, kind, mime, size: blob.size });
+      if (up.url) {
+        const r = await fetch(up.url, { method: 'PUT', headers: { 'Content-Type': mime, 'x-upsert': 'false' }, body: blob });
+        if (!r.ok) throw new Error('O envio falhou (' + r.status + ').');
+      }
+      const row = await api('addfile', { slug: s.slug, kind, mime, size: blob.size, path: up.path, label: label.trim(), ...(DEMO ? { _blob: blob } : {}) });
+      s.files = [...(s.files || []), row];
+      const all = allSongs.find(x => x.slug === s.slug); if (all && all !== s) all.files = s.files;
+      store.set(CACHE_KEY, allSongs);
+      toast(rec ? 'Gravação acrescentada' : 'Partitura acrescentada');
+      if (lastSongSlug === s.slug && !$('view-song').hidden) { const y = window.scrollY; showSong(s.slug); window.scrollTo(0, y); }
+    } catch (e) {
+      appAlert(e instanceof Limit ? e.message : (e.message || 'Não foi possível acrescentar o ficheiro.'));
+    } finally { if (document.body.contains(btn)) { btn.innerHTML = orig; btn.disabled = false; } }
+  }
+
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
   // Formato de texto: estrofes separadas por linha em branco; refrão começa por "R:"; acordes entre [ ].
   const toText = st => st.map(x => (x.type === 'chorus' ? 'R: ' : '') + x.lines.join('\n')).join('\n\n');
@@ -1553,6 +1622,7 @@
   }
   async function fileSrc(f, network) {
     if (f.url) return { url: f.url };
+    if (f._blob) return { blob: f._blob }; // modo de demonstração
     if (!network) { const m = await mediaGet(f); if (m) return m; }
     const hit = signed.get(f.path);
     if (hit && hit.until > Date.now()) return hit.src;
