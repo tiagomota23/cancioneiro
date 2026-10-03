@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v58';
+  const APP_VERSION = '2026-10-03 v59';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -288,7 +288,8 @@
     const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
     songs = f === 'todas' ? allSongs : allSongs.filter(s => has(s, f));
     lyrIndex = null;
-    bySlug = new Map((lvl() < 2 ? songs : allSongs).map(s => [s.slug, s]));
+    const extra = lvl() < 2 ? colExtra() : new Set();
+    bySlug = new Map((lvl() < 2 ? allSongs.filter(s => inCancioneiro(s) || extra.has(s.slug)) : allSongs).map(s => [s.slug, s]));
     const present = new Set(allSongs.flatMap(srcOf));
     const sel = $('src-filter');
     if (sel) {
@@ -777,6 +778,7 @@
       if (!list.length && songs.length) $('status').innerHTML = '<span class="fav-empty">Ainda não tem cânticos preferidos.<br>Abra um cântico e toque na ☆ no topo para o adicionar.</span>';
       return;
     }
+    if (catId.startsWith('colecao-')) { showCollection(catId.slice(8)); return; }
     const bk = BOOKS_LIST.find(b => b.id === catId && b.id !== 'favoritos');
     if (bk) {
       title.hidden = false;
@@ -869,6 +871,7 @@
       ${renderStanzas(body)}
       ${editBar}
       ${promo}
+      ${lvl() >= 3 && extrasOn() ? `<p class="promo-bar"><button class="revert-link" id="btn-col">${colLabel(s)}</button></p>` : ''}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
@@ -881,6 +884,7 @@
     $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
     if ($('btn-promo')) $('btn-promo').onclick = () => promote(slug, $('btn-promo').dataset.on === '1');
+    if ($('btn-col')) $('btn-col').onclick = () => openAddToCollection(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => toggleFav(slug);
@@ -1334,6 +1338,165 @@
     if ($('search').value) { $('search').value = ''; $('search-clear').hidden = true; route(); }
     else location.hash = '#/';
   };
+  // ---------- Coleções (criadas por um Maestro, para o Cancioneiro ou o Coro, por um tempo limitado) ----------
+  const DURS = { '24h': ['24 horas', 864e5], '48h': ['48 horas', 1728e5], '1w': ['1 semana', 6048e5], '1m': ['1 mês', 2592e6] };
+  let cols = [];
+  const colsKey = () => 'cancioneiro.colecoes.' + (session ? session.user.id : 'anon');
+  const expired = c => Date.parse(c.expires_at) <= Date.now();
+  const colVisible = c => (lvl() >= 3 || !expired(c)) && (c.audience === 'cancioneiro' || lvl() >= 2);
+  const colSongs = c => (c.songs || []).slice().sort((a, b) => a.position - b.position);
+  const colFits = () => true; // qualquer cântico pode entrar numa coleção (o público Cancioneiro passa a vê-lo enquanto a coleção durar)
+  // cânticos de coleções ativas para o Cancioneiro: visíveis também no perfil Cancioneiro
+  const colExtra = () => new Set(cols.filter(c => !expired(c) && c.audience === 'cancioneiro').flatMap(c => (c.songs || []).map(x => x.song_slug)));
+  async function loadCollections() {
+    if (!cols.length) cols = store.get(colsKey(), []);
+    if (DEMO) { cols = store.get('cancioneiro.demo.cols', []); return; }
+    try {
+      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,songs:collection_songs(song_slug,position)').order('created_at');
+      if (!error && data) { cols = data; store.set(colsKey(), cols); }
+    } catch (e) { /* sem rede: fica a cópia */ }
+    if (lvl() < 2 && allSongs.length) applySource();
+  }
+  const demoSave = () => store.set('cancioneiro.demo.cols', cols);
+  function renderCollectionsMenu() {
+    const vis = cols.filter(colVisible);
+    if (!vis.length && lvl() < 3) return '';
+    return `<li class="letter">COLEÇÕES</li>` + vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><span class="t">${esc(c.title)}${expired(c) ? ' <small>(expirada)</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+      (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span></button></li>` : '');
+  }
+  function showCollection(id) {
+    const c = cols.find(x => x.id === id);
+    const title = $('list-title'), rows = $('rows');
+    title.hidden = false;
+    if (!c || !colVisible(c)) { title.textContent = 'Coleção'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta coleção já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
+    const can = lvl() >= 3;
+    const fim = new Date(c.expires_at);
+    title.innerHTML = `${esc(c.title)}${can ? ' <button class="col-edit" id="col-edit">Editar</button>' : ''}<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
+    const list = colSongs(c).map(x => bySlug.get(x.song_slug)).filter(Boolean);
+    rows.innerHTML = list.map((s, i) => {
+      const row = songRow(s);
+      if (!can) return row;
+      return row.replace('<li>', `<li class="swipe" data-slug="${esc(s.slug)}"><div class="sw-actions"><button data-a="up" aria-label="Subir"${i ? '' : ' disabled'}>↑</button><button data-a="down" aria-label="Descer"${i < list.length - 1 ? '' : ' disabled'}>↓</button><button data-a="del" class="sw-del">Remover</button></div><button class="sw-more" aria-label="Opções">⋯</button>`);
+    }).join('');
+    if (!list.length) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e use "Adicionar a uma coleção".' : 'Coleção vazia.';
+    if (can) {
+      $('col-edit').onclick = () => openCollectionDlg(c);
+      rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
+    }
+  }
+  // deslizar para a esquerda mostra: Remover, Subir, Descer (no computador: botão ⋯)
+  function bindSwipe(li, c) {
+    const a = li.querySelector('a'); let x0 = null, dx = 0;
+    const close = () => li.classList.remove('open');
+    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; dx = 0; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
+    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-170, Math.min(0, dx + (li.classList.contains('open') ? -170 : 0)))}px)`; }, { passive: true });
+    a.addEventListener('touchend', () => { a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
+    a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); if (Math.abs(dx) <= 10) close(); } });
+    li.querySelector('.sw-more').onclick = () => li.classList.toggle('open');
+    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = () => colAction(c, li.dataset.slug, b.dataset.a));
+  }
+  async function colAction(c, slug, act) {
+    const list = colSongs(c), i = list.findIndex(x => x.song_slug === slug);
+    try {
+      if (act === 'del') {
+        if (!DEMO) { const { error } = await sb.from('collection_songs').delete().eq('collection_id', c.id).eq('song_slug', slug); if (error) throw error; }
+        c.songs = c.songs.filter(x => x.song_slug !== slug);
+      } else {
+        const j = act === 'up' ? i - 1 : i + 1; if (j < 0 || j >= list.length) return;
+        const A = list[i], B = list[j], pa = A.position, pb = B.position === pa ? pa + (act === 'up' ? -1 : 1) : B.position;
+        if (!DEMO) {
+          const r1 = await sb.from('collection_songs').update({ position: pb }).eq('collection_id', c.id).eq('song_slug', A.song_slug);
+          const r2 = await sb.from('collection_songs').update({ position: pa }).eq('collection_id', c.id).eq('song_slug', B.song_slug);
+          if (r1.error || r2.error) throw (r1.error || r2.error);
+        }
+        A.position = pb; B.position = pa;
+      }
+      if (DEMO) demoSave(); else store.set(colsKey(), cols);
+    } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+    showCollection(c.id);
+  }
+  // criar / editar uma coleção
+  let dlgCol = null;
+  function openCollectionDlg(c) {
+    dlgCol = c;
+    $('col-dlg-title').textContent = c ? 'Editar coleção' : 'Nova coleção';
+    $('col-name').value = c ? c.title : '';
+    $('col-aud').value = c ? c.audience : 'coro';
+    $('col-dur').value = c ? c.duration : '1w';
+    $('col-del').hidden = !c;
+    $('col-msg').textContent = (c ? `Ao guardar, a coleção fica disponível durante ${DURS[c.duration][0]} a partir de agora. ` : '') + 'Um mês depois de expirar, a coleção é apagada.';
+    $('col-dlg').showModal();
+  }
+  async function saveCollection() {
+    const title = $('col-name').value.trim().slice(0, 80);
+    if (!title) { $('col-msg').textContent = 'Escreva um título.'; return; }
+    const audience = $('col-aud').value, duration = $('col-dur').value;
+    const row = { title, audience, duration, expires_at: new Date(Date.now() + DURS[duration][1]).toISOString() };
+    try {
+      if (DEMO) {
+        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, songs: [] });
+        demoSave();
+      } else if (dlgCol) {
+        const { error } = await sb.from('collections').update(row).eq('id', dlgCol.id); if (error) throw error;
+        Object.assign(dlgCol, row);
+      } else {
+        const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by').single(); if (error) throw error;
+        cols.push({ ...data, songs: [] });
+      }
+      if (!DEMO) store.set(colsKey(), cols);
+      $('col-dlg').close();
+      const id = dlgCol ? dlgCol.id : cols[cols.length - 1].id;
+      location.hash = '#/lista/colecao-' + id; route();
+    } catch (e) { $('col-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
+  }
+  async function deleteCollection() {
+    if (!dlgCol || !confirm(`Apagar a coleção «${dlgCol.title}»? Os cânticos não são apagados.`)) return;
+    try {
+      if (!DEMO) { const { error } = await sb.from('collections').delete().eq('id', dlgCol.id); if (error) throw error; }
+      cols = cols.filter(x => x !== dlgCol); if (DEMO) demoSave(); else store.set(colsKey(), cols);
+      $('col-dlg').close(); location.hash = '#/';
+    } catch (e) { $('col-msg').textContent = 'Não foi possível apagar: ' + (e.message || e); }
+  }
+  $('col-save').onclick = saveCollection;
+  $('col-cancel').onclick = () => $('col-dlg').close();
+  $('col-del').onclick = deleteCollection;
+  // no cântico: adicionar a uma coleção (ou escolher entre várias)
+  const fitting = s => cols.filter(c => colVisible(c) && colFits(c, s));
+  function colLabel(s) {
+    const f = fitting(s), inn = f.filter(c => (c.songs || []).some(x => x.song_slug === s.slug));
+    if (f.length === 1) return inn.length ? `Na coleção «${esc(f[0].title)}» ✓ — retirar` : `Adicionar à coleção «${esc(f[0].title)}»`;
+    return inn.length ? `Em ${inn.length} coleç${inn.length > 1 ? 'ões' : 'ão'} ✓ — gerir` : 'Adicionar a uma coleção';
+  }
+  async function toggleInCollection(c, slug, on) {
+    if (on) {
+      const pos = Math.max(0, ...(c.songs || []).map(x => x.position)) + 1;
+      if (!DEMO) { const { error } = await sb.from('collection_songs').insert({ collection_id: c.id, song_slug: slug, position: pos }); if (error && !/duplicate/i.test(error.message)) throw error; }
+      c.songs = (c.songs || []).filter(x => x.song_slug !== slug).concat({ song_slug: slug, position: pos });
+    } else {
+      if (!DEMO) { const { error } = await sb.from('collection_songs').delete().eq('collection_id', c.id).eq('song_slug', slug); if (error) throw error; }
+      c.songs = (c.songs || []).filter(x => x.song_slug !== slug);
+    }
+    if (DEMO) demoSave(); else store.set(colsKey(), cols);
+  }
+  async function openAddToCollection(slug) {
+    const s = bySlug.get(slug), f = fitting(s);
+    const refresh = () => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
+    if (!f.length) { if (confirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova coleção?')) openCollectionDlg(null); return; }
+    if (f.length === 1) {
+      const on = !(f[0].songs || []).some(x => x.song_slug === slug);
+      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+      refresh(); return;
+    }
+    $('col-pick-list').innerHTML = f.map(c => `<label class="col-pick"><input type="checkbox" data-id="${esc(c.id)}"${(c.songs || []).some(x => x.song_slug === slug) ? ' checked' : ''}><span>${esc(c.title)}<small>${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'}</small></span></label>`).join('');
+    $('col-pick-list').querySelectorAll('input').forEach(i => i.onchange = async () => {
+      try { await toggleInCollection(cols.find(c => c.id === i.dataset.id), slug, i.checked); } catch (e) { i.checked = !i.checked; alert('Não foi possível guardar: ' + (e.message || e)); }
+      refresh();
+    });
+    $('col-pick').showModal();
+  }
+  $('col-pick-close').onclick = () => $('col-pick').close();
+  document.addEventListener('click', e => { if (!e.target.closest('li.swipe')) document.querySelectorAll('#rows li.open').forEach(x => x.classList.remove('open')); });
+
   // Gaveta: os livros (Preferidos, Cancioneiro e, do perfil Coro para cima, Coro, Songbook e CANTI 2024)
   const BOOKS_LIST = [
     { id: 'favoritos', label: 'Preferidos', icon: '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>', test: s => isFav(s.slug) },
@@ -1348,10 +1511,11 @@
     $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
       const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : ''}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
-    }).join('');
+    }).join('') + renderCollectionsMenu();
+    const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }
   function openDrawer() {
-    renderBooks();
+    renderBooks(); loadCollections().then(() => { if ($('drawer').classList.contains('open')) renderBooks(); });
     $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
   }
   function closeDrawer() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
@@ -1432,6 +1596,7 @@
     showList();
     load();
     loadFavs();
+    loadCollections();
     loadSyncInfo();
   })();
 

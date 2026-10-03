@@ -189,7 +189,13 @@ Deno.serve(async (req) => {
     const op = b.op;
     // perfil ativo escolhido na app (nunca acima do da pessoa)
     const lvl = ROLES.includes(b.perfil) ? Math.min(user.rank, rank(b.perfil)) : user.rank;
-    const visible = s => !!s && (lvl >= 2 || s.cancioneiro);
+    // perfil Cancioneiro: cânticos do Cancioneiro e os de coleções ativas para o Cancioneiro
+    let colSet = new Set();
+    if (lvl < 2 && ['song', 'search', 'match'].includes(op)) {
+      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)&collections.audience=eq.cancioneiro&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
+      colSet = new Set(rows.map(r => r.song_slug));
+    }
+    const visible = s => !!s && (lvl >= 2 || s.cancioneiro || colSet.has(s.slug));
     const denied = () => out({ error: 'sem permissão para este perfil' }, 403);
     const tooMany = () => out({ error: 'limite', message: 'Atingiu o limite de uso por agora. Tente de novo mais tarde.' }, 429);
 

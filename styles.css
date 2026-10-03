@@ -544,3 +544,28 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .books a { gap: 10px; align-items: center; }
 .books .book-ic { width: 18px; height: 18px; flex: none; fill: currentColor; stroke: none; }
 .books .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
+
+/* Coleções */
+.books .col-new { width: 100%; text-align: left; padding: 12px 14px; color: #fff; font: inherit; font-size: 15px; letter-spacing: .03em; text-transform: uppercase; opacity: .9; }
+.books .t small { font-size: 11px; opacity: .8; text-transform: none; }
+.list-title .col-edit { margin-left: 10px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: none; padding: 4px 10px; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; color: #fff; vertical-align: middle; }
+.list-title .col-meta { display: block; font-size: 11px; font-weight: 400; letter-spacing: .04em; text-transform: none; opacity: .8; margin-top: 4px; }
+.rows li.swipe { position: relative; overflow: hidden; }
+.rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
+.rows li.swipe:not(.open):not(.drag) .sw-actions { visibility: hidden; }
+.rows li.swipe.open > a { transform: translateX(-170px); }
+.rows li.swipe .sw-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.rows li.swipe .sw-actions button { width: 44px; color: #fff; background: rgba(0,0,0,.25); font-size: 18px; }
+.rows li.swipe .sw-actions button:disabled { opacity: .35; }
+.rows li.swipe .sw-actions .sw-del { width: 82px; font-size: 13px; font-weight: 700; background: #c0392b; }
+.rows li.swipe .sw-more { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); z-index: 2; width: 34px; height: 34px; color: #fff; font-size: 18px; opacity: .8; }
+.rows li.swipe.open .sw-more { opacity: 0; pointer-events: none; }
+@media (hover: none) { .rows li.swipe .sw-more { display: none; } .rows li.swipe > a { padding-right: 14px; } }
+.col-dlg { width: min(420px, calc(100vw - 32px)); }
+.col-field { display: block; font-size: 13px; font-weight: 700; color: #555; margin: 10px 0; }
+.col-field input, .col-field select { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 15px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
+.col-dlg .edit-actions button.ghost.danger { color: #c0392b; border-color: #e3b3ad; }
+.col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
+.col-pick { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #333; }
+.col-pick input { width: 20px; height: 20px; accent-color: #0e7f58; }
+.col-pick small { display: block; font-size: 11.5px; color: #777; }
