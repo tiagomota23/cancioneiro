@@ -632,3 +632,11 @@ button.armed, .edit-actions button.ghost.armed { background: #c0392b !important;
 body.shared-view #btn-fav, body.shared-view #btn-share, body.shared-view #btn-chords, body.no-session #btn-back { display: none; }
 .shared-foot { margin-top: 28px; font-size: 13px; color: var(--ink-soft); text-align: center; }
 .shared-foot + .shared-foot { margin-top: 6px; }
+body.no-session.shared-sub #btn-back { display: inline-flex; }
+body.shared-view .searchrow, body.shared-view #btn-perfil { visibility: hidden; }
+body.shared-view .searchrow { height: 8px; overflow: hidden; }
+#view-list .shared-foot { color: rgba(255,255,255,.85); }
+#view-list .shared-foot .revert-link { color: #fff; }
+.list-title .col-share { display: inline-flex; vertical-align: middle; margin-left: 8px; padding: 2px; color: #fff; }
+.list-title .col-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#pdf-download svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

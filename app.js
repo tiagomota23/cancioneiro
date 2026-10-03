@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v88';
+  const APP_VERSION = '2026-10-03 v89';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -235,6 +235,14 @@
     if (op === 'song') { const s = demoFull.get(b.slug); return { lyrics: s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit }; }
     if (op === 'search') return { hits: demoSearch(b.q) };
     if (op === 'share') return { token: 'demo_' + b.slug, expires_at: new Date(Date.now() + 864e5).toISOString() };
+    if (op === 'share' && b.collection) return { token: 'demoC_' + b.collection, expires_at: new Date(Date.now() + 864e5).toISOString() };
+    if (op === 'shared' && b.token.startsWith('demoC_')) {
+      const c = store.get('cancioneiro.demo.cols', []).find(x => x.id === b.token.slice(6));
+      if (!c) throw new Error('Esta coleção já não está disponível.');
+      if (b.slug) return demoApi('shared', { token: 'demo_' + b.slug });
+      if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
+      return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items: colItems(c).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number }) };
+    }
     if (op === 'shared') {
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
       const s = demoFull.get(b.token.replace(/^demo_/, ''));
@@ -950,44 +958,57 @@
     list.push({ value: 'url', label: 'Copiar endereço', sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
     const v = await appChoose('Partilhar', list);
     if (v === 'letra') copyLyrics(s, stanzas);
-    else if (v === 'url') {
-      // o endereço é pedido antes de copiar; no iPhone a cópia tem de vir logo a seguir ao toque, por isso usa-se uma promessa
-      const url = api('share', { slug: s.slug }).then(d => location.origin + location.pathname + '#/p/' + d.token);
-      try {
-        if (navigator.clipboard && window.ClipboardItem) await navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]);
-        else await copyText(await url);
-        await url; toast('Endereço copiado (válido 24 horas)');
-      } catch (e) {
-        try { const u = await url; await appDialog({ title: 'Endereço', msg: 'Copie este endereço (válido 24 horas):', input: u, ok: 'Fechar', cancel: null }); }
-        catch (e2) { appAlert(e2 instanceof Limit ? e2.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.'); }
-      }
+    else if (v === 'url') copyShareUrl(api('share', { slug: s.slug }), 'válido 24 horas');
+  }
+  // o endereço é pedido antes de copiar; no iPhone a cópia tem de vir logo a seguir ao toque, por isso usa-se uma promessa
+  async function copyShareUrl(req, until) {
+    const url = req.then(d => location.origin + location.pathname + '#/p/' + d.token);
+    try {
+      if (navigator.clipboard && window.ClipboardItem) await navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]);
+      else await copyText(await url);
+      await url; toast(`Endereço copiado (${until})`);
+    } catch (e) {
+      try { const u = await url; await appDialog({ title: 'Endereço', msg: `Copie este endereço (${until}):`, input: u, ok: 'Fechar', cancel: null }); }
+      catch (e2) { appAlert(e2 instanceof Limit ? e2.message : (e2.message && !/fetch|HTTP/i.test(e2.message) ? e2.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.')); }
     }
   }
+  async function shareCollection(c) {
+    const fim = new Date(c.expires_at).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const list = [{ value: 'url', label: 'Copiar endereço', sub: `Qualquer pessoa pode abrir até ${fim}, quando a coleção expira (sem conta: só a letra e a tradução)` },
+      { value: 'pdf', label: 'Gerar PDF', sub: 'Título, secções, títulos e letras dos cânticos' }];
+    list.push({ value: 'coro', label: 'Gerar PDF para Coro', sub: 'Também com os acordes e as partituras' });
+    const v = await appChoose('Partilhar coleção', list);
+    if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim);
+    else if (v) collectionPdf(c, v === 'coro');
+  }
 
-  // ---------- Endereço partilhado (#/p/<código>): sem conta ou perfil Cancioneiro sem acesso ao cântico → só letra e tradução ----------
-  const sharedCache = new Map(); let sharedMode = 'orig';
-  async function apiShared(token) {
-    if (DEMO) return demoApi('shared', { token });
+  // ---------- Endereço partilhado (#/p/<código>[/<cântico>]): sem conta, ou sem acesso ao cântico / coleção → só letra e tradução ----------
+  const sharedCache = new Map(); let sharedMode = 'orig', sharedBack = null;
+  async function apiShared(token, slug) {
+    if (DEMO) return demoApi('shared', { token, slug });
     const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', { method: 'POST',
       headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ op: 'shared', token }) });
+      body: JSON.stringify({ op: 'shared', token, slug }) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.message || 'Não foi possível abrir este endereço.');
     return d;
   }
-  async function showShared(token) {
-    const here = () => location.hash === '#/p/' + token;
-    let d = sharedCache.get(token);
+  async function showShared(token, slug) {
+    const key = token + (slug ? '/' + slug : ''), here = () => location.hash === '#/p/' + key;
+    sharedBack = slug ? '#/p/' + token : null;
+    let d = sharedCache.get(key);
     if (!d) {
       if (session && !allSongs.length) return; // espera pela lista de cânticos (route() volta a ser chamada)
-      sharedView(); $('song').innerHTML = '<p class="note lyr-wait">A carregar a letra…</p>';
-      try { d = await apiShared(token); sharedCache.set(token, d); }
-      catch (e) { if (here()) { $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message)}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
+      sharedView(!slug && sharedCache.get(token + ':col'));
+      if (!$('view-song').hidden) $('song').innerHTML = '<p class="note lyr-wait">A carregar…</p>'; else { $('rows').innerHTML = ''; $('status').textContent = 'A carregar…'; }
+      try { d = await apiShared(token, slug); sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); }
+      catch (e) { if (here()) { sharedView(false); $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message)}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
       if (!here()) return;
     }
+    if (d.items) return showSharedCollection(token, d);
     // quem tem conta e vê o cântico abre a página normal do cântico (do perfil Coro para cima: completa)
     if (session && bySlug.has(d.slug)) { location.replace('#/cantico/' + encodeURIComponent(d.slug)); return; }
-    sharedView();
+    sharedView(false);
     const tr = !!(d.translation && d.translation.length), mode = tr ? sharedMode : 'orig';
     const sw = tr ? `<div class="lang-switch" role="group" aria-label="Idioma">
         <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(LANGS[d.language] || d.language || 'Original')}</button>
@@ -997,17 +1018,262 @@
     $('song').innerHTML = `<h1>${esc(d.title)}</h1>${d.author ? `<p class="author">${esc(d.author)}</p>` : ''}
       <div class="meta">${sw}</div>${mode === 'trad' ? '<p class="note">Tradução</p>' : ''}
       ${body.length ? renderStanzas(body) : '<p class="note">Letra não disponível.</p>'}
-      ${sharedFoot(d.expires_at)}`;
-    $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => { sharedMode = b.dataset.mode; const y = window.scrollY; showShared(token); window.scrollTo(0, y); });
+      ${slug ? '' : sharedFoot(d.expires_at)}`;
+    $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => { sharedMode = b.dataset.mode; const y = window.scrollY; showShared(token, slug); window.scrollTo(0, y); });
     bindSharedLogin();
   }
-  function sharedView() {
-    document.body.classList.add('shared-view'); document.body.classList.toggle('no-session', !session);
-    $('view-login').hidden = true; $('splash').classList.add('gone'); show('view-song');
+  async function showSharedCollection(token, d) {
+    // quem tem conta e vê a coleção abre a página normal da coleção
+    if (session) {
+      if (!cols.length) await loadCollections();
+      const c = cols.find(x => x.id === d.collection.id);
+      if (c && colVisible(c)) { location.replace('#/lista/colecao-' + c.id); return; }
+    }
+    sharedView(true);
+    $('list-title').hidden = false; $('list-title').textContent = d.collection.title;
+    $('rows').innerHTML = d.items.map(it => it.k === 'sec'
+      ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.title)}</a></li>`
+      : `<li><a href="#/p/${token}/${encodeURIComponent(it.slug)}"><span class="t">${esc(it.title)}${it.author ? `<span class="a">${esc(it.author)}</span>` : ''}</span><span class="n">${it.number}</span></a></li>`).join('');
+    $('rows').querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
+    $('status').innerHTML = sharedFoot(d.expires_at); bindSharedLogin();
+  }
+  function sharedView(list) {
+    document.body.classList.add('shared-view'); document.body.classList.toggle('no-session', !session); document.body.classList.toggle('shared-sub', !!sharedBack);
+    $('view-login').hidden = true; $('splash').classList.add('gone'); show(list ? 'view-list' : 'view-song');
   }
   const sharedFoot = exp => `<p class="shared-foot">Partilhado do Cancioneiro${exp ? ` · válido até ${new Date(exp).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}</p>` +
     (session ? '' : '<p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p>');
-  function bindSharedLogin() { const b = $('shared-login'); if (b) b.onclick = () => { document.body.classList.remove('shared-view', 'no-session'); history.replaceState(null, '', location.pathname); showLogin(); }; }
+  function bindSharedLogin() { const b = $('shared-login'); if (b) b.onclick = () => { document.body.classList.remove('shared-view', 'no-session', 'shared-sub'); history.replaceState(null, '', location.pathname); showLogin(); }; }
+
+  // ---------- PDF de uma coleção (gerado no telemóvel com pdf-lib): letras em 2 colunas, se possível em 2 páginas ----------
+  // "para Coro": com os acordes por cima da letra e, no fim, as partituras de cada cântico
+  let pdfLibP = null;
+  const loadPdfLib = () => pdfLibP || (pdfLibP = new Promise((ok, ko) => {
+    const sc = document.createElement('script'); sc.src = 'vendor/pdf-lib/pdf-lib.min.js';
+    sc.onload = () => ok(window.PDFLib); sc.onerror = () => { pdfLibP = null; ko(new Error('pdf-lib')); }; document.head.appendChild(sc);
+  }));
+  // as fontes base do PDF só têm o alfabeto latino (WinAnsi): o resto perde os acentos ou é omitido
+  const WIN = new Set([...'€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ']);
+  const pdfSafe = t => [...String(t || '').normalize('NFC')].map(ch => {
+    const c = ch.codePointAt(0);
+    if ((c >= 32 && c <= 126) || (c >= 160 && c <= 255) || WIN.has(ch)) return ch;
+    const b = ch.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return /^[\x20-\x7e]+$/.test(b) ? b : (c === 9 ? ' ' : '');
+  }).join('');
+  let pdfGen = null; // { blob, name, title } do PDF gerado que está a ser mostrado
+  async function collectionPdf(c, coro) {
+    const title = c.title + (coro ? ' (Coro)' : '');
+    pdfGen = null; pdfUrl = null; $('pdf-download').hidden = true;
+    $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = title;
+    const msg = t => { $('pdfpages').innerHTML = `<p class="pdf-msg">${esc(t)}</p>`; };
+    msg('A gerar o PDF…');
+    try {
+      const L = await loadPdfLib();
+      const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
+      const songsIn = items.filter(it => it.k === 'song').map(it => bySlug.get(it.key));
+      let n = 0;
+      for (const s of songsIn) { msg(`A preparar as letras… (${++n}/${songsIn.length})`); try { await getLyrics(s.slug); } catch (e) { if (e instanceof Limit) throw e; } }
+      const doc = await L.PDFDocument.create();
+      doc.setTitle(pdfSafe(c.title)); doc.setCreator('Cancioneiro');
+      const F = { r: await doc.embedFont(L.StandardFonts.Helvetica), b: await doc.embedFont(L.StandardFonts.HelveticaBold), i: await doc.embedFont(L.StandardFonts.HelveticaOblique) };
+      layoutLyrics(L, doc, F, c.title, items, coro);
+      if (coro) await appendScores(L, doc, F, songsIn, msg);
+      const bytes = await doc.save();
+      if ($('pdfview').hidden) return; // fechado entretanto
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      pdfGen = { blob, title, name: (c.title.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'colecao') + (coro ? '-coro' : '') + '.pdf' };
+      pdfUrl = null;
+      await openPdf({ blob }, title, null, 'application/pdf');
+      $('pdf-download').hidden = false;
+    } catch (e) {
+      console.error(e);
+      msg(e instanceof Limit ? e.message : 'Não foi possível gerar o PDF. Verifique a ligação à internet.');
+    }
+  }
+  const GREEN = [0.06, 0.5, 0.35];
+  function layoutLyrics(L, doc, F, colTitle, items, coro) {
+    const W = 595.28, H = 841.89, M = 34, GAP = 18;
+    // título da coleção: centrado, a toda a largura da 1.ª página, com um traço por baixo
+    const TS = 20, tLines = (() => { const words = pdfSafe(colTitle).split(' '), out = []; let cur = '';
+      for (const w of words) { const t = cur ? cur + ' ' + w : w; if (cur && F.b.widthOfTextAtSize(t, TS) > W - 2 * M) { out.push(cur); cur = w; } else cur = t; }
+      out.push(cur); return out; })();
+    const headH = tLines.length * TS * 1.2 + 22;
+    const green = L.rgb(...GREEN), grey = L.rgb(0.45, 0.45, 0.45), ink = L.rgb(0.1, 0.1, 0.1);
+    // blocos que não se partem: secção + título + 1.ª estrofe ficam juntos; estrofes curtas também
+    const build = (fs, colW) => {
+      const units = []; let pend = [];
+      const wrap = (text, font, size, width, indent = fs * 0.9) => {
+        const words = text.split(/(\s+)/), out = []; let cur = '';
+        for (const w of words) {
+          const t = cur + w, max = out.length ? width - indent : width;
+          if (cur && font.widthOfTextAtSize(t.trimEnd(), size) > max && w.trim()) { out.push(cur.trimEnd()); cur = w.trimStart(); }
+          else cur = t;
+        }
+        if (cur.trim() || !out.length) out.push(cur.trimEnd());
+        return out;
+      };
+      const textRow = (t, font, size, color, h, indent = 0) => ({ h, draw: (pg, x, y) => pg.drawText(t, { x: x + indent, y: y - size, size, font, color }) });
+      const sizeT = fs * 1.15, sizeA = fs * 0.82, sizeS = fs * 1.05, sizeC = fs * 0.78;
+      for (const it of items) {
+        if (it.k === 'sec') {
+          const t = pdfSafe(it.ref.title.toUpperCase());
+          pend.push({ h: sizeS * 2.1, draw: (pg, x, y) => {
+            pg.drawText(t, { x, y: y - sizeS * 1.5, size: sizeS, font: F.b, color: green });
+            pg.drawLine({ start: { x, y: y - sizeS * 1.85 }, end: { x: x + colW, y: y - sizeS * 1.85 }, thickness: 0.6, color: green });
+          } });
+          continue;
+        }
+        const s = bySlug.get(it.key);
+        const head = [];
+        wrap(pdfSafe(s.title), F.b, sizeT, colW, 0).forEach((t, i) => head.push(textRow(t, F.b, sizeT, ink, sizeT * 1.25, i ? fs * 0.9 : 0)));
+        if (s.author) wrap(pdfSafe(s.author), F.i, sizeA, colW, 0).forEach(t => head.push(textRow(t, F.i, sizeA, grey, sizeA * 1.3)));
+        // espaço antes de cada cântico (e antes de uma secção), que cai quando fica no topo de uma coluna
+        const sp = fs * 2.4;
+        if (units.length) { const r = pend.length ? pend : head; r[0] = { ...r[0], h: r[0].h + sp, pad: sp }; }
+        const st = (lyr.get(s.slug) || {}).lyrics || [];
+        const stanzas = [];
+        for (const x of st) {
+          const rows = [], font = x.type === 'chorus' ? F.i : F.r;
+          for (const raw of x.lines) {
+            const line = raw.replace(/\s*—\s*abrir o livro\)$/, ')').replace(/\|:|:\||[♪♫𝄆𝄇]/g, '');
+            const bookRef = /^\(letra no livro /.test(line);
+            if (!coro || !line.includes('[')) {
+              const t = pdfSafe(stripChords(line)).replace(/\s+/g, ' ').trim();
+              if (!t && !coro) continue;
+              wrap(t, bookRef ? F.i : font, fs, colW).forEach((p, i) => rows.push(textRow(p, bookRef ? F.i : font, fs, bookRef ? grey : ink, fs * 1.22, i ? fs * 0.9 : 0)));
+              continue;
+            }
+            // acordes: posições no texto sem acordes
+            let text = '', chords = [];
+            line.split(/(\[[^\]]*\])/).forEach(p => { const m = p.match(/^\[([^\]]*)\]$/); if (m) chords.push({ i: text.length, c: pdfSafe(m[1]) }); else text += p; });
+            text = pdfSafe(text);
+            const segs = wrap(text, font, fs, colW); let start = 0;
+            segs.forEach((seg, si) => {
+              const idx = text.indexOf(seg, start), end = si === segs.length - 1 ? Infinity : idx + seg.length;
+              const ind = si ? fs * 0.9 : 0;
+              const mine = chords.filter(ch => ch.i >= (si ? idx : 0) && ch.i < end);
+              const pos = []; let minX = 0;
+              for (const ch of mine) { let cx = ind + font.widthOfTextAtSize(text.slice(idx, Math.max(idx, ch.i)), fs); cx = Math.max(cx, minX); pos.push([cx, ch.c]); minX = cx + F.b.widthOfTextAtSize(ch.c, sizeC) + fs * 0.35; }
+              start = idx + seg.length;
+              rows.push({ h: (pos.length ? sizeC * 1.15 : 0) + fs * 1.22, draw: (pg, x, y) => {
+                let yy = y;
+                if (pos.length) { pos.forEach(([cx, t]) => pg.drawText(t, { x: x + cx, y: yy - sizeC, size: sizeC, font: F.b, color: green })); yy -= sizeC * 1.15; }
+                if (seg.trim()) pg.drawText(seg, { x: x + ind, y: yy - fs, size: fs, font, color: ink });
+              } });
+            });
+          }
+          if (rows.length) stanzas.push(rows);
+        }
+        if (!stanzas.length) stanzas.push([textRow('(letra não disponível)', F.i, fs, grey, fs * 1.22)]);
+        stanzas.forEach((rows, k) => { if (k) rows[0] = { ...rows[0], h: rows[0].h + fs * 0.55, pad: fs * 0.55 }; });
+        // um cântico nunca se parte entre colunas ou páginas (só se não couber numa coluna inteira)
+        units.push({ rows: [...pend, ...head, ...stanzas.flat()], keep: true }); pend = [];
+      }
+      if (pend.length) units.push({ rows: pend, keep: true });
+      return units;
+    };
+    // posiciona: devolve [{ page, x, y, row }]; o espaço por cima (pad) cai no topo de uma coluna
+    const place = (fs, ncol) => {
+      const colW = (W - 2 * M - GAP * (ncol - 1)) / ncol, top = H - M, bottom = M + 14;
+      const units = build(fs, colW), out = [];
+      let page = 0, col = 0;
+      const start = () => page === 0 ? top - headH : top;
+      let y = start();
+      const next = () => { col++; if (col >= ncol) { col = 0; page++; } y = start(); };
+      for (const u of units) {
+        const uh = u.rows.reduce((a, r) => a + r.h, 0);
+        if (u.keep && y - uh < bottom && uh <= top - bottom - headH) next();
+        for (const r of u.rows) {
+          const pad = r.pad || 0;
+          let gap = y === start() ? 0 : pad;
+          if (y - gap - (r.h - pad) < bottom) { next(); gap = 0; }
+          out.push({ page, x: M + col * (colW + GAP), y: y - gap, row: r });
+          y -= gap + r.h - pad;
+        }
+      }
+      return { out, pages: page + 1 };
+    };
+    let best = null;
+    for (let fs = 11; fs >= 6.5; fs -= 0.5) { const p = place(fs, 2); best = p; best.fs = fs; if (p.pages <= 2) break; }
+    if (best.pages > 2) { const p = place(7.5, 2); best = p; } // não fica demasiado pequeno: aceita mais páginas
+    const pages = Array.from({ length: best.pages }, () => doc.addPage([W, H]));
+    tLines.forEach((t, i) => pages[0].drawText(t, { x: (W - F.b.widthOfTextAtSize(t, TS)) / 2, y: H - M - TS - i * TS * 1.2, size: TS, font: F.b, color: green }));
+    pages[0].drawLine({ start: { x: M, y: H - M - headH + 8 }, end: { x: W - M, y: H - M - headH + 8 }, thickness: 1, color: green });
+    for (const { page, x, y, row } of best.out) row.draw(pages[page], x, y);
+    pages.forEach((pg, i) => pg.drawText(pdfSafe(`Cancioneiro · ${colTitle}${pages.length > 1 ? ` · ${i + 1}/${pages.length}` : ''}`), { x: M, y: M - 12, size: 7, font: F.r, color: grey }));
+  }
+  // página de um PDF como imagem PNG (com pdf.js), opcionalmente só um recorte (box em pontos do PDF, origem em baixo)
+  async function rasterPage(bytes, i, box) {
+    const lib = await loadPdfJs();
+    const d = await lib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, page = await d.getPage(i + 1);
+    const v1 = page.getViewport({ scale: 1 }), scale = Math.min(2.5, 2400 / v1.width), vp = page.getViewport({ scale });
+    const b = box || { left: 0, bottom: 0, right: v1.width, top: v1.height };
+    const c = document.createElement('canvas');
+    c.width = Math.round((b.right - b.left) * scale); c.height = Math.round((b.top - b.bottom) * scale);
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp, transform: [1, 0, 0, 1, -b.left * scale, -(v1.height - b.top) * scale] }).promise;
+    return new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/png'))).arrayBuffer());
+  }
+  async function appendScores(L, doc, F, songsIn, msg) {
+    const W = 595.28, H = 841.89, M = 30, grey = L.rgb(0.45, 0.45, 0.45), green = L.rgb(...GREEN);
+    const bytesOf = async x => x.blob ? new Uint8Array(await x.blob.arrayBuffer()) : new Uint8Array(await (await fetch(x.url)).arrayBuffer());
+    let page = null, y = 0;
+    const newPage = () => { page = doc.addPage([W, H]); y = H - M; };
+    const put = (ep, w, h, label) => { // peça (página ou recorte) à largura da página, várias por página se couberem
+      const labelH = label ? 18 : 0, maxH = H - 2 * M - 18;
+      const sc = Math.min((W - 2 * M) / w, maxH / h);
+      if (!page || y - labelH - h * sc < M) newPage();
+      if (label) { page.drawText(label, { x: M, y: y - 12, size: 10, font: F.b, color: green }); y -= labelH; }
+      if (ep.kind === 'img') page.drawImage(ep.v, { x: M, y: y - h * sc, width: w * sc, height: h * sc });
+      else page.drawPage(ep.v, { x: M, y: y - h * sc, xScale: sc, yScale: sc });
+      y -= h * sc + 10;
+    };
+    let n = 0;
+    const total = songsIn.filter(s => scoresOf(s).length).length;
+    for (const s of songsIn) {
+      const scores = scoresOf(s); if (!scores.length) continue;
+      msg(`A juntar as partituras… (${++n}/${total})`);
+      let first = true;
+      for (const sc of scores) {
+        try {
+          const src = await fileSrc(sc);
+          const label = first ? pdfSafe(s.title + (scores.length > 1 ? ' — ' + sc.label : '')) : (scores.length > 1 ? pdfSafe(s.title + ' — ' + sc.label) : '');
+          first = false;
+          if (/^image\//.test(sc.mime || '')) {
+            const b = await bytesOf(src), png = b[0] === 0x89;
+            const img = png ? await doc.embedPng(b) : await doc.embedJpg(b);
+            put({ kind: 'img', v: img }, img.width, img.height, label); continue;
+          }
+          const parts = src.pages ? [...src.pages].sort((a, b) => a.n - b.n) : [src];
+          const crops = cropsOf(sc);
+          let lab = label;
+          for (const p of parts) {
+            const bytes = await bytesOf(p);
+            const d = await L.PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
+            // embute já (para um PDF com defeito não estragar o resto); se falhar, a página entra como imagem (pdf.js)
+            const embed = async (pg, i, box) => {
+              try { const ep = await doc.embedPage(pg, box); await ep.embed(); return { kind: 'pdf', v: ep }; }
+              catch (e) {
+                doc.embeddedPages = (doc.embeddedPages || []).filter(x => !x.alreadyEmbedded ? false : true);
+                return { kind: 'img', v: await doc.embedPng(await rasterPage(bytes, i, box)) };
+              }
+            };
+            const idxs = src.pages ? [0] : d.getPageIndices().slice(0, 8);
+            for (const i of idxs) {
+              const pg = d.getPage(i), { width, height } = pg.getSize();
+              const cs = src.pages && crops ? crops.filter(cr => cr[0] === p.n) : [];
+              if (cs.length) {
+                for (const [, x0, y0, x1, y1] of cs) {
+                  const box = { left: x0 * width, right: x1 * width, bottom: (1 - y1) * height, top: (1 - y0) * height };
+                  put(await embed(pg, i, box), box.right - box.left, box.top - box.bottom, lab); lab = '';
+                }
+              } else if (!(src.pages && crops)) { put(await embed(pg, i), width, height, lab); lab = ''; }
+            }
+          }
+        } catch (e) { if (e instanceof Limit) throw e; console.warn('partitura', s.slug, e); }
+      }
+    }
+  }
 
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
   // Formato de texto: estrofes separadas por linha em branco; refrão começa por "R:"; acordes entre [ ].
@@ -1418,11 +1684,23 @@
   }
   function closePdf() {
     if ($('pdfview').hidden) return;
+    $('pdf-download').hidden = true; pdfGen = null;
     $('pdfview').hidden = true;
     document.body.classList.remove('pdf-open');
     pdfRender++;
   }
+  $('pdf-download').onclick = async () => {
+    if (!pdfGen) return;
+    const f = new File([pdfGen.blob], pdfGen.name, { type: 'application/pdf' });
+    // no telemóvel: folha de partilha (Guardar em Ficheiros, enviar…); no computador: descarregar
+    if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) {
+      try { await navigator.share({ files: [f], title: pdfGen.title }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(pdfGen.blob); a.download = pdfGen.name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  };
   $('pdf-back').onclick = () => {
+    if (!pdfSlug) { closePdf(); return; } // PDF gerado de uma coleção: volta à coleção
     if (history.length > 1 && lastSongSlug === pdfSlug) history.back();
     else location.hash = '#/cantico/' + encodeURIComponent(pdfSlug);
   };
@@ -1437,9 +1715,9 @@
   let lastListHash = '#/';
   function route() {
     const h = location.hash || '#/';
-    const p = h.match(/^#\/p\/([A-Za-z0-9_-]+)$/);
-    if (p) { closePdf(); showShared(p[1]); window.scrollTo(0, 0); return; }
-    document.body.classList.remove('shared-view', 'no-session');
+    const p = h.match(/^#\/p\/([A-Za-z0-9_-]+)(?:\/([^/]+))?$/);
+    if (p) { closePdf(); showShared(p[1], p[2] ? decodeURIComponent(p[2]) : null); window.scrollTo(0, 0); return; }
+    document.body.classList.remove('shared-view', 'no-session', 'shared-sub'); sharedBack = null;
     if (!session) return;
     const m = h.match(/^#\/cantico\/([^/]+)(\/partitura(?:\/(\d+))?)?$/);
     if (m) {
@@ -1491,7 +1769,7 @@
     $('song').classList.toggle('show-chords', prefs.chords);
     $('btn-chords').classList.toggle('on', prefs.chords);
   };
-  $('btn-back').onclick = () => { location.hash = lastListHash; };
+  $('btn-back').onclick = () => { location.hash = sharedBack || lastListHash; };
   $('btn-back-list').onclick = () => {
     if ($('search').value) { $('search').value = ''; $('search-clear').hidden = true; route(); }
     else location.hash = '#/';
@@ -1562,7 +1840,9 @@
     const can = lvl() >= 3;
     const fim = new Date(c.expires_at);
     // público e prazo só para quem gere (Maestro / Gestor)
-    title.innerHTML = `${esc(c.title)}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
+    // partilhar a coleção: só Maestro e Gestor
+    const shareBtn = can ? '<button class="col-share" id="col-share" aria-label="Partilhar coleção" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
@@ -1572,6 +1852,7 @@
       return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
     }).join('') + (can ? '<li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li>' : '');
     if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Coleção vazia.';
+    if (can) $('col-share').onclick = () => shareCollection(c);
     rows.querySelectorAll('a.sec-line').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;

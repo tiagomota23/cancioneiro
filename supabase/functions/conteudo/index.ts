@@ -10,7 +10,7 @@ const ORIGINS = ['https://tiagomota23.github.io', 'http://localhost:8765'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
 const LIMITS = { song: [80, 250], file: [80, 250], search: [400, 2000], match: [120, 600], save: [60, 200], share: [30, 100] };
-const SHARE_HOURS = 24, SHARE_VIEWS = 300; // endereços partilhados: validade e máximo de aberturas
+const SHARE_HOURS = 24, SHARE_VIEWS = 300, SHARE_COL_VIEWS = 3000; // endereços partilhados: validade e máximo de aberturas (coleções: lista e cânticos)
 const DISTINCT = new Set(['song', 'file']);
 const ROLES = ['cancioneiro', 'coro', 'maestro', 'gestor'];
 const rank = r => ROLES.indexOf(r) + 1;
@@ -189,14 +189,27 @@ Deno.serve(async (req) => {
     if (op === 'shared') { // endereço partilhado: sem conta, só letra e tradução (como no perfil Cancioneiro), durante 24 h
       const token = String(b.token || '');
       if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return out({ error: 'endereço inválido' }, 400);
-      const [sh] = await rest(`song_shares?token=eq.${token}&select=song_slug,expires_at,views`);
-      if (!sh || Date.parse(sh.expires_at) <= Date.now()) return out({ error: 'expirado', message: 'Este endereço já não é válido (os endereços partilhados duram 24 horas).' }, 410);
-      if (sh.views >= SHARE_VIEWS) return out({ error: 'limite', message: 'Este endereço foi aberto demasiadas vezes.' }, 429);
+      const [sh] = await rest(`song_shares?token=eq.${token}&select=song_slug,collection_id,expires_at,views`);
+      // coleção: vale enquanto a coleção existir e não expirar
+      const col = sh?.collection_id ? (await rest(`collections?id=eq.${sh.collection_id}&select=id,title,audience,expires_at,songs:collection_songs(song_slug,position),sections:collection_sections(title,position)`))[0] : null;
+      const until = col ? col.expires_at : sh?.expires_at;
+      if (!sh || (sh.collection_id && !col) || Date.parse(until) <= Date.now()) return out({ error: 'expirado', message: sh?.collection_id ? 'Esta coleção já não está disponível.' : 'Este endereço já não é válido (os endereços partilhados duram 24 horas).' }, 410);
+      if (sh.views >= (col ? SHARE_COL_VIEWS : SHARE_VIEWS)) return out({ error: 'limite', message: 'Este endereço foi aberto demasiadas vezes.' }, 429);
       await rest(`song_shares?token=eq.${token}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ views: sh.views + 1 }) });
-      const [m] = await rest(`songs?slug=eq.${encodeURIComponent(sh.song_slug)}&select=slug,title,author,language,translation_language,number`);
-      const s = (await songs()).bySlug.get(sh.song_slug);
+      const c = await songs();
+      if (col && !b.slug) { // lista da coleção: secções e títulos
+        const meta = new Map((await rest(`songs?slug=in.(${col.songs.map(x => `"${x.song_slug}"`).join(',') || '""'})&select=slug,title,author,number`)).map(x => [x.slug, x]));
+        const items = [...col.sections.map(x => ({ k: 'sec', title: x.title, pos: x.position })),
+          ...col.songs.filter(x => meta.has(x.song_slug)).map(x => ({ k: 'song', ...meta.get(x.song_slug), pos: x.position }))]
+          .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
+        return out({ collection: { id: col.id, title: col.title, audience: col.audience }, items, expires_at: until });
+      }
+      const slug = col ? String(b.slug) : sh.song_slug;
+      if (col && !col.songs.some(x => x.song_slug === slug)) return out({ error: 'não encontrado' }, 404);
+      const [m] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,title,author,language,translation_language,number`);
+      const s = c.bySlug.get(slug);
       if (!m || !s) return out({ error: 'não encontrado' }, 404);
-      return out({ ...m, lyrics: noChords(s.eff), translation: s.translation || null, expires_at: sh.expires_at });
+      return out({ ...m, lyrics: noChords(s.eff), translation: s.translation || null, expires_at: until, collection: col ? { id: col.id, title: col.title } : undefined });
     }
     const user = await who(req);
     if (!user) return out({ error: 'sem acesso' }, 403);
@@ -222,6 +235,17 @@ Deno.serve(async (req) => {
       if (!colSet.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
+    }
+    if (op === 'share' && b.collection) { // endereço de uma coleção (só Maestro e Gestor; expira com a coleção)
+      if (lvl < 3) return denied();
+      const id = String(b.collection);
+      if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
+      const [col] = await rest(`collections?id=eq.${id}&select=id,audience,expires_at`);
+      if (!col || Date.parse(col.expires_at) <= Date.now()) return out({ error: 'Esta coleção já não está disponível.' }, 404);
+      if (!(await limit(user, 'share', 'col:' + id))) return tooMany();
+      const token = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18)))).replace(/\+/g, '-').replace(/\//g, '_');
+      await rest('song_shares', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token, collection_id: id, created_by: user.email, expires_at: col.expires_at }) });
+      return out({ token, expires_at: col.expires_at });
     }
     if (op === 'share') { // criar um endereço partilhado (válido 24 h) para um cântico que esta pessoa vê
       const slug = String(b.slug || '');

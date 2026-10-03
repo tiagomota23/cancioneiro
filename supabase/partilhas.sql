@@ -13,3 +13,10 @@ revoke all on public.song_shares from anon, authenticated;
 -- endereços expirados são apagados todos os dias (04:40 UTC)
 select cron.schedule('cancioneiro-partilhas-limpeza', '40 4 * * *', $$ delete from public.song_shares where expires_at < now() - interval '1 day' $$);
 select 'ok' as partilhas;
+
+-- Endereços de coleções: valem enquanto a coleção não expirar (a data é sempre a da coleção)
+alter table public.song_shares alter column song_slug drop not null;
+alter table public.song_shares add column if not exists collection_id uuid references public.collections(id) on delete cascade;
+alter table public.song_shares drop constraint if exists song_shares_alvo;
+alter table public.song_shares add constraint song_shares_alvo check ((song_slug is null) <> (collection_id is null));
+select 'ok' as partilhas_colecoes;
