@@ -580,8 +580,10 @@ html, body { touch-action: pan-x pan-y; }
 .col-pick-new { margin-top: 4px; padding: 10px 12px; border: 1px dashed #b9cfc5; border-radius: 10px; color: #0e7f58; font-weight: 700; text-align: left; }
 
 /* Secções dentro de uma coleção */
-.rows li.col-sec { border-bottom: 1px solid rgba(255,255,255,.35); }
-.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; opacity: .9; }
+/* como os títulos "Coro" e "Coro — momentos da Missa" do índice */
+.rows li.col-sec { border-bottom: 0; }
+.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; opacity: .75; border-bottom: 0; min-height: 0; }
+.rows li.col-sec .sw-actions button { font-size: 20px; }
 .rows li.col-add-sec button { width: 100%; text-align: left; padding: 14px; color: #fff; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
 
 /* Coleções do cântico: ☆/★ e "+ Cancioneiro" na mesma linha */

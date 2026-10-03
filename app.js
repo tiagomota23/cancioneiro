@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v70';
+  const APP_VERSION = '2026-10-03 v71';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1370,7 +1370,7 @@
       .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
   }
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
-  const actions = (upOff, downOff, what) => `<div class="sw-actions"><button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>↑</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>↓</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
+  const actions = (upOff, downOff, what, sec) => `<div class="sw-actions"><button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>${sec ? '⇈' : '↑'}</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>${sec ? '⇊' : '↓'}</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
   function showCollection(id) {
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
@@ -1384,7 +1384,7 @@
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
         const last = secIdx[secIdx.length - 1] === n;
-        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, last, 'Apagar secção') : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
+        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, last, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
       }
       const row = songRow(bySlug.get(it.key));
       return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
