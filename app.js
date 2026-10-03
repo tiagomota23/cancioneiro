@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v98';
+  const APP_VERSION = '2026-10-03 v99';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1557,6 +1557,14 @@
       : /Android/.test(ua) ? 'No menu do browser (⋮, no canto de cima), escolha «Adicionar ao ecrã principal» ou «Instalar app».'
       : 'No telemóvel ou tablet, abra este endereço no browser e escolha «Adicionar ao ecrã principal» (iPhone/iPad: no menu Partilhar; Android: no menu ⋮).', 'Adicionar ao ecrã principal');
   }
+  // Partilhar a app: o endereço da página de entrada (quem não tem acesso pode pedi-lo lá)
+  $('info-share-app').onclick = async () => {
+    const url = location.origin + location.pathname;
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      try { await navigator.share({ title: 'Cancioneiro', text: 'Cancioneiro — cânticos com letra, partituras e gravações', url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    await copyText(url); toast('Endereço da app copiado');
+  };
   $('perfis-install').onclick = installApp; $('info-install').onclick = installApp;
   $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
   $('perfil-info').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('perfil-info').click(); } };
