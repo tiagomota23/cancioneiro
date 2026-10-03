@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v100';
+  const APP_VERSION = '2026-10-03 v102';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1266,6 +1266,34 @@
           }
           const parts = src.pages ? [...src.pages].sort((a, b) => a.n - b.n) : [src];
           const crops = cropsOf(sc);
+          if (src.pages && crops) { // livro: todos os recortes do cântico juntos numa só página
+            const pieces = [];
+            for (const [n, x0, y0, x1, y1] of crops) {
+              const p = parts.find(q => q.n === n); if (!p) continue;
+              const bytes = await bytesOf(p), d = await L.PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
+              // as frações dos recortes são da área visível da página (CropBox), como no pdf.js
+              const pg = d.getPage(0), cb = pg.getCropBox(), width = cb.width, height = cb.height;
+              const rel = { left: x0 * width, right: x1 * width, bottom: (1 - y1) * height, top: (1 - y0) * height };
+              const box = { left: cb.x + rel.left, right: cb.x + rel.right, bottom: cb.y + rel.bottom, top: cb.y + rel.top };
+              let ep; try { ep = await doc.embedPage(pg, box); await ep.embed(); ep = { kind: 'pdf', v: ep }; }
+              catch (e) { doc.embeddedPages = (doc.embeddedPages || []).filter(x => x.alreadyEmbedded); ep = { kind: 'img', v: await doc.embedPng(await rasterPage(bytes, 0, rel)) }; }
+              pieces.push({ ep, w: rel.right - rel.left, h: rel.top - rel.bottom, pw: width });
+            }
+            if (pieces.length) {
+              const Lc = cropLayout(pieces), labelH = label ? 18 : 0;
+              const sc2 = Math.min((W - 2 * M) / Lc.W, (H - 2 * M - labelH) / Lc.H);
+              newPage();
+              if (label) { page.drawText(label, { x: M, y: y - 12, size: 10, font: F.b, color: green }); y -= labelH; }
+              const x0 = M + ((W - 2 * M) - Lc.W * sc2) / 2;
+              pieces.forEach((p, i) => {
+                const px = x0 + Lc.pos[i].x * sc2, py = y - (Lc.pos[i].y + p.h) * sc2;
+                if (p.ep.kind === 'img') page.drawImage(p.ep.v, { x: px, y: py, width: p.w * sc2, height: p.h * sc2 });
+                else page.drawPage(p.ep.v, { x: px, y: py, xScale: sc2, yScale: sc2 });
+              });
+              page = null; // a página seguinte começa de novo
+            }
+            continue;
+          }
           let lab = label;
           for (const p of parts) {
             const bytes = await bytesOf(p);
@@ -1707,6 +1735,20 @@
   // Recortes do cântico no livro: "&c=364:0,0.044,0.5,0.47|365:…" (frações da página: x0,y0,x1,y1)
   const cropsOf = f => { const m = (f.path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : null; };
   let pdfCrops = null, pdfWhole = false;
+  // Junta os recortes de um cântico numa só página: recortes de uma coluna do livro ficam lado a lado (2 colunas,
+  // pela ordem, a 1.ª coluna até metade da altura total); recortes largos ficam uns por baixo dos outros.
+  // pieces: [{ w, h }] em pontos; devolve { W, H, pos: [{ x, y }] }
+  function cropLayout(pieces) {
+    const GAP = 14, maxW = Math.max(...pieces.map(p => p.w));
+    const narrow = pieces.length > 1 && pieces.every(p => p.w <= maxW * 1.05 && p.w < 0.62 * pieces[0].pw);
+    if (!narrow) { let y = 0; const pos = pieces.map(p => { const q = { x: (maxW - p.w) / 2, y }; y += p.h + GAP; return q; }); return { W: maxW, H: y - GAP, pos }; }
+    const total = pieces.reduce((a, p) => a + p.h, 0); let y = 0, col = 0; const cols = [0, 0];
+    const pos = pieces.map((p, i) => {
+      if (col === 0 && i > 0 && y + p.h / 2 > total / 2) { col = 1; y = 0; }
+      const q = { x: col * (maxW + GAP), y }; y += p.h + GAP; cols[col] = y - GAP; return q;
+    });
+    return { W: col ? 2 * maxW + GAP : maxW, H: Math.max(...cols), pos };
+  }
   let lastSongSlug = null, songScroll = 0;
   async function loadPdfJs() {
     if (!pdfjs) {
@@ -1756,22 +1798,32 @@
     const width = Math.min(box.clientWidth - 16, 900);
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     if (pdfCrops && !pdfWhole) {
-      // só a parte da página (ou páginas) onde está o cântico
+      // só a parte da página (ou páginas) onde está o cântico, tudo junto numa só página
+      const parts = [];
       for (const [pg, x0, y0, x1, y1] of pdfCrops) {
         const page = await pdfPageN(pg);
         if (id !== pdfRender) return;
         if (!page) continue;
         const v1 = page.getViewport({ scale: 1 });
-        const cw = (x1 - x0) * v1.width, chh = (y1 - y0) * v1.height;
-        const scale = width / cw * pdfZoom;
+        parts.push({ page, x0, y0, w: (x1 - x0) * v1.width, h: (y1 - y0) * v1.height, pw: v1.width, ph: v1.height });
+      }
+      if (parts.length) {
+        const L = cropLayout(parts);
+        const scale = width / L.W * pdfZoom;
         let r = dpr;
-        while (r > 1 && cw * scale * r * chh * scale * r > 12e6) r -= 0.5;
-        const vp = page.getViewport({ scale: scale * r });
+        while (r > 1 && L.W * scale * r * L.H * scale * r > 12e6) r -= 0.5;
         const c = document.createElement('canvas');
-        c.width = Math.floor(cw * scale * r); c.height = Math.floor(chh * scale * r);
-        c.style.width = Math.floor(cw * scale) + 'px'; c.style.height = Math.floor(chh * scale) + 'px';
+        c.width = Math.floor(L.W * scale * r); c.height = Math.floor(L.H * scale * r);
+        c.style.width = Math.floor(L.W * scale) + 'px'; c.style.height = Math.floor(L.H * scale) + 'px';
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
         box.appendChild(c);
-        await page.render({ canvasContext: c.getContext('2d'), viewport: vp, transform: [1, 0, 0, 1, -x0 * vp.width, -y0 * vp.height] }).promise;
+        for (let i = 0; i < parts.length; i++) {
+          const p = parts[i], vp = p.page.getViewport({ scale: scale * r });
+          const pc = document.createElement('canvas'); pc.width = Math.ceil(p.w * scale * r); pc.height = Math.ceil(p.h * scale * r);
+          await p.page.render({ canvasContext: pc.getContext('2d'), viewport: vp, transform: [1, 0, 0, 1, -p.x0 * vp.width, -p.y0 * vp.height] }).promise;
+          if (id !== pdfRender) return;
+          ctx.drawImage(pc, Math.round(L.pos[i].x * scale * r), Math.round(L.pos[i].y * scale * r));
+        }
       }
       if (id !== pdfRender) return;
       const more = document.createElement('p');
