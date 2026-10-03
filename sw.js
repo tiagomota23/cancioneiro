@@ -1,9 +1,9 @@
 // Cache da aplicação para funcionar offline (os cânticos ficam em localStorage)
-const CACHE = 'cancioneiro-v78';
+const CACHE = 'cancioneiro-v79';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.json', 'worker.js', 'icons/icon-192.png', 'icons/icon-180.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(
-  caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())
+  caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== 'cancioneiro-media').map(k => caches.delete(k)))).then(() => self.clients.claim())
 ));
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);

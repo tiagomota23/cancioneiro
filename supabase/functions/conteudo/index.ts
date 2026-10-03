@@ -190,9 +190,12 @@ Deno.serve(async (req) => {
     // perfil ativo escolhido na app (nunca acima do da pessoa)
     const lvl = ROLES.includes(b.perfil) ? Math.min(user.rank, rank(b.perfil)) : user.rank;
     // perfil Cancioneiro: cânticos do Cancioneiro e os de coleções ativas para o Cancioneiro
+    // cânticos de coleções ativas que esta pessoa vê: o perfil Cancioneiro passa a vê-los, e não contam para os limites
+    // (a app descarrega-os ao abrir, para estarem logo disponíveis)
     let colSet = new Set();
-    if (lvl < 2 && ['song', 'search', 'match'].includes(op)) {
-      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)&collections.audience=eq.cancioneiro&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
+    if (['song', 'search', 'match', 'file'].includes(op)) {
+      const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
+      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)${aud}&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
       colSet = new Set(rows.map(r => r.song_slug));
     }
     const visible = s => !!s && (lvl >= 2 || s.cancioneiro || colSet.has(s.slug));
@@ -203,7 +206,7 @@ Deno.serve(async (req) => {
       const slug = String(b.slug || '');
       const c = await songs(); const s = c.bySlug.get(slug);
       if (!visible(s)) return out({ error: 'não encontrado' }, 404);
-      if (!(await limit(user, 'song', slug))) return tooMany();
+      if (!colSet.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
     }
@@ -308,21 +311,22 @@ Deno.serve(async (req) => {
       if (lvl < 2) return denied();
       const raw = String(b.path || '');
       const [path, frag = ''] = raw.split('#');
-      const files = await rest(`song_files?select=path&path=eq.${encodeURIComponent(raw)}&limit=1`);
+      const files = await rest(`song_files?select=path,song_slug&path=eq.${encodeURIComponent(raw)}&limit=1`);
       const songPdf = !files.length && /^partituras\/[a-z0-9_.\-]+\.pdf$/.test(path) ? await rest(`songs?select=slug&pdf_url=eq.${encodeURIComponent(path)}&limit=1`) : [];
       if (!files.length && !songPdf.length) return out({ error: 'ficheiro desconhecido' }, 404);
+      const inCol = colSet.has(files.length ? files[0].song_slug : songPdf[0].slug); // ficheiros de coleções: sem limite
       if (BOOKS[path]) {
         const p = +(frag.match(/(?:^|&)p=(\d+)/) || [])[1] || 1;
         const crop = (frag.match(/(?:^|&)c=([^&]+)/) || [])[1];
         const pages = crop ? [...new Set(crop.split('|').map(r => +r.split(':')[0]))] : [p, p + 1];
         const res = [];
         for (const n of pages) {
-          if (!(await limit(user, 'file', `${path}#${n}`))) return tooMany();
+          if (!inCol && !(await limit(user, 'file', `${path}#${n}`))) return tooMany();
           res.push({ n, url: await sign(pageFile(BOOKS[path], n)).catch(() => null) });
         }
         return out({ pages: res.filter(x => x.url) });
       }
-      if (!(await limit(user, 'file', path))) return tooMany();
+      if (!inCol && !(await limit(user, 'file', path))) return tooMany();
       return out({ url: await sign(path) });
     }
     return out({ error: 'operação desconhecida' }, 400);

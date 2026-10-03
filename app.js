@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v78';
+  const APP_VERSION = '2026-10-03 v79';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -129,6 +129,7 @@
   async function logout(msg) {
     try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
     try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(lyrKey()); } catch (e) {}
+    try { await caches.delete('cancioneiro-media'); } catch (e) {} // ficheiros guardados das coleções
     songs = []; bySlug = new Map(); session = null; favs = []; lyr.clear(); maxRole = perfil = null;
     if ($('info').open) $('info').close();
     showLogin(msg);
@@ -1146,8 +1147,37 @@
   // ---------- Ficheiros do Coro (gravações e partituras no Storage privado "coro") ----------
   const signed = new Map();
   // devolve { url } ou, nos livros, { pages: [{ n, url }] } (só as páginas do cântico)
-  async function fileSrc(f) {
+  // Ficheiros dos cânticos das coleções: guardados no telemóvel (cache "cancioneiro-media") para abrirem logo
+  const MEDIA = 'cancioneiro-media';
+  const mkey = k => 'https://media.cancioneiro.local/' + encodeURIComponent(k);
+  async function mediaGet(f) {
+    if (!('caches' in window) || !f.path) return null;
+    try {
+      const c = await caches.open(MEDIA), m = await c.match(mkey(f.path));
+      if (!m) return null;
+      if ((m.headers.get('content-type') || '').includes('json')) { // livro: lista das páginas guardadas
+        const ns = await m.json(), pages = [];
+        for (const n of ns) { const r = await c.match(mkey(f.path + '@' + n)); if (!r) return null; pages.push({ n, blob: await r.blob() }); }
+        return { pages };
+      }
+      return { blob: await m.blob() };
+    } catch (e) { return null; }
+  }
+  async function mediaSave(f) {
+    if (!('caches' in window) || !f.path) return;
+    const c = await caches.open(MEDIA);
+    if (await c.match(mkey(f.path))) return;
+    const src = await fileSrc(f, true);
+    if (src.pages) {
+      for (const p of src.pages) { const r = await fetch(p.url); if (!r.ok) throw new Error('HTTP ' + r.status); await c.put(mkey(f.path + '@' + p.n), r); }
+      await c.put(mkey(f.path), new Response(JSON.stringify(src.pages.map(p => p.n)), { headers: { 'content-type': 'application/json' } }));
+    } else if (src.url) {
+      const r = await fetch(src.url); if (!r.ok) throw new Error('HTTP ' + r.status); await c.put(mkey(f.path), r);
+    }
+  }
+  async function fileSrc(f, network) {
     if (f.url) return { url: f.url };
+    if (!network) { const m = await mediaGet(f); if (m) return m; }
     const hit = signed.get(f.path);
     if (hit && hit.until > Date.now()) return hit.src;
     const src = await api('file', { path: f.path });
@@ -1163,7 +1193,8 @@
     try {
       a = document.createElement('audio');
       a.controls = true; a.preload = 'auto';
-      a.src = (await fileSrc(f)).url;
+      const src = await fileSrc(f);
+      a.src = src.blob ? URL.createObjectURL(src.blob) : src.url;
       li.appendChild(a);
       a.addEventListener('play', () => { document.querySelectorAll('.recs audio').forEach(x => { if (x !== a) x.pause(); }); btn.classList.add('on'); });
       a.addEventListener('pause', () => btn.classList.remove('on'));
@@ -1193,7 +1224,7 @@
   }
   // src: { url } (um PDF ou imagem) ou { pages: [{ n, url }] } (páginas soltas de um livro, cada uma um PDF de 1 página)
   async function openPdf(src, title, slug, mime, page = 0, crops = null) {
-    const key = JSON.stringify(src.pages ? src.pages.map(p => p.n) : src.url);
+    const key = JSON.stringify(src.pages ? src.pages.map(p => p.n) : src.url || title + page);
     const sameCrops = JSON.stringify(crops) === JSON.stringify(pdfCrops);
     pdfCrops = crops; pdfWhole = false;
     pdfSlug = slug;
@@ -1205,14 +1236,16 @@
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
     try {
       if (!src.pages && /^image\//.test(mime || '')) {
-        $('pdfpages').innerHTML = `<img class="score-img" alt="" src="${esc(src.url)}">`;
+        $('pdfpages').innerHTML = `<img class="score-img" alt="" src="${esc(src.blob ? URL.createObjectURL(src.blob) : src.url)}">`;
         return;
       }
       const lib = await loadPdfJs();
+      // guardado no telemóvel: abre a partir dos dados; senão, pelo endereço
+      const open = async x => lib.getDocument(x.blob ? { data: new Uint8Array(await x.blob.arrayBuffer()), isEvalSupported: false } : { url: x.url, isEvalSupported: false }).promise;
       if (src.pages) {
-        const docs = await Promise.all(src.pages.map(p => lib.getDocument({ url: p.url, isEvalSupported: false }).promise));
+        const docs = await Promise.all(src.pages.map(open));
         pdfBook = new Map(src.pages.map((p, i) => [p.n, docs[i]]));
-      } else pdfDoc = await lib.getDocument({ url: src.url, isEvalSupported: false }).promise;
+      } else pdfDoc = await open(src);
       await renderPdf();
     } catch (e) {
       $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a partitura.</p>';
@@ -1360,6 +1393,30 @@
   const colFits = () => true; // qualquer cântico pode entrar numa coleção (o público Cancioneiro passa a vê-lo enquanto a coleção durar)
   // cânticos de coleções ativas para o Cancioneiro: visíveis também no perfil Cancioneiro
   const colExtra = () => new Set(cols.filter(c => !expired(c) && c.audience === 'cancioneiro').flatMap(c => (c.songs || []).map(x => x.song_slug)));
+  // Ao abrir: descarrega as letras e (do perfil Coro para cima) partituras, páginas dos livros e gravações
+  // dos cânticos das coleções ativas; apaga ficheiros guardados de cânticos que já não estão em coleções
+  let prefetching = false;
+  async function prefetchCollections() {
+    if (prefetching || DEMO || !navigator.onLine) return; prefetching = true;
+    try {
+      const slugs = [...new Set(cols.filter(c => colVisible(c) && !expired(c)).flatMap(c => (c.songs || []).map(x => x.song_slug)))].filter(sl => bySlug.has(sl));
+      const keep = new Set();
+      for (const sl of slugs) {
+        try { await getLyrics(sl); } catch (e) { if (e instanceof Limit) break; }
+        if (lvl() < 2) continue;
+        const s = bySlug.get(sl);
+        for (const f of [...scoresOf(s), ...filesOf(s, 'recording')]) {
+          if (!f.path) continue;
+          keep.add(mkey(f.path));
+          try { await mediaSave(f); } catch (e) { if (e instanceof Limit) return; }
+        }
+      }
+      if ('caches' in window && lvl() >= 2) { // limpeza
+        const c = await caches.open(MEDIA);
+        for (const r of await c.keys()) { const base = r.url.split('%40')[0]; if (!keep.has(base) && !keep.has(r.url)) await c.delete(r); }
+      }
+    } catch (e) { /* sem rede: fica para a próxima */ } finally { prefetching = false; }
+  }
   async function loadCollections() {
     if (!cols.length) cols = store.get(colsKey(), []);
     if (DEMO) { cols = store.get('cancioneiro.demo.cols', []); return; }
@@ -1805,7 +1862,7 @@
     showList();
     load();
     loadFavs();
-    loadCollections();
+    loadCollections().then(() => setTimeout(prefetchCollections, 3000));
     loadSyncInfo();
     started = true;
   } catch (e) { console.error(e); rescue('Houve um problema ao abrir. Se a lista não aparecer, feche e volte a abrir a app.'); } })();
