@@ -703,3 +703,7 @@ dialog h2:focus, dialog h2:focus-visible { outline: none; box-shadow: none; }
 .mini-info small { font-size: 12px; opacity: .85; }
 body.has-mini .view, body.has-mini .pdfpages { padding-bottom: calc(84px + var(--safe-bottom, 0px)); }
 .pdf-block { max-width: none; }
+/* aviso de instalação (2.ª abertura) */
+.coach { padding: 6px 8px; border-radius: 10px; background: #e3f5ec; box-shadow: 0 0 0 2px var(--green-ink); animation: coach 1.4s ease-in-out 3; }
+@keyframes coach { 50% { box-shadow: 0 0 0 5px rgba(14,127,88,.35); } }
+.coach-hint { margin: 0 0 6px; font-size: 13px; color: var(--green-ink); }

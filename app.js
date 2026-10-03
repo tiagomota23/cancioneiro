@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v117';
+  const APP_VERSION = '2026-10-03 v118';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1872,7 +1872,33 @@
   addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
   const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   document.body.classList.toggle('standalone', standalone());
-  addEventListener('appinstalled', () => { installEvt = null; document.body.classList.add('standalone'); });
+  addEventListener('appinstalled', () => { installEvt = null; document.body.classList.add('standalone'); store.set('cancioneiro.instalada', 1); });
+  // 1.ª vez que abre a app no browser do telemóvel: propõe instalar; 2.ª vez (se ainda não instalou): mostra onde se faz,
+  // no menu do canto superior direito (Perfil, ou o "i" para quem só tem o perfil Cancioneiro). Depois não volta a insistir.
+  function installCoach() {
+    if (standalone()) { store.set('cancioneiro.instalada', 1); return; }
+    if (!matchMedia('(pointer: coarse)').matches || store.get('cancioneiro.instalada', 0)) return;
+    const n = store.get('cancioneiro.aberturas', 0) + 1;
+    store.set('cancioneiro.aberturas', n);
+    if (n === 1) setTimeout(async () => {
+      if (document.querySelector('dialog[open]')) return;
+      if (await appConfirm('Pode instalar o Cancioneiro no ecrã principal do telemóvel ou do tablet: passa a abrir como uma app, em ecrã inteiro e mais depressa.', 'Instalar', 'Instalar a app')) installApp();
+    }, 1500);
+    else if (n === 2) setTimeout(() => {
+      if (document.querySelector('dialog[open]')) return;
+      $('btn-perfil').click(); // abre o Perfil (ou o "i")
+      setTimeout(() => {
+        const btn = $('perfis').open ? $('perfis-install') : $('info-install'), line = btn && btn.closest('p');
+        if (!line || !line.offsetParent) return;
+        line.classList.add('coach');
+        const hint = document.createElement('p'); hint.className = 'coach-hint';
+        hint.textContent = 'Ainda não instalou a app no ecrã principal? Toque aqui. Pode sempre fazê-lo neste menu, que se abre no símbolo do canto superior direito.';
+        line.before(hint); line.scrollIntoView({ block: 'center' });
+        const dlg = line.closest('dialog');
+        dlg.addEventListener('close', () => { hint.remove(); line.classList.remove('coach'); }, { once: true });
+      }, 400);
+    }, 1500);
+  }
   async function installApp() {
     if (installEvt) { const e = installEvt; installEvt = null; e.prompt(); await e.userChoice.catch(() => null); return; }
     const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -2886,6 +2912,7 @@
     loadFavs();
     loadCollections().then(() => setTimeout(prefetchCollections, 3000));
     loadSyncInfo();
+    installCoach();
     started = true;
   } catch (e) { console.error(e); rescue('Houve um problema ao abrir. Se a lista não aparecer, feche e volte a abrir a app.'); } })();
 
