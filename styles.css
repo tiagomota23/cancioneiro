@@ -518,8 +518,6 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
   :root:not([data-theme="light"]) #btn-theme .moon { display: none; }
 }
 .adm-lock { font-size: 11.5px; color: #999; }
-.perfil-info { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 12px; margin-top: 2px; border: 1px solid #dde7e2; border-radius: 10px; background: #fff; color: #333; font-weight: 700; outline: none; }
-.perfil-info i { width: 26px; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 22px; color: var(--green-ink); line-height: 1; }
 
 /* Símbolos no texto da informação: os mesmos desenhos dos botões da app */
 svg.ic { color: var(--green-ink); width: 1.2em; height: 1.2em; vertical-align: -.25em; fill: none; stroke: var(--green-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -542,3 +540,5 @@ body.solo .perfil-help { display: none; }
 .ptr.ready svg { transform: rotate(180deg); }
 .ptr.busy svg { animation: ptr-spin .8s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
+.perfis-actions { align-items: center; }
+.perfil-i { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1; color: var(--green-ink); padding: 4px 10px; cursor: pointer; outline: none; }

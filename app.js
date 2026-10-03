@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v53';
+  const APP_VERSION = '2026-10-03 v54';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1017,11 +1017,9 @@
     $('perfis-list').innerHTML = PERFIS.slice(0, rankOf(maxRole)).map(p =>
       `<button class="perfil-opt${p.id === cur ? ' on' : ''}" data-p="${p.id}"><svg viewBox="0 0 24 24" class="perfil-ic">${p.icon}</svg><span><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></button>`).join('') +
       (rankOf(cur) >= 3 ? `<a class="perfil-admin" href="#/gestao">Gestão de utilizadores ${chev}</a>` : '') +
-      (rankOf(maxRole) && rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '') +
-      `<button class="perfil-info" id="perfil-info"><i>i</i><span>Informação e ajuda</span></button>`;
+      (rankOf(maxRole) && rankOf(maxRole) < PERFIS.length ? `<p class="small">O seu perfil é <b>${esc(PERFIS[rankOf(maxRole) - 1].label)}</b>. Pode usar este e os anteriores.</p>` : '');
     $('perfis-list').querySelectorAll('.perfil-opt').forEach(b => b.onclick = () => { setPerfil(b.dataset.p, true); $('perfis').close(); });
     $('perfis-list').querySelector('.perfil-admin')?.addEventListener('click', () => $('perfis').close());
-    $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = () => { if (rankOf(maxRole) <= 1) { $('info').showModal(); $('info').scrollTop = 0; } else openPerfis(); };
@@ -1045,6 +1043,8 @@
   };
   applyTheme();
   $('perfis-close').onclick = () => $('perfis').close();
+  $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
+  $('perfil-info').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('perfil-info').click(); } };
   $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });
 
   // ---------- Gestão de utilizadores (perfil Gestor) ----------
