@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v57';
+  const APP_VERSION = '2026-10-03 v58';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -298,7 +298,6 @@
       sel.value = present.has(f) ? f : 'todas';
     }
     $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
-    if ($('az')) $('az').innerHTML = '';
   }
 
   async function load() {
@@ -776,6 +775,18 @@
       const list = songs.filter(s => isFav(s.slug)).sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }));
       rows.innerHTML = list.map(s => songRow(s)).join('');
       if (!list.length && songs.length) $('status').innerHTML = '<span class="fav-empty">Ainda não tem cânticos preferidos.<br>Abra um cântico e toque na ☆ no topo para o adicionar.</span>';
+      return;
+    }
+    const bk = BOOKS_LIST.find(b => b.id === catId && b.id !== 'favoritos');
+    if (bk) {
+      title.hidden = false;
+      title.textContent = bk.label;
+      // livros pela ordem das páginas; os outros por título
+      const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
+      const list = pool.filter(bk.test).sort(bk.book
+        ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
+        : (a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }));
+      rows.innerHTML = list.map(s => bk.book ? songRow({ ...s, book_page: pageIn(s, bk.book) || null }) : songRow(s)).join('');
       return;
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
@@ -1323,31 +1334,31 @@
     if ($('search').value) { $('search').value = ''; $('search-clear').hidden = true; route(); }
     else location.hash = '#/';
   };
-  // Gaveta: índice alfabético completo
-  const letterOf = t => { const c = norm(t).replace(/^[^a-z0-9]+/, '')[0] || '#'; return /[a-z]/.test(c) ? c.toUpperCase() : '#'; };
-  function renderAZ() {
-    const q = $('drawer-search').value.trim();
-    const list = q ? search(q).map(r => r.s) : songs.slice().sort((a, b) => norm(a.title).replace(/^[^a-z0-9]+/, '').localeCompare(norm(b.title).replace(/^[^a-z0-9]+/, ''), 'pt'));
-    let html = '', cur = null;
-    for (const s of list) {
-      const L = letterOf(s.title);
-      if (!q && L !== cur) { html += `<li class="letter">${L}</li>`; cur = L; }
-      html += `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${esc(s.title)}</span><span class="n">${s.number}${s.book_page ? `<small>pág. ${s.book_page}</small>` : ''}</span></a></li>`;
-    }
-    $('az').innerHTML = html || '<li class="empty">Nenhum cântico encontrado.</li>';
+  // Gaveta: os livros (Preferidos, Cancioneiro e, do perfil Coro para cima, Coro, Songbook e CANTI 2024)
+  const BOOKS_LIST = [
+    { id: 'favoritos', label: 'Preferidos', icon: '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>', test: s => isFav(s.slug) },
+    { id: 'livro-cancioneiro', label: 'Cancioneiro', test: s => inCancioneiro(s) },
+    { id: 'livro-coro', label: 'Coro', coro: true, test: s => srcOf(s).includes('coro_clu') },
+    { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
+    { id: 'livro-canti', label: 'CANTI 2024', coro: true, book: 'canti2024', test: s => srcOf(s).includes('canti2024') },
+  ];
+  // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
+  const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };
+  function renderBooks() {
+    $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
+      const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
+      return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : ''}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
+    }).join('');
   }
   function openDrawer() {
-    if (!$('az').innerHTML || $('drawer-search').value) { $('drawer-search').value = ''; renderAZ(); }
+    renderBooks();
     $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
   }
   function closeDrawer() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
-  $('btn-menu').onclick = openDrawer;
+  $('btn-menu').onclick = () => { $('search').value = ''; $('search-clear').hidden = true; openDrawer(); };
   $('drawer-close').onclick = closeDrawer;
   $('drawer-scrim').onclick = closeDrawer;
   $('az').addEventListener('click', e => { if (e.target.closest('a')) closeDrawer(); });
-  let tz;
-  $('drawer-search').addEventListener('input', () => { clearTimeout(tz); tz = setTimeout(() => { renderAZ(); $('az').scrollTop = 0; }, 120); });
-  $('drawer-search').addEventListener('keydown', e => { if (e.key === 'Enter') $('drawer-search').blur(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   const closeInfo = () => $('info').close();
   $('info-x').onclick = closeInfo;
@@ -1372,7 +1383,6 @@
     try { const { data } = await sb.auth.getUser(); if (data && data.user) useSource(data.user.user_metadata); } catch (e) { /* sem rede */ } // …e confirmado no servidor
   }
   $('src-filter').onchange = e => setSource(e.target.value);
-  $('btn-favs').onclick = () => { $('search').value = ''; $('search-clear').hidden = true; location.hash = '#/lista/favoritos'; };
   let t;
   $('search').addEventListener('input', () => {
     $('search-clear').hidden = !$('search').value;
@@ -1442,11 +1452,13 @@
     if (pullY == null) return;
     if (window.scrollY > 0) { pullY = null; resetPull(); return; }
     pulled = Math.max(0, e.touches[0].clientY - pullY);
-    if (pulled >= PULL && !holdTimer && !ready) holdTimer = setTimeout(() => { ready = true; ptr.classList.add('on'); }, HOLD);
+    if (pulled >= PULL && !holdTimer && !ready) holdTimer = setTimeout(() => { if (pullY != null) { ready = true; ptr.classList.add('on'); } }, HOLD);
     else if (pulled < PULL && !ready) { clearTimeout(holdTimer); holdTimer = null; }
   }, { passive: true });
+  // o iPhone cancela o toque quando a página passa a deslizar: nesse caso não há atualização
+  addEventListener('touchcancel', () => { pullY = null; resetPull(); }, { passive: true });
   addEventListener('touchend', async () => {
-    if (pullY == null) return;
+    if (pullY == null) { resetPull(); return; }
     pullY = null;
     if (!ready) { resetPull(); return; }
     refreshing = true;

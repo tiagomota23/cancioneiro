@@ -540,3 +540,7 @@ body.solo .perfil-help { display: none; }
 .perfis-actions { align-items: center; }
 .perfil-i { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1; color: var(--green-ink); padding: 4px 10px; cursor: pointer; outline: none; }
 body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
+.drawer-title { margin: 6px 0 4px 60px; font-family: var(--serif); font-weight: 400; letter-spacing: .14em; font-size: 20px; color: #fff; }
+.books a { gap: 10px; align-items: center; }
+.books .book-ic { width: 18px; height: 18px; flex: none; fill: currentColor; stroke: none; }
+.books .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
