@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v95';
+  const APP_VERSION = '2026-10-03 v96';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1544,6 +1544,20 @@
   };
   applyTheme();
   $('perfis-close').onclick = () => $('perfis').close();
+  // Adicionar ao ecrã principal: no Android o browser oferece a instalação; no iPhone/iPad só pelo menu Partilhar
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  document.body.classList.toggle('standalone', standalone());
+  addEventListener('appinstalled', () => { installEvt = null; document.body.classList.add('standalone'); });
+  async function installApp() {
+    if (installEvt) { const e = installEvt; installEvt = null; e.prompt(); await e.userChoice.catch(() => null); return; }
+    const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    appAlert(ios ? 'No Safari, toque em Partilhar (o quadrado com a seta para cima, em baixo ou no topo do ecrã) e escolha «Adicionar ao ecrã principal». A app fica com o ícone do Cancioneiro e abre em ecrã inteiro.'
+      : /Android/.test(ua) ? 'No menu do browser (⋮, no canto de cima), escolha «Adicionar ao ecrã principal» ou «Instalar app».'
+      : 'No telemóvel ou tablet, abra este endereço no browser e escolha «Adicionar ao ecrã principal» (iPhone/iPad: no menu Partilhar; Android: no menu ⋮).', 'Adicionar ao ecrã principal');
+  }
+  $('perfis-install').onclick = installApp; $('info-install').onclick = installApp;
   $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
   $('perfil-info').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('perfil-info').click(); } };
   $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });

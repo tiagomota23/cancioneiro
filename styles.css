@@ -646,3 +646,8 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 .up-del svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .up-del.armed { background: #c0392b; color: #fff; }
 .edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }
+.perfis-right { display: inline-flex; align-items: center; gap: 6px; }
+.install-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; color: var(--green-ink); background: none; border: 0; box-shadow: none; }
+.install-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+body.standalone .install-btn, .info-install { display: none; }
+body.solo:not(.standalone) .info-install { display: inline-flex; }
