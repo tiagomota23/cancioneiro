@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v99';
+  const APP_VERSION = '2026-10-03 v100';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1177,8 +1177,10 @@
         }
         if (!stanzas.length) stanzas.push([textRow('(letra não disponível)', F.i, fs, grey, fs * 1.22)]);
         stanzas.forEach((rows, k) => { if (k) rows[0] = { ...rows[0], h: rows[0].h + fs * 0.55, pad: fs * 0.55 }; });
-        // um cântico nunca se parte entre colunas ou páginas (só se não couber numa coluna inteira)
-        units.push({ rows: [...pend, ...head, ...stanzas.flat()], keep: true }); pend = [];
+        // um cântico pode continuar na coluna seguinte, mas nunca a meio de uma estrofe;
+        // a secção e o título ficam sempre juntos com a 1.ª estrofe
+        units.push({ rows: [...pend, ...head, ...stanzas[0]], keep: true }); pend = [];
+        stanzas.slice(1).forEach(rows => units.push({ rows, keep: true }));
       }
       // secções sem cânticos no fim ficavam soltas: não entram (cada secção vai sempre junta com o cântico seguinte)
       return units;
