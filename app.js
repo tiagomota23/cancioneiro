@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v75';
+  const APP_VERSION = '2026-10-03 v76';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1388,7 +1388,7 @@
     const can = lvl() >= 3;
     const fim = new Date(c.expires_at);
     // público e prazo só para quem gere (Maestro / Gestor)
-    title.innerHTML = `${esc(c.title)}${can ? ` <button class="col-edit" id="col-edit">Editar</button><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
+    title.innerHTML = `${esc(c.title)}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
@@ -1407,6 +1407,7 @@
     }));
     if (can) {
       $('col-edit').onclick = () => openCollectionDlg(c);
+      $('col-tpl').onclick = () => openTemplates(c);
       $('col-add-sec').onclick = () => { const v = prompt('Nome da nova secção (ex.: Entrada, Comunhão):'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
       rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
     }
@@ -1484,6 +1485,78 @@
     } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
     showCollection(c.id);
   }
+  // ---------- Templates (conjuntos de secções pré-definidas; só Maestro / Gestor) ----------
+  let tpls = null;
+  async function loadTemplates() {
+    if (DEMO) { tpls = store.get('cancioneiro.demo.tpls', null) || [{ id: 'demo-missa', title: 'Missa', sections: ['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora'] }]; return; }
+    const { data, error } = await sb.from('collection_templates').select('id,title,sections').order('title');
+    if (error) throw error; tpls = data;
+  }
+  async function openTemplates(c) {
+    $('tpl-list').innerHTML = '<p class="small">A carregar…</p>';
+    $('tpl-dlg').showModal();
+    try { await loadTemplates(); } catch (e) { $('tpl-list').innerHTML = `<p class="small">Não foi possível carregar: ${esc(e.message || e)}</p>`; return; }
+    $('tpl-list').innerHTML = tpls.map(t => `<div class="tpl-row" data-id="${esc(t.id)}"><button class="tpl-apply"><b>${esc(t.title)}</b><small>${esc(t.sections.join(' · '))}</small></button><button class="tpl-edit">Editar</button></div>`).join('') +
+      `<button class="col-pick-new" id="tpl-new">+ Novo template</button>`;
+    $('tpl-list').querySelectorAll('.tpl-row').forEach(r => {
+      const t = tpls.find(x => x.id === r.dataset.id);
+      r.querySelector('.tpl-apply').onclick = () => applyTemplate(c, t);
+      r.querySelector('.tpl-edit').onclick = () => openTemplateEditor(c, t);
+    });
+    $('tpl-new').onclick = () => openTemplateEditor(c, null);
+  }
+  // aplicar: acrescenta no fim as secções do template que a coleção ainda não tem
+  async function applyTemplate(c, t) {
+    const have = new Set((c.sections || []).map(x => norm(x.title)));
+    const add = t.sections.filter(x => !have.has(norm(x)));
+    if (!add.length) { toast('A coleção já tem estas secções'); $('tpl-dlg').close(); return; }
+    let pos = Math.max(0, ...colItems(c).map(x => x.pos));
+    try {
+      const rows = add.map(title => ({ collection_id: c.id, title, position: ++pos }));
+      if (DEMO) rows.forEach((r, i) => { r.id = 'demo' + Date.now() + i; });
+      else { const { data, error } = await sb.from('collection_sections').insert(rows).select('id,title,position'); if (error) throw error; rows.splice(0, rows.length, ...data); }
+      c.sections = (c.sections || []).concat(rows);
+      if (DEMO) demoSave(); else store.set(colsKey(), cols);
+      $('tpl-dlg').close(); toast(`Template «${t.title}» aplicado`);
+    } catch (e) { alert('Não foi possível aplicar: ' + (e.message || e)); }
+    showCollection(c.id);
+  }
+  let tplEditing = null, tplCol = null;
+  function openTemplateEditor(c, t) {
+    tplEditing = t; tplCol = c;
+    $('tpl-edit-title').textContent = t ? 'Editar template' : 'Novo template';
+    $('tpl-name').value = t ? t.title : '';
+    $('tpl-secs').value = t ? t.sections.join('\n') : '';
+    $('tpl-del').hidden = !t;
+    $('tpl-msg').textContent = '';
+    $('tpl-dlg').close(); $('tpl-edit').showModal();
+  }
+  async function saveTemplate() {
+    const title = $('tpl-name').value.trim().slice(0, 60);
+    const sections = $('tpl-secs').value.split('\n').map(x => x.trim().slice(0, 60)).filter(Boolean);
+    if (!title || !sections.length) { $('tpl-msg').textContent = 'Escreva um nome e pelo menos uma secção.'; return; }
+    try {
+      if (DEMO) {
+        if (tplEditing) Object.assign(tplEditing, { title, sections }); else tpls.push({ id: 'demo' + Date.now(), title, sections });
+        store.set('cancioneiro.demo.tpls', tpls);
+      } else if (tplEditing) { const { error } = await sb.from('collection_templates').update({ title, sections }).eq('id', tplEditing.id); if (error) throw error; }
+      else { const { error } = await sb.from('collection_templates').insert({ title, sections }); if (error) throw error; }
+      $('tpl-edit').close(); openTemplates(tplCol);
+    } catch (e) { $('tpl-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
+  }
+  async function deleteTemplate() {
+    if (!tplEditing || !confirm(`Apagar o template «${tplEditing.title}»? As coleções não mudam.`)) return;
+    try {
+      if (DEMO) { tpls = tpls.filter(x => x !== tplEditing); store.set('cancioneiro.demo.tpls', tpls); }
+      else { const { error } = await sb.from('collection_templates').delete().eq('id', tplEditing.id); if (error) throw error; }
+      $('tpl-edit').close(); openTemplates(tplCol);
+    } catch (e) { $('tpl-msg').textContent = 'Não foi possível apagar: ' + (e.message || e); }
+  }
+  $('tpl-close').onclick = () => $('tpl-dlg').close();
+  $('tpl-save').onclick = saveTemplate;
+  $('tpl-cancel').onclick = () => { $('tpl-edit').close(); openTemplates(tplCol); };
+  $('tpl-del').onclick = deleteTemplate;
+
   // nova secção (no fim) ou mudar o nome
   async function colSaveSection(c, sec, title) {
     try {

@@ -558,7 +558,7 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .col-dlg { width: min(420px, calc(100vw - 32px)); }
 .col-field { display: block; font-size: 13px; font-weight: 700; color: #555; margin: 10px 0; }
 .col-field input, .col-field select { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
-.col-dlg .edit-actions button.ghost.danger { color: #c0392b; border-color: #e3b3ad; }
+.col-dlg .edit-actions button.ghost.danger, #tpl-edit .edit-actions button.ghost.danger { color: #c0392b; border-color: #e3b3ad; }
 .col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
 .col-pick { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #333; }
 .col-pick input { width: 20px; height: 20px; accent-color: #0e7f58; }
@@ -598,3 +598,14 @@ html, body { touch-action: pan-x pan-y; }
 .col-dlg button, .col-dlg h2, .col-pick input { outline: none; }
 .col-dlg button:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
 .song a.book-open { color: var(--green-ink); font-weight: 700; text-decoration: underline; }
+
+/* Templates */
+.list-title .col-edit + .col-edit { margin-left: 6px; }
+.tpl-row { display: flex; align-items: stretch; gap: 6px; }
+.tpl-apply { flex: 1; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #333; outline: none; }
+.tpl-apply b { display: block; font-size: 15px; }
+.tpl-apply small { display: block; font-size: 12px; color: #777; margin-top: 2px; }
+.tpl-edit { padding: 0 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #0e7f58; font-weight: 700; font-size: 13px; outline: none; }
+.col-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; resize: vertical; }
+.list-title .col-btns { display: flex; gap: 6px; margin: 8px 0 2px; }
+.list-title .col-btns .col-edit { margin-left: 0; }

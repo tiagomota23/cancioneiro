@@ -1,5 +1,5 @@
 // Cache da aplicação para funcionar offline (os cânticos ficam em localStorage)
-const CACHE = 'cancioneiro-v75';
+const CACHE = 'cancioneiro-v76';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.json', 'worker.js', 'icons/icon-192.png', 'icons/icon-180.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(

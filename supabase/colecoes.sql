@@ -63,3 +63,20 @@ drop policy if exists "colecoes seccoes gerir" on public.collection_sections;
 create policy "colecoes seccoes gerir" on public.collection_sections for all to authenticated
   using ((select public.my_rank()) >= 3) with check ((select public.my_rank()) >= 3);
 grant select, insert, update, delete on public.collection_sections to authenticated;
+
+-- Templates: conjuntos de secções pré-definidas para aplicar a uma coleção (só Maestro / Gestor)
+create table if not exists public.collection_templates (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (length(title) between 1 and 60),
+  sections text[] not null default '{}',
+  created_by text default (auth.jwt() ->> 'email'),
+  created_at timestamptz not null default now()
+);
+alter table public.collection_templates enable row level security;
+drop policy if exists "templates gerir" on public.collection_templates;
+create policy "templates gerir" on public.collection_templates for all to authenticated
+  using ((select public.my_rank()) >= 3) with check ((select public.my_rank()) >= 3);
+grant select, insert, update, delete on public.collection_templates to authenticated;
+insert into public.collection_templates (title, sections, created_by)
+  select 'Missa', array['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora'], 'tiago.mota@gmail.com'
+  where not exists (select 1 from public.collection_templates where title = 'Missa');
