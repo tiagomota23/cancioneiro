@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v86';
+  const APP_VERSION = '2026-10-03 v87';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -120,6 +120,7 @@
   }
   $('btn-google').onclick = async () => {
     $('login-msg').textContent = 'A abrir o Google…';
+    try { if (location.hash.startsWith('#/cantico/')) sessionStorage.setItem('cancioneiro.depois', location.hash); } catch (e) {}
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' } },
@@ -316,6 +317,7 @@
   }
 
   async function load() {
+    try { const h = sessionStorage.getItem('cancioneiro.depois'); if (h) { sessionStorage.removeItem('cancioneiro.depois'); history.replaceState(null, '', location.pathname + h); } } catch (e) {}
     const cached = store.get(CACHE_KEY, null);
     if (cached && cached.length) { setSongs(cached); route(); }
     try {
@@ -895,9 +897,8 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
-    // o perfil Cancioneiro não pode copiar a letra (botão); ninguém pode selecionar o texto
-    $('btn-copy').hidden = lvl() < 2;
-    $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
+    // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
+    $('btn-share').onclick = () => shareSong(s, data ? body : null);
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug, $('btn-revert'));
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
@@ -926,12 +927,22 @@
     const clean = l => stripChords(l).replace(/\|:|:\||[♪♫𝄆𝄇]/g, '').replace(new RegExp('\\(\\s*' + CH + '\\s*\\)', 'g'), '').replace(/\s+/g, ' ').trim();
     const text = [s.title, s.author || ''].filter(Boolean).join('\n') + '\n\n' +
       (stanzas || []).map(st => st.lines.map(clean).filter(l => l && !onlyChords.test(l)).join('\n')).filter(Boolean).join('\n\n') + '\n';
+    await copyText(text); toast('Letra copiada');
+  }
+  async function copyText(text) {
     try { await navigator.clipboard.writeText(text); }
     catch (e) { // alternativa para browsers sem acesso à área de transferência
       const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } finally { ta.remove(); }
     }
-    toast('Letra copiada');
+  }
+  async function shareSong(s, stanzas) {
+    const list = [];
+    if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: 'Copiar letra', sub: 'Título e letra, sem acordes' });
+    list.push({ value: 'url', label: 'Copiar endereço', sub: 'Ligação para esta página (só para quem tem acesso à app)' });
+    const v = await appChoose('Partilhar', list);
+    if (v === 'letra') copyLyrics(s, stanzas);
+    else if (v === 'url') { await copyText(location.origin + location.pathname + '#/cantico/' + encodeURIComponent(s.slug)); toast('Endereço copiado'); }
   }
 
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------

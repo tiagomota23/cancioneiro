@@ -182,7 +182,7 @@ body::before {
 .songbar .icon-btn svg { width: 23px; height: 23px; }
 .songbar #btn-chords svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .songbar #btn-chords svg circle { fill: currentColor; stroke: none; }
-.songbar #btn-copy svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.songbar #btn-share svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* A−/A+: letras centradas na caixa, com o sinal pequeno em cima à direita (não altera o alinhamento) */
 .songbar .txt { font-family: var(--sans); line-height: 1; position: relative; }
 .songbar .txt .a { font-size: 19px; }
