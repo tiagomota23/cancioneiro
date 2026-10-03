@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v102';
+  const APP_VERSION = '2026-10-03 v104';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -875,7 +875,10 @@
          </div>`
       : `<span class="lang-chip">${esc(langName)}</span>`;
     const scores = scoresOf(s);
+    // letra digitalizada em mais do que um livro (Songbook e CANTI): um só botão, que mostra as duas juntas
+    const scans = scores.filter(isBookScan);
     const pdf = scores.map((sc, i) => {
+      if (scans.length > 1 && isBookScan(sc)) return sc === scans[0] ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${esc(scans.map(x => x.label.split(',')[0]).join(' + '))}</a>` : '';
       const lbl = scores.length > 1 || pageOf(sc) ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
       return sc.url && /^https?:/.test(sc.url)
         ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(lbl)}</a>`
@@ -1254,8 +1257,55 @@
       const scores = scoresOf(s); if (!scores.length) continue;
       msg(`A juntar as partituras… (${++n}/${total})`);
       let first = true;
+      // letra digitalizada nos livros (Songbook, CANTI): tudo numa só página, um bloco por livro, à mesma escala
+      const scans = scores.filter(isBookScan);
+      if (scans.length) {
+        try {
+          const blocks = [];
+          for (const sc of scans) {
+            const src = await fileSrc(sc), pieces = [];
+            for (const [n, x0, y0, x1, y1] of cropsOf(sc)) {
+              const p = (src.pages || []).find(q => q.n === n); if (!p) continue;
+              const bytes = await bytesOf(p), d = await L.PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
+              // as frações dos recortes são da área visível da página (CropBox), como no pdf.js
+              const pg = d.getPage(0), cb = pg.getCropBox(), width = cb.width, height = cb.height;
+              const rel = { left: x0 * width, right: x1 * width, bottom: (1 - y1) * height, top: (1 - y0) * height };
+              const box = { left: cb.x + rel.left, right: cb.x + rel.right, bottom: cb.y + rel.bottom, top: cb.y + rel.top };
+              let ep; try { ep = await doc.embedPage(pg, box); await ep.embed(); ep = { kind: 'pdf', v: ep }; }
+              catch (e) { doc.embeddedPages = (doc.embeddedPages || []).filter(x => x.alreadyEmbedded); ep = { kind: 'img', v: await doc.embedPng(await rasterPage(bytes, 0, rel)) }; }
+              pieces.push({ ep, w: rel.right - rel.left, h: rel.top - rel.bottom, pw: width });
+            }
+            if (pieces.length) blocks.push({ label: pdfSafe(sc.label), pieces, Lc: cropLayout(pieces) });
+          }
+          if (blocks.length) {
+            const PAD = 8, LAB = 16, GAPB = 12, titleH = 20;
+            const avW = W - 2 * M - 2 * PAD, avH = H - 2 * M - titleH - blocks.length * (LAB + 2 * PAD) - (blocks.length - 1) * GAPB;
+            const sc2 = Math.min(avW / Math.max(...blocks.map(b => b.Lc.W)), avH / blocks.reduce((t, b) => t + b.Lc.H, 0));
+            newPage();
+            page.drawText(pdfSafe(s.title), { x: M, y: y - 12, size: 11, font: F.b, color: green }); y -= titleH;
+            for (const b of blocks) {
+              const bw = Math.max(b.Lc.W * sc2 + 2 * PAD, 140), bh = LAB + b.Lc.H * sc2 + 2 * PAD;
+              const bx = M + (W - 2 * M - bw) / 2;
+              // contorno verde com cantos arredondados
+              const rr = 8, x0 = 0, y0 = 0;
+              page.drawSvgPath(`M ${rr} 0 H ${bw - rr} Q ${bw} 0 ${bw} ${rr} V ${bh - rr} Q ${bw} ${bh} ${bw - rr} ${bh} H ${rr} Q 0 ${bh} 0 ${bh - rr} V ${rr} Q 0 0 ${rr} 0 Z`,
+                { x: bx + x0, y: y - y0, borderColor: green, borderWidth: 1 });
+              page.drawText(b.label, { x: bx + PAD, y: y - PAD - 9, size: 8.5, font: F.b, color: green });
+              const cx = bx + PAD + ((bw - 2 * PAD) - b.Lc.W * sc2) / 2, top = y - PAD - LAB;
+              b.pieces.forEach((p, i) => {
+                const px = cx + b.Lc.pos[i].x * sc2, py = top - (b.Lc.pos[i].y + p.h) * sc2;
+                if (p.ep.kind === 'img') page.drawImage(p.ep.v, { x: px, y: py, width: p.w * sc2, height: p.h * sc2 });
+                else page.drawPage(p.ep.v, { x: px, y: py, xScale: sc2, yScale: sc2 });
+              });
+              y -= bh + GAPB;
+            }
+            page = null; first = false;
+          }
+        } catch (e) { if (e instanceof Limit) throw e; console.warn('letra digitalizada', s.slug, e); }
+      }
       for (const sc of scores) {
         try {
+          if (isBookScan(sc)) continue;
           const src = await fileSrc(sc);
           const label = first ? pdfSafe(s.title + (scores.length > 1 ? ' — ' + sc.label : '')) : (scores.length > 1 ? pdfSafe(s.title + ' — ' + sc.label) : '');
           first = false;
@@ -1266,34 +1316,7 @@
           }
           const parts = src.pages ? [...src.pages].sort((a, b) => a.n - b.n) : [src];
           const crops = cropsOf(sc);
-          if (src.pages && crops) { // livro: todos os recortes do cântico juntos numa só página
-            const pieces = [];
-            for (const [n, x0, y0, x1, y1] of crops) {
-              const p = parts.find(q => q.n === n); if (!p) continue;
-              const bytes = await bytesOf(p), d = await L.PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
-              // as frações dos recortes são da área visível da página (CropBox), como no pdf.js
-              const pg = d.getPage(0), cb = pg.getCropBox(), width = cb.width, height = cb.height;
-              const rel = { left: x0 * width, right: x1 * width, bottom: (1 - y1) * height, top: (1 - y0) * height };
-              const box = { left: cb.x + rel.left, right: cb.x + rel.right, bottom: cb.y + rel.bottom, top: cb.y + rel.top };
-              let ep; try { ep = await doc.embedPage(pg, box); await ep.embed(); ep = { kind: 'pdf', v: ep }; }
-              catch (e) { doc.embeddedPages = (doc.embeddedPages || []).filter(x => x.alreadyEmbedded); ep = { kind: 'img', v: await doc.embedPng(await rasterPage(bytes, 0, rel)) }; }
-              pieces.push({ ep, w: rel.right - rel.left, h: rel.top - rel.bottom, pw: width });
-            }
-            if (pieces.length) {
-              const Lc = cropLayout(pieces), labelH = label ? 18 : 0;
-              const sc2 = Math.min((W - 2 * M) / Lc.W, (H - 2 * M - labelH) / Lc.H);
-              newPage();
-              if (label) { page.drawText(label, { x: M, y: y - 12, size: 10, font: F.b, color: green }); y -= labelH; }
-              const x0 = M + ((W - 2 * M) - Lc.W * sc2) / 2;
-              pieces.forEach((p, i) => {
-                const px = x0 + Lc.pos[i].x * sc2, py = y - (Lc.pos[i].y + p.h) * sc2;
-                if (p.ep.kind === 'img') page.drawImage(p.ep.v, { x: px, y: py, width: p.w * sc2, height: p.h * sc2 });
-                else page.drawPage(p.ep.v, { x: px, y: py, xScale: sc2, yScale: sc2 });
-              });
-              page = null; // a página seguinte começa de novo
-            }
-            continue;
-          }
+
           let lab = label;
           for (const p of parts) {
             const bytes = await bytesOf(p);
@@ -1734,7 +1757,9 @@
   const pageOf = f => { const m = (f.path || '').match(/#p=(\d+)/); return m ? +m[1] : 0; };
   // Recortes do cântico no livro: "&c=364:0,0.044,0.5,0.47|365:…" (frações da página: x0,y0,x1,y1)
   const cropsOf = f => { const m = (f.path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : null; };
-  let pdfCrops = null, pdfWhole = false;
+  let pdfCrops = null, pdfWhole = false, pdfMulti = null;
+  // letra digitalizada de um livro (página do Songbook / CANTI com recorte do cântico); as partituras ficam como estão
+  const isBookScan = sc => /^livros\//.test(sc.path || '') && !!cropsOf(sc);
   // Junta os recortes de um cântico numa só página: recortes de uma coluna do livro ficam lado a lado (2 colunas,
   // pela ordem, a 1.ª coluna até metade da altura total); recortes largos ficam uns por baixo dos outros.
   // pieces: [{ w, h }] em pontos; devolve { W, H, pos: [{ x, y }] }
@@ -1761,7 +1786,7 @@
   async function openPdf(src, title, slug, mime, page = 0, crops = null) {
     const key = JSON.stringify(src.pages ? src.pages.map(p => p.n) : src.url || title + page);
     const sameCrops = JSON.stringify(crops) === JSON.stringify(pdfCrops);
-    pdfCrops = crops; pdfWhole = false;
+    pdfCrops = crops; pdfWhole = false; pdfMulti = null;
     pdfSlug = slug;
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
@@ -1786,17 +1811,72 @@
       $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a partitura.</p>';
     }
   }
+  // várias digitalizações de livros do mesmo cântico na mesma página, cada uma com a sua origem
+  async function openBooks(list, title, slug) {
+    pdfSlug = slug; pdfCrops = null; pdfWhole = false; pdfDoc = null; pdfBook = null; pdfZoom = 1; pdfUrl = 'multi:' + slug;
+    $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = title;
+    $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir…</p>';
+    try {
+      const lib = await loadPdfJs();
+      const open = async x => lib.getDocument(x.blob ? { data: new Uint8Array(await x.blob.arrayBuffer()), isEvalSupported: false } : { url: x.url, isEvalSupported: false }).promise;
+      pdfMulti = [];
+      for (const b of list) {
+        const docs = await Promise.all(b.src.pages.map(open));
+        pdfMulti.push({ label: b.label, crops: b.crops, book: new Map(b.src.pages.map((p, i) => [p.n, docs[i]])) });
+      }
+      await renderPdf();
+    } catch (e) { $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a letra.</p>'; }
+  }
+  async function renderMulti(id, box, width, dpr) {
+    const blocks = [];
+    for (const b of pdfMulti) {
+      const parts = [];
+      const regs = pdfWhole ? [...b.book.keys()].sort((x, y) => x - y).map(n => [n, 0, 0, 1, 1]) : b.crops;
+      for (const [pg, x0, y0, x1, y1] of regs) {
+        const d = b.book.get(pg); if (!d) continue;
+        const page = await d.getPage(1); if (id !== pdfRender) return;
+        const v1 = page.getViewport({ scale: 1 });
+        parts.push({ page, x0, y0, w: (x1 - x0) * v1.width, h: (y1 - y0) * v1.height, pw: v1.width });
+      }
+      if (parts.length) blocks.push({ label: b.label, parts, L: pdfWhole ? cropLayout(parts.map(p => ({ ...p, pw: 0 }))) : cropLayout(parts) });
+    }
+    // a mesma escala para todos os blocos (letra do mesmo tamanho)
+    const scale = (width - 22) / Math.max(...blocks.map(b => b.L.W)) * pdfZoom;
+    for (const b of blocks) {
+      const blk = document.createElement('div'); blk.className = 'pdf-block'; box.appendChild(blk);
+      const lab = document.createElement('p'); lab.className = 'pdf-src'; lab.textContent = b.label; blk.appendChild(lab);
+      let r = dpr;
+      while (r > 1 && b.L.W * scale * r * b.L.H * scale * r > 12e6) r -= 0.5;
+      const c = document.createElement('canvas');
+      c.width = Math.floor(b.L.W * scale * r); c.height = Math.floor(b.L.H * scale * r);
+      c.style.width = Math.floor(b.L.W * scale) + 'px'; c.style.height = Math.floor(b.L.H * scale) + 'px';
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      blk.appendChild(c);
+      for (let i = 0; i < b.parts.length; i++) {
+        const p = b.parts[i], vp = p.page.getViewport({ scale: scale * r });
+        const pc = document.createElement('canvas'); pc.width = Math.ceil(p.w * scale * r); pc.height = Math.ceil(p.h * scale * r);
+        await p.page.render({ canvasContext: pc.getContext('2d'), viewport: vp, transform: [1, 0, 0, 1, -p.x0 * vp.width, -p.y0 * vp.height] }).promise;
+        if (id !== pdfRender) return;
+        ctx.drawImage(pc, Math.round(b.L.pos[i].x * scale * r), Math.round(b.L.pos[i].y * scale * r));
+      }
+    }
+    const more = document.createElement('p'); more.className = 'pdf-more';
+    more.innerHTML = `<button type="button">${pdfWhole ? 'Ver só a letra do cântico' : 'Ver as páginas inteiras'}</button>`;
+    more.firstChild.onclick = () => { pdfWhole = !pdfWhole; renderPdf(); };
+    box.appendChild(more);
+  }
   // página n: num livro cada página é um PDF à parte (página 1 desse PDF)
   const pdfPageN = async n => pdfBook ? (pdfBook.has(n) ? pdfBook.get(n).getPage(1) : null) : (n >= 1 && n <= pdfDoc.numPages ? pdfDoc.getPage(n) : null);
   async function renderPdf() {
     try { await renderPdfInner(); } catch (e) { console.error('renderPdf', e); }
   }
   async function renderPdfInner() {
-    if (!pdfDoc && !pdfBook) return;
+    if (!pdfDoc && !pdfBook && !pdfMulti) return;
     const id = ++pdfRender, box = $('pdfpages');
     box.innerHTML = '';
     const width = Math.min(box.clientWidth - 16, 900);
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    if (pdfMulti) return renderMulti(id, box, width, dpr);
     if (pdfCrops && !pdfWhole) {
       // só a parte da página (ou páginas) onde está o cântico, tudo junto numa só página
       const parts = [];
@@ -1900,6 +1980,13 @@
           const key = h;
           (async () => {
             try {
+              const scans = scoresOf(s).filter(isBookScan);
+              if (isBookScan(sc) && scans.length > 1) {
+                const srcs = await Promise.all(scans.map(x => fileSrc(x)));
+                if (location.hash === key && pdfUrl !== 'multi:' + slug) openBooks(scans.map((x, i) => ({ label: x.label, src: srcs[i], crops: cropsOf(x) })), s.title, slug);
+                else if (location.hash === key) { $('pdfview').hidden = false; document.body.classList.add('pdf-open'); }
+                return;
+              }
               const src = await fileSrc(sc);
               if (location.hash === key) openPdf(src, s.title, slug, sc.mime, pageOf(sc), cropsOf(sc));
             } catch (e) {

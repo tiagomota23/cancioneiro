@@ -655,3 +655,6 @@ body.solo:not(.standalone) .info-install { display: block; }
 .install-line { display: inline-flex; align-items: center; gap: 8px; padding: 0; background: none; border: 0; box-shadow: none; color: var(--green-ink); font: inherit; font-weight: 700; text-align: left; }
 .install-line svg { width: 1.4em; height: 1.4em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .share-app { margin-top: -4px; }
+.pdf-block { border: 1.5px solid var(--green-ink); border-radius: 12px; padding: 6px 10px 10px; margin: 0 auto 14px; background: #fff; width: fit-content; max-width: 100%; }
+.pdf-src { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--green-ink); }
+.pdf-block canvas { display: block; margin: 0 auto; }
