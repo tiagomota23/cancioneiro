@@ -48,26 +48,32 @@
   // Categorias do índice (como na versão italiana, agrupadas por língua)
   const CATEGORIES = [
     { id: 'todos', label: 'Todos os cânticos', test: () => true },
-    { id: 'pt', label: 'Cânticos em português', test: s => s.language === 'pt' || s.language === 'gl' },
-    { id: 'it', label: 'Cânticos italianos', test: s => s.language === 'it' || s.language === 'nap' || s.language === 'fur' },
-    { id: 'la', label: 'Cânticos em latim', test: s => s.language === 'la' },
-    { id: 'en', label: 'Cânticos ingleses, irlandeses e americanos', test: s => s.language === 'en' },
-    { id: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
-    { id: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
-    { id: 'outros', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw', 'de', 'xx'].includes(s.language) },
+    { id: 'pt', lang: 'pt', label: 'Cânticos em português', test: s => s.language === 'pt' || s.language === 'gl' },
+    { id: 'it', lang: 'it', label: 'Cânticos italianos', test: s => s.language === 'it' || s.language === 'nap' || s.language === 'fur' },
+    { id: 'la', lang: 'la', label: 'Cânticos em latim', test: s => s.language === 'la' },
+    { id: 'en', lang: 'en', label: 'Cânticos ingleses, irlandeses e americanos', test: s => s.language === 'en' },
+    { id: 'es', lang: 'es', label: 'Cânticos espanhóis e sul-americanos', test: s => s.language === 'es' },
+    { id: 'fr', lang: 'fr', label: 'Cânticos franceses', test: s => s.language === 'fr' },
+    { id: 'outros', lang: 'xx', label: 'Outras línguas', test: s => ['cu', 'ln', 'ru', 'sw', 'de', 'xx'].includes(s.language) },
     { id: 'traducao', label: 'Cânticos com tradução', test: s => !!s.has_translation },
     { id: 'acordes', label: 'Cânticos com acordes', test: s => lvl() >= 2 && s.has_chords },
     { id: 'partituras', label: 'Cânticos com partitura', test: s => scoresOf(s).length > 0 },
     { id: 'gravacoes', label: 'Cânticos com gravações das vozes', test: s => filesOf(s, 'recording').length > 0 },
     { id: 'copyright', label: 'Cânticos com copyright', test: s => extrasOn() && !!s.rights },
-    { id: 'coro-missa', head: 'Coro', label: 'Coro — para a Missa', test: s => hasTag(s, 'Coro CLU', 'Para a Missa') },
-    { id: 'coro-gestos', label: 'Coro — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
-    { id: 'coro-outras', label: 'Coro — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
-    ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro — momentos da Missa' : null, label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
-    ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
+    { id: 'coro-missa', tg: ['Coro CLU', 'Para a Missa'], head: 'Coro', label: 'Coro — para a Missa', test: s => hasTag(s, 'Coro CLU', 'Para a Missa') },
+    { id: 'coro-gestos', tg: ['Coro CLU', 'Para Gestos'], label: 'Coro — para Gestos', test: s => hasTag(s, 'Coro CLU', 'Para Gestos') },
+    { id: 'coro-outras', tg: ['Coro CLU', 'Outras'], label: 'Coro — outras músicas', test: s => hasTag(s, 'Coro CLU', 'Outras') },
+    ...MOMENTS.map((m, i) => ({ id: 'momento-' + m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]+/g, '-'), head: i === 0 ? 'Coro — momentos da Missa' : null, tg: ['Coro CLU — momento', m], label: m, test: s => hasTag(s, 'Coro CLU — momento', m) })),
+    ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, tg: [b.grp, sec], label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v110';
+  // categorias próprias (dos cânticos novos): etiquetas do grupo "Categoria"
+  const allCategories = () => {
+    const own = [...new Set(allSongs.flatMap(s => (s.tags || []).filter(t => t.grp === 'Categoria').map(t => t.tag)))].sort((a, b) => a.localeCompare(b, 'pt'));
+    const i = CATEGORIES.findIndex(c => c.id === 'traducao');
+    return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
+  };
+  const APP_VERSION = '2026-10-03 v112';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -268,6 +274,7 @@
       const nv = store.get('cancioneiro.demo.novos', []), slug = 'novo_' + Date.now();
       nv.push({ slug, number: 9000 + nv.length, title: b.title, author: b.author || null, language: b.language, lyrics: b.lyrics, translation: null, cancioneiro: false,
         approved: lvl() >= 3, added_by: 'demo@localhost', parecidos: [...demoFull.values()].filter(x => norm(b.title) && norm(x.title).includes(norm(b.title))).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })), sources: [{ source: 'novos' }], tags: [], files: [] });
+      nv[nv.length - 1].tags = b.tag ? [b.tag] : [];
       store.set('cancioneiro.demo.novos', nv); return { slug, approved: lvl() >= 3 };
     }
     if (op === 'coro') { const nv = store.get('cancioneiro.demo.novos', []); store.set('cancioneiro.demo.novos', nv.map(x => x.slug === b.slug ? { ...x, sources: b.on ? [...x.sources, { source: 'coro_clu' }] : x.sources.filter(y => y.source !== 'coro_clu') } : x)); return { ok: true }; }
@@ -812,7 +819,7 @@
     }
     if (!catId) {
       title.hidden = true;
-      rows.innerHTML = CATEGORIES.map(c => {
+      rows.innerHTML = allCategories().map(c => {
         const n = songs.filter(c.test).length;
         if (!n) return '';
         return (c.head ? `<li class="cat-head">${esc(c.head)}</li>` : '') +
@@ -855,7 +862,7 @@
       }
       return;
     }
-    const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
+    const cat = allCategories().find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
     const book = BOOKS.find(b => cat.id.startsWith(b.id + '-'));
     title.textContent = cat.id.startsWith('momento-') ? 'Coro — ' + cat.label : book ? book.head + ' — ' + cat.label : cat.label;
@@ -1392,29 +1399,68 @@
   function openNewSong() {
     if (lvl() < 2) return;
     newPdf = null;
-    for (const id of ['sn-url', 'sn-title', 'sn-author', 'sn-text']) $(id).value = '';
+    for (const id of ['sn-title', 'sn-author', 'sn-text']) $(id).value = '';
+    fillCats('');
     $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
     $('sn-lang').value = 'pt'; $('sn-pdf-name').textContent = ''; $('sn-msg').textContent = '';
     $('sn-hint').textContent = lvl() >= 3 ? 'Fica logo disponível para todos.' : 'Fica em "Novos Cânticos" até um Maestro o aprovar.';
     $('song-new').showModal();
   }
-  // texto simples → estrofes (linha em branco separa estrofes; "R:" no início = refrão)
+  // categorias: todas as da página inicial (língua, Coro, momentos, Songbook, CANTI e as próprias), menos as automáticas
+  const AUTO_CATS = ['todos', 'traducao', 'acordes', 'partituras', 'gravacoes', 'copyright'];
+  const catValue = c => c.lang ? 'lang:' + c.id : 'tag:' + c.tg[0] + '||' + c.tg[1];
+  function fillCats(sel) {
+    const list = allCategories().filter(c => !AUTO_CATS.includes(c.id) && (c.lang || c.tg));
+    if (sel && sel.startsWith('tag:') && !list.some(c => catValue(c) === sel)) { const [g, t] = sel.slice(4).split('||'); list.push({ id: 'nova', tg: [g, t], label: t, head: 'Outras categorias' }); }
+    let html = '', open = false;
+    for (const c of list) {
+      const head = c.lang ? null : c.head;
+      if (head) { html += (open ? '</optgroup>' : '') + `<optgroup label="${esc(head)}">`; open = true; }
+      html += `<option value="${esc(catValue(c))}">${esc(c.label)}</option>`;
+    }
+    $('sn-cat').innerHTML = html + (open ? '</optgroup>' : '') + '<option value="nova">+ Nova categoria…</option>';
+    $('sn-cat').value = sel || 'lang:' + (LANG_IDS.includes($('sn-lang').value) ? $('sn-lang').value : 'pt');
+    $('sn-cat').dataset.prev = $('sn-cat').value;
+  }
+  const LANG_IDS = ['pt', 'it', 'la', 'en', 'es', 'fr'];
+  $('sn-cat').onchange = async () => {
+    const v = $('sn-cat').value;
+    if (v === 'nova') {
+      const t = (await appPrompt('Nova categoria', '', 'Por exemplo: Cânticos de Natal'))?.replace(/\s+/g, ' ').replace(/\|/g, '').trim().slice(0, 60);
+      fillCats(t ? 'tag:Categoria||' + t : $('sn-cat').dataset.prev); return;
+    }
+    if (v.startsWith('lang:') && v !== 'lang:outros') $('sn-lang').value = v.slice(5);
+    $('sn-cat').dataset.prev = v;
+  };
+  $('sn-lang').onchange = () => { if ($('sn-cat').value.startsWith('lang:')) fillCats('lang:' + (LANG_IDS.includes($('sn-lang').value) ? $('sn-lang').value : 'outros')); };
+  // idioma provável de uma letra (palavras mais comuns de cada língua)
+  const STOPW = { pt: 'o a os as de do da que e em um uma não meu minha tu teu nós é são ao pelo para com senhor coração', it: 'il lo la gli le di del della che e è non un una io mio mia noi per con sono nel signore cuore più', es: 'el la los las de del que y en un una no mi yo por con es son al señor corazón más muy', fr: 'le la les de du des que et en un une ne pas je nous vous est sont au pour avec seigneur', en: 'the a of and to in is you i my your we he she it not with for be are on all lord heart', la: 'et in est non ad cum qui quae quod deus dominus domine nobis nos tibi mea sanctus gloria' };
+  function guessLang(text) {
+    const w = norm(text).match(/[a-z']+/g) || []; let best = 'pt', top = 0;
+    for (const [l, list] of Object.entries(STOPW)) { const set = new Set(norm(list).split(' ')); const n = w.filter(x => set.has(x)).length; if (n > top) { top = n; best = l; } }
+    return best;
+  }
+  // gerar: preenche título, autor, letra e idioma / categoria (o que for encontrado)
   const fill = d => {
-    if (d.title && !$('sn-title').value.trim()) $('sn-title').value = d.title;
-    if (d.author && !$('sn-author').value.trim()) $('sn-author').value = d.author;
-    if (d.text) $('sn-text').value = d.text;
+    if (d.title) $('sn-title').value = d.title;
+    if (d.author) $('sn-author').value = d.author;
+    if (d.text) {
+      $('sn-text').value = d.text;
+      $('sn-lang').value = guessLang(d.title + '\n' + d.text);
+      if ($('sn-cat').value.startsWith('lang:')) fillCats('lang:' + $('sn-lang').value);
+    }
   };
   $('sn-url-go').onclick = async () => {
-    const u = $('sn-url').value.trim(); if (!u) { $('sn-url').focus(); return; }
+    const u = (await appPrompt('Gerar de URL', '', 'Endereço (URL) de uma página com a letra do cântico'))?.trim(); if (!u) return;
     const b = $('sn-url-go'); b.disabled = true; $('sn-msg').textContent = 'A ler a página…';
-    try { const d = await api('scrape', { url: u }); fill(d); $('sn-msg').textContent = 'Confira o título, o autor e a letra antes de guardar.'; }
+    try { const d = await api('scrape', { url: u }); fill(d); $('sn-msg').textContent = 'Gerado a partir da página: confira o título, o autor, a categoria e a letra antes de guardar.'; }
     catch (e) { $('sn-msg').textContent = e.message || 'Não foi possível ler essa página.'; }
     finally { b.disabled = false; }
   };
   $('sn-pdf').onclick = async () => {
     const [f] = await pickFiles('application/pdf', false); if (!f) return;
     if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) { $('sn-msg').textContent = 'Escolha um ficheiro PDF.'; return; }
-    newPdf = f; $('sn-pdf-name').textContent = f.name; $('sn-msg').textContent = 'A ler o texto do PDF…';
+    newPdf = f; $('sn-pdf-name').textContent = 'PDF: ' + f.name + ' (fica junto ao cântico)'; $('sn-msg').textContent = 'A ler o texto do PDF…';
     try {
       const lib = await loadPdfJs(), doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
       const out = [];
@@ -1446,7 +1492,9 @@
       const sim = (await api('similar', { title, lines: text.split('\n') })).similar || [];
       if (sim.length && !(await appConfirm(`Já existem cânticos parecidos:\n\n${sim.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why} parecido${x.why.includes(' e ') ? 's' : ''})`).join('\n')}\n\nQuer mesmo acrescentar este cântico?${lvl() >= 3 ? '' : ' Quem aprovar também vai ver este aviso.'}`, 'Criar mesmo assim', 'Cânticos parecidos'))) { $('sn-msg').textContent = ''; return; }
       $('sn-msg').textContent = 'A guardar…';
-      const d = await api('addsong', { title, author: $('sn-author').value.trim(), language: $('sn-lang').value, lyrics: text ? fromText(text) : [], hasPdf: !!newPdf });
+      const cat = $('sn-cat').value;
+      const [cgrp, ctag] = cat.startsWith('tag:') ? cat.slice(4).split('||') : [];
+      const d = await api('addsong', { title, author: $('sn-author').value.trim(), language: $('sn-lang').value, tag: ctag ? { grp: cgrp, tag: ctag } : null, lyrics: text ? fromText(text) : [], hasPdf: !!newPdf });
       if (newPdf) {
         $('sn-msg').textContent = 'A enviar o PDF…';
         const up = await api('upload', { slug: d.slug, kind: 'score', mime: 'application/pdf', size: newPdf.size });

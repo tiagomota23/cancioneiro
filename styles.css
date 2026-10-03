@@ -677,3 +677,11 @@ body.solo:not(.standalone) .info-install { display: block; }
 .sim-list a { color: var(--green-ink); text-decoration: underline; }
 .sim-list a small { margin-left: 6px; color: #8a6d00; text-decoration: none; }
 #app-dlg-msg { white-space: pre-line; }
+.song-new h2 { font-size: 22px; margin-bottom: 12px; }
+dialog h2:focus, dialog h2:focus-visible { outline: none; box-shadow: none; }
+.song-new .sn-gen { display: flex; gap: 10px; margin: 0 0 6px; }
+.song-new .sn-gen-btn { flex: 1; padding: 10px 8px; border-radius: 10px; border: 1.5px solid var(--green-ink); background: #fff; color: var(--green-ink); font: inherit; font-size: 15px; font-weight: 700; }
+.song-new .sn-gen-btn:disabled { opacity: .5; }
+.song-new .sn-pdf-name:empty { display: none; }
+.song-new .sn-f { min-width: 0; }
+.song-new .sn-f select, .song-new .sn-f input { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; text-overflow: ellipsis; }

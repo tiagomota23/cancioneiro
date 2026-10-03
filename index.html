@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=110">
+  <link rel="stylesheet" href="styles.css?v=112">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -217,12 +217,14 @@
   <!-- Novo cântico: escrever, ler de um endereço ou de um PDF -->
   <dialog id="song-new" class="editor song-new">
     <h2 tabindex="-1" autofocus>Novo cântico</h2>
-    <div class="sn-from">
-      <div class="sn-row"><input id="sn-url" type="url" inputmode="url" placeholder="Endereço de uma página com a letra" autocomplete="off"><button type="button" id="sn-url-go" class="ghost">Ler</button></div>
-      <div class="sn-row"><button type="button" id="sn-pdf" class="ghost">Juntar PDF…</button><span id="sn-pdf-name" class="small"></span></div>
+    <div class="sn-gen">
+      <button type="button" id="sn-url-go" class="sn-gen-btn">Gerar de URL</button>
+      <button type="button" id="sn-pdf" class="sn-gen-btn">Gerar de PDF</button>
     </div>
+    <p class="small sn-pdf-name" id="sn-pdf-name"></p>
     <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off"></label>
     <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off"></label>
+    <label class="sn-f">Categoria<select id="sn-cat"></select></label>
     <label class="sn-f">Idioma<select id="sn-lang"></select></label>
     <label class="sn-f">Letra<textarea id="sn-text" spellcheck="false" autocapitalize="off"></textarea></label>
     <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint"></span></p>
@@ -246,7 +248,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=110"></script>
-  <script src="app.js?v=110"></script>
+  <script src="config.js?v=112"></script>
+  <script src="app.js?v=112"></script>
 </body>
 </html>
