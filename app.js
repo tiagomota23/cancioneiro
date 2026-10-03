@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v65';
+  const APP_VERSION = '2026-10-03 v66';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1391,8 +1391,9 @@
     a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-144, Math.min(0, dx + (li.classList.contains("open") ? -144 : 0)))}px)`; }, { passive: true });
     a.addEventListener('touchend', () => { a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
     a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); if (Math.abs(dx) <= 10) close(); } });
-    li.querySelector('.sw-more').onclick = () => li.classList.toggle('open');
-    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = () => {
+    li.querySelector('.sw-more').onclick = e => { e.stopPropagation(); li.classList.toggle('open'); };
+    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = e => {
+      e.stopPropagation(); // o toque nos botões não fecha a linha
       // remover pede confirmação: o caixote passa a ✓ e é preciso tocar outra vez
       if (b.dataset.a === 'del' && !b.classList.contains('confirm')) {
         b.classList.add('confirm'); b.setAttribute('aria-label', 'Confirmar remoção');
