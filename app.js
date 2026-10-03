@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v114';
+  const APP_VERSION = '2026-10-03 v115';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1018,30 +1018,40 @@
   async function shareSong(s, stanzas) {
     const list = [];
     if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: 'Copiar letra', sub: 'Título e letra, sem acordes' });
-    list.push({ value: 'url', label: 'Copiar endereço', sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
+    list.push({ value: 'url', label: urlLabel(), sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
     const v = await appChoose('Partilhar', list);
     if (v === 'letra') copyLyrics(s, stanzas);
-    else if (v === 'url') copyShareUrl(api('share', { slug: s.slug }), 'válido 24 horas');
+    else if (v === 'url') copyShareUrl(api('share', { slug: s.slug }), 'válido 24 horas', s.title);
   }
   // o endereço é pedido antes de copiar; no iPhone a cópia tem de vir logo a seguir ao toque, por isso usa-se uma promessa
-  async function copyShareUrl(req, until) {
-    const url = req.then(d => location.origin + location.pathname + '#/p/' + d.token);
-    try {
-      if (navigator.clipboard && window.ClipboardItem) await navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]);
-      else await copyText(await url);
-      await url; toast(`Endereço copiado (${until})`);
-    } catch (e) {
-      try { const u = await url; await appDialog({ title: 'Endereço', msg: `Copie este endereço (${until}):`, input: u, ok: 'Fechar', cancel: null }); }
-      catch (e2) { appAlert(e2 instanceof Limit ? e2.message : (e2.message && !/fetch|HTTP/i.test(e2.message) ? e2.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.')); }
+  // Partilhar endereço: menu de partilha do sistema (iPhone, iPad, Android, Safari…); nos outros, copia e avisa
+  const canShare = () => !!navigator.share && (matchMedia('(pointer: coarse)').matches || /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg/.test(navigator.userAgent));
+  const urlLabel = () => canShare() ? 'Partilhar endereço' : 'Copiar endereço';
+  async function copyShareUrl(req, until, title) {
+    let u;
+    try { u = location.origin + location.pathname + '#/p/' + (await req).token; }
+    catch (e) { appAlert(e instanceof Limit ? e.message : (e.message && !/fetch|HTTP/i.test(e.message) ? e.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.')); return; }
+    const share = () => navigator.share({ title: title || 'Cancioneiro', text: (title ? title + ' — ' : '') + 'Cancioneiro (' + until + ')', url: u });
+    if (canShare()) {
+      try { await share(); return; }
+      catch (e) {
+        if (e.name === 'AbortError') return; // fechou o menu
+        // o sistema só abre o menu logo a seguir a um toque: pede mais um toque
+        if (e.name === 'NotAllowedError' && await appDialog({ title: 'Endereço pronto', msg: `O endereço está pronto (${until}).`, ok: 'Partilhar', cancel: 'Fechar' })) {
+          try { await share(); return; } catch (e2) { if (e2.name === 'AbortError') return; }
+        }
+      }
     }
+    try { await copyText(u); await appAlert(`O endereço foi copiado para a área de transferência (${until}). Cole-o onde o quiser enviar.`, 'Endereço copiado'); }
+    catch (e) { await appDialog({ title: 'Endereço', msg: `Copie este endereço (${until}):`, input: u, ok: 'Fechar', cancel: null }); }
   }
   async function shareCollection(c) {
     const fim = new Date(c.expires_at).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const list = [{ value: 'url', label: 'Copiar endereço', sub: `Qualquer pessoa pode abrir até ${fim}, quando a coleção expira (sem conta: só a letra e a tradução)` },
+    const list = [{ value: 'url', label: urlLabel(), sub: `Qualquer pessoa pode abrir até ${fim}, quando a coleção expira (sem conta: só a letra e a tradução)` },
       { value: 'pdf', label: 'Gerar PDF', sub: 'Título, secções, títulos e letras dos cânticos' }];
     list.push({ value: 'coro', label: 'Gerar PDF para Coro', sub: 'Também com os acordes e as partituras' });
     const v = await appChoose('Partilhar coleção', list);
-    if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim);
+    if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim, c.title);
     else if (v) collectionPdf(c, v === 'coro');
   }
 
@@ -1847,10 +1857,10 @@
   // Partilhar a app: o endereço da página de entrada (quem não tem acesso pode pedi-lo lá)
   $('info-share-app').onclick = async () => {
     const url = location.origin + location.pathname;
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    if (canShare()) {
       try { await navigator.share({ title: 'Cancioneiro', text: 'Cancioneiro — cânticos com letra, partituras e gravações', url }); return; } catch (e) { if (e.name === 'AbortError') return; }
     }
-    await copyText(url); toast('Endereço da app copiado');
+    await copyText(url); appAlert('O endereço da app foi copiado para a área de transferência. Cole-o onde o quiser enviar.', 'Endereço copiado');
   };
   $('perfis-install').onclick = installApp;
   $('perfis-newsong').onclick = () => { $('perfis').close(); openNewSong(); }; $('info-install').onclick = installApp;
