@@ -617,3 +617,9 @@ html, body { touch-action: pan-x pan-y; }
 
 /* botão à espera de confirmação (2.º toque) */
 button.armed, .edit-actions button.ghost.armed { background: #c0392b !important; color: #fff !important; border-color: #c0392b !important; }
+
+/* Janela genérica da app */
+.app-dlg-msg { margin: 4px 0 12px; color: #444; line-height: 1.45; }
+#app-dlg-input { display: block; width: 100%; margin: 4px 0 14px; font: inherit; font-size: 16px; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
+#app-dlg-input[hidden] { display: none; }
+#app-dlg .tpl-apply { width: 100%; }

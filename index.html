@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=80">
+  <link rel="stylesheet" href="styles.css?v=81">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -193,6 +193,15 @@
     <div class="edit-actions"><button type="button" id="tpl-del" class="ghost danger">Apagar</button><span></span><button type="button" id="tpl-cancel" class="ghost">Cancelar</button><button type="button" id="tpl-save">Guardar</button></div>
   </dialog>
 
+  <!-- Janela genérica da app (mensagens, confirmações, texto, escolha) — em vez das do sistema -->
+  <dialog id="app-dlg" class="col-dlg app-dlg">
+    <h2 id="app-dlg-title" tabindex="-1" autofocus></h2>
+    <p id="app-dlg-msg" class="app-dlg-msg"></p>
+    <input id="app-dlg-input" maxlength="80" autocomplete="off" hidden>
+    <div id="app-dlg-list" class="col-pick-list" hidden></div>
+    <div class="edit-actions"><span></span><button type="button" id="app-dlg-cancel" class="ghost">Cancelar</button><button type="button" id="app-dlg-ok">OK</button></div>
+  </dialog>
+
   <!-- Escolher perfil -->
   <dialog id="perfis" class="perfis">
     <h2 tabindex="-1" autofocus>Perfil</h2>
@@ -216,7 +225,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=80"></script>
-  <script src="app.js?v=80"></script>
+  <script src="config.js?v=81"></script>
+  <script src="app.js?v=81"></script>
 </body>
 </html>

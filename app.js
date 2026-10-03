@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v80';
+  const APP_VERSION = '2026-10-03 v81';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -161,7 +161,7 @@
     if (error && !/duplicate/i.test(error.message)) {
       favs = was ? favs.concat(slug) : favs.filter(x => x !== slug); // repõe
       store.set(favKey(), favs);
-      alert('Não foi possível guardar o preferido. Verifique a ligação à internet.');
+      appAlert('Não foi possível guardar o preferido. Verifique a ligação à internet.');
     }
     refreshFavUI();
   }
@@ -897,7 +897,7 @@
     // o perfil Cancioneiro não pode copiar a letra (botão); ninguém pode selecionar o texto
     $('btn-copy').hidden = lvl() < 2;
     $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
-    if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
+    if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug, $('btn-revert'));
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => lvl() >= 3 ? openSongCollections(slug) : toggleFav(slug);
@@ -968,7 +968,7 @@
       showSong(editSlug);
     } catch (e) {
       const msg = 'Não foi possível guardar: ' + (e.message || e);
-      if ($('editor').open) $('edit-msg').textContent = msg; else alert(msg);
+      if ($('editor').open) $('edit-msg').textContent = msg; else appAlert(msg);
     } finally {
       for (const b of document.querySelectorAll('#editor button')) b.disabled = false;
     }
@@ -979,11 +979,37 @@
     saveLyrics(st);
   };
   function revertLyrics(slug, btn) {
-    if (!(btn ? tapConfirm(btn, 'Confirmar: repor original') : confirm('Repor a letra original deste cântico (como no site / pasta do Coro)? A edição fica no histórico.'))) return;
+    if (!btn || !tapConfirm(btn, 'Confirmar: repor original')) return;
     editSlug = slug;
     saveLyrics(null);
   }
   $('edit-reset').onclick = () => revertLyrics(editSlug, $('edit-reset'));
+
+  // ---------- Janelas da app (em vez de alert/confirm/prompt do sistema, para manter o aspeto) ----------
+  function appDialog({ title = '', msg = '', input = null, list = null, ok = 'OK', cancel = 'Cancelar' }) {
+    return new Promise(resolve => {
+      const d = $('app-dlg');
+      $('app-dlg-title').textContent = title; $('app-dlg-title').hidden = !title;
+      $('app-dlg-msg').textContent = msg; $('app-dlg-msg').hidden = !msg;
+      const inp = $('app-dlg-input'); inp.hidden = input === null; inp.value = input ?? '';
+      const lst = $('app-dlg-list'); lst.hidden = !list;
+      lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
+      $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
+      $('app-dlg-cancel').textContent = cancel || ''; $('app-dlg-cancel').hidden = !cancel;
+      const done = v => { d.close(); resolve(v); };
+      $('app-dlg-ok').onclick = () => done(input !== null ? inp.value : true);
+      $('app-dlg-cancel').onclick = () => done(input !== null || list ? null : false);
+      lst.querySelectorAll('button').forEach(b => b.onclick = () => done(list[+b.dataset.i].value));
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); done(inp.value); } };
+      d.oncancel = e => { e.preventDefault(); done(input !== null || list ? null : false); };
+      d.showModal();
+      if (input !== null) setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    });
+  }
+  const appAlert = (msg, title = '') => appDialog({ title, msg, cancel: null });
+  const appConfirm = (msg, ok = 'Sim', title = '') => appDialog({ title, msg, ok });
+  const appPrompt = (title, value = '', msg = '') => appDialog({ title, msg, input: value });
+  const appChoose = (title, list, msg = '') => appDialog({ title, msg, list });
 
   // Confirmação em dois toques dentro das janelas (no iPhone, o confirm() do sistema não aparece com uma janela aberta):
   // o 1.º toque põe o botão vermelho a pedir confirmação; o 2.º (em 4 s) confirma
@@ -997,7 +1023,7 @@
   // ---------- Promover ao Cancioneiro (perfil Maestro) ----------
   async function promote(slug, on, confirmed) {
     const s = bySlug.get(slug);
-    if (!on && !confirmed && !(confirm('Retirar este cântico do Cancioneiro? Quem tem o perfil Cancioneiro deixa de o ver.'))) return;
+    if (!on && !confirmed && !(await appConfirm('Retirar este cântico do Cancioneiro? Quem tem o perfil Cancioneiro deixa de o ver.', 'Retirar'))) return;
     const b = $('btn-promo'); if (b) b.disabled = true;
     try {
       const d = await api('promote', { slug, on });
@@ -1005,7 +1031,7 @@
       store.set(CACHE_KEY, allSongs.map(({ _t, _a, ...x }) => x));
       applySource();
       toast(on ? 'Cântico promovido ao Cancioneiro' : 'Cântico retirado do Cancioneiro');
-    } catch (e) { alert(e instanceof Limit ? e.message : 'Não foi possível guardar: ' + e.message); }
+    } catch (e) { appAlert(e instanceof Limit ? e.message : 'Não foi possível guardar: ' + e.message); }
     if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
   }
 
@@ -1121,32 +1147,31 @@
       </form>` : ''}
       <p class="small">Os perfis são hierárquicos: <b>Cancioneiro</b> (só os cânticos do Cancioneiro, sem acordes, partituras nem gravações) &lt; <b>Coro</b> (tudo, sem editar) &lt; <b>Maestro</b> (edita letras, promove cânticos ao Cancioneiro e muda perfis entre Cancioneiro e Maestro) &lt; <b>Gestor</b> (gere todos os utilizadores; recebe os pedidos de acesso por email).</p>`;
     const call = async (op, body, msg) => {
-      try { await api(op, body); if (msg) toast(msg); } catch (e) { alert(e instanceof Limit ? e.message : e.message); }
+      try { await api(op, body); if (msg) toast(msg); } catch (e) { appAlert(e instanceof Limit ? e.message : e.message); }
       showAdmin();
     };
     box.querySelectorAll('li[data-req]').forEach(li => {
       li.querySelector('.adm-ok').onclick = () => call('user', { email: li.dataset.email, role: li.querySelector('.req-role').value, name: li.querySelector('b').textContent.replace('(sem nome)', '') }, 'Acesso autorizado');
-      li.querySelector('.adm-no').onclick = () => { if (confirm('Recusar este pedido? A conta fica bloqueada.')) call('reject', { id: li.dataset.req }, 'Pedido recusado'); };
+      li.querySelector('.adm-no').onclick = e => { if (tapConfirm(e.currentTarget, 'Confirmar')) call('reject', { id: li.dataset.req }, 'Pedido recusado'); };
     });
     box.querySelectorAll('li[data-email]:not([data-req])').forEach(li => {
       const email = li.dataset.email, sel = li.querySelector('.usr-role');
       if (!sel) return; // Gestor protegido
       const was = sel.value;
       sel.onchange = () => {
-        if (!confirm(`Mudar o perfil de ${email} para ${PERFIS[rankOf(sel.value) - 1].label}?`)) { sel.value = was; return; }
-        call('user', { email, role: sel.value }, 'Perfil alterado');
+        appConfirm(`Mudar o perfil de ${email} para ${PERFIS[rankOf(sel.value) - 1].label}?`, 'Mudar').then(okd => { if (okd) call('user', { email, role: sel.value }, 'Perfil alterado'); else sel.value = was; });
       };
       if (!gestor) return;
-      li.querySelector('.adm-del').onclick = () => { if (confirm(`Retirar o acesso de ${email} ao Cancioneiro?`)) call('user', { email, remove: true }, 'Acesso retirado'); };
+      li.querySelector('.adm-del').onclick = e => { if (tapConfirm(e.currentTarget, 'Confirmar')) call('user', { email, remove: true }, 'Acesso retirado'); };
       const nm = li.querySelector('.adm-name[role=button]');
       if (!nm) return; // o nome vem do Google
-      const rename = () => { const v = prompt('Nome:', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
+      const rename = async () => { const v = await appPrompt('Nome', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
       nm.onclick = rename; nm.onkeydown = e => { if (e.key === 'Enter') rename(); };
     });
     if (gestor) $('adm-add').onsubmit = e => {
       e.preventDefault();
       const email = $('add-email').value.trim().toLowerCase();
-      if (users.some(u => u.email === email)) { alert('Este email já tem acesso.'); return; }
+      if (users.some(u => u.email === email)) { appAlert('Este email já tem acesso.'); return; }
       call('user', { email, role: $('add-role').value, name: $('add-name').value.trim() }, 'Utilizador acrescentado');
     };
   }
@@ -1472,13 +1497,12 @@
       e.preventDefault();
       if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;
       const sec = (c.sections || []).find(x => 'sec:' + x.id === a.closest('li').dataset.key);
-      const v = prompt('Nome da secção:', sec.title);
-      if (v && v.trim()) colSaveSection(c, sec, v.trim().slice(0, 60));
+      appPrompt('Nome da secção', sec.title).then(v => { if (v && v.trim()) colSaveSection(c, sec, v.trim().slice(0, 60)); });
     }));
     if (can) {
       $('col-edit').onclick = () => openCollectionDlg(c);
       $('col-tpl').onclick = () => openTemplates(c);
-      $('col-add-sec').onclick = () => { const v = prompt('Nome da nova secção (ex.: Entrada, Comunhão):'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
+      $('col-add-sec').onclick = async () => { const v = await appPrompt('Nova secção', '', 'Por exemplo: Entrada, Comunhão'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
       rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
     }
   }
@@ -1552,7 +1576,7 @@
         await colPersist(c, items);
       }
       if (DEMO) demoSave(); else store.set(colsKey(), cols);
-    } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+    } catch (e) { appAlert('Não foi possível guardar: ' + (e.message || e)); }
     showCollection(c.id);
   }
   // ---------- Templates (conjuntos de secções pré-definidas; só Maestro / Gestor) ----------
@@ -1588,7 +1612,7 @@
       c.sections = (c.sections || []).concat(rows);
       if (DEMO) demoSave(); else store.set(colsKey(), cols);
       $('tpl-dlg').close(); toast(`Template «${t.title}» aplicado`);
-    } catch (e) { alert('Não foi possível aplicar: ' + (e.message || e)); }
+    } catch (e) { appAlert('Não foi possível aplicar: ' + (e.message || e)); }
     showCollection(c.id);
   }
   let tplEditing = null, tplCol = null;
@@ -1627,6 +1651,18 @@
   $('tpl-cancel').onclick = () => { $('tpl-edit').close(); openTemplates(tplCol); };
   $('tpl-del').onclick = deleteTemplate;
 
+  // põe um cântico (acabado de acrescentar no fim) no fim da secção escolhida ('' = antes da primeira secção)
+  async function placeInSection(c, slug, secId) {
+    let items = colItems(c);
+    const me = items.find(it => it.key === slug); items = items.filter(it => it !== me);
+    let at;
+    if (!secId) at = items.findIndex(it => it.k === 'sec');
+    else { const si = items.findIndex(it => it.key === 'sec:' + secId); at = items.findIndex((it, n) => n > si && it.k === 'sec'); }
+    if (at < 0) at = items.length;
+    items.splice(at, 0, me);
+    await colPersist(c, items);
+    if (DEMO) demoSave(); else store.set(colsKey(), cols);
+  }
   // nova secção (no fim) ou mudar o nome
   async function colSaveSection(c, sec, title) {
     try {
@@ -1640,7 +1676,7 @@
         c.sections = (c.sections || []).concat(row);
       }
       if (DEMO) demoSave(); else store.set(colsKey(), cols);
-    } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+    } catch (e) { appAlert('Não foi possível guardar: ' + (e.message || e)); }
     showCollection(c.id);
   }
   // criar / editar uma coleção
@@ -1709,15 +1745,15 @@
   async function openAddToCollection(slug) {
     const s = bySlug.get(slug), f = fitting(s);
     const refresh = () => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
-    if (!f.length) { if (confirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova coleção?')) openCollectionDlg(null); return; }
+    if (!f.length) { if (await appConfirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova coleção?', 'Criar')) openCollectionDlg(null); return; }
     if (f.length === 1) {
       const on = !(f[0].songs || []).some(x => x.song_slug === slug);
-      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { appAlert('Não foi possível guardar: ' + (e.message || e)); }
       refresh(); return;
     }
     $('col-pick-list').innerHTML = f.map(c => `<label class="col-pick"><input type="checkbox" data-id="${esc(c.id)}"${(c.songs || []).some(x => x.song_slug === slug) ? ' checked' : ''}><span>${esc(c.title)}<small>${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'}</small></span></label>`).join('');
     $('col-pick-list').querySelectorAll('input').forEach(i => i.onchange = async () => {
-      try { await toggleInCollection(cols.find(c => c.id === i.dataset.id), slug, i.checked); } catch (e) { i.checked = !i.checked; alert('Não foi possível guardar: ' + (e.message || e)); }
+      try { await toggleInCollection(cols.find(c => c.id === i.dataset.id), slug, i.checked); } catch (e) { i.checked = !i.checked; appAlert('Não foi possível guardar: ' + (e.message || e)); }
       refresh();
     });
     $('col-pick').showModal();
@@ -1743,11 +1779,20 @@
         if (k === 'fav') { if (isFav(slug) !== i.checked) await toggleFav(slug); }
         else if (k === 'cancioneiro') { await promote(slug, i.checked); i.checked = inCancioneiro(bySlug.get(slug)); }
         else {
-          await toggleInCollection(cols.find(c => c.id === k.slice(2)), slug, i.checked);
+          const col = cols.find(c => c.id === k.slice(2));
+          // com secções: escolher em que secção fica o cântico
+          let sec;
+          if (i.checked && (col.sections || []).length) {
+            const secs = colItems(col).filter(it => it.k === 'sec').map(it => it.ref);
+            sec = await appChoose('Em que secção?', [{ value: '', label: 'No início (sem secção)' }, ...secs.map(x => ({ value: x.id, label: x.title }))]);
+            if (sec === null) { i.checked = false; return; }
+          }
+          await toggleInCollection(col, slug, i.checked);
+          if (i.checked && sec !== undefined) await placeInSection(col, slug, sec);
           // ao acrescentar a uma coleção, abre a lista dessa coleção
           if (i.checked) { $('col-pick').close(); toast('Adicionado à coleção'); location.hash = '#/lista/colecao-' + k.slice(2); return; }
         }
-      } catch (e) { i.checked = !i.checked; alert('Não foi possível guardar: ' + (e.message || e)); }
+      } catch (e) { i.checked = !i.checked; appAlert('Não foi possível guardar: ' + (e.message || e)); }
       refresh();
     });
     $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(null); };
