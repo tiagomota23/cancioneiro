@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v87';
+  const APP_VERSION = '2026-10-03 v88';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -98,7 +98,7 @@
   // Modo de teste só em localhost (?demo): sem Google, com a cópia local songs.json
   const DEMO = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('demo');
   async function accessToken(renew) {
-    if (DEMO) { session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
+    if (DEMO) { if (new URLSearchParams(location.search).has('semconta')) return ''; session = { user: { id: 'demo', email: 'demo@localhost' }, access_token: '' }; return ''; }
     // nunca fica à espera para sempre (rede lenta ao abrir no iPhone): ao fim de 6 s usa a sessão guardada
     const slow = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
     const saved = () => { try { const v = JSON.parse(localStorage.getItem(`sb-${new URL(CFG.SUPABASE_URL).hostname.split('.')[0]}-auth-token`)); return v && v.access_token ? v : null; } catch (e) { return null; } };
@@ -120,7 +120,7 @@
   }
   $('btn-google').onclick = async () => {
     $('login-msg').textContent = 'A abrir o Google…';
-    try { if (location.hash.startsWith('#/cantico/')) sessionStorage.setItem('cancioneiro.depois', location.hash); } catch (e) {}
+    try { if (/^#\/(cantico|p)\//.test(location.hash)) sessionStorage.setItem('cancioneiro.depois', location.hash); } catch (e) {}
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' } },
@@ -234,6 +234,14 @@
   async function demoApi(op, b) {
     if (op === 'song') { const s = demoFull.get(b.slug); return { lyrics: s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit }; }
     if (op === 'search') return { hits: demoSearch(b.q) };
+    if (op === 'share') return { token: 'demo_' + b.slug, expires_at: new Date(Date.now() + 864e5).toISOString() };
+    if (op === 'shared') {
+      if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
+      const s = demoFull.get(b.token.replace(/^demo_/, ''));
+      if (!s) throw new Error('Este endereço já não é válido (os endereços partilhados duram 24 horas).');
+      return { slug: s.slug, title: s.title, author: s.author, language: s.language, translation_language: s.translation_language, number: s.number,
+        lyrics: (s.lyrics_edit || s.lyrics || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })), translation: s.translation || null, expires_at: new Date(Date.now() + 864e5).toISOString() };
+    }
     if (op === 'match') return { matches: matchLyrics(b.text) };
     if (op === 'file') {
       const [path, frag = ''] = b.path.split('#');
@@ -939,11 +947,67 @@
   async function shareSong(s, stanzas) {
     const list = [];
     if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: 'Copiar letra', sub: 'Título e letra, sem acordes' });
-    list.push({ value: 'url', label: 'Copiar endereço', sub: 'Ligação para esta página (só para quem tem acesso à app)' });
+    list.push({ value: 'url', label: 'Copiar endereço', sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
     const v = await appChoose('Partilhar', list);
     if (v === 'letra') copyLyrics(s, stanzas);
-    else if (v === 'url') { await copyText(location.origin + location.pathname + '#/cantico/' + encodeURIComponent(s.slug)); toast('Endereço copiado'); }
+    else if (v === 'url') {
+      // o endereço é pedido antes de copiar; no iPhone a cópia tem de vir logo a seguir ao toque, por isso usa-se uma promessa
+      const url = api('share', { slug: s.slug }).then(d => location.origin + location.pathname + '#/p/' + d.token);
+      try {
+        if (navigator.clipboard && window.ClipboardItem) await navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]);
+        else await copyText(await url);
+        await url; toast('Endereço copiado (válido 24 horas)');
+      } catch (e) {
+        try { const u = await url; await appDialog({ title: 'Endereço', msg: 'Copie este endereço (válido 24 horas):', input: u, ok: 'Fechar', cancel: null }); }
+        catch (e2) { appAlert(e2 instanceof Limit ? e2.message : 'Não foi possível criar o endereço. Verifique a ligação à internet.'); }
+      }
+    }
   }
+
+  // ---------- Endereço partilhado (#/p/<código>): sem conta ou perfil Cancioneiro sem acesso ao cântico → só letra e tradução ----------
+  const sharedCache = new Map(); let sharedMode = 'orig';
+  async function apiShared(token) {
+    if (DEMO) return demoApi('shared', { token });
+    const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', { method: 'POST',
+      headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: 'shared', token }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.message || 'Não foi possível abrir este endereço.');
+    return d;
+  }
+  async function showShared(token) {
+    const here = () => location.hash === '#/p/' + token;
+    let d = sharedCache.get(token);
+    if (!d) {
+      if (session && !allSongs.length) return; // espera pela lista de cânticos (route() volta a ser chamada)
+      sharedView(); $('song').innerHTML = '<p class="note lyr-wait">A carregar a letra…</p>';
+      try { d = await apiShared(token); sharedCache.set(token, d); }
+      catch (e) { if (here()) { $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message)}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
+      if (!here()) return;
+    }
+    // quem tem conta e vê o cântico abre a página normal do cântico (do perfil Coro para cima: completa)
+    if (session && bySlug.has(d.slug)) { location.replace('#/cantico/' + encodeURIComponent(d.slug)); return; }
+    sharedView();
+    const tr = !!(d.translation && d.translation.length), mode = tr ? sharedMode : 'orig';
+    const sw = tr ? `<div class="lang-switch" role="group" aria-label="Idioma">
+        <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(LANGS[d.language] || d.language || 'Original')}</button>
+        <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(LANGS[d.translation_language] || 'Português')}</button></div>`
+      : (d.language ? `<span class="lang-chip">${esc(LANGS[d.language] || d.language)}</span>` : '');
+    const body = (mode === 'trad' ? d.translation : d.lyrics) || [];
+    $('song').innerHTML = `<h1>${esc(d.title)}</h1>${d.author ? `<p class="author">${esc(d.author)}</p>` : ''}
+      <div class="meta">${sw}</div>${mode === 'trad' ? '<p class="note">Tradução</p>' : ''}
+      ${body.length ? renderStanzas(body) : '<p class="note">Letra não disponível.</p>'}
+      ${sharedFoot(d.expires_at)}`;
+    $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => { sharedMode = b.dataset.mode; const y = window.scrollY; showShared(token); window.scrollTo(0, y); });
+    bindSharedLogin();
+  }
+  function sharedView() {
+    document.body.classList.add('shared-view'); document.body.classList.toggle('no-session', !session);
+    $('view-login').hidden = true; $('splash').classList.add('gone'); show('view-song');
+  }
+  const sharedFoot = exp => `<p class="shared-foot">Partilhado do Cancioneiro${exp ? ` · válido até ${new Date(exp).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}</p>` +
+    (session ? '' : '<p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p>');
+  function bindSharedLogin() { const b = $('shared-login'); if (b) b.onclick = () => { document.body.classList.remove('shared-view', 'no-session'); history.replaceState(null, '', location.pathname); showLogin(); }; }
 
   // ---------- Editar letra (guardada em lyrics_edit; histórico na tabela song_edits) ----------
   // Formato de texto: estrofes separadas por linha em branco; refrão começa por "R:"; acordes entre [ ].
@@ -1372,8 +1436,11 @@
   // ---------- Router ----------
   let lastListHash = '#/';
   function route() {
-    if (!session) return;
     const h = location.hash || '#/';
+    const p = h.match(/^#\/p\/([A-Za-z0-9_-]+)$/);
+    if (p) { closePdf(); showShared(p[1]); window.scrollTo(0, 0); return; }
+    document.body.classList.remove('shared-view', 'no-session');
+    if (!session) return;
     const m = h.match(/^#\/cantico\/([^/]+)(\/partitura(?:\/(\d+))?)?$/);
     if (m) {
       const slug = decodeURIComponent(m[1]);
@@ -1907,7 +1974,7 @@
   function rescue(msg) {
     if (started) return; started = true;
     $('splash').classList.add('gone');
-    if (!session) { showLogin(msg || ''); return; }
+    if (!session) { if (location.hash.startsWith('#/p/')) route(); else showLogin(msg || ''); return; }
     $('view-login').hidden = true;
     showList(); load(); loadFavs(); loadCollections();
     if (msg) $('status').textContent = msg;
@@ -1921,7 +1988,7 @@
       if (err && !session) { showLogin('Não foi possível entrar: ' + err); return; }
     }
     await splashDone;
-    if (!session) { showLogin(); return; }
+    if (!session) { started = true; if (location.hash.startsWith('#/p/')) route(); else showLogin(); return; }
     $('view-login').hidden = true;
     $('splash').classList.add('gone'); started = true;
     $('info-user').textContent = 'Sessão: ' + session.user.email;

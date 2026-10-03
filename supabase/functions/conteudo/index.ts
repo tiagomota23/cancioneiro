@@ -9,7 +9,8 @@ const ADMIN = 'tiago.mota@gmail.com';
 const ORIGINS = ['https://tiagomota23.github.io', 'http://localhost:8765'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
-const LIMITS = { song: [80, 250], file: [80, 250], search: [400, 2000], match: [120, 600], save: [60, 200] };
+const LIMITS = { song: [80, 250], file: [80, 250], search: [400, 2000], match: [120, 600], save: [60, 200], share: [30, 100] };
+const SHARE_HOURS = 24, SHARE_VIEWS = 300; // endereços partilhados: validade e máximo de aberturas
 const DISTINCT = new Set(['song', 'file']);
 const ROLES = ['cancioneiro', 'coro', 'maestro', 'gestor'];
 const rank = r => ROLES.indexOf(r) + 1;
@@ -73,7 +74,7 @@ async function alert(user, kind, n) {
   const sent = await rest(`access_log?select=id&user_id=eq.${user.id}&kind=eq.alerta&at=gte.${since}&limit=1`);
   if (sent.length) return;
   await rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: user.id, email: user.email, kind: 'alerta', key: kind }) });
-  const what = { song: 'cânticos abertos', file: 'ficheiros (gravações/partituras)', search: 'pesquisas na letra', match: 'identificações pelo som', save: 'edições de letra' }[kind] || kind;
+  const what = { song: 'cânticos abertos', file: 'ficheiros (gravações/partituras)', search: 'pesquisas na letra', match: 'identificações pelo som', save: 'edições de letra', share: 'endereços partilhados' }[kind] || kind;
   const html = `<div style="font-family:Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e3e3e3;border-radius:12px;overflow:hidden"><div style="background:#1ab07f;color:#fff;padding:16px 22px;font-size:20px;letter-spacing:4px">CANCIONEIRO</div><div style="padding:22px;color:#333;font-size:15px;line-height:1.5"><h2 style="margin:0 0 14px;font-size:18px;color:#12966a">Limite de uso atingido</h2><p>A conta <b>${user.email}</b> atingiu o limite de <b>${what}</b> (${n} nas últimas 24 horas). O acesso a mais conteúdo foi travado temporariamente.</p><p style="color:#777;font-size:13px">Se não foi uso normal, pode bloquear a conta retirando o email da lista de autorizados.</p></div></div>`;
   await mailGestores(`Cancioneiro: limite de uso atingido (${user.email})`, html);
 }
@@ -183,17 +184,29 @@ Deno.serve(async (req) => {
   const out = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: H });
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(req) });
   try {
-    const user = await who(req);
-    if (!user) return out({ error: 'sem acesso' }, 403);
     const b = await req.json().catch(() => ({}));
     const op = b.op;
+    if (op === 'shared') { // endereço partilhado: sem conta, só letra e tradução (como no perfil Cancioneiro), durante 24 h
+      const token = String(b.token || '');
+      if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return out({ error: 'endereço inválido' }, 400);
+      const [sh] = await rest(`song_shares?token=eq.${token}&select=song_slug,expires_at,views`);
+      if (!sh || Date.parse(sh.expires_at) <= Date.now()) return out({ error: 'expirado', message: 'Este endereço já não é válido (os endereços partilhados duram 24 horas).' }, 410);
+      if (sh.views >= SHARE_VIEWS) return out({ error: 'limite', message: 'Este endereço foi aberto demasiadas vezes.' }, 429);
+      await rest(`song_shares?token=eq.${token}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ views: sh.views + 1 }) });
+      const [m] = await rest(`songs?slug=eq.${encodeURIComponent(sh.song_slug)}&select=slug,title,author,language,translation_language,number`);
+      const s = (await songs()).bySlug.get(sh.song_slug);
+      if (!m || !s) return out({ error: 'não encontrado' }, 404);
+      return out({ ...m, lyrics: noChords(s.eff), translation: s.translation || null, expires_at: sh.expires_at });
+    }
+    const user = await who(req);
+    if (!user) return out({ error: 'sem acesso' }, 403);
     // perfil ativo escolhido na app (nunca acima do da pessoa)
     const lvl = ROLES.includes(b.perfil) ? Math.min(user.rank, rank(b.perfil)) : user.rank;
     // perfil Cancioneiro: cânticos do Cancioneiro e os de coleções ativas para o Cancioneiro
     // cânticos de coleções ativas que esta pessoa vê: o perfil Cancioneiro passa a vê-los, e não contam para os limites
     // (a app descarrega-os ao abrir, para estarem logo disponíveis)
     let colSet = new Set();
-    if (['song', 'search', 'match', 'file'].includes(op)) {
+    if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
       const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)${aud}&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
       colSet = new Set(rows.map(r => r.song_slug));
@@ -209,6 +222,16 @@ Deno.serve(async (req) => {
       if (!colSet.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
+    }
+    if (op === 'share') { // criar um endereço partilhado (válido 24 h) para um cântico que esta pessoa vê
+      const slug = String(b.slug || '');
+      const c = await songs(); const s = c.bySlug.get(slug);
+      if (!visible(s)) return out({ error: 'não encontrado' }, 404);
+      if (!(await limit(user, 'share', slug))) return tooMany();
+      const token = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18)))).replace(/\+/g, '-').replace(/\//g, '_');
+      const expires_at = new Date(Date.now() + SHARE_HOURS * 3600e3).toISOString();
+      await rest('song_shares', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token, song_slug: slug, created_by: user.email, expires_at }) });
+      return out({ token, expires_at });
     }
     if (op === 'search') {
       const q = String(b.q || '').slice(0, 120);

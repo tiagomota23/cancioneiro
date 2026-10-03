@@ -627,3 +627,8 @@ button.armed, .edit-actions button.ghost.armed { background: #c0392b !important;
 #app-dlg-input { display: block; width: 100%; margin: 4px 0 14px; font: inherit; font-size: 16px; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
 #app-dlg-input[hidden] { display: none; }
 #app-dlg .tpl-apply { width: 100%; }
+
+/* Endereço partilhado: só letra e tradução */
+body.shared-view #btn-fav, body.shared-view #btn-share, body.shared-view #btn-chords, body.no-session #btn-back { display: none; }
+.shared-foot { margin-top: 28px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.shared-foot + .shared-foot { margin-top: 6px; }
