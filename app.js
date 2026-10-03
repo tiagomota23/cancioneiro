@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v67';
+  const APP_VERSION = '2026-10-03 v68';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1521,7 +1521,11 @@
       try {
         if (k === 'fav') { if (isFav(slug) !== i.checked) await toggleFav(slug); }
         else if (k === 'cancioneiro') { await promote(slug, i.checked); i.checked = inCancioneiro(bySlug.get(slug)); }
-        else await toggleInCollection(cols.find(c => c.id === k.slice(2)), slug, i.checked);
+        else {
+          await toggleInCollection(cols.find(c => c.id === k.slice(2)), slug, i.checked);
+          // ao acrescentar a uma coleção, abre a lista dessa coleção
+          if (i.checked) { $('col-pick').close(); toast('Adicionado à coleção'); location.hash = '#/lista/colecao-' + k.slice(2); return; }
+        }
       } catch (e) { i.checked = !i.checked; alert('Não foi possível guardar: ' + (e.message || e)); }
       refresh();
     });
