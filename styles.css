@@ -718,3 +718,4 @@ body.has-mini .view, body.has-mini .pdfpages { padding-bottom: calc(84px + var(-
 .tour-n { flex: 1; font-size: 12px; color: #888; }
 .tour-skip { background: none; border: 0; color: #777; font: inherit; font-size: 14px; padding: 8px; }
 .tour-next { background: var(--green-ink); color: #fff; border: 0; border-radius: 18px; padding: 8px 18px; font: inherit; font-size: 14px; font-weight: 700; }
+.btn-ic { width: 1.15em; height: 1.15em; vertical-align: -.2em; margin-right: 6px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
