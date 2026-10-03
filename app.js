@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v113';
+  const APP_VERSION = '2026-10-03 v114';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2344,7 +2344,7 @@
       return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
     }).join('') + (can ? '<li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li>' : '');
     if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Coleção vazia.';
-    if (can) $('col-share').onclick = () => shareCollection(c);
+    if ($('col-share')) $('col-share').onclick = () => shareCollection(c); // só existe se a coleção tiver cânticos
     rows.querySelectorAll('a.sec-line').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;
