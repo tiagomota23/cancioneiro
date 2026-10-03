@@ -146,7 +146,16 @@ function pdfFor(src, current) {
 }
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json' } });
 
+
+// Só corre a pedido do agendamento (pg_cron), que primeiro deixa um pedido em job_requests (que ninguém de fora consegue escrever).
+// O pedido é gasto aqui: um pedido = uma execução.
+async function claimJob(job) {
+  const since = new Date(Date.now() - 10 * 60e3).toISOString();
+  const r = await rest(`job_requests?job=eq.${job}&requested_at=gte.${since}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+  return Array.isArray(r) && r.length > 0;
+}
 Deno.serve(async () => {
+  if (!(await claimJob('sync-songs').catch(() => false))) return json({ error: 'sem pedido do agendamento' }, 403);
   const log = { added: [], updated: [], baseline: 0, error: null };
   try {
     const last = await rest('sync_log?select=run_at&order=run_at.desc&limit=1');

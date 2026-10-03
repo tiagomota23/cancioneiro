@@ -107,6 +107,14 @@ async function onHealth() {
   return { ok: !problems.length, problems };
 }
 
+
+// Só corre a pedido do agendamento (pg_cron), que primeiro deixa um pedido em job_requests (que ninguém de fora consegue escrever).
+// O pedido é gasto aqui: um pedido = uma execução.
+async function claimJob(job) {
+  const since = new Date(Date.now() - 10 * 60e3).toISOString();
+  const r = await rest(`job_requests?job=eq.${job}&requested_at=gte.${since}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+  return Array.isArray(r) && r.length > 0;
+}
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let b = {};
@@ -114,7 +122,7 @@ Deno.serve(async (req) => {
   try {
     if (b.type === 'access') return json(await onAccess(b.id));
     if (b.type === 'sync') return json(await onSync(b.id));
-    if (b.type === 'health') return json(await onHealth());
+    if (b.type === 'health') return (await claimJob('health').catch(() => false)) ? json(await onHealth()) : json({ error: 'sem pedido do agendamento' }, 403);
     if (b.type === 'peek') return await onPeekOrDecide(b.id, b.token, null, false);
     if (b.type === 'decide') return await onPeekOrDecide(b.id, b.token, b.action, true, b.role);
     return json({ error: 'tipo desconhecido' }, 400);

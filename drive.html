@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VdVE1bV93swj4yuQGvlrDKtAYtuPFeukw/FVNumgA/o='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-v6jrPY2uaqbkHRZhQZZHwm5sGNGPAsumVJ2pV72kfmU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#1ab07f">
@@ -28,6 +28,7 @@
     <p id="m"></p>
   </main>
   <script>
+if (window.top !== window.self) { document.documentElement.style.display = 'none'; try { window.top.location = window.location.href; } catch (e) {} throw new Error('framed'); } // não pode ser mostrado dentro de outra página
     // Página de resultado da ligação ao Google Drive (função drive-auth); o texto vem no endereço e é mostrado como texto simples
     const q = new URLSearchParams(location.search);
     document.getElementById('t').textContent = q.get('t') || 'Drive do Coro';

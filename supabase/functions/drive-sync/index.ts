@@ -59,7 +59,16 @@ const label = (name, folder) => {
 };
 const VOICES = [['todos', 0], ['tutti', 0], ['soprano', 1], ['contralto', 2], ['alto', 2], ['tenor', 3], ['baixo', 4], ['piano', 5]];
 const sortOf = l => { const x = l.toLowerCase(); for (const [k, v] of VOICES) if (x.includes(k)) return v; return 6; };
+
+// Só corre a pedido do agendamento (pg_cron), que primeiro deixa um pedido em job_requests (que ninguém de fora consegue escrever).
+// O pedido é gasto aqui: um pedido = uma execução.
+async function claimJob(job) {
+  const since = new Date(Date.now() - 10 * 60e3).toISOString();
+  const r = await rest(`job_requests?job=eq.${job}&requested_at=gte.${since}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+  return Array.isArray(r) && r.length > 0;
+}
 Deno.serve(async () => {
+  if (!(await claimJob('drive-sync').catch(() => false))) return json({ error: 'sem pedido do agendamento' }, 403);
   const sum = { imported: [], newFolders: [], changed: [], removed: [], skipped: [], baseline: 0 };
   let error = null;
   try {

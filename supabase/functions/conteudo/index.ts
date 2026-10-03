@@ -9,7 +9,8 @@ const ADMIN = 'tiago.mota@gmail.com';
 const ORIGINS = ['https://tiagomota23.github.io', 'http://localhost:8765'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
-const LIMITS = { song: [80, 250], file: [80, 250], search: [400, 2000], match: [120, 600], save: [60, 200], share: [30, 100] };
+const LIMITS = { song: [80, 250], file: [80, 250], search: [60, 300], match: [30, 150], save: [60, 200], share: [30, 100] };
+const MAX_HITS = 20; // resultados por pesquisa na letra
 const SHARE_HOURS = 24, SHARE_VIEWS = 300, SHARE_COL_VIEWS = 3000; // endereços partilhados: validade e máximo de aberturas (coleções: lista e cânticos)
 const DISTINCT = new Set(['song', 'file']);
 const ROLES = ['cancioneiro', 'coro', 'maestro', 'gestor'];
@@ -106,7 +107,16 @@ async function songs() {
   return cache;
 }
 
-// pesquisa na letra: frase exata numa linha, ou todos os termos na letra (só o trecho de uma linha é devolvido)
+// trecho curto à volta do que foi encontrado (no máximo ~7 palavras), para não dar linhas inteiras a quem pesquisa muito
+function shortSnip(line, terms) {
+  const words = String(line || '').split(/\s+/).filter(Boolean);
+  if (words.length <= 7) return words.join(' ');
+  const nw = words.map(norm);
+  let i = nw.findIndex(w => terms.some(t => w.includes(t))); if (i < 0) i = 0;
+  const a = Math.max(0, Math.min(i - 3, words.length - 7));
+  return (a > 0 ? '… ' : '') + words.slice(a, a + 7).join(' ') + (a + 7 < words.length ? ' …' : '');
+}
+// pesquisa na letra: frase exata numa linha, ou todos os termos na letra (só um trecho curto é devolvido)
 function searchLyrics(c, q, ok) {
   const nq = norm(q).trim(); if (nq.length < 3) return [];
   const terms = nq.split(/\s+/), out = [];
@@ -114,9 +124,9 @@ function searchLyrics(c, q, ok) {
     if (!ok(s)) continue;
     let li = s.nl.findIndex(l => l.includes(nq)), score = 20;
     if (li < 0 && terms.every(t => s.nl.some(l => l.includes(t)))) { li = s.nl.findIndex(l => l.includes(terms[0])); score = 8; }
-    if (li >= 0) out.push({ slug: s.slug, score, snip: s.lines[li] });
+    if (li >= 0) out.push({ slug: s.slug, score, snip: shortSnip(s.lines[li], terms) });
   }
-  return out.sort((a, b) => b.score - a.score).slice(0, 60);
+  return out.sort((a, b) => b.score - a.score).slice(0, MAX_HITS);
 }
 
 // identificação pelo som: janelas de 3 linhas, palavras e pares de palavras pesados por raridade (como na app)
@@ -160,7 +170,7 @@ function match(c, text, ok) {
       for (const b of qbi) if (win.bigrams.has(b)) sc += 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0);
       if (sc > best) { best = sc; bestLine = win.line; }
     }
-    if (best) out.push({ slug, score: best / total, snip: bestLine });
+    if (best) out.push({ slug, score: best / total, snip: shortSnip(bestLine, qset) });
   }
   return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
 }
@@ -175,6 +185,20 @@ async function sign(path) {
 const BOOKS = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' };
 const pageFile = (dir, n) => `${dir}/p${String(n).padStart(3, '0')}.pdf`;
 
+// assinaturas dos tipos aceites (primeiros bytes do ficheiro)
+function fileOk(b, mime) {
+  const at = (i, ...v) => v.every((x, k) => b[i + k] === x), str = (i, t) => [...t].every((c, k) => b[i + k] === c.charCodeAt(0));
+  if (mime === 'application/pdf') return str(0, '%PDF');
+  if (mime === 'image/jpeg') return at(0, 0xff, 0xd8, 0xff);
+  if (mime === 'image/png') return at(0, 0x89, 0x50, 0x4e, 0x47);
+  if (mime === 'audio/mpeg') return str(0, 'ID3') || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0);
+  if (/^audio\/(mp4|x-m4a|m4a)$/.test(mime)) return str(4, 'ftyp');
+  if (mime === 'audio/aac') return str(0, 'ID3') || (b[0] === 0xff && (b[1] & 0xf6) === 0xf0) || str(4, 'ftyp');
+  if (/^audio\/(x-)?wav$/.test(mime)) return str(0, 'RIFF') && str(8, 'WAVE');
+  if (mime === 'audio/ogg') return str(0, 'OggS');
+  if (mime === 'audio/webm') return at(0, 0x1a, 0x45, 0xdf, 0xa3);
+  return false;
+}
 const noChords = v => (v || []).map(st => ({ ...st, lines: st.lines.map(stripChords) }));
 const validEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(e);
 const validLyrics = v => Array.isArray(v) && v.length <= 80 && v.every(st => st && (st.type === 'verse' || st.type === 'chorus') && Array.isArray(st.lines) && st.lines.length <= 80 && st.lines.every(l => typeof l === 'string' && l.length <= 300));
@@ -225,6 +249,8 @@ Deno.serve(async (req) => {
       const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)${aud}&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
       colSet = new Set(rows.map(r => r.song_slug));
     }
+    // sem limite só para quem não cria coleções: um Maestro / Gestor não as pode usar para contornar os limites
+    const free = user.rank >= 3 ? new Set() : colSet;
     const visible = s => !!s && (lvl >= 2 || s.cancioneiro || colSet.has(s.slug));
     const denied = () => out({ error: 'sem permissão para este perfil' }, 403);
     const tooMany = () => out({ error: 'limite', message: 'Atingiu o limite de uso por agora. Tente de novo mais tarde.' }, 429);
@@ -233,7 +259,7 @@ Deno.serve(async (req) => {
       const slug = String(b.slug || '');
       const c = await songs(); const s = c.bySlug.get(slug);
       if (!visible(s)) return out({ error: 'não encontrado' }, 404);
-      if (!colSet.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
+      if (!free.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
     }
@@ -308,10 +334,19 @@ Deno.serve(async (req) => {
       }
       const path = String(b.path || ''), label = String(b.label || '').trim().slice(0, 80) || (kind === 'score' ? 'Partitura' : 'Gravação');
       if (!new RegExp(`^enviados/${slug.replace(/[^a-z0-9_]/g, '')}/\\d+-[0-9a-f]{8}\\.[a-z0-9]+$`).test(path)) return out({ error: 'ficheiro inválido' }, 400);
-      try { await sign(path); } catch (e) { return out({ error: 'O ficheiro não chegou ao servidor.' }, 400); }
+      // o conteúdo tem de ser mesmo o que diz ser (assinatura no início do ficheiro) e não passar de 40 MB
+      const obj = `${SB}/storage/v1/object/coro/${path}`;
+      const head = await fetch(obj, { headers: { ...HDR, Range: 'bytes=0-15' } }).catch(() => null);
+      if (!head || !(head.ok || head.status === 206)) return out({ error: 'O ficheiro não chegou ao servidor.' }, 400);
+      const sig = new Uint8Array(await head.arrayBuffer());
+      const total = +((head.headers.get('content-range') || '').split('/')[1] || head.headers.get('content-length') || 0);
+      if (!fileOk(sig, mime) || !total || total > 40e6) {
+        await fetch(obj, { method: 'DELETE', headers: HDR }).catch(() => {});
+        return out({ error: total > 40e6 ? 'O ficheiro é demasiado grande (máximo 40 MB).' : 'O conteúdo do ficheiro não corresponde ao tipo indicado.' }, 400);
+      }
       const [last] = await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&kind=eq.${kind}&select=sort&order=sort.desc&limit=1`);
       const [row] = await rest('song_files?select=kind,label,path,mime,sort', { method: 'POST', headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ song_slug: slug, kind, label, path, mime, size, sort: (last?.sort ?? 0) + 1 }) });
+        body: JSON.stringify({ song_slug: slug, kind, label, path, mime, size: total, sort: (last?.sort ?? 0) + 1 }) });
       return out(row);
     }
     if (op === 'promote') { // Maestro: pôr ou tirar um cântico do Cancioneiro (os do site original ficam sempre)
@@ -397,7 +432,7 @@ Deno.serve(async (req) => {
       const files = await rest(`song_files?select=path,song_slug&path=eq.${encodeURIComponent(raw)}&limit=1`);
       const songPdf = !files.length && /^partituras\/[a-z0-9_.\-]+\.pdf$/.test(path) ? await rest(`songs?select=slug&pdf_url=eq.${encodeURIComponent(path)}&limit=1`) : [];
       if (!files.length && !songPdf.length) return out({ error: 'ficheiro desconhecido' }, 404);
-      const inCol = colSet.has(files.length ? files[0].song_slug : songPdf[0].slug); // ficheiros de coleções: sem limite
+      const inCol = free.has(files.length ? files[0].song_slug : songPdf[0].slug); // ficheiros de coleções: sem limite
       if (BOOKS[path]) {
         const p = +(frag.match(/(?:^|&)p=(\d+)/) || [])[1] || 1;
         const crop = (frag.match(/(?:^|&)c=([^&]+)/) || [])[1];
