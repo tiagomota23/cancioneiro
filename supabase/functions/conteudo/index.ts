@@ -457,7 +457,7 @@ Deno.serve(async (req) => {
       const similar = findSimilar(await songs(), title, lyrics.flatMap(st => st.lines), x => x.approved !== false);
       await rest('songs', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
         slug, number: (mx?.number || 0) + 1, title, author, language, lyrics, has_chords: lyrics.some(st => st.lines.some(l => l.includes('['))),
-        cancioneiro: false, approved: ok, added_by: user.email, added_at: now, approved_by: ok ? user.email : null, similar: similar.length ? similar : null }) });
+        cancioneiro: false, approved: ok, added_by: user.email, added_at: now, approved_by: ok ? user.email : null, parecidos: similar.length ? similar : null }) });
       await rest('song_sources', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ song_slug: slug, source: 'novos' }) });
       cache = null;
       return out({ slug, approved: ok });

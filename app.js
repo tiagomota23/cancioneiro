@@ -267,7 +267,7 @@
     if (op === 'addsong') {
       const nv = store.get('cancioneiro.demo.novos', []), slug = 'novo_' + Date.now();
       nv.push({ slug, number: 9000 + nv.length, title: b.title, author: b.author || null, language: b.language, lyrics: b.lyrics, translation: null, cancioneiro: false,
-        approved: lvl() >= 3, added_by: 'demo@localhost', similar: [...demoFull.values()].filter(x => norm(b.title) && norm(x.title).includes(norm(b.title))).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })), sources: [{ source: 'novos' }], tags: [], files: [] });
+        approved: lvl() >= 3, added_by: 'demo@localhost', parecidos: [...demoFull.values()].filter(x => norm(b.title) && norm(x.title).includes(norm(b.title))).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })), sources: [{ source: 'novos' }], tags: [], files: [] });
       store.set('cancioneiro.demo.novos', nv); return { slug, approved: lvl() >= 3 };
     }
     if (op === 'coro') { const nv = store.get('cancioneiro.demo.novos', []); store.set('cancioneiro.demo.novos', nv.map(x => x.slug === b.slug ? { ...x, sources: b.on ? [...x.sources, { source: 'coro_clu' }] : x.sources.filter(y => y.source !== 'coro_clu') } : x)); return { ok: true }; }
@@ -304,7 +304,7 @@
       demoFull = new Map(full.map(s => [s.slug, s]));
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
-    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,similar,' +
+    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,parecidos,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -931,7 +931,7 @@
     const original = srcOf(s).includes('original');
     // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
     const mine = session && s.added_by === session.user.email;
-    const sims = (s.approved === false && Array.isArray(s.similar) ? s.similar : []).filter(x => x.slug !== s.slug);
+    const sims = (s.approved === false && Array.isArray(s.parecidos) ? s.parecidos : []).filter(x => x.slug !== s.slug);
     const simHtml = sims.length ? `<div class="sim-list"><b>Atenção: parecido com cânticos que já existem</b>${sims.map(x => `<a href="#/cantico/${encodeURIComponent(x.slug)}">${esc(x.title)}${x.author ? ' — ' + esc(x.author) : ''}<small>${esc(x.why)}</small></a>`).join('')}</div>` : '';
     // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
     const pendHtml = s.approved === false
@@ -1461,7 +1461,7 @@
     finally { b.disabled = false; }
   };
   async function decideSong(s, ok, btn) {
-    const sims = Array.isArray(s.similar) ? s.similar : [];
+    const sims = Array.isArray(s.parecidos) ? s.parecidos : [];
     if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
     btn.disabled = true;
     try {

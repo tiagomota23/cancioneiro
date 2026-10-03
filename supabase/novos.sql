@@ -14,6 +14,6 @@ create policy "leitura familia" on public.songs for select to authenticated
 select 'ok' as novos;
 
 -- Cânticos parecidos (título ou letra) encontrados quando um cântico novo é acrescentado: avisa quem cria e quem aprova
-alter table public.songs add column if not exists similar jsonb;
-grant select (similar) on public.songs to authenticated;
+alter table public.songs add column if not exists parecidos jsonb;
+grant select (parecidos) on public.songs to authenticated;
 select 'ok' as parecidos;
