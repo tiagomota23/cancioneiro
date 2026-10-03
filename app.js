@@ -67,7 +67,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v106';
+  const APP_VERSION = '2026-10-03 v107';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -269,6 +269,7 @@
         approved: lvl() >= 3, added_by: 'demo@localhost', sources: [{ source: 'novos' }], tags: [], files: [] });
       store.set('cancioneiro.demo.novos', nv); return { slug, approved: lvl() >= 3 };
     }
+    if (op === 'coro') { const nv = store.get('cancioneiro.demo.novos', []); store.set('cancioneiro.demo.novos', nv.map(x => x.slug === b.slug ? { ...x, sources: b.on ? [...x.sources, { source: 'coro_clu' }] : x.sources.filter(y => y.source !== 'coro_clu') } : x)); return { ok: true }; }
     if (op === 'approvesong' || op === 'delsong') {
       const nv = store.get('cancioneiro.demo.novos', []);
       store.set('cancioneiro.demo.novos', op === 'delsong' ? nv.filter(x => x.slug !== b.slug) : nv.map(x => x.slug === b.slug ? { ...x, approved: true } : x)); return { ok: true };
@@ -2496,8 +2497,10 @@
     const item = (key, label, sub, checked, disabled) => `<label class="col-pick${disabled ? ' dis' : ''}"><input type="checkbox" data-k="${esc(key)}"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span></label>`;
     // primeira linha: ☆/★ preferido e "+ Cancioneiro" (cheio se já está no Cancioneiro; só "Cancioneiro" se é do original)
     const inC = inCancioneiro(s);
+    // cânticos novos já aprovados também podem ir para o livro do Coro
+    const novo = srcOf(s).includes('novos') && s.approved !== false, inCoro = srcOf(s).includes('coro_clu');
     $('col-pick-list').innerHTML =
-      `<div class="pick-top"><button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button>` +
+      `<div class="pick-top">${novo ? `<button class="pick-canc${inCoro ? ' on' : ''}" id="pick-coro" aria-pressed="${inCoro}">+ Coro</button>` : ''}<button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button>` +
       `<button class="pick-star${isFav(slug) ? ' on' : ''}" id="pick-fav" aria-label="${isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'}" aria-pressed="${isFav(slug)}"><svg viewBox="0 0 24 24">${ICON_STAR}</svg></button></div>` +
       act.map(c => item('c:' + c.id, c.title, `${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false)).join('') +
       `<button class="col-pick-new" id="col-pick-new">+ Nova coleção</button>`;
@@ -2527,6 +2530,18 @@
     });
     $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(null); };
     $('pick-fav').onclick = async () => { await toggleFav(slug); const on = isFav(slug); $('pick-fav').classList.toggle('on', on); $('pick-fav').setAttribute('aria-pressed', on); refresh(); };
+    if ($('pick-coro')) $('pick-coro').onclick = async () => {
+      const b = $('pick-coro'), sg = bySlug.get(slug), was = srcOf(sg).includes('coro_clu');
+      if (was && !b.dataset.armed) { tapConfirm(b, 'Confirmar: retirar'); return; }
+      if (was) tapConfirm(b);
+      b.disabled = true;
+      try {
+        await api('coro', { slug, on: !was });
+        sg.sources = was ? (sg.sources || []).filter(x => x.source !== 'coro_clu') : [...(sg.sources || []), { source: 'coro_clu' }];
+        store.set(CACHE_KEY, allSongs); toast(was ? 'Retirado do Coro' : 'Acrescentado ao Coro');
+      } catch (e) { appAlert(e.message || 'Não foi possível.'); }
+      const on = srcOf(bySlug.get(slug)).includes('coro_clu'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.disabled = false; refresh();
+    };
     if (!original) $('pick-canc').onclick = async () => {
       const b = $('pick-canc'), was = inCancioneiro(bySlug.get(slug));
       if (was && !b.dataset.armed) { tapConfirm(b, 'Confirmar: retirar'); return; } // 1.º toque: pede confirmação

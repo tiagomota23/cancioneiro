@@ -235,8 +235,13 @@ async function scrape(raw) {
   }
   text = text.replace(/\r/g, '').trim();
   if (text.split('\n').filter(l => l.trim()).length < 3) throw new Error('Não foi possível encontrar a letra nessa página. Pode copiá-la e colá-la no formulário.');
-  // «Título – Autor» / «Título - Letras - Autor» nos títulos das páginas
-  if (!author) { const t = title.split(/\s[-–|]\s/); if (t.length > 1) { title = t[0]; author = t[t.length - 1].replace(/\b(letra|letras|lyrics|testo|paroles)\b/ig, '').trim(); } }
+  // o "autor" de algumas páginas é o próprio site: não serve
+  const host = url.hostname.replace(/^www\./, '').split('.')[0];
+  if (/\.(com|org|net|it|pt|es|fr)\b/i.test(author) || norm(author).replace(/[^a-z]/g, '').includes(norm(host).replace(/[^a-z]/g, ''))) author = '';
+  // «Título – Autor», «Título — Testo e accordi», «Título | Site» nos títulos das páginas
+  const WORDS = /\b(letra|letras|lyrics|testo|testi|accordi|chords|cifra|cifras|paroles|songtext|e|and|y|et)\b/ig;
+  const parts = title.split(/\s[-–—|]\s/).map(x => x.trim()).filter(x => x && x.replace(WORDS, '').trim() && !norm(x).includes(norm(host)));
+  if (parts.length) { title = parts[0]; if (!author && parts.length > 1) author = parts[parts.length - 1].replace(WORDS, '').trim(); }
   return { title: title.slice(0, 120), author: author.slice(0, 120), text: text.slice(0, 20000), url: url.href };
 }
 // apagar um ficheiro do Storage (a API só apaga com a lista de caminhos)
@@ -434,6 +439,19 @@ Deno.serve(async (req) => {
       if (!(await limit(user, 'save', 'scrape:' + Date.now()))) return tooMany();
       try { return out(await scrape(String(b.url || ''))); }
       catch (e) { return out({ error: String(e.message || e) }, 400); }
+    }
+    if (op === 'coro') { // Maestro: pôr / tirar um cântico novo (já aprovado) do livro do Coro
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), on = !!b.on;
+      const [sg] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,approved,sources:song_sources(source)`);
+      if (!sg) return out({ error: 'não encontrado' }, 404);
+      if (!sg.sources.some(x => x.source === 'novos')) return out({ error: 'Só os cânticos novos podem ser postos ou tirados do Coro.' }, 400);
+      if (on && sg.approved === false) return out({ error: 'Aprove primeiro o cântico novo.' }, 400);
+      if (!(await limit(user, 'save', 'coro:' + slug))) return tooMany();
+      if (on) await rest('song_sources', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ song_slug: slug, source: 'coro_clu' }) });
+      else await rest(`song_sources?song_slug=eq.${encodeURIComponent(slug)}&source=eq.coro_clu`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      cache = null;
+      return out({ ok: true });
     }
     if (op === 'approvesong') { // Maestro: aprovar um cântico novo
       if (lvl < 3) return denied();
