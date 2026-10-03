@@ -96,7 +96,7 @@ async function songs() {
   const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
-  const list = await all('songs?select=slug,cancioneiro,lyrics,lyrics_edit,translation&order=number.asc');
+  const list = await all('songs?select=slug,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');
   for (const s of list) {
     s.eff = s.lyrics_edit || s.lyrics || [];
     s.lines = s.eff.flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
@@ -185,6 +185,60 @@ async function sign(path) {
 const BOOKS = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' };
 const pageFile = (dir, n) => `${dir}/p${String(n).padStart(3, '0')}.pdf`;
 
+// ---------- ler uma página com a letra de um cântico ----------
+// só endereços públicos http(s) (nunca endereços internos), no máximo 1,5 MB, 3 redireccionamentos e 10 s
+function publicUrl(u) {
+  let x; try { x = new URL(u); } catch (e) { throw new Error('Endereço inválido.'); }
+  if (!/^https?:$/.test(x.protocol)) throw new Error('O endereço tem de começar por http:// ou https://');
+  const h = x.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (!h.includes('.') || /(^|\.)(localhost|local|internal|lan|home|corp)$/.test(h) || /^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(h) || h.includes(':') || /supabase\.(co|in|net)$/.test(h))
+    throw new Error('Esse endereço não é permitido.');
+  return x;
+}
+const decodeEnt = t => t.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp|rsquo|lsquo|ldquo|rdquo|hellip|ndash|mdash);/gi, (m, e) => {
+  const k = e.toLowerCase(); const map = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', hellip: '…', ndash: '–', mdash: '—' };
+  if (k[0] === '#') { const n = k[1] === 'x' ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10); return n ? String.fromCodePoint(n) : m; }
+  return map[k] ?? m;
+});
+const htmlText = h => decodeEnt(h.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n\n').replace(/<[^>]+>/g, '')).replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+async function scrape(raw) {
+  let url = publicUrl(raw.trim()), r;
+  for (let i = 0; ; i++) {
+    r = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'Mozilla/5.0 (Cancioneiro)', Accept: 'text/html,*/*' } }).catch(() => null);
+    if (!r) throw new Error('Não foi possível abrir esse endereço.');
+    if (r.status >= 300 && r.status < 400 && r.headers.get('location') && i < 3) { url = publicUrl(new URL(r.headers.get('location'), url).href); continue; }
+    break;
+  }
+  if (!r.ok) throw new Error(`O endereço respondeu com erro (HTTP ${r.status}).`);
+  if (!/text\/html|application\/xhtml|text\/plain/.test(r.headers.get('content-type') || '')) throw new Error('Esse endereço não é uma página de texto.');
+  const reader = r.body.getReader(); const parts = []; let n = 0;
+  while (n < 1.5e6) { const { done, value } = await reader.read(); if (done) break; parts.push(value); n += value.length; }
+  reader.cancel().catch(() => {});
+  const html = new TextDecoder().decode(new Uint8Array(parts.flatMap(p => [...p]))).replace(/<(script|style|noscript|svg|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, ' ');
+  const meta = k => (html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${k}["'][^>]*content=["']([^"']*)`, 'i')) || [])[1];
+  let title = decodeEnt(meta('og:title') || (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || (html.match(/<title>([^<]*)/i) || [])[1] || '').trim();
+  let author = decodeEnt(meta('music:musician') || meta('author') || '').trim();
+  // letra: dados estruturados ou o bloco com mais quebras de linha (preferindo classes como lyrics / letra / testo / paroles)
+  let text = '';
+  for (const m of html.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) { try { const j = JSON.stringify(JSON.parse(m[1])); const t = (j.match(/"lyrics":\{[^}]*"text":"((?:[^"\\]|\\.)*)"/) || [])[1]; if (t) text = JSON.parse('"' + t + '"'); } catch (e) {} }
+  if (!text) {
+    let best = null;
+    const re = /<(pre|div|p|section|article|span|td)\b([^>]*)>/gi; let m;
+    while ((m = re.exec(html))) {
+      const start = m.index + m[0].length, end = html.indexOf('</' + m[1], start); if (end < 0) continue;
+      const inner = html.slice(start, end); if (inner.length > 20000) continue;
+      const brs = (inner.match(/<br\s*\/?>|\n/gi) || []).length + (m[1] === 'pre' ? 5 : 0);
+      const score = brs * (/(lyric|letra|testo|paroles|songtext|song-text|cifra|letter|tekst)/i.test(m[2]) ? 3 : 1);
+      if (brs >= 4 && (!best || score > best.score)) best = { score, inner };
+    }
+    if (best) text = htmlText(best.inner);
+  }
+  text = text.replace(/\r/g, '').trim();
+  if (text.split('\n').filter(l => l.trim()).length < 3) throw new Error('Não foi possível encontrar a letra nessa página. Pode copiá-la e colá-la no formulário.');
+  // «Título – Autor» / «Título - Letras - Autor» nos títulos das páginas
+  if (!author) { const t = title.split(/\s[-–|]\s/); if (t.length > 1) { title = t[0]; author = t[t.length - 1].replace(/\b(letra|letras|lyrics|testo|paroles)\b/ig, '').trim(); } }
+  return { title: title.slice(0, 120), author: author.slice(0, 120), text: text.slice(0, 20000), url: url.href };
+}
 // apagar um ficheiro do Storage (a API só apaga com a lista de caminhos)
 const removeObject = path => fetch(`${SB}/storage/v1/object/coro`, { method: 'DELETE', headers: HDR, body: JSON.stringify({ prefixes: [path] }) }).catch(() => {});
 // assinaturas dos tipos aceites (primeiros bytes do ficheiro)
@@ -253,7 +307,8 @@ Deno.serve(async (req) => {
     }
     // sem limite só para quem não cria coleções: um Maestro / Gestor não as pode usar para contornar os limites
     const free = user.rank >= 3 ? new Set() : colSet;
-    const visible = s => !!s && (lvl >= 2 || s.cancioneiro || colSet.has(s.slug));
+    // cânticos novos ainda por aprovar: só para quem os acrescentou e para Maestro / Gestor
+    const visible = s => !!s && (lvl >= 2 || s.cancioneiro || colSet.has(s.slug)) && (s.approved !== false || lvl >= 3 || s.added_by === user.email);
     const denied = () => out({ error: 'sem permissão para este perfil' }, 403);
     const tooMany = () => out({ error: 'limite', message: 'Atingiu o limite de uso por agora. Tente de novo mais tarde.' }, 429);
 
@@ -316,9 +371,12 @@ Deno.serve(async (req) => {
       await removeObject(path);
       return out({ ok: true });
     }
-    if (op === 'upload' || op === 'addfile') { // Maestro: acrescentar gravações e partituras a um cântico
-      if (lvl < 3) return denied();
+    if (op === 'upload' || op === 'addfile') { // Maestro: acrescentar gravações e partituras; Coro: só aos cânticos novos que acrescentou
       const slug = String(b.slug || ''), kind = String(b.kind || '');
+      if (lvl < 3) {
+        const [mine] = lvl >= 2 ? await rest(`songs?slug=eq.${encodeURIComponent(slug)}&added_by=eq.${encodeURIComponent(user.email)}&select=slug`) : [];
+        if (!mine) return denied();
+      }
       const mime = String(b.mime || '').toLowerCase(), size = +b.size || 0;
       const okMime = kind === 'recording' ? /^audio\/(mpeg|mp4|x-m4a|m4a|aac|wav|x-wav|ogg|webm)$/.test(mime) : /^(application\/pdf|image\/(jpeg|png))$/.test(mime);
       if (!['recording', 'score'].includes(kind) || !okMime) return out({ error: 'Tipo de ficheiro não aceite.' }, 400);
@@ -351,11 +409,56 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ song_slug: slug, kind, label, path, mime, size: total, sort: (last?.sort ?? 0) + 1 }) });
       return out(row);
     }
+    if (op === 'addsong') { // Novos Cânticos: Coro para cima; do Coro fica pendente até um Maestro aprovar
+      if (lvl < 2) return denied();
+      const title = String(b.title || '').trim().slice(0, 120), author = String(b.author || '').trim().slice(0, 120) || null;
+      const language = /^[a-z]{2}$/.test(b.language || '') ? b.language : 'pt';
+      const lyrics = b.lyrics;
+      if (!title) return out({ error: 'Falta o título.' }, 400);
+      if (!validLyrics(lyrics) || (!lyrics.length && !b.hasPdf)) return out({ error: 'Falta a letra (ou a letra é inválida).' }, 400);
+      if (!(await limit(user, 'save', 'addsong:' + title))) return tooMany();
+      const base = norm(title + (author ? ' ' + author : '')).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 60) || 'cantico';
+      let slug = base;
+      for (let i = 2; (await rest(`songs?slug=eq.${slug}&select=slug`)).length; i++) slug = base + '_' + i;
+      const [mx] = await rest('songs?select=number&order=number.desc&limit=1');
+      const ok = lvl >= 3, now = new Date().toISOString();
+      await rest('songs', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
+        slug, number: (mx?.number || 0) + 1, title, author, language, lyrics, has_chords: lyrics.some(st => st.lines.some(l => l.includes('['))),
+        cancioneiro: false, approved: ok, added_by: user.email, added_at: now, approved_by: ok ? user.email : null }) });
+      await rest('song_sources', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ song_slug: slug, source: 'novos' }) });
+      cache = null;
+      return out({ slug, approved: ok });
+    }
+    if (op === 'scrape') { // ler título, autor e letra de uma página pública (para preencher o formulário)
+      if (lvl < 2) return denied();
+      if (!(await limit(user, 'save', 'scrape:' + Date.now()))) return tooMany();
+      try { return out(await scrape(String(b.url || ''))); }
+      catch (e) { return out({ error: String(e.message || e) }, 400); }
+    }
+    if (op === 'approvesong') { // Maestro: aprovar um cântico novo
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || '');
+      const r = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&approved=eq.false&select=slug`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ approved: true, approved_by: user.email }) });
+      if (!r.length) return out({ error: 'não encontrado' }, 404);
+      cache = null;
+      return out({ ok: true });
+    }
+    if (op === 'delsong') { // recusar / retirar um cântico novo ainda pendente (Maestro, ou quem o acrescentou)
+      const slug = String(b.slug || '');
+      const [sg] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,approved,added_by`);
+      if (!sg || sg.approved !== false) return out({ error: 'Só se podem retirar cânticos novos ainda por aprovar.' }, 400);
+      if (lvl < 3 && sg.added_by !== user.email) return denied();
+      for (const f of await rest(`song_files?song_slug=eq.${encodeURIComponent(slug)}&select=path`)) if (/^enviados\//.test(f.path)) await removeObject(f.path);
+      await rest(`songs?slug=eq.${encodeURIComponent(slug)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      cache = null;
+      return out({ ok: true });
+    }
     if (op === 'promote') { // Maestro: pôr ou tirar um cântico do Cancioneiro (os do site original ficam sempre)
       if (lvl < 3) return denied();
       const slug = String(b.slug || ''), on = !!b.on;
-      const [s] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,sources:song_sources(source)`);
+      const [s] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,approved,sources:song_sources(source)`);
       if (!s) return out({ error: 'não encontrado' }, 404);
+      if (on && s.approved === false) return out({ error: 'Aprove primeiro o cântico novo.' }, 400);
       if (!on && s.sources.some(x => x.source === 'original')) return out({ error: 'Este cântico é do Cancioneiro original e não pode ser retirado.' }, 400);
       if (!(await limit(user, 'save', 'promote:' + slug))) return tooMany();
       const r = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=cancioneiro,promoted_by,promoted_at`, { method: 'PATCH', headers: { Prefer: 'return=representation' },

@@ -8,7 +8,7 @@
     gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli', de: 'Alemão', xx: 'Outra língua',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
-  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024' };
+  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
   // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior direito
@@ -67,7 +67,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v105';
+  const APP_VERSION = '2026-10-03 v106';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -262,6 +262,17 @@
       return { pages: pages.map(n => ({ n, url: `drive-coro-clu/out/${book}/p${String(n).padStart(3, '0')}.pdf` })) };
     }
     if (op === 'upload') return { path: 'demo', url: null };
+    if (op === 'scrape') throw new Error('No modo de demonstração não se leem páginas.');
+    if (op === 'addsong') {
+      const nv = store.get('cancioneiro.demo.novos', []), slug = 'novo_' + Date.now();
+      nv.push({ slug, number: 9000 + nv.length, title: b.title, author: b.author || null, language: b.language, lyrics: b.lyrics, translation: null, cancioneiro: false,
+        approved: lvl() >= 3, added_by: 'demo@localhost', sources: [{ source: 'novos' }], tags: [], files: [] });
+      store.set('cancioneiro.demo.novos', nv); return { slug, approved: lvl() >= 3 };
+    }
+    if (op === 'approvesong' || op === 'delsong') {
+      const nv = store.get('cancioneiro.demo.novos', []);
+      store.set('cancioneiro.demo.novos', op === 'delsong' ? nv.filter(x => x.slug !== b.slug) : nv.map(x => x.slug === b.slug ? { ...x, approved: true } : x)); return { ok: true };
+    }
     if (op === 'addfile') return { kind: b.kind, label: b.label, path: 'enviados/demo/' + Date.now() + '-abcdef12.pdf', _blob: b._blob, mime: b.mime, sort: 99 };
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
     if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
@@ -287,11 +298,11 @@
     const { SUPABASE_URL, SUPABASE_ANON_KEY } = CFG;
     let token = await accessToken();
     if (DEMO) {
-      const full = await (await fetch('songs.json')).json();
+      const full = [...await (await fetch('songs.json')).json(), ...store.get('cancioneiro.demo.novos', [])];
       demoFull = new Map(full.map(s => [s.slug, s]));
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
-    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,' +
+    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -321,7 +332,8 @@
     // "Cancioneiro" = cânticos do site original e os promovidos por um Maestro
     const has = (s, k) => k === 'original' ? inCancioneiro(s) : srcOf(s).includes(k);
     const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
-    songs = f === 'todas' ? allSongs : allSongs.filter(s => has(s, f));
+    const ok = allSongs.filter(s => s.approved !== false); // cânticos novos por aprovar: só em "Novos Cânticos"
+    songs = f === 'todas' ? ok : ok.filter(s => has(s, f));
     lyrIndex = null;
     const extra = lvl() < 2 ? colExtra() : new Set();
     bySlug = new Map((lvl() < 2 ? allSongs.filter(s => inCancioneiro(s) || extra.has(s.slug)) : allSongs).map(s => [s.slug, s]));
@@ -777,7 +789,8 @@
     const title = q ? highlight(s.title, q) : esc(s.title);
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
     const sn = snip ? `<span class="snip">${highlight(snip, q)}</span>` : '';
-    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
+    const pend = s.approved === false ? '<small class="pend">por aprovar</small>' : '';
+    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${pend}${author}${sn}</span><span class="n">${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
 
   function showList(catId) {
@@ -824,7 +837,13 @@
       const list = pool.filter(bk.test).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
         : (a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }));
-      rows.innerHTML = list.map(s => bk.book ? songRow({ ...s, book_page: pageIn(s, bk.book) || null }) : songRow(s)).join('');
+      rows.innerHTML = list.map(s => bk.book ? songRow({ ...s, book_page: pageIn(s, bk.book) || null }) : songRow(s)).join('') +
+        (bk.novos && lvl() >= 2 ? '<li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li>' : '');
+      if (bk.novos) {
+        const pend = list.filter(s => s.approved === false).length;
+        if (pend) title.innerHTML = `${esc(bk.label)}<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>`;
+        if ($('novo-cantico')) $('novo-cantico').onclick = () => openNewSong();
+      }
       return;
     }
     const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
@@ -901,8 +920,11 @@
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
     const canEdit = data && mode === 'orig' && lvl() >= 3 && extrasOn();
     const original = srcOf(s).includes('original');
-    // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra")
-    const canFiles = lvl() >= 3 && extrasOn();
+    // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
+    const mine = session && s.added_by === session.user.email;
+    const pendHtml = s.approved === false ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p><p>${lvl() >= 3 ? '<button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button>' : mine ? '<button class="ghost-btn" id="song-reject">Retirar</button>' : ''}</p></div>` : '';
+    // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra"); Coro: nos cânticos novos que acrescentou
+    const canFiles = (lvl() >= 3 || (lvl() >= 2 && mine && srcOf(s).includes('novos'))) && extrasOn();
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
     // ficheiros enviados pela app: o Maestro / Gestor pode apagá-los (os importados ficam)
     const ups = canFiles ? (s.files || []).filter(f => /^enviados\//.test(f.path || '')) : [];
@@ -918,6 +940,7 @@
       ${note}
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
+      ${pendHtml}
       ${editBar}
       ${upHtml}
       ${recHtml}
@@ -927,6 +950,8 @@
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
     $('btn-chords').hidden = !(lyrics.some(st => st.lines.some(l => l.includes('['))) && mode === 'orig');
     if ($('btn-edit')) $('btn-edit').onclick = () => openEditor(slug);
+    if ($('song-approve')) $('song-approve').onclick = () => decideSong(s, true, $('song-approve'));
+    if ($('song-reject')) $('song-reject').onclick = () => { if (tapConfirm($('song-reject'), 'Confirmar?')) decideSong(s, false, $('song-reject')); };
     $('song').querySelectorAll('.up-del').forEach(b => b.onclick = () => { if (tapConfirm(b, 'Apagar?')) delFile(s, b.dataset.path); });
     if ($('btn-add-rec')) { $('btn-add-rec').onclick = () => addFiles(s, 'recording', $('btn-add-rec')); $('btn-add-score').onclick = () => addFiles(s, 'score', $('btn-add-score')); }
     // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
@@ -1348,6 +1373,86 @@
     }
   }
 
+  // ---------- Novos Cânticos (perfil Coro para cima): escrever, ler de um endereço ou de um PDF ----------
+  let newPdf = null;
+  function openNewSong() {
+    if (lvl() < 2) return;
+    newPdf = null;
+    for (const id of ['sn-url', 'sn-title', 'sn-author', 'sn-text']) $(id).value = '';
+    $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+    $('sn-lang').value = 'pt'; $('sn-pdf-name').textContent = ''; $('sn-msg').textContent = '';
+    $('sn-hint').textContent = lvl() >= 3 ? 'Fica logo disponível para todos.' : 'Fica em "Novos Cânticos" até um Maestro o aprovar.';
+    $('song-new').showModal();
+  }
+  // texto simples → estrofes (linha em branco separa estrofes; "R:" no início = refrão)
+  const fill = d => {
+    if (d.title && !$('sn-title').value.trim()) $('sn-title').value = d.title;
+    if (d.author && !$('sn-author').value.trim()) $('sn-author').value = d.author;
+    if (d.text) $('sn-text').value = d.text;
+  };
+  $('sn-url-go').onclick = async () => {
+    const u = $('sn-url').value.trim(); if (!u) { $('sn-url').focus(); return; }
+    const b = $('sn-url-go'); b.disabled = true; $('sn-msg').textContent = 'A ler a página…';
+    try { const d = await api('scrape', { url: u }); fill(d); $('sn-msg').textContent = 'Confira o título, o autor e a letra antes de guardar.'; }
+    catch (e) { $('sn-msg').textContent = e.message || 'Não foi possível ler essa página.'; }
+    finally { b.disabled = false; }
+  };
+  $('sn-pdf').onclick = async () => {
+    const [f] = await pickFiles('application/pdf', false); if (!f) return;
+    if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) { $('sn-msg').textContent = 'Escolha um ficheiro PDF.'; return; }
+    newPdf = f; $('sn-pdf-name').textContent = f.name; $('sn-msg').textContent = 'A ler o texto do PDF…';
+    try {
+      const lib = await loadPdfJs(), doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
+      const out = [];
+      for (let i = 1; i <= Math.min(doc.numPages, 4); i++) {
+        const tc = await (await doc.getPage(i)).getTextContent(); let lastY = null, line = '', gap = 0;
+        for (const it of tc.items) {
+          const y = it.transform[5], h = it.height || 10;
+          if (lastY !== null && Math.abs(y - lastY) > h * 0.5) { out.push(line.trim()); if (Math.abs(y - lastY) > h * 1.9) out.push(''); line = ''; }
+          line += it.str; lastY = y; gap = h;
+        }
+        if (line.trim()) out.push(line.trim()); out.push('');
+      }
+      const text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      const lines = text.split('\n').filter(l => l.trim());
+      // título: a 1.ª linha com letras (não números de página nem cabeçalhos curtos)
+      const ti = lines.findIndex(l => /\p{L}{3}/u.test(l) && l.length <= 80);
+      if (lines.length) { fill({ title: ti >= 0 ? lines[ti] : '', text: text.split('\n').slice(text.split('\n').indexOf(lines[Math.max(ti, 0)]) + (ti >= 0 ? 1 : 0)).join('\n').replace(/^\n+/, '') }); $('sn-msg').textContent = 'Texto do PDF copiado para o formulário: confira-o. O PDF fica junto ao cântico.'; }
+      else $('sn-msg').textContent = 'O PDF não tem texto (é uma imagem): escreva a letra ou guarde só com o PDF.';
+    } catch (e) { $('sn-msg').textContent = 'Não foi possível ler o PDF; ele fica na mesma junto ao cântico.'; }
+  };
+  $('sn-cancel').onclick = () => $('song-new').close();
+  $('sn-save').onclick = async () => {
+    const title = $('sn-title').value.trim(), text = $('sn-text').value.trim();
+    if (!title) { $('sn-msg').textContent = 'Falta o título.'; $('sn-title').focus(); return; }
+    if (!text && !newPdf) { $('sn-msg').textContent = 'Escreva a letra, leia-a de um endereço ou junte um PDF.'; return; }
+    const b = $('sn-save'); b.disabled = true; $('sn-msg').textContent = 'A guardar…';
+    try {
+      const d = await api('addsong', { title, author: $('sn-author').value.trim(), language: $('sn-lang').value, lyrics: text ? fromText(text) : [], hasPdf: !!newPdf });
+      if (newPdf) {
+        $('sn-msg').textContent = 'A enviar o PDF…';
+        const up = await api('upload', { slug: d.slug, kind: 'score', mime: 'application/pdf', size: newPdf.size });
+        if (up.url) { const r = await fetch(up.url, { method: 'PUT', headers: { 'Content-Type': 'application/pdf', 'x-upsert': 'false' }, body: newPdf }); if (!r.ok) throw new Error('O envio do PDF falhou (' + r.status + ').'); }
+        await api('addfile', { slug: d.slug, kind: 'score', mime: 'application/pdf', size: newPdf.size, path: up.path, label: 'Partitura', ...(DEMO ? { _blob: newPdf } : {}) });
+      }
+      $('song-new').close();
+      toast(d.approved ? 'Cântico acrescentado' : 'Cântico acrescentado — fica à espera de aprovação');
+      await load();
+      location.hash = '#/cantico/' + encodeURIComponent(d.slug);
+    } catch (e) { $('sn-msg').textContent = e instanceof Limit ? e.message : (e.message || 'Não foi possível guardar.'); }
+    finally { b.disabled = false; }
+  };
+  async function decideSong(s, ok, btn) {
+    btn.disabled = true;
+    try {
+      await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
+      toast(ok ? 'Cântico aprovado' : 'Cântico retirado');
+      await load();
+      location.hash = ok ? '#/cantico/' + encodeURIComponent(s.slug) : '#/lista/livro-novos';
+      if (ok) route();
+    } catch (e) { appAlert(e.message || 'Não foi possível.'); btn.disabled = false; }
+  }
+
   // ---------- Acrescentar gravações e partituras (Maestro / Gestor) ----------
   // Partitura: um PDF, ou fotografias/imagens das páginas, que são juntas num só PDF (uma página por imagem)
   function pickFiles(accept, multiple) {
@@ -1620,7 +1725,8 @@
     }
     await copyText(url); toast('Endereço da app copiado');
   };
-  $('perfis-install').onclick = installApp; $('info-install').onclick = installApp;
+  $('perfis-install').onclick = installApp;
+  $('perfis-newsong').onclick = () => { $('perfis').close(); openNewSong(); }; $('info-install').onclick = installApp;
   $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
   $('perfil-info').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('perfil-info').click(); } };
   $('perfis').addEventListener('click', e => { if (e.target === $('perfis')) $('perfis').close(); });
@@ -2440,12 +2546,15 @@
     { id: 'livro-coro', label: 'Coro', coro: true, test: s => srcOf(s).includes('coro_clu') },
     { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
     { id: 'livro-canti', label: 'CANTI 2024', coro: true, book: 'canti2024', test: s => srcOf(s).includes('canti2024') },
+    // acrescentados na app (ficam aqui mesmo depois de passarem para o Cancioneiro); só aparece se tiver cânticos
+    { id: 'livro-novos', label: 'Novos Cânticos', coro: true, novos: true, test: s => srcOf(s).includes('novos') },
   ];
   // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };
   function renderBooks() {
     $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
       const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
+      if (b.novos && !n) return '';
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
     }).join('') + renderCollectionsMenu();
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };

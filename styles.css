@@ -658,3 +658,15 @@ body.solo:not(.standalone) .info-install { display: block; }
 .pdf-block { border: 1.5px solid var(--green-ink); border-radius: 12px; padding: 6px 10px 10px; margin: 0 auto 14px; background: #fff; width: fit-content; max-width: 100%; }
 .pdf-src { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--green-ink); }
 .pdf-block canvas { display: block; margin: 0 auto; }
+/* Novo cântico */
+.song-new .sn-from { display: grid; gap: 8px; padding: 10px; margin: 0 0 12px; border: 1px dashed #c9dcd3; border-radius: 10px; }
+.song-new .sn-row { display: flex; gap: 8px; align-items: center; }
+.song-new .sn-row input { flex: 1; min-width: 0; }
+.song-new input, .song-new select { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid #cfdcd6; border-radius: 8px; background: #fff; color: #222; }
+.song-new .sn-f { display: grid; gap: 4px; margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
+.song-new textarea { min-height: 220px; }
+.pend { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 10px; background: #f3c969; color: #4a3800; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: none; vertical-align: middle; }
+.pend-bar { margin: 1em 0; padding: 10px 12px; border: 1px solid #f0d58a; background: #fff8e3; border-radius: 10px; font-size: 14px; color: #5a4600; }
+.pend-bar p { margin: 0 0 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pend-bar p:last-child { margin: 0; }
+.ghost-btn { font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; border: 1px solid #c0392b; color: #c0392b; background: #fff; }

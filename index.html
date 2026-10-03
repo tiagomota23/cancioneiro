@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=105">
+  <link rel="stylesheet" href="styles.css?v=106">
 </head>
 <body>
   <div id="splash" class="splash"><h1>CANCIONEIRO</h1></div>
@@ -209,8 +209,25 @@
   <dialog id="perfis" class="perfis">
     <h2 tabindex="-1" autofocus>Perfil</h2>
     <p class="perfis-install"><button type="button" class="install-line" id="perfis-install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg><span>Adicionar a app ao ecrã principal</span></button></p>
+    <p class="perfis-install coro-only"><button type="button" class="install-line" id="perfis-newsong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Acrescentar um cântico</span></button></p>
     <div id="perfis-list" class="perfis-list"></div>
     <form method="dialog" class="info-actions perfis-actions"><button type="button" id="perfis-close">Fechar</button><i class="perfil-i" id="perfil-info" role="button" tabindex="0" aria-label="Informação e ajuda" title="Informação e ajuda">i</i></form>
+  </dialog>
+
+  <!-- Novo cântico: escrever, ler de um endereço ou de um PDF -->
+  <dialog id="song-new" class="editor song-new">
+    <h2 tabindex="-1" autofocus>Novo cântico</h2>
+    <div class="sn-from">
+      <div class="sn-row"><input id="sn-url" type="url" inputmode="url" placeholder="Endereço de uma página com a letra" autocomplete="off"><button type="button" id="sn-url-go" class="ghost">Ler</button></div>
+      <div class="sn-row"><button type="button" id="sn-pdf" class="ghost">Juntar PDF…</button><span id="sn-pdf-name" class="small"></span></div>
+    </div>
+    <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off"></label>
+    <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off"></label>
+    <label class="sn-f">Idioma<select id="sn-lang"></select></label>
+    <label class="sn-f">Letra<textarea id="sn-text" spellcheck="false" autocapitalize="off"></textarea></label>
+    <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint"></span></p>
+    <p class="small" id="sn-msg" role="status"></p>
+    <div class="edit-actions"><span></span><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
   </dialog>
 
   <!-- Editar letra -->
@@ -229,7 +246,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=105"></script>
-  <script src="app.js?v=105"></script>
+  <script src="config.js?v=106"></script>
+  <script src="app.js?v=106"></script>
 </body>
 </html>
