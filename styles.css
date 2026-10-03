@@ -738,3 +738,14 @@ dialog.tour.center { background: rgba(0,0,0,.55); }
 .sec-add .sa-search { position: relative; margin: 4px 0 6px; }
 .sec-add .sa-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: #888; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
 .sec-add .sa-search #sa-q { margin: 0; padding-left: 38px; }
+
+/* Maiúsculas como na página inicial: títulos, nomes de cânticos em listas, etiquetas, botões pequenos e procura
+   (a letra, as descrições e os botões das janelas ficam em minúsculas, para se lerem bem) */
+.song h1, dialog h2, .pdf-title, .admin-title, .list-title { text-transform: uppercase; letter-spacing: .06em; }
+dialog h2 { font-size: 22px; }
+#sa-list b, .tpl-apply b, .col-pick span, .sim-list a, .perfil-opt b, .pdf-src, .song-new .sn-f, .song-new .sn-flabel,
+.sec-add .sa-sec, .up-files li span, #sn-flist li span, .mini-info b, .pend-bar p:first-child, .shared-foot,
+.col-edit, .col-share, .sn-gen-btn, .edit-btn, .ghost-btn, .pick-canc, .install-line span, .tour-msg + .tour-nav .tour-n { text-transform: uppercase; letter-spacing: .05em; }
+#sa-list small, .tpl-apply small, .col-pick small, .sim-list small, .perfil-opt small { text-transform: none; letter-spacing: 0; }
+input::placeholder, textarea::placeholder { text-transform: uppercase; letter-spacing: .06em; }
+.perfil-admin, .meta a.pdf, .lang-chip, .lang-switch button, .src-chip, .moments, .pdf-more button, .col-pick-new, .pick-top button { text-transform: uppercase; letter-spacing: .05em; }
