@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v63';
+  const APP_VERSION = '2026-10-03 v64';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -160,11 +160,19 @@
     }
     refreshFavUI();
   }
+  // No cântico: ☆ (preferido) ou, do perfil Maestro para cima, um livro que abre as coleções do cântico
+  const ICON_STAR = '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>';
+  const ICON_BOOK = '<path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/>';
   function refreshFavUI() {
     const fb = $('btn-fav'), slug = fb.dataset.slug;
     if (slug) {
-      fb.classList.toggle('on', isFav(slug)); fb.setAttribute('aria-pressed', isFav(slug));
-      fb.setAttribute('aria-label', isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+      const book = lvl() >= 3;
+      const on = isFav(slug) || (book && cols.some(c => !expired(c) && (c.songs || []).some(x => x.song_slug === slug)));
+      fb.querySelector('svg').innerHTML = book ? ICON_BOOK : ICON_STAR;
+      fb.classList.toggle('book', book);
+      fb.classList.toggle('on', on); fb.setAttribute('aria-pressed', on);
+      fb.setAttribute('aria-label', book ? 'Coleções' : isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+      fb.title = book ? 'Coleções' : '';
     }
     if (location.hash === '#/lista/favoritos' && !$('view-list').hidden) showList('favoritos');
   }
@@ -853,11 +861,6 @@
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
     const canEdit = data && mode === 'orig' && lvl() >= 3 && extrasOn();
     const original = srcOf(s).includes('original');
-    const promo = lvl() >= 3 && extrasOn() && !original
-      ? `<p class="promo-bar">${inCancioneiro(s)
-        ? `<span>No Cancioneiro${s.promoted_by ? ' (promovido por ' + esc(s.promoted_by.split('@')[0]) + ')' : ''}</span><button class="revert-link" id="btn-promo" data-on="0">Retirar do Cancioneiro</button>`
-        : `<button class="edit-btn" id="btn-promo" data-on="1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>Promover ao Cancioneiro</button>`}</p>`
-      : '';
     const editBar = canEdit
       ? `<p class="edit-bar">${edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar letra</button></p>`
       : '';
@@ -870,8 +873,6 @@
       ${wait}
       ${renderStanzas(body)}
       ${editBar}
-      ${promo}
-      ${lvl() >= 3 && extrasOn() ? `<p class="promo-bar"><button class="revert-link" id="btn-col">${colLabel(s)}</button></p>` : ''}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
@@ -883,11 +884,9 @@
     $('btn-copy').hidden = lvl() < 2;
     $('btn-copy').onclick = () => { if (data && lvl() >= 2) copyLyrics(s, body); };
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug);
-    if ($('btn-promo')) $('btn-promo').onclick = () => promote(slug, $('btn-promo').dataset.on === '1');
-    if ($('btn-col')) $('btn-col').onclick = () => openAddToCollection(slug);
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
-    fb.onclick = () => toggleFav(slug);
+    fb.onclick = () => lvl() >= 3 ? openSongCollections(slug) : toggleFav(slug);
     refreshFavUI();
     $('btn-chords').classList.toggle('on', prefs.chords);
     $('song').querySelectorAll('.lang-switch button').forEach(b => b.onclick = () => {
@@ -1376,7 +1375,7 @@
     rows.innerHTML = list.map((s, i) => {
       const row = songRow(s);
       if (!can) return row;
-      return row.replace('<li>', `<li class="swipe" data-slug="${esc(s.slug)}"><div class="sw-actions"><button data-a="up" aria-label="Subir"${i ? '' : ' disabled'}>↑</button><button data-a="down" aria-label="Descer"${i < list.length - 1 ? '' : ' disabled'}>↓</button><button data-a="del" class="sw-del">Remover</button></div><button class="sw-more" aria-label="Opções">⋯</button>`);
+      return row.replace('<li>', `<li class="swipe" data-slug="${esc(s.slug)}"><div class="sw-actions"><button data-a="up" aria-label="Subir"${i ? '' : ' disabled'}>↑</button><button data-a="down" aria-label="Descer"${i < list.length - 1 ? '' : ' disabled'}>↓</button><button data-a="del" class="sw-del" aria-label="Remover da coleção"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button>`);
     }).join('');
     if (!list.length) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e use "Adicionar a uma coleção".' : 'Coleção vazia.';
     if (can) {
@@ -1389,11 +1388,20 @@
     const a = li.querySelector('a'); let x0 = null, dx = 0;
     const close = () => li.classList.remove('open');
     a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; dx = 0; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
-    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-170, Math.min(0, dx + (li.classList.contains('open') ? -170 : 0)))}px)`; }, { passive: true });
+    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-144, Math.min(0, dx + (li.classList.contains("open") ? -144 : 0)))}px)`; }, { passive: true });
     a.addEventListener('touchend', () => { a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
     a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); if (Math.abs(dx) <= 10) close(); } });
     li.querySelector('.sw-more').onclick = () => li.classList.toggle('open');
-    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = () => colAction(c, li.dataset.slug, b.dataset.a));
+    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = () => {
+      // remover pede confirmação: o caixote passa a ✓ e é preciso tocar outra vez
+      if (b.dataset.a === 'del' && !b.classList.contains('confirm')) {
+        b.classList.add('confirm'); b.setAttribute('aria-label', 'Confirmar remoção');
+        b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+        setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>'; } }, 4000);
+        return;
+      }
+      colAction(c, li.dataset.slug, b.dataset.a);
+    });
   }
   async function colAction(c, slug, act) {
     const list = colSongs(c), i = list.findIndex(x => x.song_slug === slug);
@@ -1495,6 +1503,30 @@
     $('col-pick').showModal();
   }
   $('col-pick-close').onclick = () => $('col-pick').close();
+  // Maestro: livro no cântico → Preferidos, Cancioneiro (promover/retirar) e coleções ativas
+  function openSongCollections(slug) {
+    const s = bySlug.get(slug); if (!s) return;
+    const original = srcOf(s).includes('original');
+    const act = cols.filter(c => !expired(c) && colVisible(c));
+    const item = (key, label, sub, checked, disabled) => `<label class="col-pick${disabled ? ' dis' : ''}"><input type="checkbox" data-k="${esc(key)}"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span></label>`;
+    $('col-pick-list').innerHTML =
+      item('fav', 'Preferidos', 'Os seus cânticos preferidos', isFav(slug), false) +
+      item('cancioneiro', 'Cancioneiro', original ? 'Do Cancioneiro original' : inCancioneiro(s) ? 'Promovido' + (s.promoted_by ? ' por ' + s.promoted_by.split('@')[0] : '') : 'Promover ao Cancioneiro', inCancioneiro(s), original) +
+      act.map(c => item('c:' + c.id, c.title, `${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false)).join('') +
+      `<button class="col-pick-new" id="col-pick-new">+ Nova coleção</button>`;
+    const refresh = () => { refreshFavUI(); if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
+    $('col-pick-list').querySelectorAll('input').forEach(i => i.onchange = async () => {
+      const k = i.dataset.k;
+      try {
+        if (k === 'fav') { if (isFav(slug) !== i.checked) await toggleFav(slug); }
+        else if (k === 'cancioneiro') { await promote(slug, i.checked); i.checked = inCancioneiro(bySlug.get(slug)); }
+        else await toggleInCollection(cols.find(c => c.id === k.slice(2)), slug, i.checked);
+      } catch (e) { i.checked = !i.checked; alert('Não foi possível guardar: ' + (e.message || e)); }
+      refresh();
+    });
+    $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(null); };
+    $('col-pick').showModal();
+  }
   document.addEventListener('click', e => { if (!e.target.closest('li.swipe')) document.querySelectorAll('#rows li.open').forEach(x => x.classList.remove('open')); });
 
   // Gaveta: os livros (Preferidos, Cancioneiro e, do perfil Coro para cima, Coro, Songbook e CANTI 2024)

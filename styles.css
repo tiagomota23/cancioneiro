@@ -574,3 +574,13 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 input, select, textarea { font-size: max(16px, 1em); }
 html, body { touch-action: pan-x pan-y; }
 .pdfview, .pdfview * { touch-action: auto; }
+
+.rows li.swipe .sw-actions .sw-del { width: 56px; }
+.rows li.swipe .sw-actions .sw-del svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rows li.swipe .sw-actions .sw-del.confirm { background: #8e1f14; }
+.rows li.swipe.open > a { transform: translateX(-144px); }
+.fav-toggle.book svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.fav-toggle.book.on svg { fill: rgba(14,127,88,.18); }
+.fav-toggle.book.on { color: var(--green-ink); }
+.col-pick.dis { opacity: .6; }
+.col-pick-new { margin-top: 4px; padding: 10px 12px; border: 1px dashed #b9cfc5; border-radius: 10px; color: #0e7f58; font-weight: 700; text-align: left; }
