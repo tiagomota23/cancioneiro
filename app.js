@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v125';
+  const APP_VERSION = '2026-10-03 v126';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2543,7 +2543,7 @@
     // público e prazo só para quem gere (Maestro / Gestor)
     // partilhar a coleção: só Maestro e Gestor
     const shareBtn = can && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar coleção" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
-    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
+    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button><button class="col-edit" id="col-addsong">+ Cântico</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
@@ -2563,6 +2563,7 @@
     if (can) {
       $('col-edit').onclick = () => openCollectionDlg(c);
       $('col-tpl').onclick = () => openTemplates(c);
+      $('col-addsong').onclick = () => openSectionAdd(c, null, true);
       $('col-add-sec').onclick = async () => { const v = await appPrompt('Nova secção', '', 'Por exemplo: Entrada, Comunhão'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
       rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
     }
@@ -2724,9 +2725,18 @@
 
   // põe um cântico (acabado de acrescentar no fim) no fim da secção escolhida ('' = antes da primeira secção)
   // "+" numa secção da folha: procurar um cântico e acrescentá-lo no fim dessa secção
-  function openSectionAdd(c, secId) {
-    const sec = (c.sections || []).find(x => x.id === secId); if (!sec) return;
-    $('sa-title').textContent = 'Acrescentar a «' + sec.title + '»';
+  // pick = true: botão no topo da folha, com a escolha da secção
+  function openSectionAdd(c, secId, pick) {
+    const secs = colItems(c).filter(it => it.k === 'sec').map(it => it.ref);
+    if (!pick && !secs.some(x => x.id === secId)) return;
+    $('sa-sec').hidden = !pick || !secs.length;
+    if (pick) {
+      $('sa-sel').innerHTML = '<option value="">No início (sem secção)</option>' + secs.map(x => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
+      $('sa-sel').value = secs.length ? secs[secs.length - 1].id : '';
+    }
+    const curSec = () => pick ? ($('sa-sel').value || null) : secId;
+    const secName = () => (secs.find(x => x.id === curSec()) || {}).title;
+    $('sa-title').textContent = pick ? 'Acrescentar cântico' : 'Acrescentar a «' + secName() + '»';
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
     const pool = allSongs.filter(s => s.approved !== false && (lvl() >= 2 || inCancioneiro(s)));
     const render = () => {
@@ -2740,9 +2750,10 @@
       $('sa-list').querySelectorAll('button:not([disabled])').forEach(b => b.onclick = async () => {
         b.disabled = true;
         try {
+          const sid = curSec();
           await toggleInCollection(c, b.dataset.slug, true);
-          await placeInSection(c, b.dataset.slug, secId);
-          $('sec-add').close(); toast('Acrescentado a «' + sec.title + '»');
+          await placeInSection(c, b.dataset.slug, sid);
+          $('sec-add').close(); toast(sid ? 'Acrescentado a «' + secName() + '»' : 'Acrescentado à folha');
           if (location.hash === '#/lista/colecao-' + c.id) showCollection(c.id);
         } catch (e) { b.disabled = false; appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível acrescentar: ' + (e.message || e)); }
       });

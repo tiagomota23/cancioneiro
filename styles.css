@@ -732,3 +732,6 @@ dialog.tour.center { background: rgba(0,0,0,.55); }
 .sec-add #sa-list button { display: grid; width: 100%; text-align: left; padding: 9px 4px; border: 0; border-bottom: 1px solid #eef3f0; background: none; font: inherit; color: #222; }
 .sec-add #sa-list button small { color: #888; font-size: 12px; }
 .sec-add #sa-list button:disabled { opacity: .5; }
+.sec-add .sa-sec { display: grid; gap: 4px; margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
+.sec-add .sa-sec[hidden] { display: none; }
+.sec-add .sa-sec select { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid #cfdcd6; border-radius: 10px; background: #fff; color: #222; }
