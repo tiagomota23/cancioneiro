@@ -12,3 +12,8 @@ create policy "leitura familia" on public.songs for select to authenticated
   using (((select public.my_rank()) >= 2 or ((select public.my_rank()) = 1 and (cancioneiro or public.in_cancioneiro_collection(slug))))
          and (approved or (select public.my_rank()) >= 3 or added_by = lower(coalesce(auth.jwt() ->> 'email', ''))));
 select 'ok' as novos;
+
+-- Cânticos parecidos (título ou letra) encontrados quando um cântico novo é acrescentado: avisa quem cria e quem aprova
+alter table public.songs add column if not exists similar jsonb;
+grant select (similar) on public.songs to authenticated;
+select 'ok' as parecidos;

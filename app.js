@@ -67,7 +67,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v109';
+  const APP_VERSION = '2026-10-03 v110';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -263,10 +263,11 @@
     }
     if (op === 'upload') return { path: 'demo', url: null };
     if (op === 'scrape') throw new Error('No modo de demonstração não se leem páginas.');
+    if (op === 'similar') { const n = norm(b.title); return { similar: [...demoFull.values()].filter(x => n && norm(x.title).includes(n)).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })) }; }
     if (op === 'addsong') {
       const nv = store.get('cancioneiro.demo.novos', []), slug = 'novo_' + Date.now();
       nv.push({ slug, number: 9000 + nv.length, title: b.title, author: b.author || null, language: b.language, lyrics: b.lyrics, translation: null, cancioneiro: false,
-        approved: lvl() >= 3, added_by: 'demo@localhost', sources: [{ source: 'novos' }], tags: [], files: [] });
+        approved: lvl() >= 3, added_by: 'demo@localhost', similar: [...demoFull.values()].filter(x => norm(b.title) && norm(x.title).includes(norm(b.title))).slice(0, 5).map(x => ({ slug: x.slug, title: x.title, author: x.author, why: 'título' })), sources: [{ source: 'novos' }], tags: [], files: [] });
       store.set('cancioneiro.demo.novos', nv); return { slug, approved: lvl() >= 3 };
     }
     if (op === 'coro') { const nv = store.get('cancioneiro.demo.novos', []); store.set('cancioneiro.demo.novos', nv.map(x => x.slug === b.slug ? { ...x, sources: b.on ? [...x.sources, { source: 'coro_clu' }] : x.sources.filter(y => y.source !== 'coro_clu') } : x)); return { ok: true }; }
@@ -303,7 +304,7 @@
       demoFull = new Map(full.map(s => [s.slug, s]));
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
-    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,' +
+    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,similar,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -930,9 +931,11 @@
     const original = srcOf(s).includes('original');
     // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
     const mine = session && s.added_by === session.user.email;
+    const sims = (s.approved === false && Array.isArray(s.similar) ? s.similar : []).filter(x => x.slug !== s.slug);
+    const simHtml = sims.length ? `<div class="sim-list"><b>Atenção: parecido com cânticos que já existem</b>${sims.map(x => `<a href="#/cantico/${encodeURIComponent(x.slug)}">${esc(x.title)}${x.author ? ' — ' + esc(x.author) : ''}<small>${esc(x.why)}</small></a>`).join('')}</div>` : '';
     // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
     const pendHtml = s.approved === false
-      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
+      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
       : srcOf(s).includes('novos') && lvl() >= 3 && extrasOn() ? '<p class="edit-bar"><button class="ghost-btn" id="song-reject">Apagar cântico novo</button></p>' : '';
     // Maestro / Gestor: acrescentar gravações e partituras (ao lado de "Editar letra"); Coro: nos cânticos novos que acrescentou
     const canFiles = (lvl() >= 3 || (lvl() >= 2 && mine && srcOf(s).includes('novos'))) && extrasOn();
@@ -1437,8 +1440,12 @@
     const title = $('sn-title').value.trim(), text = $('sn-text').value.trim();
     if (!title) { $('sn-msg').textContent = 'Falta o título.'; $('sn-title').focus(); return; }
     if (!text && !newPdf) { $('sn-msg').textContent = 'Escreva a letra, leia-a de um endereço ou junte um PDF.'; return; }
-    const b = $('sn-save'); b.disabled = true; $('sn-msg').textContent = 'A guardar…';
+    const b = $('sn-save'); b.disabled = true; $('sn-msg').textContent = 'A procurar cânticos parecidos…';
     try {
+      // já há cânticos com título ou letra parecidos? quem cria tem de confirmar (e quem aprova também é avisado)
+      const sim = (await api('similar', { title, lines: text.split('\n') })).similar || [];
+      if (sim.length && !(await appConfirm(`Já existem cânticos parecidos:\n\n${sim.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why} parecido${x.why.includes(' e ') ? 's' : ''})`).join('\n')}\n\nQuer mesmo acrescentar este cântico?${lvl() >= 3 ? '' : ' Quem aprovar também vai ver este aviso.'}`, 'Criar mesmo assim', 'Cânticos parecidos'))) { $('sn-msg').textContent = ''; return; }
+      $('sn-msg').textContent = 'A guardar…';
       const d = await api('addsong', { title, author: $('sn-author').value.trim(), language: $('sn-lang').value, lyrics: text ? fromText(text) : [], hasPdf: !!newPdf });
       if (newPdf) {
         $('sn-msg').textContent = 'A enviar o PDF…';
@@ -1454,6 +1461,8 @@
     finally { b.disabled = false; }
   };
   async function decideSong(s, ok, btn) {
+    const sims = Array.isArray(s.similar) ? s.similar : [];
+    if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
@@ -2197,7 +2206,7 @@
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
     return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
-      (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
+      (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova folha</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
   const withSongs = items => items.filter((it, i) => it.k !== 'sec' || (items[i + 1] && items[i + 1].k === 'song'));
@@ -2419,7 +2428,7 @@
   let dlgCol = null;
   function openCollectionDlg(c) {
     dlgCol = c;
-    $('col-dlg-title').textContent = c ? 'Editar coleção' : 'Nova coleção';
+    $('col-dlg-title').textContent = c ? 'Editar coleção' : 'Nova folha';
     $('col-name').value = c ? c.title : '';
     $('col-aud').value = c ? c.audience : 'coro';
     $('col-dur').value = c ? c.duration : '1w';
@@ -2485,7 +2494,7 @@
   async function openAddToCollection(slug) {
     const s = bySlug.get(slug), f = fitting(s);
     const refresh = () => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
-    if (!f.length) { if (await appConfirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova coleção?', 'Criar')) openCollectionDlg(null); return; }
+    if (!f.length) { if (await appConfirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova folha?', 'Criar')) openCollectionDlg(null); return; }
     if (f.length === 1) {
       const on = !(f[0].songs || []).some(x => x.song_slug === slug);
       try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível guardar: ' + (e.message || e)); }
@@ -2513,7 +2522,7 @@
       `<div class="pick-top">${novo ? `<button class="pick-canc${inCoro ? ' on' : ''}" id="pick-coro" aria-pressed="${inCoro}">+ Coro</button>` : ''}<button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button>` +
       `<button class="pick-star${isFav(slug) ? ' on' : ''}" id="pick-fav" aria-label="${isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'}" aria-pressed="${isFav(slug)}"><svg viewBox="0 0 24 24">${ICON_STAR}</svg></button></div>` +
       act.map(c => item('c:' + c.id, c.title, `${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false)).join('') +
-      `<button class="col-pick-new" id="col-pick-new">+ Nova coleção</button>`;
+      `<button class="col-pick-new" id="col-pick-new">+ Nova folha</button>`;
     const refresh = () => { refreshFavUI(); if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
     $('col-pick-list').querySelectorAll('input').forEach(i => i.onchange = async () => {
       const k = i.dataset.k;

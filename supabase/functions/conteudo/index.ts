@@ -96,11 +96,13 @@ async function songs() {
   const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
-  const list = await all('songs?select=slug,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');
+  const list = await all('songs?select=slug,title,author,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');
   for (const s of list) {
     s.eff = s.lyrics_edit || s.lyrics || [];
     s.lines = s.eff.flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
     s.nl = s.lines.map(norm);
+    s.lset = new Set(s.eff.flatMap(st => st.lines).map(cleanLine).filter(l => l.length >= 12));
+    s.nt = cleanLine(s.title);
   }
   cache = { list, bySlug: new Map(list.map(s => [s.slug, s])), idx: null };
   cacheStamp = stamp;
@@ -115,6 +117,24 @@ function shortSnip(line, terms) {
   let i = nw.findIndex(w => terms.some(t => w.includes(t))); if (i < 0) i = 0;
   const a = Math.max(0, Math.min(i - 3, words.length - 7));
   return (a > 0 ? '… ' : '') + words.slice(a, a + 7).join(' ') + (a + 7 < words.length ? ' …' : '');
+}
+// ---------- cânticos parecidos (para avisar antes de acrescentar um cântico novo) ----------
+const cleanLine = l => norm(stripChords(String(l || ''))).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+const words = t => new Set(t.split(' ').filter(w => w.length > 2));
+function findSimilar(c, title, lines, ok) {
+  const nt = cleanLine(title), tw = words(nt);
+  const ll = new Set(lines.map(cleanLine).filter(l => l.length >= 12));
+  const out = [];
+  for (const s of c.list) {
+    if (!ok(s)) continue;
+    const sw = words(s.nt), inter = [...tw].filter(w => sw.has(w)).length;
+    const tSim = !!nt && (s.nt === nt || (nt.length >= 6 && s.nt.length >= 6 && (s.nt.includes(nt) || nt.includes(s.nt))) ||
+      (tw.size >= 2 && sw.size >= 2 && inter / new Set([...tw, ...sw]).size >= 0.6));
+    let common = 0; for (const l of ll) if (s.lset.has(l)) common++;
+    const lSim = common >= 2 || (ll.size >= 2 && common / ll.size >= 0.3);
+    if (tSim || lSim) out.push({ slug: s.slug, title: s.title, author: s.author || null, why: tSim && lSim ? 'título e letra' : tSim ? 'título' : 'letra', w: (tSim ? 1 : 0) + (lSim ? 2 : 0) + common / 100 });
+  }
+  return out.sort((a, b) => b.w - a.w).slice(0, 5).map(({ w, ...x }) => x);
 }
 // pesquisa na letra: frase exata numa linha, ou todos os termos na letra (só um trecho curto é devolvido)
 function searchLyrics(c, q, ok) {
@@ -414,6 +434,12 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ song_slug: slug, kind, label, path, mime, size: total, sort: (last?.sort ?? 0) + 1 }) });
       return out(row);
     }
+    if (op === 'similar') { // antes de acrescentar: cânticos com título ou letra parecidos
+      if (lvl < 2) return denied();
+      if (!(await limit(user, 'search', 'similar:' + String(b.title || '').slice(0, 60)))) return tooMany();
+      const lines = Array.isArray(b.lines) ? b.lines.slice(0, 400).map(x => String(x).slice(0, 300)) : [];
+      return out({ similar: findSimilar(await songs(), String(b.title || '').slice(0, 120), lines, visible) });
+    }
     if (op === 'addsong') { // Novos Cânticos: Coro para cima; do Coro fica pendente até um Maestro aprovar
       if (lvl < 2) return denied();
       const title = String(b.title || '').trim().slice(0, 120), author = String(b.author || '').trim().slice(0, 120) || null;
@@ -427,9 +453,11 @@ Deno.serve(async (req) => {
       for (let i = 2; (await rest(`songs?slug=eq.${slug}&select=slug`)).length; i++) slug = base + '_' + i;
       const [mx] = await rest('songs?select=number&order=number.desc&limit=1');
       const ok = lvl >= 3, now = new Date().toISOString();
+      // parecidos com cânticos que já existem: fica registado para quem aprova
+      const similar = findSimilar(await songs(), title, lyrics.flatMap(st => st.lines), x => x.approved !== false);
       await rest('songs', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
         slug, number: (mx?.number || 0) + 1, title, author, language, lyrics, has_chords: lyrics.some(st => st.lines.some(l => l.includes('['))),
-        cancioneiro: false, approved: ok, added_by: user.email, added_at: now, approved_by: ok ? user.email : null }) });
+        cancioneiro: false, approved: ok, added_by: user.email, added_at: now, approved_by: ok ? user.email : null, similar: similar.length ? similar : null }) });
       await rest('song_sources', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ song_slug: slug, source: 'novos' }) });
       cache = null;
       return out({ slug, approved: ok });

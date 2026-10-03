@@ -672,3 +672,8 @@ body.solo:not(.standalone) .info-install { display: block; }
 .ghost-btn { font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; border: 1px solid #c0392b; color: #c0392b; background: #fff; }
 .list-title .novos-filtro { display: block; margin-top: 10px; font: inherit; font-size: 16px; letter-spacing: 0; text-transform: none; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.7); background: rgba(255,255,255,.15); color: #fff; max-width: 100%; }
 .list-title .novos-filtro option { color: #222; }
+.sim-list { display: grid; gap: 4px; margin: 0 0 10px; }
+.sim-list b { color: #8a5a00; }
+.sim-list a { color: var(--green-ink); text-decoration: underline; }
+.sim-list a small { margin-left: 6px; color: #8a6d00; text-decoration: none; }
+#app-dlg-msg { white-space: pre-line; }
