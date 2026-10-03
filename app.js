@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v79';
+  const APP_VERSION = '2026-10-03 v80';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -978,17 +978,26 @@
     if (!st.length) { $('edit-msg').textContent = 'A letra não pode ficar vazia.'; return; }
     saveLyrics(st);
   };
-  function revertLyrics(slug) {
-    if (!confirm('Repor a letra original deste cântico (como no site / pasta do Coro)? A edição fica no histórico.')) return;
+  function revertLyrics(slug, btn) {
+    if (!(btn ? tapConfirm(btn, 'Confirmar: repor original') : confirm('Repor a letra original deste cântico (como no site / pasta do Coro)? A edição fica no histórico.'))) return;
     editSlug = slug;
     saveLyrics(null);
   }
-  $('edit-reset').onclick = () => revertLyrics(editSlug);
+  $('edit-reset').onclick = () => revertLyrics(editSlug, $('edit-reset'));
+
+  // Confirmação em dois toques dentro das janelas (no iPhone, o confirm() do sistema não aparece com uma janela aberta):
+  // o 1.º toque põe o botão vermelho a pedir confirmação; o 2.º (em 4 s) confirma
+  function tapConfirm(btn, label) {
+    if (btn.dataset.armed) { clearTimeout(+btn.dataset.armed); delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn.dataset.orig; return true; }
+    btn.dataset.orig = btn.innerHTML; btn.textContent = label; btn.classList.add('armed');
+    btn.dataset.armed = setTimeout(() => { delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn.dataset.orig; }, 4000);
+    return false;
+  }
 
   // ---------- Promover ao Cancioneiro (perfil Maestro) ----------
-  async function promote(slug, on) {
+  async function promote(slug, on, confirmed) {
     const s = bySlug.get(slug);
-    if (!on && !confirm('Retirar este cântico do Cancioneiro? Quem tem o perfil Cancioneiro deixa de o ver.')) return;
+    if (!on && !confirmed && !(confirm('Retirar este cântico do Cancioneiro? Quem tem o perfil Cancioneiro deixa de o ver.'))) return;
     const b = $('btn-promo'); if (b) b.disabled = true;
     try {
       const d = await api('promote', { slug, on });
@@ -1606,7 +1615,7 @@
     } catch (e) { $('tpl-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
   }
   async function deleteTemplate() {
-    if (!tplEditing || !confirm(`Apagar o template «${tplEditing.title}»? As coleções não mudam.`)) return;
+    if (!tplEditing || !tapConfirm($('tpl-del'), 'Confirmar: apagar')) return;
     try {
       if (DEMO) { tpls = tpls.filter(x => x !== tplEditing); store.set('cancioneiro.demo.tpls', tpls); }
       else { const { error } = await sb.from('collection_templates').delete().eq('id', tplEditing.id); if (error) throw error; }
@@ -1669,7 +1678,7 @@
     } catch (e) { $('col-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
   }
   async function deleteCollection() {
-    if (!dlgCol || !confirm(`Apagar a coleção «${dlgCol.title}»? Os cânticos não são apagados.`)) return;
+    if (!dlgCol || !tapConfirm($('col-del'), 'Confirmar: apagar')) return;
     try {
       if (!DEMO) { const { error } = await sb.from('collections').delete().eq('id', dlgCol.id); if (error) throw error; }
       cols = cols.filter(x => x !== dlgCol); if (DEMO) demoSave(); else store.set(colsKey(), cols);
@@ -1744,8 +1753,11 @@
     $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(null); };
     $('pick-fav').onclick = async () => { await toggleFav(slug); const on = isFav(slug); $('pick-fav').classList.toggle('on', on); $('pick-fav').setAttribute('aria-pressed', on); refresh(); };
     if (!original) $('pick-canc').onclick = async () => {
-      const b = $('pick-canc'); b.disabled = true;
-      await promote(slug, !inCancioneiro(bySlug.get(slug)));
+      const b = $('pick-canc'), was = inCancioneiro(bySlug.get(slug));
+      if (was && !b.dataset.armed) { tapConfirm(b, 'Confirmar: retirar'); return; } // 1.º toque: pede confirmação
+      if (was) tapConfirm(b); // 2.º toque: repõe o botão e retira
+      b.disabled = true;
+      await promote(slug, !was, true); // já confirmado
       const on = inCancioneiro(bySlug.get(slug)); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.disabled = false; refreshFavUI();
     };
     $('col-pick').showModal();

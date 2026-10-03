@@ -614,3 +614,6 @@ html, body { touch-action: pan-x pan-y; }
 .splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: #fff; font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
 .splash.gone::after { display: none; }
 @keyframes splash-help { to { opacity: .9; } }
+
+/* botão à espera de confirmação (2.º toque) */
+button.armed, .edit-actions button.ghost.armed { background: #c0392b !important; color: #fff !important; border-color: #c0392b !important; }
