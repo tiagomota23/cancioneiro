@@ -597,3 +597,4 @@ html, body { touch-action: pan-x pan-y; }
 .pick-canc:disabled { opacity: 1; }
 .col-dlg button, .col-dlg h2, .col-pick input { outline: none; }
 .col-dlg button:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
+.song a.book-open { color: var(--green-ink); font-weight: 700; text-decoration: underline; }

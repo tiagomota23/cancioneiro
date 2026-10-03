@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v73';
+  const APP_VERSION = '2026-10-03 v74';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -808,6 +808,15 @@
       .map(s => songRow(s)).join('');
   }
 
+  // cânticos só com a página do livro: "(letra no livro X, pág. N — abrir)" com "abrir" a ligar à página
+  function bookNote(stanzas, s, scores) {
+    const lines = (stanzas || []).flatMap(st => st.lines);
+    const m = lines.length === 1 && lines[0].match(/^\(letra no livro (.+?), pág\. (\d+)(?: — abrir o livro)?\)$/);
+    if (!m) return '';
+    const i = scores.findIndex(sc => (sc.label || '').startsWith(m[1]));
+    const link = i >= 0 ? ` — <a class="book-open" href="#/cantico/${encodeURIComponent(s.slug)}/partitura${i ? '/' + i : ''}">abrir</a>` : '';
+    return `<div class="stanza verse"><div class="line">(letra no livro ${esc(m[1])}, pág. ${esc(m[2])}${link})</div></div>`;
+  }
   function renderStanzas(stanzas) {
     return stanzas.map(st => {
       const hasCh = st.lines.some(l => l.includes('['));
@@ -871,7 +880,7 @@
       <div class="meta">${sw}${pdf}</div>
       ${note}
       ${wait}
-      ${renderStanzas(body)}
+      ${bookNote(body, s, scores) || renderStanzas(body)}
       ${editBar}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
