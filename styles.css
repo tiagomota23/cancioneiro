@@ -649,7 +649,8 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 .perfis-right { display: inline-flex; align-items: center; gap: 6px; }
 .install-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; color: var(--green-ink); background: none; border: 0; box-shadow: none; }
 .install-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-body.standalone .install-btn, .info-install { display: none; }
+body.standalone .install-btn, .info-install, body.standalone .perfis-install { display: none; }
+.perfis-install { margin: 0 0 12px; }
 body.solo:not(.standalone) .info-install { display: block; }
 .install-line { display: inline-flex; align-items: center; gap: 8px; padding: 0; background: none; border: 0; box-shadow: none; color: var(--green-ink); font: inherit; font-weight: 700; text-align: left; }
 .install-line svg { width: 1.4em; height: 1.4em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
