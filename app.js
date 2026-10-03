@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v62';
+  const APP_VERSION = '2026-10-03 v63';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1601,6 +1601,10 @@
   })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // Sem zoom com dois dedos nas páginas da app (só nas partituras); o iPhone ignora user-scalable, por isso trava-se o gesto
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => { if ($('pdfview').hidden) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1 && $('pdfview').hidden) e.preventDefault(); }, { passive: false });
 
   // ---------- Puxar para baixo, segurar 5 s e largar: atualiza a app para a versão mais recente ----------
   // (o service worker vai sempre primeiro à rede, por isso recarregar traz a última versão publicada)
