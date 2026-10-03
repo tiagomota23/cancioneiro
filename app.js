@@ -1169,7 +1169,7 @@
         // um cântico nunca se parte entre colunas ou páginas (só se não couber numa coluna inteira)
         units.push({ rows: [...pend, ...head, ...stanzas.flat()], keep: true }); pend = [];
       }
-      if (pend.length) units.push({ rows: pend, keep: true });
+      // secções sem cânticos no fim ficavam soltas: não entram (cada secção vai sempre junta com o cântico seguinte)
       return units;
     };
     // posiciona: devolve [{ page, x, y, row }]; o espaço por cima (pad) cai no topo de uma coluna
