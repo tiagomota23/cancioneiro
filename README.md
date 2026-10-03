@@ -20,6 +20,14 @@ no servidor: RLS (`my_rank()`) na lista de cânticos e ficheiros, e a função `
 SQL em `supabase/perfis.sql`. Os emails para os Gestores usam o remetente de teste do Resend, que só entrega ao dono da conta Resend;
 para outros Gestores receberem é preciso verificar um domínio no Resend.
 
+## Coleções
+Um Maestro (ou Gestor) cria coleções no menu ☰ (Livros → "+ Nova coleção"): título, público (Coro ou Cancioneiro) e duração
+(24 h, 48 h, 1 semana, 1 mês). Em cada cântico há "Adicionar a uma coleção"; na lista da coleção, deslizar para a esquerda
+mostra Remover / ↑ / ↓ (no computador, botão ⋯), e "Editar" muda as propriedades (a duração conta a partir de quando se guarda).
+Qualquer cântico pode entrar numa coleção do Cancioneiro: enquanto a coleção durar, o perfil Cancioneiro vê-o (RLS e função
+`conteudo`). As coleções expiradas desaparecem para os outros perfis e são apagadas 1 mês depois (pg_cron
+`cancioneiro-colecoes-limpeza`). SQL em `supabase/colecoes.sql`.
+
 ## Proteção do conteúdo
 A letra, as gravações e as partituras nunca são lidas diretamente da base de dados: passam pela função `supabase/functions/conteudo`
 (`song`, `search`, `match`, `save`, `file`), um cântico de cada vez, com limites por conta registados em `access_log`
