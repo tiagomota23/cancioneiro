@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v118';
+  const APP_VERSION = '2026-10-03 v119';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1875,6 +1875,53 @@
   addEventListener('appinstalled', () => { installEvt = null; document.body.classList.add('standalone'); store.set('cancioneiro.instalada', 1); });
   // 1.ª vez que abre a app no browser do telemóvel: propõe instalar; 2.ª vez (se ainda não instalou): mostra onde se faz,
   // no menu do canto superior direito (Perfil, ou o "i" para quem só tem o perfil Cancioneiro). Depois não volta a insistir.
+  // ---------- Tutorial: corre na 1.ª vez (adaptado ao perfil); pode ver-se de novo no "i" ----------
+  const TOUR_KEY = 'cancioneiro.tutorial';
+  function tourSteps() {
+    const L = rankOf(maxRole) || 1, solo = document.body.classList.contains('solo');
+    const st = [
+      { msg: L >= 2 ? 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer (menos de um minuto).' : 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer.' },
+      { el: '.search', msg: 'Procure qualquer cântico pelo título, autor, número ou por palavras da letra.' },
+      { el: '#btn-mic', msg: 'Toque no microfone e deixe o telemóvel ouvir uns segundos de um cântico: a app descobre qual é.' },
+      { el: '#btn-menu', msg: L >= 2 ? 'As coleções: os seus Preferidos, o Cancioneiro, o Coro, o Songbook, o CANTI 2024, os Novos Cânticos e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
+      { msg: 'Em cada cântico: ☆ guarda-o nos Preferidos, A− / A+ muda o tamanho da letra, ☾ alterna entre claro e escuro, e o botão de partilhar envia-o a alguém (o endereço vale 24 horas).' + (L >= 2 ? ' Também pode ver os acordes, abrir as partituras e ouvir as gravações de cada voz.' : '') },
+    ];
+    if (L >= 2) st.push({ msg: 'Conhece um cântico que falta? Acrescente-o no Perfil → «Acrescentar um cântico»: pode escrevê-lo ou gerá-lo de uma página da internet ou de um PDF.' + (L >= 3 ? '' : ' Um Maestro aprova-o.') });
+    if (L >= 3) st.push({ msg: 'Como Maestro: «Editar cântico» muda letra, título, categoria, gravações e partituras; o livro no topo de um cântico põe-no no Cancioneiro, no Coro ou numa folha. Nas folhas organiza a Missa por secções (ou com um template), partilha-as e gera o PDF. Os cânticos novos esperam pela sua aprovação.' });
+    if (L >= 4) st.push({ msg: 'Como Gestor: no Perfil, «Gestão de utilizadores» deixa autorizar pedidos de acesso, mudar perfis e retirar acessos.' });
+    st.push({ el: '#btn-perfil', msg: solo ? 'Aqui, no «i», tem a ajuda, pode instalar a app no ecrã principal e partilhá-la. O tutorial também se pode ver de novo aqui.'
+      : 'Aqui está o seu perfil: pode usar um perfil mais simples, instalar a app no ecrã principal, partilhá-la com convite e ver a ajuda no «i» (onde também pode rever este tutorial).' });
+    return st;
+  }
+  function startTour(force) {
+    if (!force && store.get(TOUR_KEY, 0)) { installCoach(); return; }
+    if ($('view-list').hidden || document.querySelector('dialog[open]')) {
+      if (force) { location.hash = '#/'; setTimeout(() => startTour(true), 500); } else installCoach();
+      return;
+    }
+    const steps = tourSteps(); let i = 0;
+    const ov = document.createElement('div'); ov.className = 'tour'; ov.innerHTML = '<div class="tour-hole"></div><div class="tour-box" role="dialog" aria-live="polite"><p class="tour-msg"></p><div class="tour-nav"><span class="tour-n"></span><button type="button" class="tour-skip">Saltar</button><button type="button" class="tour-next">Seguinte</button></div></div>';
+    document.body.appendChild(ov);
+    const hole = ov.querySelector('.tour-hole'), box = ov.querySelector('.tour-box');
+    const end = () => { ov.remove(); removeEventListener('resize', show); store.set(TOUR_KEY, 1); if (!force) installCoach(); };
+    function show() {
+      const st = steps[i], t = st.el && document.querySelector(st.el);
+      ov.querySelector('.tour-msg').textContent = st.msg;
+      ov.querySelector('.tour-n').textContent = `${i + 1} / ${steps.length}`;
+      ov.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'Terminar' : 'Seguinte';
+      if (t && t.offsetParent) {
+        const r = t.getBoundingClientRect(), pad = 6;
+        Object.assign(hole.style, { display: 'block', left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
+        ov.classList.remove('center');
+        const below = r.bottom + 16 + 180 < innerHeight;
+        box.style.top = below ? r.bottom + 14 + 'px' : ''; box.style.bottom = below ? '' : innerHeight - r.top + 14 + 'px';
+      } else { hole.style.display = 'none'; ov.classList.add('center'); box.style.top = box.style.bottom = ''; }
+    }
+    ov.querySelector('.tour-next').onclick = () => { if (++i >= steps.length) end(); else show(); };
+    ov.querySelector('.tour-skip').onclick = end;
+    addEventListener('resize', show);
+    window.scrollTo(0, 0); show();
+  }
   function installCoach() {
     if (standalone()) { store.set('cancioneiro.instalada', 1); return; }
     if (!matchMedia('(pointer: coarse)').matches || store.get('cancioneiro.instalada', 0)) return;
@@ -1922,6 +1969,7 @@
     await shareOrCopy(url, 'convite para o perfil ' + label + ', válido 30 dias', 'Cancioneiro');
   };
   $('perfis-install').onclick = installApp;
+  $('info-tour').onclick = () => { $('info').close(); setTimeout(() => startTour(true), 300); };
   $('perfis-newsong').onclick = () => { $('perfis').close(); openNewSong(); }; $('info-install').onclick = installApp;
   $('perfil-info').onclick = () => { $('perfis').close(); $('info').showModal(); $('info').scrollTop = 0; };
   $('perfil-info').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('perfil-info').click(); } };
@@ -2912,7 +2960,7 @@
     loadFavs();
     loadCollections().then(() => setTimeout(prefetchCollections, 3000));
     loadSyncInfo();
-    installCoach();
+    startTour(); // 1.ª vez: tutorial (no fim, a proposta de instalar)
     started = true;
   } catch (e) { console.error(e); rescue('Houve um problema ao abrir. Se a lista não aparecer, feche e volte a abrir a app.'); } })();
 

@@ -707,3 +707,14 @@ body.has-mini .view, body.has-mini .pdfpages { padding-bottom: calc(84px + var(-
 .coach { padding: 6px 8px; border-radius: 10px; background: #e3f5ec; box-shadow: 0 0 0 2px var(--green-ink); animation: coach 1.4s ease-in-out 3; }
 @keyframes coach { 50% { box-shadow: 0 0 0 5px rgba(14,127,88,.35); } }
 .coach-hint { margin: 0 0 6px; font-size: 13px; color: var(--green-ink); }
+/* Tutorial */
+.tour { position: fixed; inset: 0; z-index: 70; }
+.tour.center { background: rgba(0,0,0,.55); }
+.tour-hole { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0,0,0,.55); pointer-events: none; transition: all .25s ease; outline: 2px solid #fff; }
+.tour-box { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; background: #fff; color: #333; border-radius: 14px; padding: 14px 16px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+.tour.center .tour-box { top: 50%; transform: translateY(-50%); }
+.tour-msg { margin: 0 0 12px; font-size: 15px; line-height: 1.45; }
+.tour-nav { display: flex; align-items: center; gap: 10px; }
+.tour-n { flex: 1; font-size: 12px; color: #888; }
+.tour-skip { background: none; border: 0; color: #777; font: inherit; font-size: 14px; padding: 8px; }
+.tour-next { background: var(--green-ink); color: #fff; border: 0; border-radius: 18px; padding: 8px 18px; font: inherit; font-size: 14px; font-weight: 700; }
