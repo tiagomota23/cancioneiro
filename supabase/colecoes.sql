@@ -47,3 +47,19 @@ create policy "leitura familia" on public.songs for select to authenticated
 
 -- Coleções expiradas há mais de 1 mês são apagadas (todos os dias às 04:30 UTC)
 select cron.schedule('cancioneiro-colecoes-limpeza', '30 4 * * *', $$ delete from public.collections where expires_at < now() - interval '1 month' $$);
+
+-- Secções dentro de uma coleção: linhas separadoras na mesma ordem (position) que os cânticos
+create table if not exists public.collection_sections (
+  id uuid primary key default gen_random_uuid(),
+  collection_id uuid not null references public.collections(id) on delete cascade,
+  title text not null check (length(title) between 1 and 60),
+  position int not null default 0
+);
+alter table public.collection_sections enable row level security;
+drop policy if exists "colecoes seccoes ler" on public.collection_sections;
+create policy "colecoes seccoes ler" on public.collection_sections for select to authenticated
+  using (exists (select 1 from public.collections c where c.id = collection_id));
+drop policy if exists "colecoes seccoes gerir" on public.collection_sections;
+create policy "colecoes seccoes gerir" on public.collection_sections for all to authenticated
+  using ((select public.my_rank()) >= 3) with check ((select public.my_rank()) >= 3);
+grant select, insert, update, delete on public.collection_sections to authenticated;

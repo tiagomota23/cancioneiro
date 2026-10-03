@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v68';
+  const APP_VERSION = '2026-10-03 v69';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1351,7 +1351,7 @@
     if (!cols.length) cols = store.get(colsKey(), []);
     if (DEMO) { cols = store.get('cancioneiro.demo.cols', []); return; }
     try {
-      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,songs:collection_songs(song_slug,position)').order('created_at');
+      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,songs:collection_songs(song_slug,position),sections:collection_sections(id,title,position)').order('created_at');
       if (!error && data) { cols = data; store.set(colsKey(), cols); }
     } catch (e) { /* sem rede: fica a cópia */ }
     if (lvl() < 2 && allSongs.length) applySource();
@@ -1363,62 +1363,125 @@
     return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><span class="t">${esc(c.title)}${expired(c) ? ' <small>(expirada)</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span></button></li>` : '');
   }
+  // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
+  function colItems(c) {
+    return [...(c.songs || []).map(x => ({ k: 'song', key: x.song_slug, pos: x.position, ref: x })),
+            ...(c.sections || []).map(x => ({ k: 'sec', key: 'sec:' + x.id, pos: x.position, ref: x }))]
+      .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
+  }
+  const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+  const actions = (upOff, downOff, what) => `<div class="sw-actions"><button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>↑</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>↓</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
   function showCollection(id) {
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
-    title.hidden = false;
+    title.hidden = false; $('status').textContent = '';
     if (!c || !colVisible(c)) { title.textContent = 'Coleção'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta coleção já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
     const can = lvl() >= 3;
     const fim = new Date(c.expires_at);
     title.innerHTML = `${esc(c.title)}${can ? ' <button class="col-edit" id="col-edit">Editar</button>' : ''}<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
-    const list = colSongs(c).map(x => bySlug.get(x.song_slug)).filter(Boolean);
-    rows.innerHTML = list.map((s, i) => {
-      const row = songRow(s);
-      if (!can) return row;
-      return row.replace('<li>', `<li class="swipe" data-slug="${esc(s.slug)}"><div class="sw-actions"><button data-a="up" aria-label="Subir"${i ? '' : ' disabled'}>↑</button><button data-a="down" aria-label="Descer"${i < list.length - 1 ? '' : ' disabled'}>↓</button><button data-a="del" class="sw-del" aria-label="Remover da coleção"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button>`);
-    }).join('');
-    if (!list.length) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e use "Adicionar a uma coleção".' : 'Coleção vazia.';
+    const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
+    const secIdx = items.map((it, n) => it.k === 'sec' ? n : -1).filter(n => n >= 0);
+    rows.innerHTML = items.map((it, n) => {
+      if (it.k === 'sec') {
+        const last = secIdx[secIdx.length - 1] === n;
+        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, last, 'Apagar secção') : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
+      }
+      const row = songRow(bySlug.get(it.key));
+      return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
+    }).join('') + (can ? '<li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li>' : '');
+    if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Coleção vazia.';
+    rows.querySelectorAll('a.sec-line').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault();
+      if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;
+      const sec = (c.sections || []).find(x => 'sec:' + x.id === a.closest('li').dataset.key);
+      const v = prompt('Nome da secção:', sec.title);
+      if (v && v.trim()) colSaveSection(c, sec, v.trim().slice(0, 60));
+    }));
     if (can) {
       $('col-edit').onclick = () => openCollectionDlg(c);
+      $('col-add-sec').onclick = () => { const v = prompt('Nome da nova secção (ex.: Entrada, Comunhão):'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
       rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
     }
   }
-  // deslizar para a esquerda mostra: Remover, Subir, Descer (no computador: botão ⋯)
+  // deslizar para a esquerda mostra: Subir, Descer, Remover (no computador: botão ⋯)
   function bindSwipe(li, c) {
     const a = li.querySelector('a'); let x0 = null, dx = 0;
     const close = () => li.classList.remove('open');
     a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; dx = 0; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
-    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-144, Math.min(0, dx + (li.classList.contains("open") ? -144 : 0)))}px)`; }, { passive: true });
-    a.addEventListener('touchend', () => { a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
-    a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); if (Math.abs(dx) <= 10) close(); } });
+    a.addEventListener('touchmove', e => { if (x0 == null) return; dx = e.touches[0].clientX - x0; if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-144, Math.min(0, dx + (li.classList.contains('open') ? -144 : 0)))}px)`; }, { passive: true });
+    a.addEventListener('touchend', () => { a.dataset.moved = Math.abs(dx) > 10 ? '1' : ''; a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
+    a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); if (Math.abs(dx) <= 10) close(); } }, true);
     li.querySelector('.sw-more').onclick = e => { e.stopPropagation(); li.classList.toggle('open'); };
     li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = e => {
       e.stopPropagation(); // o toque nos botões não fecha a linha
       // remover pede confirmação: o caixote passa a ✓ e é preciso tocar outra vez
       if (b.dataset.a === 'del' && !b.classList.contains('confirm')) {
-        b.classList.add('confirm'); b.setAttribute('aria-label', 'Confirmar remoção');
+        b.classList.add('confirm');
         b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-        setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>'; } }, 4000);
+        setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = TRASH; } }, 4000);
         return;
       }
-      colAction(c, li.dataset.slug, b.dataset.a);
+      colAction(c, li.dataset.key, b.dataset.a);
     });
   }
-  async function colAction(c, slug, act) {
-    const list = colSongs(c), i = list.findIndex(x => x.song_slug === slug);
+  // grava as posições que mudaram (cânticos e secções numerados 1, 2, 3… pela nova ordem)
+  async function colPersist(c, items) {
+    const songUp = [], secUp = [];
+    items.forEach((it, n) => { if (it.ref.position !== n + 1) { it.ref.position = n + 1; (it.k === 'song' ? songUp : secUp).push(it.ref); } });
+    if (!DEMO) {
+      const res = await Promise.all([
+        ...songUp.map(x => sb.from('collection_songs').update({ position: x.position }).eq('collection_id', c.id).eq('song_slug', x.song_slug)),
+        ...secUp.map(x => sb.from('collection_sections').update({ position: x.position }).eq('id', x.id)),
+      ]);
+      const bad = res.find(r => r.error); if (bad) throw bad.error;
+    }
+  }
+  async function colAction(c, key, act) {
+    let items = colItems(c);
+    const i = items.findIndex(it => it.key === key); if (i < 0) return;
+    const it = items[i];
     try {
       if (act === 'del') {
-        if (!DEMO) { const { error } = await sb.from('collection_songs').delete().eq('collection_id', c.id).eq('song_slug', slug); if (error) throw error; }
-        c.songs = c.songs.filter(x => x.song_slug !== slug);
-      } else {
-        const j = act === 'up' ? i - 1 : i + 1; if (j < 0 || j >= list.length) return;
-        const A = list[i], B = list[j], pa = A.position, pb = B.position === pa ? pa + (act === 'up' ? -1 : 1) : B.position;
-        if (!DEMO) {
-          const r1 = await sb.from('collection_songs').update({ position: pb }).eq('collection_id', c.id).eq('song_slug', A.song_slug);
-          const r2 = await sb.from('collection_songs').update({ position: pa }).eq('collection_id', c.id).eq('song_slug', B.song_slug);
-          if (r1.error || r2.error) throw (r1.error || r2.error);
+        if (it.k === 'song') {
+          if (!DEMO) { const { error } = await sb.from('collection_songs').delete().eq('collection_id', c.id).eq('song_slug', it.key); if (error) throw error; }
+          c.songs = c.songs.filter(x => x.song_slug !== it.key);
+        } else { // apagar a secção tira só a linha; os cânticos ficam
+          if (!DEMO) { const { error } = await sb.from('collection_sections').delete().eq('id', it.ref.id); if (error) throw error; }
+          c.sections = c.sections.filter(x => x !== it.ref);
         }
-        A.position = pb; B.position = pa;
+      } else if (it.k === 'song') { // o cântico troca com o item vizinho (pode passar para o outro lado de uma linha de secção)
+        const j = act === 'up' ? i - 1 : i + 1; if (j < 0 || j >= items.length) return;
+        [items[i], items[j]] = [items[j], items[i]];
+        await colPersist(c, items);
+      } else { // a secção move-se com os seus cânticos, para antes/depois da secção vizinha
+        const end = n => { let k = n + 1; while (k < items.length && items[k].k !== 'sec') k++; return k; };
+        const block = items.slice(i, end(i));
+        if (act === 'up') {
+          if (i === 0) return;
+          let p = i - 1; while (p > 0 && items[p].k !== 'sec') p--; // início da secção anterior (ou o topo)
+          items = [...items.slice(0, p), ...block, ...items.slice(p, i), ...items.slice(end(i))];
+        } else {
+          const nx = end(i); if (nx >= items.length) return;
+          const nb = items.slice(nx, end(nx));
+          items = [...items.slice(0, i), ...nb, ...block, ...items.slice(end(nx))];
+        }
+        await colPersist(c, items);
+      }
+      if (DEMO) demoSave(); else store.set(colsKey(), cols);
+    } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
+    showCollection(c.id);
+  }
+  // nova secção (no fim) ou mudar o nome
+  async function colSaveSection(c, sec, title) {
+    try {
+      if (sec) {
+        if (!DEMO) { const { error } = await sb.from('collection_sections').update({ title }).eq('id', sec.id); if (error) throw error; }
+        sec.title = title;
+      } else {
+        const pos = Math.max(0, ...colItems(c).map(x => x.pos)) + 1;
+        let row = { id: 'demo' + Date.now(), collection_id: c.id, title, position: pos };
+        if (!DEMO) { const { data, error } = await sb.from('collection_sections').insert({ collection_id: c.id, title, position: pos }).select('id,title,position').single(); if (error) throw error; row = data; }
+        c.sections = (c.sections || []).concat(row);
       }
       if (DEMO) demoSave(); else store.set(colsKey(), cols);
     } catch (e) { alert('Não foi possível guardar: ' + (e.message || e)); }
@@ -1443,14 +1506,14 @@
     const row = { title, audience, duration, expires_at: new Date(Date.now() + DURS[duration][1]).toISOString() };
     try {
       if (DEMO) {
-        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, songs: [] });
+        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, songs: [], sections: [] });
         demoSave();
       } else if (dlgCol) {
         const { error } = await sb.from('collections').update(row).eq('id', dlgCol.id); if (error) throw error;
         Object.assign(dlgCol, row);
       } else {
         const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by').single(); if (error) throw error;
-        cols.push({ ...data, songs: [] });
+        cols.push({ ...data, songs: [], sections: [] });
       }
       if (!DEMO) store.set(colsKey(), cols);
       $('col-dlg').close();
@@ -1478,7 +1541,7 @@
   }
   async function toggleInCollection(c, slug, on) {
     if (on) {
-      const pos = Math.max(0, ...(c.songs || []).map(x => x.position)) + 1;
+      const pos = Math.max(0, ...colItems(c).map(x => x.pos)) + 1;
       if (!DEMO) { const { error } = await sb.from('collection_songs').insert({ collection_id: c.id, song_slug: slug, position: pos }); if (error && !/duplicate/i.test(error.message)) throw error; }
       c.songs = (c.songs || []).filter(x => x.song_slug !== slug).concat({ song_slug: slug, position: pos });
     } else {

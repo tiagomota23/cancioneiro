@@ -578,3 +578,8 @@ html, body { touch-action: pan-x pan-y; }
 .fav-toggle.book.on { color: var(--green-ink); }
 .col-pick.dis { opacity: .6; }
 .col-pick-new { margin-top: 4px; padding: 10px 12px; border: 1px dashed #b9cfc5; border-radius: 10px; color: #0e7f58; font-weight: 700; text-align: left; }
+
+/* Secções dentro de uma coleção */
+.rows li.col-sec { border-bottom: 1px solid rgba(255,255,255,.35); }
+.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; opacity: .9; }
+.rows li.col-add-sec button { width: 100%; text-align: left; padding: 14px; color: #fff; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
