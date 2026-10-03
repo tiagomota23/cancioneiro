@@ -67,7 +67,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v108';
+  const APP_VERSION = '2026-10-03 v109';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2571,7 +2571,7 @@
     { id: 'livro-coro', label: 'Coro', coro: true, test: s => srcOf(s).includes('coro_clu') },
     { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
     { id: 'livro-canti', label: 'CANTI 2024', coro: true, book: 'canti2024', test: s => srcOf(s).includes('canti2024') },
-    // acrescentados na app (ficam aqui mesmo depois de passarem para o Cancioneiro); só aparece se tiver cânticos
+    // acrescentados na app (ficam aqui mesmo depois de passarem para o Cancioneiro)
     { id: 'livro-novos', label: 'Novos Cânticos', coro: true, novos: true, test: s => srcOf(s).includes('novos') },
   ];
   // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
@@ -2579,7 +2579,6 @@
   function renderBooks() {
     $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
       const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
-      if (b.novos && !n) return '';
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
     }).join('') + renderCollectionsMenu();
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
