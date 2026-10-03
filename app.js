@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v82';
+  const APP_VERSION = '2026-10-03 v83';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -167,6 +167,7 @@
   }
   // No cântico: ☆ (preferido) ou, do perfil Maestro para cima, um livro que abre as coleções do cântico
   const ICON_STAR = '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>';
+  const ICON_PAGE = '<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5"/>';
   const ICON_BOOK = '<path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/>';
   function refreshFavUI() {
     const fb = $('btn-fav'), slug = fb.dataset.slug;
@@ -1464,8 +1465,8 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg><span class="t">${esc(c.title)}${expired(c) ? ' <small>(expirada)</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
-      (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg></button></li>` : '');
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${esc(c.title)}${expired(c) ? ' <small>(expirada)</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+      (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova coleção</span><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg></button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
   function colItems(c) {
@@ -1822,7 +1823,7 @@
   function renderBooks() {
     $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
       const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
-      return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : ''}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
+      return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
     }).join('') + renderCollectionsMenu();
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }
