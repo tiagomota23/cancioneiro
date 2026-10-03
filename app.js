@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v54';
+  const APP_VERSION = '2026-10-03 v55';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -986,6 +986,11 @@
     if (solo) { $('btn-perfil').setAttribute('aria-label', 'Informação'); $('btn-perfil').title = 'Informação'; }
     for (const x of PERFIS) document.body.classList.toggle('perfil-' + x.id, x === p);
     document.body.classList.toggle('lvl-1', lvl() < 2);
+    document.body.classList.toggle('lvl-lt3', lvl() < 3);
+    document.body.classList.toggle('lvl-lt4', lvl() < 4);
+    // informação: só os perfis que esta pessoa pode usar
+    $('perfil-list').innerHTML = rankOf(maxRole) > 1 ? ' (' + PERFIS.slice(0, rankOf(maxRole)).map(x =>
+      `<span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg>&nbsp;${esc(x.label)}</span>`).join(', ') + ')' : '';
     lyricHits = { q: '', map: new Map() };
     if (allSongs.length) applySource();
   }
@@ -1023,8 +1028,7 @@
     $('perfis').showModal();
   }
   $('btn-perfil').onclick = () => { if (rankOf(maxRole) <= 1) { $('info').showModal(); $('info').scrollTop = 0; } else openPerfis(); };
-  // símbolos dos perfis no texto da informação (os mesmos do botão)
-  document.querySelectorAll('svg[data-perfil]').forEach(el => { el.innerHTML = PERFIS[rankOf(el.dataset.perfil) - 1].icon; });
+
   // ninguém pode selecionar nem copiar o texto da letra (o botão de copiar, do perfil Coro para cima, continua a funcionar)
   const inSong = e => e.target && e.target.closest && e.target.closest('#song');
   for (const ev of ['copy', 'cut', 'contextmenu', 'selectstart', 'dragstart']) document.addEventListener(ev, e => { if (inSong(e)) e.preventDefault(); });
