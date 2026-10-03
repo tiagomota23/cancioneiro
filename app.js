@@ -65,7 +65,7 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
-  const APP_VERSION = '2026-10-03 v71';
+  const APP_VERSION = '2026-10-03 v72';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1380,11 +1380,9 @@
     const fim = new Date(c.expires_at);
     title.innerHTML = `${esc(c.title)}${can ? ' <button class="col-edit" id="col-edit">Editar</button>' : ''}<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
-    const secIdx = items.map((it, n) => it.k === 'sec' ? n : -1).filter(n => n >= 0);
     rows.innerHTML = items.map((it, n) => {
       if (it.k === 'sec') {
-        const last = secIdx[secIdx.length - 1] === n;
-        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, last, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
+        return `<li class="col-sec${can ? ' swipe' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, n === items.length - 1, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
       }
       const row = songRow(bySlug.get(it.key));
       return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
@@ -1461,9 +1459,14 @@
           let p = i - 1; while (p > 0 && items[p].k !== 'sec') p--; // início da secção anterior (ou o topo)
           items = [...items.slice(0, p), ...block, ...items.slice(p, i), ...items.slice(end(i))];
         } else {
-          const nx = end(i); if (nx >= items.length) return;
-          const nb = items.slice(nx, end(nx));
-          items = [...items.slice(0, i), ...nb, ...block, ...items.slice(end(nx))];
+          const nx = end(i);
+          if (nx >= items.length) { // não há secção abaixo: a linha desce um lugar (o cântico seguinte fica acima dela)
+            if (i >= items.length - 1) return;
+            [items[i], items[i + 1]] = [items[i + 1], items[i]];
+          } else {
+            const nb = items.slice(nx, end(nx));
+            items = [...items.slice(0, i), ...nb, ...block, ...items.slice(end(nx))];
+          }
         }
         await colPersist(c, items);
       }
