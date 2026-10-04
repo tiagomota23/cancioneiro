@@ -85,7 +85,7 @@ insert into public.collection_templates (title, sections, created_by)
 create or replace function public.colecao_max_canticos() returns trigger language plpgsql as $$
 begin
   if (select count(*) from public.collection_songs where collection_id = new.collection_id and song_slug <> new.song_slug) >= 10 then
-    raise exception 'Uma coleção pode ter no máximo 10 cânticos.' using errcode = 'check_violation';
+    raise exception 'Uma folha pode ter no máximo 10 cânticos.' using errcode = 'check_violation';
   end if;
   return new;
 end $$;
