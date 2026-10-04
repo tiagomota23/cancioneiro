@@ -762,3 +762,4 @@ dialog.sec-add #sa-list { flex: 1; min-height: 0; max-height: none; overflow-y: 
 /* janelas com caixas de texto ou conteúdo que muda: ficam no topo do ecrã (não saltam ao escrever nem com o teclado) */
 dialog.top-dlg[open] { margin: calc(var(--safe-top, 0px) + 14px) auto auto; max-height: calc(100dvh - var(--safe-top, 0px) - 28px); }
 .sec-add .sa-sec { margin-top: 2px; }
+.perfis-line { margin: 0 0 12px; }
