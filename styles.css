@@ -749,3 +749,9 @@ dialog h2 { font-size: 22px; }
 #sa-list small, .tpl-apply small, .col-pick small, .sim-list small, .perfil-opt small { text-transform: none; letter-spacing: 0; }
 input::placeholder, textarea::placeholder { text-transform: uppercase; letter-spacing: .06em; }
 .perfil-admin, .meta a.pdf, .lang-chip, .lang-switch button, .src-chip, .moments, .pdf-more button, .col-pick-new, .pick-top button { text-transform: uppercase; letter-spacing: .05em; }
+/* Versão de teste: aviso na capa e no canto da página inicial */
+.splash-in { display: grid; justify-items: center; gap: 10px; }
+.splash-sub { margin: 0; font-family: var(--serif); font-size: clamp(14px, 4vw, 22px); letter-spacing: .3em; text-transform: uppercase; opacity: 0; animation: splash-sub .6s ease 1s forwards; }
+@keyframes splash-sub { to { opacity: .9; } }
+.topbar-left-spacer { display: grid; place-items: center; }
+.test-tag { font-size: 9.5px; line-height: 1.2; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; text-align: center; color: #fff; opacity: .85; }
