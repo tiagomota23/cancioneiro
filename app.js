@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v138';
+  const APP_VERSION = '2026-10-03 v139';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -253,7 +253,7 @@
     if (op === 'share' && b.collection) return { token: 'demoC_' + b.collection, expires_at: new Date(Date.now() + 864e5).toISOString() };
     if (op === 'shared' && b.token.startsWith('demoC_')) {
       const c = store.get('cancioneiro.demo.cols', []).find(x => x.id === b.token.slice(6));
-      if (!c) throw new Error('Esta coleção já não está disponível.');
+      if (!c) throw new Error('Esta folha já não está disponível.');
       if (b.slug) return demoApi('shared', { token: 'demo_' + b.slug });
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
       return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items: withSongs(colItems(c)).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number }) };
@@ -1073,10 +1073,10 @@
   }
   async function shareCollection(c) {
     const fim = new Date(c.expires_at).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const list = [{ value: 'url', label: urlLabel(), sub: `Qualquer pessoa pode abrir até ${fim}, quando a coleção expira (sem conta: só a letra e a tradução)` },
+    const list = [{ value: 'url', label: urlLabel(), sub: `Qualquer pessoa pode abrir até ${fim}, quando a folha expira (sem conta: só a letra e a tradução)` },
       { value: 'pdf', label: 'Gerar PDF', sub: 'Título, secções, títulos e letras dos cânticos' }];
     list.push({ value: 'coro', label: 'Gerar PDF para Coro', sub: 'Também com os acordes e as partituras' });
-    const v = await appChoose('Partilhar coleção', list);
+    const v = await appChoose('Partilhar folha', list);
     if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim, c.title);
     else if (v) collectionPdf(c, v === 'coro');
   }
@@ -1101,7 +1101,7 @@
       sharedView(!slug && sharedCache.get(token + ':col'));
       if (!$('view-song').hidden) $('song').innerHTML = '<p class="note lyr-wait">A carregar…</p>'; else { $('rows').innerHTML = ''; $('status').textContent = 'A carregar…'; }
       try { d = await apiShared(token, slug); sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); }
-      catch (e) { if (here()) { sharedView(false); $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message)}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
+      catch (e) { if (here()) { sharedView(false); $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message.replace('coleção', 'folha'))}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
       if (!here()) return;
     }
     if (d.items) return showSharedCollection(token, d);
@@ -1743,7 +1743,7 @@
   $('edit-reset').onclick = () => revertLyrics(editSlug, $('edit-reset'));
 
   // ---------- Janelas da app (em vez de alert/confirm/prompt do sistema, para manter o aspeto) ----------
-  function appDialog({ title = '', msg = '', html = '', input = null, list = null, ok = 'OK', okHtml = '', cancel = 'Cancelar' }) {
+  function appDialog({ title = '', msg = '', html = '', input = null, list = null, ok = 'OK', okHtml = '', cancel = 'Cancelar', extra = '' }) {
     return new Promise(resolve => {
       const d = $('app-dlg');
       $('app-dlg-title').textContent = title; $('app-dlg-title').hidden = !title;
@@ -1755,10 +1755,12 @@
       lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
       if (okHtml) $('app-dlg-ok').innerHTML = okHtml; else $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
       $('app-dlg-cancel').textContent = cancel || ''; $('app-dlg-cancel').hidden = !cancel;
+      $('app-dlg-extra').textContent = extra; $('app-dlg-extra').hidden = !extra; // botão à esquerda: devolve { extra, value }
       const done = v => { d.close(); resolve(v); };
       $('app-dlg-ok').onclick = () => done(input !== null ? inp.value : true);
       $('app-dlg-cancel').onclick = () => done(input !== null || list ? null : false);
       lst.querySelectorAll('button').forEach(b => b.onclick = () => done(list[+b.dataset.i].value));
+      $('app-dlg-extra').onclick = () => done({ extra: true, value: inp.value });
       inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); done(inp.value); } };
       d.oncancel = e => { e.preventDefault(); done(input !== null || list ? null : false); };
       d.showModal();
@@ -2538,12 +2540,12 @@
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
     title.hidden = false; $('status').textContent = '';
-    if (!c || !colVisible(c)) { title.textContent = 'Coleção'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta coleção já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
+    if (!c || !colVisible(c)) { title.textContent = 'Folha'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta folha já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
     const can = lvl() >= 3;
     const fim = new Date(c.expires_at);
     // público e prazo só para quem gere (Maestro / Gestor)
     // partilhar a coleção: só Maestro e Gestor
-    const shareBtn = can && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar coleção" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    const shareBtn = can && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
     title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button><button class="col-edit" id="col-addsong">+ Cântico</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
     const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     rows.innerHTML = items.map((it, n) => {
@@ -2551,15 +2553,19 @@
         return `<li class="col-sec${can ? ' swipe sec4' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, n === items.length - 1, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
       }
       const row = songRow(bySlug.get(it.key));
-      return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da coleção')}`) : row;
+      return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da folha')}`) : row;
     }).join('') + (can ? '<li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li>' : '');
-    if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Coleção vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Coleção vazia.';
+    if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Folha vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Folha vazia.';
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c); // só existe se a coleção tiver cânticos
     rows.querySelectorAll('a.sec-line').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;
       const sec = (c.sections || []).find(x => 'sec:' + x.id === a.closest('li').dataset.key);
-      appPrompt('Nome da secção', sec.title).then(v => { if (v && v.trim()) colSaveSection(c, sec, v.trim().slice(0, 60)); });
+      appDialog({ title: 'Nome da secção', input: sec.title, extra: '+ Cântico' }).then(async v => {
+        const add = v && v.extra, t = ((add ? v.value : v) || '').trim().slice(0, 60);
+        if (t && t !== sec.title) await colSaveSection(c, sec, t);
+        if (add) openSectionAdd(c, sec.id, true);
+      });
     }));
     if (can) {
       $('col-edit').onclick = () => openCollectionDlg(c);
@@ -2676,7 +2682,7 @@
   async function applyTemplate(c, t) {
     const have = new Set((c.sections || []).map(x => norm(x.title)));
     const add = t.sections.filter(x => !have.has(norm(x)));
-    if (!add.length) { toast('A coleção já tem estas secções'); $('tpl-dlg').close(); return; }
+    if (!add.length) { toast('A folha já tem estas secções'); $('tpl-dlg').close(); return; }
     let pos = Math.max(0, ...colItems(c).map(x => x.pos));
     try {
       const rows = add.map(title => ({ collection_id: c.id, title, position: ++pos }));
@@ -2794,12 +2800,12 @@
   let dlgCol = null;
   function openCollectionDlg(c) {
     dlgCol = c;
-    $('col-dlg-title').textContent = c ? 'Editar coleção' : 'Nova folha';
+    $('col-dlg-title').textContent = c ? 'Editar folha' : 'Nova folha';
     $('col-name').value = c ? c.title : '';
     $('col-aud').value = c ? c.audience : 'coro';
     $('col-dur').value = c ? c.duration : '1w';
     $('col-del').hidden = !c;
-    $('col-msg').textContent = (c ? `Ao guardar, a coleção fica disponível durante ${DURS[c.duration][0]} a partir de agora. ` : '') + 'Um mês depois de expirar, a coleção é apagada.';
+    $('col-msg').textContent = (c ? `Ao guardar, a folha fica disponível durante ${DURS[c.duration][0]} a partir de agora. ` : '') + 'Um mês depois de expirar, a folha é apagada.';
     $('col-dlg').showModal();
   }
   async function saveCollection() {
@@ -2839,12 +2845,12 @@
   const fitting = s => cols.filter(c => colVisible(c) && colFits(c, s));
   function colLabel(s) {
     const f = fitting(s), inn = f.filter(c => (c.songs || []).some(x => x.song_slug === s.slug));
-    if (f.length === 1) return inn.length ? `Na coleção «${esc(f[0].title)}» ✓ — retirar` : `Adicionar à coleção «${esc(f[0].title)}»`;
-    return inn.length ? `Em ${inn.length} coleç${inn.length > 1 ? 'ões' : 'ão'} ✓ — gerir` : 'Adicionar a uma coleção';
+    if (f.length === 1) return inn.length ? `Na folha «${esc(f[0].title)}» ✓ — retirar` : `Adicionar à folha «${esc(f[0].title)}»`;
+    return inn.length ? `Em ${inn.length} folha${inn.length > 1 ? 's' : ''} ✓ — gerir` : 'Adicionar a uma folha';
   }
   const COL_MAX = 10; // máximo de cânticos numa coleção (também travado na base de dados)
   const colFull = c => (c.songs || []).length >= COL_MAX;
-  const fullMsg = c => `A coleção «${c.title}» já tem ${COL_MAX} cânticos (o máximo). Retire um antes de acrescentar outro.`;
+  const fullMsg = c => `A folha «${c.title}» já tem ${COL_MAX} cânticos (o máximo). Retire um antes de acrescentar outro.`;
   async function toggleInCollection(c, slug, on) {
     if (on && colFull(c) && !(c.songs || []).some(x => x.song_slug === slug)) throw new Error(fullMsg(c));
     if (on) {
@@ -2860,10 +2866,10 @@
   async function openAddToCollection(slug) {
     const s = bySlug.get(slug), f = fitting(s);
     const refresh = () => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } };
-    if (!f.length) { if (await appConfirm('Ainda não há coleções onde este cântico possa entrar. Criar uma nova folha?', 'Criar')) openCollectionDlg(null); return; }
+    if (!f.length) { if (await appConfirm('Ainda não há folhas onde este cântico possa entrar. Criar uma nova folha?', 'Criar')) openCollectionDlg(null); return; }
     if (f.length === 1) {
       const on = !(f[0].songs || []).some(x => x.song_slug === slug);
-      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à coleção' : 'Retirado da coleção'); } catch (e) { appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível guardar: ' + (e.message || e)); }
+      try { await toggleInCollection(f[0], slug, on); toast(on ? 'Adicionado à folha' : 'Retirado da folha'); } catch (e) { appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível guardar: ' + (e.message || e)); }
       refresh(); return;
     }
     $('col-pick-list').innerHTML = f.map(c => `<label class="col-pick"><input type="checkbox" data-id="${esc(c.id)}"${(c.songs || []).some(x => x.song_slug === slug) ? ' checked' : ''}><span>${esc(c.title)}<small>${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'}</small></span></label>`).join('');
@@ -2908,7 +2914,7 @@
           await toggleInCollection(col, slug, i.checked);
           if (i.checked && sec !== undefined) await placeInSection(col, slug, sec);
           // ao acrescentar a uma coleção, abre a lista dessa coleção
-          if (i.checked) { $('col-pick').close(); toast('Adicionado à coleção'); location.hash = '#/lista/colecao-' + k.slice(2); return; }
+          if (i.checked) { $('col-pick').close(); toast('Adicionado à folha'); location.hash = '#/lista/colecao-' + k.slice(2); return; }
         }
       } catch (e) { i.checked = !i.checked; appAlert(/máximo|max/.test(e.message) ? fullMsg(cols.find(c => 'c:' + c.id === i.dataset.k || c.id === i.dataset.id) || { title: '' }) : 'Não foi possível guardar: ' + (e.message || e)); }
       refresh();
