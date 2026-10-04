@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v135';
+  const APP_VERSION = '2026-10-03 v136';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2596,7 +2596,7 @@
         setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = TRASH; } }, 4000);
         return;
       }
-      if (b.dataset.a === 'add') { li.classList.remove('open'); openSectionAdd(c, li.dataset.key.slice(4)); return; }
+      if (b.dataset.a === 'add') { li.classList.remove('open'); openSectionAdd(c, li.dataset.key.slice(4), true); return; }
       colAction(c, li.dataset.key, b.dataset.a);
     });
   }
@@ -2733,11 +2733,11 @@
     $('sa-sec').hidden = !pick || !secs.length;
     if (pick) {
       $('sa-sel').innerHTML = '<option value="">No início (sem secção)</option>' + secs.map(x => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
-      $('sa-sel').value = secs.length ? secs[secs.length - 1].id : '';
+      $('sa-sel').value = secId && secs.some(x => x.id === secId) ? secId : secs.length ? secs[secs.length - 1].id : ''; // "+" numa secção: essa secção
     }
     const curSec = () => pick ? ($('sa-sel').value || null) : secId;
     const secName = () => (secs.find(x => x.id === curSec()) || {}).title;
-    $('sa-title').textContent = pick ? 'Acrescentar cântico' : 'Acrescentar a «' + secName() + '»';
+    $('sa-title').textContent = 'Acrescentar cântico';
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
     const pool = allSongs.filter(s => s.approved !== false && (lvl() >= 2 || inCancioneiro(s)));
     const render = () => {
