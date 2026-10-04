@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=133">
+  <link rel="stylesheet" href="styles.css?v=134">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste</p></div></div>
@@ -167,7 +167,7 @@
   </dialog>
 
   <!-- Coleção: criar / editar (Maestro) -->
-  <dialog id="col-dlg" class="col-dlg">
+  <dialog id="col-dlg" class="col-dlg top-dlg">
     <h2 id="col-dlg-title">Nova folha</h2>
     <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off"></label>
     <label class="col-field">Público<select id="col-aud"><option value="coro">Coro</option><option value="cancioneiro">Cancioneiro</option></select></label>
@@ -189,7 +189,7 @@
     <div id="tpl-list" class="col-pick-list"></div>
     <form method="dialog" class="info-actions"><span></span><button type="button" id="tpl-close">Fechar</button></form>
   </dialog>
-  <dialog id="tpl-edit" class="col-dlg">
+  <dialog id="tpl-edit" class="col-dlg top-dlg">
     <h2 id="tpl-edit-title" tabindex="-1" autofocus>Novo template</h2>
     <label class="col-field">Nome<input id="tpl-name" maxlength="60" autocomplete="off"></label>
     <label class="col-field">Secções (uma por linha)<textarea id="tpl-secs" rows="7"></textarea></label>
@@ -233,13 +233,12 @@
   </dialog>
 
   <!-- Novo cântico: escrever, ler de um endereço ou de um PDF -->
-  <dialog id="song-new" class="editor song-new">
+  <dialog id="song-new" class="editor song-new top-dlg">
     <h2 tabindex="-1" autofocus id="sn-h2">Novo cântico</h2>
     <div class="sn-gen" id="sn-gen">
       <button type="button" id="sn-url-go" class="sn-gen-btn">Gerar de URL</button>
       <button type="button" id="sn-pdf" class="sn-gen-btn">Gerar de PDF</button>
     </div>
-    <p class="small sn-pdf-name" id="sn-pdf-name"></p>
     <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off"></label>
     <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off"></label>
     <label class="sn-f">Categoria<select id="sn-cat"></select></label>
@@ -251,12 +250,13 @@
       <div class="sn-gen"><button type="button" id="sn-add-rec" class="sn-gen-btn">+ Gravação</button><button type="button" id="sn-add-score" class="sn-gen-btn">+ Partitura</button></div>
     </div>
     <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint"></span></p>
+    <p class="small sn-pdf-name" id="sn-pdf-name"></p>
     <p class="small" id="sn-msg" role="status"></p>
     <div class="edit-actions"><span></span><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
   </dialog>
 
   <!-- Editar letra -->
-  <dialog id="editor" class="editor">
+  <dialog id="editor" class="editor top-dlg">
     <h2>Editar letra</h2>
     <p class="small" id="edit-title"></p>
     <textarea id="edit-text" spellcheck="false" autocapitalize="off"></textarea>
@@ -271,7 +271,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=133"></script>
-  <script src="app.js?v=133"></script>
+  <script src="config.js?v=134"></script>
+  <script src="app.js?v=134"></script>
 </body>
 </html>

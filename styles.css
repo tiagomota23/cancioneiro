@@ -759,3 +759,5 @@ input::placeholder, textarea::placeholder { text-transform: uppercase; letter-sp
 dialog.sec-add[open] { display: flex; flex-direction: column; margin: calc(var(--safe-top, 0px) + 14px) auto auto; height: min(78dvh, 640px); max-height: none; overflow: hidden; }
 dialog.sec-add h2, dialog.sec-add .sa-sec, dialog.sec-add .sa-search, dialog.sec-add #sa-msg, dialog.sec-add .info-actions { flex: none; }
 dialog.sec-add #sa-list { flex: 1; min-height: 0; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* janelas com caixas de texto ou conteúdo que muda: ficam no topo do ecrã (não saltam ao escrever nem com o teclado) */
+dialog.top-dlg[open] { margin: calc(var(--safe-top, 0px) + 14px) auto auto; max-height: calc(100dvh - var(--safe-top, 0px) - 28px); }

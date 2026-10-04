@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v133';
+  const APP_VERSION = '2026-10-03 v134';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1750,6 +1750,7 @@
       if (html) $('app-dlg-msg').innerHTML = html; else $('app-dlg-msg').textContent = msg; // html: só texto da própria app
       $('app-dlg-msg').hidden = !msg && !html;
       const inp = $('app-dlg-input'); inp.hidden = input === null; inp.value = input ?? '';
+      d.classList.toggle('top-dlg', input !== null); // com caixa de texto: fica no topo (o teclado não a faz saltar)
       const lst = $('app-dlg-list'); lst.hidden = !list;
       lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
       if (okHtml) $('app-dlg-ok').innerHTML = okHtml; else $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
