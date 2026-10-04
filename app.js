@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-03 v130';
+  const APP_VERSION = '2026-10-03 v131';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2572,12 +2572,12 @@
   function bindSwipe(li, c) {
     const a = li.querySelector('a'); let x0 = null, y0 = 0, dx = 0, dir = null;
     const close = () => li.classList.remove('open');
-    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dir = null; a.style.transition = 'none'; li.classList.add('drag'); }, { passive: true });
+    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dir = null; a.style.transition = 'none'; }, { passive: true });
     // só conta como deslizar se o gesto for sobretudo para o lado (a deslizar a lista para cima/baixo não abre)
     a.addEventListener('touchmove', e => {
       if (x0 == null) return;
       const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
-      if (!dir && Math.hypot(mx, my) > 8) dir = Math.abs(mx) > Math.abs(my) * 1.5 ? 'x' : 'y';
+      if (!dir && Math.hypot(mx, my) > 8) { dir = Math.abs(mx) > Math.abs(my) * 1.5 ? 'x' : 'y'; if (dir === 'x') li.classList.add('drag'); } // os botões só aparecem a deslizar para o lado
       if (dir !== 'x') { dx = 0; return; }
       dx = mx;
       const W = (li.querySelector('.sw-actions') || {}).offsetWidth || 144;
