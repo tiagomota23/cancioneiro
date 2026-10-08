@@ -4,6 +4,8 @@ const TOP = '1s97kgMruXIrPI25RU7SC1DA3I38pt4l4';
 const ROOTS = [['missa', '1Rd37zBWre5iv03lr89E9b-kxhqUX6o58'], ['gestos', '1GCfBC-xv0LiuZZnkJobyoQihp33p2Ozy'], ['cancioneiros', '1K9sQfKoop2nLsCOVy8HOLAbuf-Px0ZH6']];
 const AUDIO = { mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', ogg: 'audio/ogg' };
 const SCORE = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' };
+// Ficheiros sem extensão no nome (ex.: «Soprano Anima Christi»): usa o tipo que o Drive indica
+const BY_MIME = { 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a', 'audio/aac': 'aac', 'audio/ogg': 'ogg', 'application/ogg': 'ogg', 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const MAX = 30e6;
 const nk = p => p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9/]/g, '');
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
@@ -92,7 +94,7 @@ Deno.serve(async () => {
         seen.add(it.id);
         const k = known.get(it.id);
         if (k) {
-          if (!it.folder && ((it.md5 && k.md5 && it.md5 !== k.md5) || (!it.md5 && k.modified && it.modified !== k.modified))) { sum.changed.push(it.path); upserts.push(row(it, 'changed')); }
+          if (!it.folder && ((it.md5 && k.md5 && it.md5 !== k.md5) || (!it.md5 && k.modified && Date.parse(it.modified) !== Date.parse(k.modified)))) { sum.changed.push(it.path); upserts.push(row(it, 'changed')); }
           else if (k.status === 'removed') upserts.push(row(it, 'seen'));
           continue;
         }
@@ -104,7 +106,8 @@ Deno.serve(async () => {
         }
         const songPath = parts.slice(0, 2).join('/');
         const slug = folders.get(nk(songPath));
-        const ext = (it.name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || '';
+        let ext = (it.name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || '';
+        if (!AUDIO[ext] && !SCORE[ext]) ext = BY_MIME[it.mime] || ext;
         const mime = AUDIO[ext] || SCORE[ext];
         if (slug && mime && it.size && it.size <= MAX) {
           const r = await fetch(`https://www.googleapis.com/drive/v3/files/${it.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${tok}` } });
