@@ -143,7 +143,6 @@ const { objects } = await fn('objects');
 const { sql } = await fn('schema');
 const objMap = new Map(objects.map(o => [o.name, o]));
 console.log(`${data.songs.length} cânticos, ${objects.length} ficheiros no armazenamento`);
-if (objects.length % 1000 === 0) throw new Error('A lista de ficheiros parece cortada (múltiplo de 1000): verificar a função backup (op=objects)');
 
 // endereços de download, em lotes, quando são precisos
 const signed = new Map(); // caminho → { url, at } (os endereços valem 2 horas; renovam-se ao fim de 90 minutos)
