@@ -1,10 +1,13 @@
 # Converte para AAC (.m4a) as gravações em formatos que nem todos os telemóveis tocam (ex.: .ogg do WhatsApp).
-# Corre todos os dias (depois da verificação do Drive às segundas) e a pedido. Precisa do segredo SUPABASE_SERVICE_ROLE_KEY.
+# Corre todos os dias e a pedido. Sem segredos: identifica-se à função gravacoes do Supabase com o token OIDC do GitHub.
 name: Converter gravações
 on:
   schedule:
     - cron: '45 6 * * *'   # todos os dias, 06:45 UTC
   workflow_dispatch: {}
+permissions:
+  contents: read
+  id-token: write
 jobs:
   converter:
     runs-on: ubuntu-latest
@@ -13,6 +16,4 @@ jobs:
       - name: Instalar ffmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Converter
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node tools/audio/convert.mjs

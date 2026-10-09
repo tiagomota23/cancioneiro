@@ -58,9 +58,10 @@ Nada é apagado no Cancioneiro. Estado em `drive_files` / `drive_sync_log` (só 
 
 ## Gravações: sempre em MP3 ou AAC
 A GitHub Action «Converter gravações» (`.github/workflows/converter-gravacoes.yml`, todos os dias às 06:45 UTC e a pedido)
-converte para AAC (`.m4a`) qualquer gravação noutro formato (ogg/opus do WhatsApp, webm, wav, 3gp…), venha do Drive ou da app:
-substitui o ficheiro no bucket `coro` e atualiza `song_files`. Usa `tools/audio/convert.mjs` e o segredo do repositório
-`SUPABASE_SERVICE_ROLE_KEY`. Se falhar, o GitHub avisa por email.
+converte para AAC (`.m4a`) qualquer gravação noutro formato (ogg/opus do WhatsApp, webm, wav, 3gp…), venha do Drive ou da app.
+`tools/audio/convert.mjs` pede a lista à função `supabase/functions/gravacoes` e devolve-lhe cada ficheiro convertido; a função
+substitui-o no bucket `coro` e atualiza `song_files`. Sem segredos: a Action identifica-se com o token OIDC do GitHub, que a função
+só aceita deste repositório, do ramo main e deste workflow. Se falhar, o GitHub avisa por email.
 
 ## Mapa visual da app
 `tools/screens/capture.mjs` abre cada ecrã da app no modo `?demo` (dados fictícios de `tools/screens/fixture.mjs`: só textos de
