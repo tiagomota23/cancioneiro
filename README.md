@@ -56,6 +56,12 @@ GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET). Gravações e partituras novas em past
 acrescentadas automaticamente; pastas novas, ficheiros alterados (ex.: o Word "Músicas Coro") e apagados são enviados por email para rever.
 Nada é apagado no Cancioneiro. Estado em `drive_files` / `drive_sync_log` (só service_role).
 
+## Gravações: sempre em MP3 ou AAC
+A GitHub Action «Converter gravações» (`.github/workflows/converter-gravacoes.yml`, todos os dias às 06:45 UTC e a pedido)
+converte para AAC (`.m4a`) qualquer gravação noutro formato (ogg/opus do WhatsApp, webm, wav, 3gp…), venha do Drive ou da app:
+substitui o ficheiro no bucket `coro` e atualiza `song_files`. Usa `tools/audio/convert.mjs` e o segredo do repositório
+`SUPABASE_SERVICE_ROLE_KEY`. Se falhar, o GitHub avisa por email.
+
 ## Mapa visual da app
 `tools/screens/capture.mjs` abre cada ecrã da app no modo `?demo` (dados fictícios de `tools/screens/fixture.mjs`: só textos de
 domínio público, nunca letras da base de dados) e guarda em `tools/screens/out/` (fora do git) uma imagem por ecrã (`png/`,
