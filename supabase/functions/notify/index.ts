@@ -143,6 +143,8 @@ Deno.serve(async (req) => {
   let b = {};
   try { b = await req.json(); } catch (e) { /* sem corpo */ }
   try {
+    // identificadores vêm de fora (chave pública): só UUID (pedidos) ou número (verificações), nunca texto livre na consulta
+    if ((b.type === 'access' && !/^[0-9a-f-]{36}$/.test(String(b.id || ''))) || (b.type === 'sync' && !/^\d{1,12}$/.test(String(b.id ?? '')))) return json({ error: 'id inválido' }, 400);
     if (b.type === 'access') { // corre em segundo plano (espera ~12 s pelo convite) e responde já a quem chamou
       const job = onAccess(b.id).catch(e => console.error('access', e));
       // @ts-ignore EdgeRuntime existe nas funções do Supabase
