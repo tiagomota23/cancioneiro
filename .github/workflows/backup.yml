@@ -1,0 +1,28 @@
+# Cópia de segurança completa do Cancioneiro para o Google Drive (cânticos, ficheiros, base de dados, código e manual).
+# Corre todas as segundas às 07:30 UTC (depois das verificações semanais) e a pedido. Incremental: só envia o que mudou.
+# Sem segredos: identifica-se à função backup do Supabase com o token OIDC do GitHub. Manual: docs/MANUAL.md.
+name: Cópia de segurança
+on:
+  schedule:
+    - cron: '30 7 * * 1'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  id-token: write
+concurrency: { group: backup, cancel-in-progress: false }
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Empacotar o código (repositório completo e cópia simples)
+        run: |
+          git fetch --all --quiet
+          git bundle create "$RUNNER_TEMP/cancioneiro.bundle" --all
+          git archive --format=zip -o "$RUNNER_TEMP/cancioneiro-codigo.zip" HEAD
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Copiar para o Google Drive
+        run: node tools/backup/backup.mjs "$RUNNER_TEMP/cancioneiro.bundle" "$RUNNER_TEMP/cancioneiro-codigo.zip"

@@ -75,3 +75,11 @@ O supabase-js é substituído por `tools/screens/supabase-stub.js` (o modo de de
 Uso: `NODE_PATH=$(npm root -g) node tools/screens/capture.mjs [ecrã ...]` (precisa do Playwright com o Chromium).
 As imagens alimentam o Design «Cancioneiro — mapa da app» no claude.ai: a cada nova versão da app, gerar de novo e atualizar o Design.
 Ecrãs novos ou mudados: acrescentar a `SCREENS` em `capture.mjs`.
+
+## Manual, cópia de segurança e reconstrução
+- `docs/MANUAL.md`: descrição completa da solução (arquitetura, componentes, perfis, fluxos, segurança, operação).
+- Cópia de segurança semanal (GitHub Action «Cópia de segurança», `tools/backup/backup.mjs`, função `backup`): todos os cânticos
+  (uma pasta por cântico, com ficha e letra em texto, gravações, partituras e atalhos para as páginas dos livros), livros, base de dados
+  (dados e esquema completo), código (repositório git) e manual, num Google Drive de outra conta (autorização própria, só `drive.file`;
+  o Drive do Coro só é lido). Incremental. Esquema exportado por `supabase/backup.sql`.
+- `docs/RECONSTRUIR.md`: como reconstruir tudo a partir da cópia, incluindo o texto para uma sessão nova do Claude Code.
