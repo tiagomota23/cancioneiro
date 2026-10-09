@@ -207,6 +207,10 @@ Cancioneiro — cópia de segurança/
   .estado.json  estado da cópia incremental (não mexer)
 ```
 
+No fim de cada execução, a cópia faz um inventário de tudo o que criou no Drive e compara-o com a base de dados (pastas, textos,
+ficheiros, base de dados, código); se faltar alguma coisa, a execução falha (e o GitHub avisa por email). Restos de execuções
+interrompidas vão para `removidos/duplicados`. As partituras que estão em sites externos são também copiadas para a pasta do cântico.
+
 É incremental: só envia o que mudou (impressão digital de cada ficheiro). Os ficheiros substituídos mantêm as versões
 anteriores no Drive (Gerir versões, cerca de 30 dias). Não guarda segredos (chaves e palavras-passe): recriam-se na reconstrução.
 

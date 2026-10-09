@@ -97,6 +97,7 @@ function songText(s, extra) {
   if (s.approved === false) L.push('Estado: por aprovar');
   if (s.lyrics_edit) L.push(`Letra editada por ${s.edited_by || '?'}${s.edited_at ? ' em ' + s.edited_at.slice(0, 10) : ''} (abaixo a versão editada; a original está em base-de-dados/dados.json)`);
   if (extra.books.length) L.push(`Livros: ${extra.books.join('; ')}`);
+  if (/^https?:\/\//.test(s.pdf_url || '')) L.push(`Partitura externa: ${s.pdf_url} (cópia nesta pasta, se o site respondeu)`);
   L.push('', '— LETRA —' + (s.has_chords ? ' (acordes entre [ ], antes da sílaba)' : ''), '', stanzas(s.lyrics_edit || s.lyrics));
   if (s.translation) L.push('', `— TRADUÇÃO (${LANG[s.translation_language] || s.translation_language || ''}) —`, '', stanzas(s.translation));
   return L.filter(x => x !== null).join('\n') + '\n';
@@ -185,7 +186,7 @@ console.log(`livros: ${Object.values(st.counts).reduce((a, b) => a + b, 0)} envi
 const by = (rows, k) => rows.reduce((m, r) => (m.get(r[k]) || m.set(r[k], []).get(r[k])).push(r) && m, new Map());
 const srcBy = by(data.song_sources, 'song_slug'), tagBy = by(data.song_tags, 'song_slug'), fileBy = by(data.song_files, 'song_slug');
 const SRC = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos' };
-const live = new Set();
+const live = new Set(), missingExternal = [];
 await pool(data.songs, 3, async s => {
   live.add(s.slug);
   const name = `${String(s.number).padStart(4, '0')} - ${clean(s.title)}`;
@@ -207,6 +208,13 @@ await pool(data.songs, 3, async s => {
   const seen = new Map();
   const own = files.filter(x => !x.path.startsWith('livros/'));
   if (s.pdf_url && objMap.has(s.pdf_url)) own.push({ path: s.pdf_url, label: 'Partitura (Cancioneiro original)', mime: 'application/pdf' });
+  // partitura num site externo: guarda-se uma cópia (se o site deixar de existir, fica esta); se não responder, mantém-se a anterior
+  if (/^https?:\/\//.test(s.pdf_url || '')) {
+    const r = await fetch(s.pdf_url, { signal: AbortSignal.timeout(30000), headers: { 'User-Agent': 'Mozilla/5.0 (Cancioneiro, cópia de segurança)' } }).catch(() => null);
+    const buf = r && r.ok ? Buffer.from(await r.arrayBuffer()) : null;
+    if (buf && buf.length && buf.length < 50e6 && buf.subarray(0, 4).toString() === '%PDF') await put(`url:${s.slug}`, 'Partitura (site externo).pdf', f.id, 'application/pdf', buf);
+    else { count('partituras externas indisponíveis'); if (!S.files[`url:${s.slug}`]) missingExternal.push(s.slug); }
+  }
   for (const x of own) {
     if (!objMap.has(x.path)) continue;
     let base = clean(x.label || (x.kind === 'score' ? 'Partitura' : 'Gravação'));
@@ -255,7 +263,31 @@ if (fs.existsSync(FILES.manual)) {
     } catch (e) { console.log('Manual como Google Doc: ' + e.message.slice(0, 120)); }
   }
 }
-S.last = { at: new Date().toISOString(), songs: data.songs.length, objects: objects.length, counts: st.counts };
+// 5) verificação: inventário de tudo o que a app criou no Drive, comparado com o que devia lá estar
+const inv = [];
+for (let page = ''; ;) {
+  const r = await g('GET', `files?q=${encodeURIComponent('trashed=false')}&fields=nextPageToken,files(id,name,parents,mimeType)&pageSize=1000${page ? '&pageToken=' + page : ''}`);
+  inv.push(...r.files); if (!(page = r.nextPageToken)) break;
+}
+const known = new Set([root, S.stateId, ...Object.values(S.folders), ...Object.values(S.songs).map(f => f.id), ...Object.values(S.files).map(f => f.id)]);
+const extra = inv.filter(x => !known.has(x.id) && !(x.parents || []).includes(S.folders.removidos) && x.id !== S.folders['removidos:duplicados']);
+if (extra.length) { // restos de execuções interrompidas (nunca se apagam: vão para removidos/duplicados)
+  S.folders['removidos:duplicados'] ||= (await findChild(S.folders.removidos, 'duplicados', true))?.id || await mkFolder('duplicados', S.folders.removidos);
+  for (const x of extra) if (x.id !== S.folders['removidos:duplicados'] && (x.parents || [])[0]) await move(x.id, x.parents[0], S.folders['removidos:duplicados']).catch(() => {});
+}
+const ids = new Set(inv.map(x => x.id));
+const faltam = [];
+for (const s of data.songs) {
+  const f = S.songs[s.slug];
+  if (!f || f.removed || !ids.has(f.id)) faltam.push(`pasta ${s.number}`);
+  else if (!S.files[`txt:${s.slug}`] || !ids.has(S.files[`txt:${s.slug}`].id)) faltam.push(`texto ${s.number}`);
+}
+const copied = new Set(Object.keys(S.files).filter(k => k.startsWith('obj:') && ids.has(S.files[k].id)).map(k => k.slice(4).replace(/@[^@]*$/, '')));
+for (const o of objects) if (!copied.has(o.name)) faltam.push(`ficheiro ${o.name.split('/')[0]}/…`);
+for (const k of ['db:dados', 'db:esquema', 'code:bundle', 'code:zip', 'doc:manual', 'doc:rebuild']) if (!S.files[k] || !ids.has(S.files[k].id)) faltam.push(k);
+console.log(`Verificação: ${inv.length} itens no Drive · ${data.songs.length} cânticos · ${objects.length} ficheiros · ${extra.length} duplicados arrumados · ${missingExternal.length} partituras externas sem cópia · ${faltam.length} em falta`);
+S.last = { at: new Date().toISOString(), songs: data.songs.length, objects: objects.length, counts: st.counts, verificacao: { itens: inv.length, duplicados: extra.length, emFalta: faltam.length, externasSemCopia: missingExternal } };
+if (faltam.length) { await saveState(true); throw new Error(`Cópia incompleta: ${faltam.length} em falta (ex.: ${faltam.slice(0, 5).join(', ')})`); }
 await saveState(true);
 console.log(`Feito em ${Math.round((Date.now() - t0) / 1000)} s · ${calls} pedidos ao Drive · ${JSON.stringify(st.counts)} · ${today}`);
 } catch (e) { console.error('Erro: a guardar o estado antes de sair'); await saveState(true).catch(() => {}); throw e; }
