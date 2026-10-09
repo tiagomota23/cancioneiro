@@ -42,21 +42,29 @@ async function token() {
   }
   return gtok;
 }
-let calls = 0;
+let calls = 0, nextWrite = 0;
+// o Drive aceita cerca de 3 escritas por segundo por conta: as escritas (criar, alterar, enviar) seguem a um ritmo fixo
+async function writeSlot() { const now = Date.now(), t = Math.max(now, nextWrite); nextWrite = t + 400; if (t > now) await sleep(t - now); }
+const limited = (status, text) => status === 429 || status >= 500 || (status === 403 && /rate|quota|usageLimits/i.test(text));
 async function g(method, url, { json, body, headers = {}, raw = false } = {}) {
   for (let i = 0; ; i++) {
     calls++;
+    if (method !== 'GET') await writeSlot();
     const r = await fetch(url.startsWith('http') ? url : 'https://www.googleapis.com/drive/v3/' + url, {
       method, headers: { Authorization: `Bearer ${await token()}`, ...(json ? { 'Content-Type': 'application/json; charset=UTF-8' } : {}), ...headers },
       body: json ? JSON.stringify(json) : body });
     if (r.ok) return raw ? r : (r.status === 204 ? null : r.json());
     const t = await r.text();
-    if ((r.status === 429 || r.status >= 500 || (r.status === 403 && /rate|quota/i.test(t))) && i < 6) { await sleep(2 ** i * 1000 + Math.random() * 500); continue; }
+    if (limited(r.status, t) && i < 8) { await sleep(Math.min(64e3, 2 ** i * 2000) + Math.random() * 1000); continue; }
     if (r.status === 401 && i < 1) { gtok = null; continue; }
     throw new Error(`Drive ${method} ${url.split('?')[0].slice(0, 60)} → ${r.status} ${t.slice(0, 200)}`);
   }
 }
 const q = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+async function findChild(parent, name, folder) {
+  const r = await g('GET', `files?q=${encodeURIComponent(`name='${q(name)}' and '${parent}' in parents and trashed=false and mimeType${folder ? '=' : '!='}'${FOLDER}'`)}&fields=files(id,md5Checksum,size,shortcutDetails)`);
+  return r.files[0] || null;
+}
 async function mkFolder(name, parent) { return (await g('POST', 'files?fields=id', { json: { name, mimeType: FOLDER, parents: [parent] } })).id; }
 async function upload(name, parent, mime, buf, id) { // id: substitui o conteúdo (o Drive guarda as versões anteriores)
   const meta = id ? { name } : { name, parents: [parent] };
@@ -66,8 +74,9 @@ async function upload(name, parent, mime, buf, id) { // id: substitui o conteúd
   for (let i = 0; ; i++) {
     const r = await fetch(loc, { method: 'PUT', headers: { 'Content-Type': mime }, body: buf });
     if (r.ok) return (await r.json()).id;
-    if (i < 4 && (r.status >= 500 || r.status === 429)) { await sleep(2 ** i * 1500); continue; }
-    throw new Error(`upload ${r.status} ${(await r.text()).slice(0, 200)}`);
+    const t = await r.text();
+    if (i < 8 && limited(r.status, t)) { await sleep(Math.min(64e3, 2 ** i * 2000) + Math.random() * 1000); continue; }
+    throw new Error(`upload ${r.status} ${t.slice(0, 200)}`);
   }
 }
 const move = (id, from, to, name) => from === to ? g('PATCH', `files/${id}?fields=id`, { json: { name } })
@@ -104,17 +113,21 @@ const root = found.files[0]?.id || await mkFolder(ROOT_NAME, 'root');
 const stateFile = (await g('GET', `files?q=${encodeURIComponent(`name='.estado.json' and '${root}' in parents and trashed=false`)}&fields=files(id)`)).files[0];
 const S = stateFile ? await (await g('GET', `files/${stateFile.id}?alt=media`, { raw: true })).json() : { folders: {}, songs: {}, files: {} };
 S.folders ||= {}; S.songs ||= {}; S.files ||= {};
-for (const f of ['canticos', 'livros', 'outros', 'base-de-dados', 'codigo', 'removidos']) S.folders[f] ||= await mkFolder(f, root);
+for (const f of ['canticos', 'livros', 'outros', 'base-de-dados', 'codigo', 'removidos']) S.folders[f] ||= (await findChild(root, f, true))?.id || await mkFolder(f, root);
 // guarda o estado de tempos a tempos (se a Action parar a meio, a próxima continua daí)
 let dirty = 0, saving = Promise.resolve();
 function saveState(force) { // um de cada vez (os envios correm em paralelo)
   if (!force && ++dirty % 200) return saving;
-  saving = saving.then(async () => { S.stateId = await upload('.estado.json', root, 'application/json', Buffer.from(JSON.stringify(S)), S.stateId || stateFile?.id); });
+  saving = saving.catch(() => {}).then(async () => { S.stateId = await upload('.estado.json', root, 'application/json', Buffer.from(JSON.stringify(S)), S.stateId || stateFile?.id); });
   return saving;
 }
 // ficheiro com impressão digital: só envia se mudou
 async function put(key, name, parent, mime, buf, hash = sha(buf)) {
-  const cur = S.files[key];
+  let cur = S.files[key];
+  if (!cur) { // talvez já exista de uma execução interrompida: aproveita-se (o mesmo conteúdo não se envia de novo)
+    const ex = await findChild(parent, name);
+    if (ex) { cur = S.files[key] = { id: ex.id, hash: ex.md5Checksum === crypto.createHash('md5').update(buf).digest('hex') ? hash : '', parent, name }; }
+  }
   if (cur && cur.hash === hash && cur.parent === parent && cur.name === name) return cur.id;
   let id;
   if (cur && cur.parent === parent) { id = await upload(name, parent, mime, buf, cur.id); count('atualizados'); }
@@ -123,6 +136,7 @@ async function put(key, name, parent, mime, buf, hash = sha(buf)) {
   return id;
 }
 
+try { // em caso de erro, o estado fica guardado (a próxima execução continua daí, sem duplicar)
 console.log('A ler a base de dados…');
 const data = await fn('data');
 const { objects } = await fn('objects');
@@ -150,7 +164,8 @@ async function bytesOf(path) {
 const objHash = o => `${o.etag || ''}:${o.size}`;
 async function putObject(key, name, parent, path) {
   const o = objMap.get(path); if (!o) return null;
-  const cur = S.files[key];
+  let cur = S.files[key];
+  if (!cur) { const ex = await findChild(parent, name); if (ex && +ex.size === +o.size) { cur = S.files[key] = { id: ex.id, hash: objHash(o), parent, name }; await saveState(); } }
   if (cur && cur.hash === objHash(o) && cur.parent === parent && cur.name === name) return cur.id;
   return put(key, name, parent, o.mimetype || 'application/octet-stream', await bytesOf(path), objHash(o));
 }
@@ -159,10 +174,10 @@ const used = new Set();
 // 1) livros: completos e páginas
 const BOOKS = { songbook: 'Songbook', canti2024: 'CANTI 2024' };
 for (const [b, label] of Object.entries(BOOKS)) {
-  S.folders['livro:' + b] ||= await mkFolder(label, S.folders.livros);
+  S.folders['livro:' + b] ||= (await findChild(S.folders.livros, label, true))?.id || await mkFolder(label, S.folders.livros);
   if (objMap.has(`livros/${b}.pdf`)) { await putObject(`obj:livros/${b}.pdf`, `${label} (livro completo).pdf`, S.folders.livros, `livros/${b}.pdf`); used.add(`livros/${b}.pdf`); }
   const pages = objects.filter(o => o.name.startsWith(`livros/${b}/`));
-  await pool(pages, 4, async o => { await putObject('obj:' + o.name, o.name.split('/').pop(), S.folders['livro:' + b], o.name); used.add(o.name); });
+  await pool(pages, 3, async o => { await putObject('obj:' + o.name, o.name.split('/').pop(), S.folders['livro:' + b], o.name); used.add(o.name); });
 }
 console.log(`livros: ${Object.values(st.counts).reduce((a, b) => a + b, 0)} enviados`);
 
@@ -171,11 +186,11 @@ const by = (rows, k) => rows.reduce((m, r) => (m.get(r[k]) || m.set(r[k], []).ge
 const srcBy = by(data.song_sources, 'song_slug'), tagBy = by(data.song_tags, 'song_slug'), fileBy = by(data.song_files, 'song_slug');
 const SRC = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos' };
 const live = new Set();
-await pool(data.songs, 4, async s => {
+await pool(data.songs, 3, async s => {
   live.add(s.slug);
   const name = `${String(s.number).padStart(4, '0')} - ${clean(s.title)}`;
   let f = S.songs[s.slug];
-  if (!f) { f = S.songs[s.slug] = { id: await mkFolder(name, S.folders.canticos), name }; count('pastas'); }
+  if (!f) { const ex = await findChild(S.folders.canticos, name, true); f = S.songs[s.slug] = { id: ex?.id || await mkFolder(name, S.folders.canticos), name }; if (!ex) count('pastas'); }
   else if (f.name !== name || f.removed) { await move(f.id, f.removed ? S.folders.removidos : S.folders.canticos, S.folders.canticos, name); f.name = name; delete f.removed; }
   const files = fileBy.get(s.slug) || [];
   const books = [], shortcuts = [];
@@ -204,6 +219,8 @@ await pool(data.songs, 4, async s => {
     if (!target) continue;
     const key = `lnk:${s.slug}:${page}`, nm = `${BOOKS[book] || book}, pág. ${n}`;
     if (S.files[key]?.parent === f.id && S.files[key]?.target === target) continue;
+    const ex = await findChild(f.id, nm);
+    if (ex && ex.shortcutDetails?.targetId === target) { S.files[key] = { id: ex.id, parent: f.id, target, name: nm }; continue; }
     const id = (await g('POST', 'files?fields=id', { json: { name: nm, mimeType: SHORTCUT, parents: [f.id], shortcutDetails: { targetId: target } } })).id;
     S.files[key] = { id, parent: f.id, target, name: nm }; count('atalhos'); await saveState();
   }
@@ -214,7 +231,7 @@ console.log(`cânticos: ${live.size}`);
 
 // 3) ficheiros do armazenamento que não ficaram em nenhum cântico
 const rest = objects.filter(o => !used.has(o.name));
-await pool(rest, 4, async o => { await putObject('obj:' + o.name, o.name.replace(/\//g, ' — '), S.folders.outros, o.name); });
+await pool(rest, 3, async o => { await putObject('obj:' + o.name, o.name.replace(/\//g, ' — '), S.folders.outros, o.name); });
 console.log(`outros: ${rest.length}`);
 
 // 4) base de dados, código e manual
@@ -241,3 +258,4 @@ if (fs.existsSync(FILES.manual)) {
 S.last = { at: new Date().toISOString(), songs: data.songs.length, objects: objects.length, counts: st.counts };
 await saveState(true);
 console.log(`Feito em ${Math.round((Date.now() - t0) / 1000)} s · ${calls} pedidos ao Drive · ${JSON.stringify(st.counts)} · ${today}`);
+} catch (e) { console.error('Erro: a guardar o estado antes de sair'); await saveState(true).catch(() => {}); throw e; }
