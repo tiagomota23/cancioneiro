@@ -40,7 +40,11 @@ Deno.serve(async req => {
     if (!(await githubOk(req).catch(() => false))) return json({ error: 'não autorizado' }, 401);
     const op = new URL(req.url).searchParams.get('op');
     if (op === 'schema') return json({ sql: await rest('rpc/backup_schema', { method: 'POST', body: '{}' }) });
-    if (op === 'objects') return json({ objects: await rest('rpc/backup_objects', { method: 'POST', body: '{}', headers: { Range: '0-99999' } }) });
+    if (op === 'objects') { // por páginas: a API devolve no máximo 1000 linhas de cada vez
+      const objects = [];
+      for (let i = 0; ; i += 1000) { const p = await rest(`rpc/backup_objects?limit=1000&offset=${i}`, { method: 'POST', body: '{}' }); objects.push(...p); if (p.length < 1000) break; }
+      return json({ objects });
+    }
     if (op === 'data') {
       // tudo o que é preciso para reconstruir (sem registos de acesso, pedidos, convites nem estado do Drive, que são transitórios ou secretos)
       const T = ['songs?order=number', 'song_sources', 'song_tags', 'song_files?order=id', 'collections', 'collection_songs', 'collection_sections',
