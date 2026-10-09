@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-09 v140';
+  const APP_VERSION = '2026-10-09 v141';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -133,15 +133,30 @@
     $('login-msg').textContent = msg || (inv ? 'Recebeu um convite para o Cancioneiro. Entre com a sua conta Google; um Gestor confirma o acesso.' : '');
     splashDone.then(() => $('splash').classList.add('gone'));
   }
+  // No computador, o Google abre numa janela à parte (num separador afixado do Safari, sair do site abre outro separador
+  // e a sessão ficava lá). Essa janela fecha-se sozinha ao voltar e esta página entra (evento storage, mais abaixo).
+  // No telemóvel e na app instalada, e se o browser bloquear a janela, continua tudo na mesma página.
+  const LOGIN_WIN = 'cancioneiro-login', LOGIN_FLAG = 'cancioneiro.login-janela';
+  let popupLogin = false; // esta página abriu a janela do Google e espera pela sessão
   $('btn-google').onclick = async () => {
     $('login-msg').textContent = 'A abrir o Google…';
     try { if (/^#\/(cantico|p)\//.test(location.hash)) sessionStorage.setItem('cancioneiro.depois', location.hash); } catch (e) {}
-    const { error } = await sb.auth.signInWithOAuth({
+    let w = null;
+    if (!matchMedia('(pointer: coarse)').matches && !standalone()) {
+      const W = 500, H = 640, x = Math.max(0, (screen.availWidth - W) / 2), y = Math.max(0, (screen.availHeight - H) / 2);
+      try { w = window.open('', LOGIN_WIN, `popup,width=${W},height=${H},left=${x},top=${y}`); } catch (e) { w = null; }
+    }
+    const { data, error } = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' } },
+      options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' }, skipBrowserRedirect: !!w },
     });
-    if (error) $('login-msg').textContent = 'Erro: ' + error.message;
+    if (error) { if (w) w.close(); $('login-msg').textContent = 'Erro: ' + error.message; return; }
+    if (w) { try { localStorage.setItem(LOGIN_FLAG, String(Date.now())); } catch (e) {} w.location.href = data.url; popupLogin = true; $('login-msg').textContent = 'Continue na janela do Google que se abriu.'; }
   };
+  // a janela do Google guardou a sessão (localStorage é partilhado): esta página recarrega e entra
+  addEventListener('storage', e => {
+    if (popupLogin && !$('view-login').hidden && e.newValue && e.key === `sb-${new URL(CFG.SUPABASE_URL).hostname.split('.')[0]}-auth-token`) location.reload();
+  });
   async function logout(msg) {
     try { await sb.auth.signOut(); } catch (e) { /* sem rede */ }
     try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(lyrKey()); } catch (e) {}
@@ -3032,6 +3047,7 @@
     if (DEMO) return;
     session = s;
     if (event === 'SIGNED_OUT' && $('view-login').hidden) showLogin();
+    if (event === 'SIGNED_IN' && s && popupLogin && !$('view-login').hidden) location.reload(); // sessão vinda da janela do Google
   });
   // Se algo falhar ou demorar ao abrir, a capa sai na mesma (nunca fica presa na capa verde)
   let started = false;
@@ -3050,6 +3066,19 @@
       const err = new URLSearchParams(location.search).get('error_description');
       history.replaceState(null, '', location.pathname + location.hash);
       if (err && !session) { showLogin('Não foi possível entrar: ' + err); return; }
+    }
+    if (fromGoogle) {
+      // regresso na janela do Google aberta pelo computador: com a sessão guardada, fecha-se (a página que a abriu entra)
+      // (fromGoogle: o supabase-js já tirou o ?code= do endereço)
+      // (o nome da janela perde-se ao passar pelo Google: a marca fica no localStorage, partilhado com a página que a abriu)
+      let flag = 0; try { flag = +localStorage.getItem(LOGIN_FLAG) || 0; localStorage.removeItem(LOGIN_FLAG); } catch (e) {}
+      if (session && Date.now() - flag < 15 * 60e3) {
+        window.close(); await new Promise(r => setTimeout(r, 500));
+        // o browser não deixou fechar: só um aviso (a app já entrou na página de onde se clicou)
+        started = true; $('splash').classList.add('gone'); $('view-login').hidden = false;
+        $('btn-google').hidden = true; $('login-msg').textContent = 'Sessão iniciada ✓ — pode fechar esta janela.';
+        return;
+      }
     }
     await splashDone;
     if (!session) { started = true; if (location.hash.startsWith('#/p/')) route(); else showLogin(); return; }
