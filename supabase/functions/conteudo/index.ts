@@ -6,7 +6,7 @@
 // (pode ser inferior ao da pessoa); vale sempre o menor dos dois.
 const SB = Deno.env.get('SUPABASE_URL'); const SK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); const RESEND = Deno.env.get('RESEND_API_KEY');
 const ADMIN = 'tiago.mota@gmail.com';
-const ORIGINS = ['https://tiagomota23.github.io', 'http://localhost:8765'];
+const ORIGINS = ['https://tiagomota23.github.io'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
 const LIMITS = { song: [80, 250], file: [80, 250], search: [60, 300], match: [30, 150], save: [60, 200], share: [30, 100] };
@@ -215,6 +215,24 @@ function publicUrl(u) {
     throw new Error('Esse endereço não é permitido.');
   return x;
 }
+// o nome também não pode apontar para um endereço interno (ex.: 127.0.0.1.nip.io): resolve-se e verifica-se cada IP
+const privateIp = ip => {
+  ip = ip.toLowerCase();
+  const m = ip.match(/^(?:::ffff:)?(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    const [a, b] = [+m[1], +m[2]];
+    return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) ||
+      (a === 100 && b >= 64 && b <= 127) || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19));
+  }
+  return ip === '::' || ip === '::1' || /^(fc|fd|fe[89ab]|ff)/.test(ip) || ip.startsWith('64:ff9b:') || ip.startsWith('::ffff:');
+};
+async function publicHost(x) {
+  const ips = [];
+  for (const t of ['A', 'AAAA']) ips.push(...await Deno.resolveDns(x.hostname, t).catch(() => []));
+  if (!ips.length) throw new Error('Não foi possível encontrar esse endereço.');
+  if (ips.some(privateIp)) throw new Error('Esse endereço não é permitido.');
+  return x;
+}
 const decodeEnt = t => t.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp|rsquo|lsquo|ldquo|rdquo|hellip|ndash|mdash);/gi, (m, e) => {
   const k = e.toLowerCase(); const map = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', hellip: '…', ndash: '–', mdash: '—' };
   if (k[0] === '#') { const n = k[1] === 'x' ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10); return n ? String.fromCodePoint(n) : m; }
@@ -222,11 +240,11 @@ const decodeEnt = t => t.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp|rs
 });
 const htmlText = h => decodeEnt(h.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n\n').replace(/<[^>]+>/g, '')).replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 async function scrape(raw) {
-  let url = publicUrl(raw.trim()), r;
+  let url = await publicHost(publicUrl(raw.trim())), r;
   for (let i = 0; ; i++) {
     r = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'Mozilla/5.0 (Cancioneiro)', Accept: 'text/html,*/*' } }).catch(() => null);
     if (!r) throw new Error('Não foi possível abrir esse endereço.');
-    if (r.status >= 300 && r.status < 400 && r.headers.get('location') && i < 3) { url = publicUrl(new URL(r.headers.get('location'), url).href); continue; }
+    if (r.status >= 300 && r.status < 400 && r.headers.get('location') && i < 3) { url = await publicHost(publicUrl(new URL(r.headers.get('location'), url).href)); continue; }
     break;
   }
   if (!r.ok) throw new Error(`O endereço respondeu com erro (HTTP ${r.status}).`);

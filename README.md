@@ -31,11 +31,14 @@ Qualquer cântico pode entrar numa coleção do Cancioneiro: enquanto a coleçã
 ## Proteção do conteúdo
 A letra, as gravações e as partituras nunca são lidas diretamente da base de dados: passam pela função `supabase/functions/conteudo`
 (`song`, `search`, `match`, `save`, `file`), um cântico de cada vez, com limites por conta registados em `access_log`
-(cânticos: 80/hora e 250/dia distintos; ficheiros idem; pesquisas 400/2000; identificação pelo som 120/600; edições 60/200).
+(cânticos: 80/hora e 250/dia distintos; ficheiros idem; pesquisas 60/300; identificação pelo som 30/150; edições 60/200;
+transcrição do som 150/600 — acima disso a app usa o modelo do telemóvel).
 Ao atingir um limite, o administrador recebe um email. Os ficheiros são entregues por URLs assinados de 1 hora; os livros
 (Songbook e CANTI 2024) estão divididos em páginas (`livros/<livro>/pNNN.pdf`) e só são entregues as páginas do cântico.
 A app guarda no telemóvel no máximo 150 letras recentes, apagadas ao terminar a sessão. pdf.js está em `vendor/pdfjs/`;
-supabase-js tem verificação SRI; as páginas têm Content-Security-Policy. Os links de autorização enviados por email expiram ao fim de 30 dias.
+supabase-js tem verificação SRI; as páginas têm Content-Security-Policy (scripts só da própria app e do endereço exato do supabase-js).
+A leitura de páginas para acrescentar cânticos recusa endereços internos (também por DNS). O bucket `coro` só aceita PDF, imagens e áudio até 50 MB.
+Endurecimento da base de dados em `supabase/seguranca.sql`. Os links de autorização enviados por email expiram ao fim de 30 dias.
 
 ## Verificação semanal
 A função `supabase/functions/sync-songs` (agendada com pg_cron às segundas, 05:00 UTC) lê https://cancioneiro.marriaga.com/index.html,

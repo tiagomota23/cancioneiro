@@ -19,6 +19,15 @@ Deno.serve(async (req) => {
     body: '{}',
   }).then((r) => (r.ok ? r.json() : false)).catch(() => false);
   if (allowed !== true) return json({ error: 'sem acesso' }, 403);
+  // limite por pessoa (o serviço de transcrição é pago): 150 por hora e 600 por dia; acima disso a app usa o modelo do telemóvel
+  const SB = Deno.env.get('SUPABASE_URL'), SK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
+  const u = await fetch(`${SB}/auth/v1/user`, { headers: { apikey: SK, Authorization: auth } }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (!u?.id) return json({ error: 'sem acesso' }, 403);
+  const since = new Date(Date.now() - 864e5).toISOString(), hourAgo = Date.now() - 3600e3;
+  const rows = await fetch(`${SB}/rest/v1/access_log?select=at&user_id=eq.${u.id}&kind=eq.transcribe&at=gte.${since}&limit=1000`, { headers: HDR }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  if (rows.length >= 600 || rows.filter((x: { at: string }) => Date.parse(x.at) > hourAgo).length >= 150) return json({ error: 'limite de uso atingido' }, 429);
+  await fetch(`${SB}/rest/v1/access_log`, { method: 'POST', headers: { ...HDR, Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: u.id, email: u.email, kind: 'transcribe', key: null }) }).catch(() => {});
 
   const key = Deno.env.get('GROQ_API_KEY');
   if (!key) return json({ error: 'GROQ_API_KEY em falta' }, 500);
