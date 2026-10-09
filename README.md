@@ -55,3 +55,12 @@ com a autorização (só leitura) dada uma vez em `…/functions/v1/drive-auth` 
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET). Gravações e partituras novas em pastas de cânticos já existentes (`drive_folders`) são
 acrescentadas automaticamente; pastas novas, ficheiros alterados (ex.: o Word "Músicas Coro") e apagados são enviados por email para rever.
 Nada é apagado no Cancioneiro. Estado em `drive_files` / `drive_sync_log` (só service_role).
+
+## Mapa visual da app
+`tools/screens/capture.mjs` abre cada ecrã da app no modo `?demo` (dados fictícios de `tools/screens/fixture.mjs`: só textos de
+domínio público, nunca letras da base de dados) e guarda em `tools/screens/out/` (fora do git) uma imagem por ecrã (`png/`,
+telemóvel 390 px) e o HTML de cada ecrã (`html/`, para importar no Figma com o plugin html.to.design).
+O supabase-js é substituído por `tools/screens/supabase-stub.js` (o modo de demonstração não usa a base de dados).
+Uso: `NODE_PATH=$(npm root -g) node tools/screens/capture.mjs [ecrã ...]` (precisa do Playwright com o Chromium).
+As imagens alimentam o Design «Cancioneiro — mapa da app» no claude.ai: a cada nova versão da app, gerar de novo e atualizar o Design.
+Ecrãs novos ou mudados: acrescentar a `SCREENS` em `capture.mjs`.
