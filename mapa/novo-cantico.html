@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="pt" style="--fs: 18px;"><head><meta name="robots" content="noindex">
+  <meta charset="utf-8">
+  
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1ab07f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cancioneiro">
+  <title>Cancioneiro</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&amp;family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&amp;display=swap" rel="stylesheet">
+  
+<base href="https://tiagomota23.github.io/cancioneiro/"><style>:root {
+  --green-1: #1fb385;
+  --green-2: #12966a;
+  --green-ink: #0e7f58;
+  --row-line: rgba(255, 255, 255, 0.22);
+  --paper: #ffffff;
+  --ink: #4a4a4a;
+  --ink-soft: #7d7d7d;
+  --chord: #0e7f58;
+  --fs: 18px;
+  --serif: "Marcellus", "Optima", Georgia, serif;
+  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  /* iOS 26 desfoca uma faixa logo abaixo da barra de estado (cerca de 28 pt): quando há barra de estado,
+     o conteúdo do topo começa 16 px mais abaixo, para ficar fora dessa faixa (no computador: 0) */
+  --edge: calc(min(var(--safe-top), 1px) * 16);
+  --top: calc(var(--safe-top) + var(--edge));
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Modo escuro: segue o telemóvel, a menos que se escolha claro/escuro no botão das páginas dos cânticos (data-theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121614;
+    --ink: #d8dcd9;
+    --ink-soft: #9aa39e;
+    --chord: #5fcf90;
+    --green-ink: #5fcf90;
+    --song-h1: #eef1ef; --pdf-bg: #222; --pdf-title: #eee;
+  }
+}
+:root[data-theme="dark"] {
+    --paper: #121614;
+    --ink: #d8dcd9;
+    --ink-soft: #9aa39e;
+    --chord: #5fcf90;
+    --green-ink: #5fcf90;
+  --song-h1: #eef1ef; --pdf-bg: #222; --pdf-title: #eee;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* Sem altura fixa nem overflow no body: no iPhone isso transformava o body num segundo scroller
+   (a página só deslizava depois de um zoom). O documento é o único scroller. */
+html { overflow-x: hidden; }
+body { margin: 0; min-height: 100dvh; overflow-x: clip; }
+body { touch-action: manipulation; }
+body {
+  font-family: var(--sans);
+  background: var(--green-2);
+  color: #fff;
+  -webkit-text-size-adjust: 100%;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+[hidden] { display: none !important; }
+
+/* Capa */
+.splash {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--green-1), var(--green-2));
+  transition: opacity .45s ease;
+}
+.splash h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(30px, 9vw, 60px); letter-spacing: .14em; margin: 0 0 0 .14em;
+}
+.splash.gone { opacity: 0; pointer-events: none; }
+
+.view { min-height: 100dvh; }
+/* Fundo verde numa camada fixa: o iPhone não suporta background-attachment: fixed
+   (repetia o degradê a cada ecrã, com faixas de verde mais claro/escuro) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  /* verde liso na zona do cabeçalho e da barra de pesquisa (que tem fundo liso), degradê só abaixo */
+  background: linear-gradient(180deg, var(--green-1) 0, var(--green-1) calc(var(--top) + 140px), var(--green-2) 100%);
+}
+.view.green {
+  background: transparent;
+  padding-bottom: calc(24px + var(--safe-bottom));
+}
+.view.white { background: var(--paper); color: var(--ink); min-height: 100dvh; }
+
+/* Barra superior (lista) */
+.topbar {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(10px + var(--top)) 10px 4px;
+}
+.brand {
+  /* centrado na mesma linha que os botões de 44 px, sem transform (que deixava as letras desfocadas):
+     a palavra é cortada à altura das maiúsculas (text-box) só para o alinhamento, sem esconder nada */
+  position: absolute; left: 60px; right: 60px; top: calc(10px + var(--top)); height: 44px; margin: 0;
+  display: flex; align-items: center; justify-content: center; line-height: 1; pointer-events: none;
+  font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: .14em;
+  white-space: nowrap;
+}
+.icon-btn {
+  width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px;
+}
+.icon-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn svg circle { fill: currentColor; stroke: none; }
+.search svg circle { fill: none; stroke: currentColor; }
+.icon-btn.info i { font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1; text-box: trim-both cap alphabetic; display: block; }
+.icon-btn:active { background: rgba(255,255,255,.12); }
+.view.white .icon-btn:active { background: rgba(0,0,0,.06); }
+
+/* Barra de estado do iPhone: faixa verde fixa (elemento real, opaco, com toda a largura e pelo menos 8 px)
+   por cima da lista. Assim o Safari (iOS 26) trata o topo como uma barra sólida desta cor, em vez de
+   desfocar o conteúdo que fica junto à barra de estado (o título e o símbolo do perfil apareciam desfocados). */
+.topfill {
+  position: fixed; top: 0; left: 0; right: 0; height: max(var(--top), 8px); z-index: 6;
+  background: var(--green-1); pointer-events: none;
+}
+.searchrow {
+  position: sticky; top: var(--top); z-index: 5;
+  background: var(--green-1); box-shadow: 0 0 0 100vmax var(--green-1); clip-path: inset(0 -100vmax -12px);
+  display: flex; align-items: center; gap: 2px; padding: 6px 14px 10px 6px;
+}
+.searchrow .search { flex: 1; margin: 0; }
+.search {
+  margin: 6px 14px 10px; display: flex; align-items: center; gap: 8px;
+  background: #fff; color: #9a9a9a; border-radius: 22px; padding: 0 12px; height: 40px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+}
+.search svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; }
+.search input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font: 400 16px var(--sans); color: #333; /* ≥16px: o iPhone não faz zoom ao tocar */
+}
+.search input::placeholder { font-size: 11px; letter-spacing: .08em; color: #a8a8a8; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search .clear { font-size: 22px; color: #999; padding: 0 2px; }
+
+.list-title {
+  margin: 14px 18px 6px; font-family: var(--serif); font-weight: 400;
+  font-size: 18px; letter-spacing: .1em; text-transform: uppercase;
+}
+
+/* Linhas */
+.rows { list-style: none; margin: 0; padding: 0 0 0 4px; }
+.rows li a {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 48px; padding: 10px 14px;
+  color: #fff; text-decoration: none;
+  border-bottom: 1px solid var(--row-line);
+}
+.rows li a:active { background: rgba(255,255,255,.08); }
+.rows .t {
+  flex: 1; min-width: 0;
+  font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; line-height: 1.35;
+}
+.rows .a {
+  display: block; margin-top: 3px;
+  font-size: 11px; letter-spacing: .04em; text-transform: none; font-style: italic; opacity: .75;
+}
+.rows .snip {
+  display: block; margin-top: 4px;
+  font-size: 12px; letter-spacing: 0; text-transform: none; opacity: .85;
+}
+.rows mark { background: rgba(255,255,255,.28); color: #fff; border-radius: 2px; padding: 0 1px; }
+.rows .n { font-size: 11px; opacity: .8; font-variant-numeric: tabular-nums; text-align: right; }
+.rows .bp { display: block; font-size: 10px; opacity: .85; margin-top: 2px; white-space: nowrap; }
+.rows .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
+.rows .badge {
+  font-size: 10px; letter-spacing: .08em; border: 1px solid rgba(255,255,255,.5);
+  border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px;
+}
+.status { text-align: center; font-size: 13px; opacity: .85; padding: 16px; }
+
+/* Cântico */
+.songbar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 2px;
+  padding: calc(4px + var(--top)) 8px 4px;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--green-ink);
+}
+.songbar .spacer { flex: 1; }
+.songbar { align-items: center; }
+/* todos os ícones da barra na mesma caixa de 44×44, centrados na mesma linha */
+.songbar .icon-btn { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; }
+.songbar .icon-btn svg { width: 23px; height: 23px; }
+.songbar #btn-chords svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.songbar #btn-chords svg circle { fill: currentColor; stroke: none; }
+.songbar #btn-share svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* A−/A+: letras centradas na caixa, com o sinal pequeno em cima à direita (não altera o alinhamento) */
+.songbar .txt { font-family: var(--sans); line-height: 1; position: relative; }
+.songbar .txt .a { font-size: 19px; }
+.songbar .txt.big .a { font-size: 24px; }
+.songbar .txt .s { position: absolute; top: 9px; right: 7px; font-size: 11px; font-weight: 700; }
+.songbar .txt.big .s { top: 7px; right: 5px; }
+.songbar #btn-chords { opacity: .45; }
+.songbar #btn-chords.on { opacity: 1; }
+
+.song {
+  font-size: var(--fs);
+  padding: 8px 20px calc(48px + var(--safe-bottom));
+  max-width: 44em; margin: 0 auto;
+}
+.song h1 {
+  font-family: var(--sans); font-weight: 700; font-size: 1.15em; color: var(--song-h1, #333); margin: .4em 0 .15em;
+  line-height: 1.25;
+}
+.song .author { color: var(--green-ink); font-size: .72em; margin: 0 0 .6em; }
+.song .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: .2em 0 1.2em; }
+.lang-switch { display: inline-flex; border: 1px solid var(--green-ink); border-radius: 16px; overflow: hidden; }
+.lang-switch button {
+  font-size: 12px; letter-spacing: .06em; padding: 5px 12px; color: var(--green-ink);
+}
+.lang-switch button.on { background: var(--green-ink); color: var(--paper); }
+.lang-chip {
+  font-size: 12px; letter-spacing: .06em; padding: 5px 12px; color: var(--paper);
+  background: var(--green-ink); border: 1px solid var(--green-ink); border-radius: 16px;
+}
+.pdf {
+  font-size: 12px; letter-spacing: .04em; padding: 5px 12px; border-radius: 16px;
+  color: var(--ink-soft); border: 1px solid currentColor; text-decoration: none;
+}
+.note { font-size: 12px; color: var(--ink-soft); margin: -0.6em 0 1.2em; font-style: italic; }
+
+.stanza { margin: 0 0 1.15em; font-weight: 300; line-height: 1.45; }
+.stanza.chorus { font-style: italic; }
+.line {
+  white-space: pre-wrap;
+  padding-left: 1.1em; text-indent: -1.1em; /* versos longos: continuação recuada */
+}
+.line:empty::before { content: "\200b"; }
+
+/* Acordes por cima das sílabas */
+.ch { display: none; }
+.show-chords .stanza.has-ch .line { line-height: 2.35; }
+.show-chords .ch {
+  display: inline-block; position: relative; width: 0; overflow: visible;
+  top: -1.45em; text-indent: 0;
+  font-style: normal; font-weight: 700; font-size: .68em; color: var(--chord);
+  white-space: nowrap; user-select: none; -webkit-user-select: none;
+}
+.show-chords .ch::after { content: attr(data-c); }
+
+.song .num { text-align: right; color: var(--ink-soft); font-size: 11px; margin-top: 2em; }
+
+dialog {
+  /* as janelas são sempre claras, mesmo em modo escuro */
+  --paper: #ffffff; --ink: #4a4a4a; --ink-soft: #7d7d7d; --green-ink: #0e7f58; --chord: #0e7f58;
+  background: #fff;
+  border: 0; border-radius: 14px; max-width: min(92vw, 420px); padding: 20px 22px;
+  color: #333; font-size: 15px; line-height: 1.45;
+}
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h2 { font-family: var(--serif); font-weight: 400; letter-spacing: .1em; color: var(--green-2); margin: 0 0 8px; font-size: 26px; }
+dialog .small { font-size: 12.5px; color: #666; }
+dialog form { text-align: right; }
+dialog form button { color: #fff; background: var(--green-ink); padding: 8px 18px; border-radius: 18px; }
+
+@media (min-width: 700px) {
+  .searchrow { max-width: 620px; margin: 0 auto; }
+  .rows, .list-title { max-width: 760px; margin-left: auto; margin-right: auto; }
+}
+
+/* Ouvir e identificar */
+.search .mic { width: 32px; height: 32px; display: grid; place-items: center; color: var(--green-ink); flex: none; margin-right: -6px; }
+.search .mic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.listen {
+  position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.listen .sheet {
+  width: 100%; max-width: 520px; background: #fff; color: #333;
+  border-radius: 18px 18px 0 0; padding: 22px 20px calc(18px + var(--safe-bottom));
+  text-align: center; animation: up .2s ease-out;
+}
+@keyframes up { from { transform: translateY(40px); opacity: 0; } }
+.listen .pulse {
+  width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--green-1); color: #fff;
+}
+.listen .pulse svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.listen .pulse.on { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(31,179,133,.55); } 70% { box-shadow: 0 0 0 18px rgba(31,179,133,0); } 100% { box-shadow: 0 0 0 0 rgba(31,179,133,0); } }
+.listen-status { font-family: var(--serif); letter-spacing: .1em; font-size: 16px; margin: 4px 0; color: var(--green-2); text-transform: uppercase; }
+.listen-text { min-height: 2.8em; font-style: italic; color: #555; font-size: 15px; margin: 6px 0 12px; }
+.listen-langs { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.listen-langs button { font-size: 12px; letter-spacing: .06em; padding: 5px 11px; border-radius: 14px; border: 1px solid var(--green-ink); color: var(--green-ink); }
+.listen-langs button.on { background: var(--green-ink); color: #fff; }
+.listen-actions { display: flex; gap: 10px; }
+.listen-actions button { flex: 1; padding: 11px; border-radius: 22px; border: 1px solid #ccc; font-size: 15px; }
+.listen-actions .primary { background: var(--green-ink); border-color: var(--green-ink); color: #fff; }
+
+/* Gaveta com índice alfabético */
+.drawer { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+.drawer-panel {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 88%; max-width: 480px;
+  background: linear-gradient(180deg, var(--green-1), var(--green-2));
+  box-shadow: 4px 0 18px rgba(0,0,0,.25);
+  transform: translateX(-102%); transition: transform .28s ease;
+  display: flex; flex-direction: column; color: #fff;
+}
+.drawer-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background .28s; }
+.drawer.open { pointer-events: auto; }
+.drawer.open .drawer-panel { transform: none; }
+.drawer.open .drawer-scrim { background: rgba(0,0,0,.25); }
+.drawer-panel { z-index: 1; }
+.drawer-top { padding: calc(14px + var(--top)) 4px 6px; }
+.drawer-search { position: static; margin: 6px 10px; }
+.drawer-body { flex: 1; min-height: 0; display: flex; }
+.drawer-close { flex: none; margin: 6px 2px 0 4px; color: #fff; align-self: flex-start; }
+.az {
+  flex: 1; min-width: 0; list-style: none; margin: 0; padding: 4px 0 calc(24px + var(--safe-bottom));
+  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--row-line);
+}
+.az .letter {
+  position: sticky; top: 0; z-index: 1;
+  margin: 6px 10px 2px; padding: 1px 12px; background: #e8e8e8; color: #333;
+  font-size: 15px; letter-spacing: .04em;
+}
+.az a {
+  display: flex; align-items: baseline; gap: 10px; padding: 11px 14px 11px 22px;
+  color: #fff; text-decoration: none;
+}
+.az a:active { background: rgba(255,255,255,.1); }
+.az .t { flex: 1; min-width: 0; font-size: 15px; letter-spacing: .03em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.az .n { font-size: 12px; opacity: .9; font-variant-numeric: tabular-nums; text-align: right; }
+.az .n small { display: block; font-size: 10px; opacity: .85; }
+.az .empty { padding: 20px; opacity: .85; font-size: 14px; }
+
+/* Preferidos */
+.star-btn svg { fill: currentColor; stroke: currentColor; stroke-width: 1.2; }
+.fav-toggle svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.fav-toggle.on svg { fill: currentColor; }
+.fav-toggle.on { color: #e3a008; }
+.fav-empty { text-align: center; padding: 40px 28px; font-size: 14px; line-height: 1.5; opacity: .9; }
+.listen-progress { height: 3px; background: #e6e6e6; border-radius: 2px; overflow: hidden; margin: 8px 24px 0; }
+.listen-progress div { height: 100%; width: 0; background: var(--green-1); transition: width .5s linear; }
+.listen-hint { font-size: 12px; color: #777; min-height: 1em; margin: -4px 0 14px; }
+.listen-eq { display: block; width: 280px; max-width: 100%; height: 60px; margin: 2px auto 4px; }
+.listen-diag { font-size: 11px; color: #999; margin: -8px 0 12px; font-variant-numeric: tabular-nums; }
+.listen .pulse { cursor: pointer; }
+.topbar-left-spacer { width: 44px; height: 44px; }
+.topbar #btn-back-list:not([hidden]) + .topbar-left-spacer { display: none; }
+.searchrow .star-btn { width: 38px; margin-right: 2px; }
+.searchrow .star-btn svg { width: 22px; height: 22px; }
+
+/* Entrada */
+.view.login { min-height: 100vh; display: grid; place-items: center; text-align: center;
+  background: linear-gradient(180deg, var(--green-1), var(--green-2)); padding: 24px; }
+.login-box h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 9vw, 56px); letter-spacing: .14em; margin: 0 0 48px .14em; }
+.google-btn { display: inline-flex; align-items: center; gap: 12px; background: #fff; color: #333;
+  font-size: 16px; padding: 12px 22px; border-radius: 26px; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+.google-btn svg { width: 20px; height: 20px; }
+.login-msg { min-height: 1.4em; margin: 18px 0 0; font-size: 14px; }
+.login-note { font-size: 12px; opacity: .8; margin-top: 28px; }
+.info-actions { display: flex; justify-content: space-between; gap: 10px; }
+dialog form button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }
+
+/* ---- Adaptação a qualquer ecrã (larguras pequenas, paisagem, entalhe/notch) ---- */
+:root {
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+/* elementos flexíveis podem encolher abaixo da largura "natural" do campo de texto */
+.search { min-width: 0; }
+.search input { width: 100%; min-width: 0; }
+.searchrow { padding-left: calc(6px + var(--safe-left)); padding-right: calc(14px + var(--safe-right)); }
+.searchrow > .icon-btn { flex: none; }
+.topbar { padding-left: calc(10px + var(--safe-left)); padding-right: calc(10px + var(--safe-right)); }
+.brand { font-size: clamp(17px, 5.8vw, 24px); }
+.brand span { text-box: trim-both cap alphabetic; margin-right: -.14em; } /* o espaçamento depois da última letra não conta para o centro */
+.rows { padding-left: calc(4px + var(--safe-left)); padding-right: var(--safe-right); }
+.list-title { margin-left: calc(18px + var(--safe-left)); margin-right: calc(18px + var(--safe-right)); overflow-wrap: anywhere; }
+.rows .t { overflow-wrap: anywhere; }
+.songbar { padding-left: calc(8px + var(--safe-left)); padding-right: calc(8px + var(--safe-right)); }
+.song { padding-left: calc(20px + var(--safe-left)); padding-right: calc(20px + var(--safe-right)); overflow-wrap: break-word; }
+.song .meta { min-width: 0; }
+.drawer-panel { padding-left: var(--safe-left); }
+.listen .sheet { max-height: 100dvh; overflow-y: auto; padding-left: calc(20px + var(--safe-left)); padding-right: calc(20px + var(--safe-right)); }
+.listen-eq { width: min(280px, 100%); }
+dialog { max-height: 90dvh; overflow-y: auto; }
+/* ecrãs muito estreitos (ex.: iPhone SE, 320 px) */
+@media (max-width: 360px) {
+  .searchrow { gap: 0; }
+  .searchrow > .icon-btn { width: 36px; }
+  .search input::placeholder { letter-spacing: .04em; }
+  .rows .t { letter-spacing: .08em; }
+  .listen-langs button { padding: 5px 8px; }
+}
+/* paisagem com pouca altura: ecrã de gravação mais compacto */
+@media (max-height: 500px) {
+  .listen .pulse { width: 52px; height: 52px; margin-bottom: 4px; }
+  .listen-eq { height: 40px; }
+  .listen .sheet { padding-top: 12px; }
+  .login-box h1 { margin-bottom: 24px; }
+}
+/* ecrãs largos (tablet/computador): conteúdo centrado */
+@media (min-width: 700px) {
+  .topbar { max-width: 800px; margin: 0 auto; }
+}
+.login-note a { color: #fff; }
+
+/* Partitura (PDF) mostrada dentro da app */
+.pdfview { position: fixed; inset: 0; z-index: 35; background: #f2f2f2; display: flex; flex-direction: column; }
+.pdfbar { flex: none; display: flex; align-items: center; gap: 4px; background: var(--paper); color: var(--green-ink);
+  padding: calc(4px + var(--top)) calc(8px + var(--safe-right)) 4px calc(4px + var(--safe-left)); box-shadow: 0 1px 6px rgba(0,0,0,.12); }
+.pdf-back { display: flex; align-items: center; gap: 2px; height: 44px; padding: 0 8px 0 2px; font-size: 16px; color: var(--green-ink); flex: none; }
+.pdf-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pdf-title { flex: 1; min-width: 0; text-align: center; font-weight: 700; color: #333; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pdfbar .icon-btn { width: 40px; height: 44px; font-size: 22px; flex: none; }
+.pdfpages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 8px 8px calc(24px + var(--safe-bottom)); text-align: center; }
+.pdfpages canvas { display: block; margin: 0 auto 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.pdf-msg { margin-top: 40px; color: #555; }
+body.pdf-open { overflow: hidden; }
+.pdfview { background: var(--pdf-bg, #f2f2f2); }
+.pdf-title { color: var(--pdf-title, inherit); }
+
+/* Fontes, Coro CLU, gravações */
+.rows li.cat-head { padding: 20px 14px 6px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+.rows li.src-note { padding: 10px 14px; color: #fff; font-size: 13px; opacity: .9; border-bottom: 1px solid var(--row-line); }
+.rows li.src-note a { color: inherit; }
+.src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; margin: 10px 0; }
+.src-row select { font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid #bbb; background: #fff; color: #333; max-width: 100%; }
+.recs { margin: 1.6em 0 .6em; font-size: 15px; }
+.recs h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--green-ink); margin: 0 0 8px; font-weight: 700; }
+.recs ul { list-style: none; margin: 0; padding: 0; }
+.recs li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid rgba(128,128,128,.2); }
+.recs li:last-child { border-bottom: 1px solid rgba(128,128,128,.2); }
+.recs .rl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.recs button.rec { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--green-ink); display: grid; place-items: center; color: var(--green-ink); }
+.recs button.rec svg { width: 18px; height: 18px; fill: currentColor; }
+.recs button.rec.on, .recs button.rec.busy { background: var(--green-ink); color: var(--paper); }
+.recs audio { width: 100%; height: 40px; }
+.rec-err { font-size: 12px; color: #c0392b; width: 100%; }
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 1.6em 0 0; }
+.src-chip { font-size: 11px; letter-spacing: .04em; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--ink-soft); color: var(--ink-soft); }
+.src-chip.src-coro_clu { border-color: var(--green-ink); color: var(--green-ink); }
+.moments { font-size: 11px; color: var(--ink-soft); }
+.score-img { display: block; width: 100%; max-width: none; margin: 8px auto; background: #fff; }
+
+/* Direitos de autor e edição de letras */
+.song .rights { font-size: .6em; color: var(--ink-soft); margin: -.3em 0 .7em; line-height: 1.4; }
+.edit-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin: .4em 0 1.2em; font-size: 12px; color: var(--ink-soft); }
+.edit-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; background: var(--green-ink); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.edit-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.revert-link { font-size: 12px; color: var(--green-ink); text-decoration: underline; padding: 6px 2px; }
+dialog.editor { width: min(94vw, 640px); max-width: none; }
+.editor textarea { width: 100%; min-height: 45dvh; font: 16px/1.45 ui-monospace, Menlo, monospace; padding: 10px; border: 1px solid #bbb; border-radius: 8px; resize: vertical; box-sizing: border-box; color: #222; background: #fff; }
+.edit-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.edit-actions span { flex: 1; }
+.edit-actions button { color: #fff; background: var(--green-ink); padding: 8px 16px; border-radius: 18px; }
+.edit-actions button.ghost { background: none; color: var(--green-ink); border: 1px solid var(--green-ink); }
+.edit-actions button:disabled { opacity: .5; }
+
+/* Janela ⓘ: botões sempre visíveis, mesmo quando o texto não cabe no ecrã */
+/* O texto rola numa área interior; os botões ficam sempre visíveis em baixo */
+#info { padding: 0; overflow: hidden; }
+#info[open] { display: flex; flex-direction: column; max-height: 90dvh; }
+#info .info-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 20px 22px 8px; outline: none; }
+#info .info-actions { flex: none; margin: 0; padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; background: #fff; }
+.dlg-x { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 50%; font-size: 28px; line-height: 1; color: #666; background: rgba(255,255,255,.9); z-index: 1; }
+.dlg-x:focus:not(:focus-visible) { outline: none; }
+
+.pdf-more { text-align: center; margin: 14px 0 24px; }
+.pdf-more button { font-size: 14px; padding: 8px 16px; border-radius: 18px; border: 1px solid var(--green-ink); color: var(--green-ink); background: #fff; }
+
+/* Aviso breve (ex.: "Letra copiada") */
+.toast { position: fixed; left: 50%; bottom: calc(28px + var(--safe-bottom)); transform: translate(-50%, 12px); z-index: 60;
+  background: rgba(20,20,20,.88); color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 22px; opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* Perfis: símbolo no canto superior direito (círculo: vazio Cancioneiro, C Coro, M Maestro, cheio Gestor) */
+svg.perfil-ic { --ic-bg: var(--green-1); fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn svg.perfil-ic circle { fill: none; stroke: currentColor; }
+.perfil-btn svg.perfil-ic { width: 25px; height: 25px; }
+body.lvl-1 .coro-only { display: none; }
+.perfis { width: min(420px, calc(100vw - 32px)); }
+.perfis-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 14px; }
+.perfil-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; background: #fff; color: #333; outline: none; }
+.perfil-opt:focus, .perfil-opt:focus-visible, .perfis h2:focus { outline: none; box-shadow: none; }
+.perfil-opt.on { border-color: var(--green-2); background: var(--green-2); color: #fff; }
+.perfil-opt svg { width: 26px; height: 26px; flex: none; color: var(--green-ink); --ic-bg: #fff; }
+.perfil-opt.on svg { --ic-bg: var(--green-2); }
+.perfil-opt.on svg, .perfil-opt.on small { color: #fff; }
+.perfil-opt b { display: block; font-size: 15px; }
+.perfil-opt small { display: block; font-size: 12px; color: var(--ink-soft); line-height: 1.35; margin-top: 2px; }
+.perfil-admin { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 10px; background: var(--green-ink); color: #fff; font-weight: 700; text-decoration: none; }
+.perfil-admin .chev { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.promo-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin: -.6em 0 1.2em; font-size: 12px; color: var(--ink-soft); }
+
+/* Gestão de utilizadores */
+.admin-title { font-family: var(--serif); font-weight: 400; letter-spacing: .1em; font-size: 20px; margin: 0 0 0 4px; color: var(--green-2); }
+.admin { max-width: 720px; margin: 0 auto; padding: 4px calc(16px + var(--safe-right)) calc(32px + var(--safe-bottom)) calc(16px + var(--safe-left)); }
+.admin h2 { font-family: var(--serif); font-weight: 400; letter-spacing: .08em; color: var(--green-2); font-size: 18px; margin: 22px 0 8px; }
+.adm-list { list-style: none; margin: 0; padding: 0; }
+.adm-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+.adm-who { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; min-width: 0; flex: 1 1 220px; }
+.adm-who svg { --ic-bg: #fff; grid-row: span 3; width: 22px; height: 22px; color: var(--green-ink); align-self: center; }
+.adm-who b, .adm-who span, .adm-who small { grid-column: 2; overflow-wrap: anywhere; }
+li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small { grid-column: 1 / -1; }
+.adm-who span { font-size: 13px; color: var(--ink-soft); }
+.adm-who small { font-size: 11.5px; color: #999; }
+.adm-name { cursor: pointer; }
+.adm-act { display: flex; align-items: center; gap: 8px; }
+.admin select, .admin input { font: inherit; font-size: 16px; padding: 7px 8px; border: 1px solid #ccd8d2; border-radius: 8px; background: var(--paper); color: var(--ink); }
+.admin button { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 8px; background: var(--green-ink); color: #fff; }
+.admin button.adm-del, .admin button.adm-no { background: none; color: #c0392b; border: 1px solid #e3b3ad; }
+.adm-add { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-add input { flex: 1 1 160px; min-width: 0; }
+.admin .small { font-size: 12.5px; color: #666; line-height: 1.5; margin-top: 18px; }
+.admin .note { color: var(--ink-soft); }
+
+/* Letra: não se pode selecionar nem copiar (todos os perfis) */
+#song { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Botão claro/escuro na barra do cântico: lua em modo claro, sol em modo escuro */
+#btn-theme .sun { display: none; }
+:root[data-theme="dark"] #btn-theme .sun { display: inline; }
+:root[data-theme="dark"] #btn-theme .moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) #btn-theme .sun { display: inline; }
+  :root:not([data-theme="light"]) #btn-theme .moon { display: none; }
+}
+.adm-lock { font-size: 11.5px; color: #999; }
+
+/* Símbolos no texto da informação: os mesmos desenhos dos botões da app */
+svg.ic { --ic-bg: #fff; color: var(--green-ink); width: 1.2em; height: 1.2em; vertical-align: -.25em; fill: none; stroke: var(--green-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+svg.ic circle { fill: var(--green-ink); stroke: none; }
+svg.ic circle.o, svg.ic.perfil-ic circle { fill: none; stroke: var(--green-ink); }
+svg.ic.star-f { fill: var(--green-ink); }
+.nw { white-space: nowrap; }
+/* Quem só tem o perfil Cancioneiro vê o "i" (informação) em vez do símbolo */
+.perfil-btn > i { display: none; }
+.perfil-btn.info > i { display: block; }
+.perfil-btn.info > svg { display: none; }
+body.solo .perfil-help { display: none; }
+
+.perfis-actions { align-items: center; }
+.perfil-i { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1; color: var(--green-ink); padding: 4px 10px; cursor: pointer; outline: none; }
+body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
+.drawer-title { margin: 6px 0 4px 60px; font-family: var(--serif); font-weight: 400; letter-spacing: .14em; font-size: 20px; color: #fff; }
+.books a { gap: 10px; align-items: center; }
+.books .book-ic { width: 18px; height: 18px; flex: none; fill: currentColor; stroke: none; }
+.books .book-ic.outline { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.books .chev { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; opacity: .7; flex: none; }
+
+/* Coleções */
+.books .col-new { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; color: #fff; font: inherit; font-size: 15px; letter-spacing: .03em; text-transform: uppercase; opacity: .9; }
+.books .col-new .t { flex: none; }
+.books .t s { text-decoration-thickness: 1.5px; opacity: .75; }
+.books .t small { font-size: 11px; opacity: .8; text-transform: none; }
+.list-title .col-edit { margin-left: 10px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: none; padding: 4px 10px; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; color: #fff; vertical-align: middle; }
+.list-title .col-meta { display: block; font-size: 11px; font-weight: 400; letter-spacing: .04em; text-transform: none; opacity: .8; margin-top: 4px; }
+.rows li.swipe { position: relative; overflow: hidden; }
+.rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
+.rows li.swipe:not(.open):not(.drag) .sw-actions { visibility: hidden; }
+.rows li.swipe.open > a { transform: translateX(-170px); }
+.rows li.swipe .sw-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.rows li.swipe .sw-actions button { width: 44px; color: #fff; background: rgba(0,0,0,.25); font-size: 18px; }
+.rows li.swipe .sw-actions button:disabled { opacity: .35; }
+.rows li.swipe .sw-actions .sw-del { width: 82px; font-size: 13px; font-weight: 700; background: #c0392b; }
+.rows li.swipe .sw-more { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); z-index: 2; width: 34px; height: 34px; color: #fff; font-size: 18px; opacity: .8; }
+.rows li.swipe.open .sw-more { opacity: 0; pointer-events: none; }
+@media (hover: none) { .rows li.swipe .sw-more { display: none; } .rows li.swipe > a { padding-right: 14px; } }
+.col-dlg { width: min(420px, calc(100vw - 32px)); }
+.col-field { display: block; font-size: 13px; font-weight: 700; color: #555; margin: 10px 0; }
+.col-field input, .col-field select { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
+.col-dlg .edit-actions button.ghost.danger, #tpl-edit .edit-actions button.ghost.danger { color: #c0392b; border-color: #e3b3ad; }
+.col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
+.col-pick { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #333; }
+.col-pick input { width: 20px; height: 20px; accent-color: #0e7f58; }
+.col-pick small { display: block; font-size: 11.5px; color: #777; }
+
+/* Sem zoom nas páginas da app (o iPhone faz zoom sozinho em campos com letra < 16 px; o gesto de pinça fica só para as partituras) */
+input, select, textarea { font-size: max(16px, 1em); }
+html, body { touch-action: pan-x pan-y; }
+.pdfview, .pdfview * { touch-action: auto; }
+
+.rows li.swipe .sw-actions .sw-del { width: 56px; }
+.rows li.swipe .sw-actions .sw-del svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rows li.swipe .sw-actions .sw-del.confirm { background: #8e1f14; }
+.rows li.swipe.open > a { transform: translateX(-144px); }
+.fav-toggle.book svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.fav-toggle.book.on svg { fill: rgba(14,127,88,.18); }
+.fav-toggle.book.on { color: var(--green-ink); }
+.col-pick.dis { opacity: .6; }
+.col-pick-new { margin-top: 4px; padding: 10px 12px; border: 1px dashed #b9cfc5; border-radius: 10px; color: #0e7f58; font-weight: 700; text-align: left; }
+
+/* Secções dentro de uma coleção */
+/* como os títulos "Coro" e "Coro — momentos da Missa" do índice */
+.rows li.col-sec { border-bottom: 0; }
+.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; opacity: .75; border-bottom: 0; min-height: 0; }
+.rows li.col-sec .sw-actions button { font-size: 20px; }
+.rows li.col-add-sec button { width: 100%; text-align: left; padding: 14px; color: #fff; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+
+/* Coleções do cântico: ☆/★ à esquerda e "+ Cancioneiro" à direita, pequenos */
+.pick-top { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 6px; }
+.pick-star { width: 34px; height: 34px; display: grid; place-items: center; border: 0; color: #0e7f58; }
+.pick-star svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.pick-star.on { color: #e3a008; }
+.pick-star.on svg { fill: currentColor; }
+.pick-canc { height: 30px; padding: 0 14px; border-radius: 15px; border: 1.5px solid #0e7f58; color: #0e7f58; font-weight: 700; font-size: 13px; background: #fff; }
+.pick-canc.on { background: #0e7f58; color: #fff; }
+.pick-canc:disabled { opacity: 1; }
+.col-dlg button, .col-dlg h2, .col-pick input { outline: none; }
+.col-dlg button:focus-visible { box-shadow: 0 0 0 2px rgba(14,127,88,.35); }
+.song a.book-open { color: var(--green-ink); font-weight: 700; text-decoration: underline; }
+
+/* Templates */
+.list-title .col-edit + .col-edit { margin-left: 6px; }
+.tpl-row { display: flex; align-items: stretch; gap: 6px; }
+.tpl-apply { flex: 1; text-align: left; padding: 10px 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #333; outline: none; }
+.tpl-apply b { display: block; font-size: 15px; }
+.tpl-apply small { display: block; font-size: 12px; color: #777; margin-top: 2px; }
+.tpl-edit { padding: 0 12px; border: 1px solid #dde7e2; border-radius: 10px; color: #0e7f58; font-weight: 700; font-size: 13px; outline: none; }
+.col-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; font-weight: 400; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; resize: vertical; }
+.list-title .col-btns { display: flex; gap: 6px; margin: 8px 0 2px; }
+.list-title .col-btns .col-edit { margin-left: 0; }
+
+/* Se a app não arrancar (ficheiro não chegou), ao fim de 10 s a capa explica o que fazer */
+.splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: #fff; font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
+.splash.gone::after { display: none; }
+@keyframes splash-help { to { opacity: .9; } }
+
+/* botão à espera de confirmação (2.º toque) */
+button.armed, .edit-actions button.ghost.armed { background: #c0392b !important; color: #fff !important; border-color: #c0392b !important; }
+
+/* Janela genérica da app */
+.app-dlg-msg { margin: 4px 0 12px; color: #444; line-height: 1.45; }
+#app-dlg-input { display: block; width: 100%; margin: 4px 0 14px; font: inherit; font-size: 16px; padding: 9px 10px; border: 1px solid #ccd8d2; border-radius: 8px; background: #fff; color: #333; }
+#app-dlg-input[hidden] { display: none; }
+#app-dlg .tpl-apply { width: 100%; }
+
+/* Endereço partilhado: só letra e tradução */
+body.shared-view #btn-fav, body.shared-view #btn-share, body.shared-view #btn-chords, body.no-session #btn-back { display: none; }
+.shared-foot { margin-top: 28px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.shared-foot + .shared-foot { margin-top: 6px; }
+body.no-session.shared-sub #btn-back { display: inline-flex; }
+body.shared-view .searchrow, body.shared-view #btn-perfil { visibility: hidden; }
+body.shared-view .searchrow { height: 8px; overflow: hidden; }
+#view-list .shared-foot { color: rgba(255,255,255,.85); }
+#view-list .shared-foot .revert-link { color: #fff; }
+.list-title .col-share { display: inline-flex; vertical-align: middle; margin-left: 8px; padding: 2px; color: #fff; }
+.list-title .col-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#pdf-download svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
+.up-files li { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 2px 0; }
+.up-del { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.up-del svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.up-del.armed { background: #c0392b; color: #fff; }
+.edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }
+.perfis-right { display: inline-flex; align-items: center; gap: 6px; }
+.install-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; color: var(--green-ink); background: none; border: 0; box-shadow: none; }
+.install-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+body.standalone .install-btn, .info-install, body.standalone .perfis-install { display: none; }
+.perfis-install { margin: 0 0 12px; }
+body.solo:not(.standalone) .info-install { display: block; }
+.install-line { display: inline-flex; align-items: center; gap: 8px; padding: 0; background: none; border: 0; box-shadow: none; color: var(--green-ink); font: inherit; font-weight: 700; text-align: left; }
+.install-line svg { width: 1.4em; height: 1.4em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.share-app { margin-top: -4px; }
+.pdf-block { border: 1.5px solid var(--green-ink); border-radius: 12px; padding: 6px 10px 10px; margin: 0 auto 14px; background: #fff; width: fit-content; max-width: 100%; }
+.pdf-src { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--green-ink); }
+.pdf-block canvas { display: block; margin: 0 auto; }
+/* Novo cântico */
+.song-new .sn-from { display: grid; gap: 8px; padding: 10px; margin: 0 0 12px; border: 1px dashed #c9dcd3; border-radius: 10px; }
+.song-new .sn-row { display: flex; gap: 8px; align-items: center; }
+.song-new .sn-row input { flex: 1; min-width: 0; }
+.song-new input, .song-new select { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid #cfdcd6; border-radius: 8px; background: #fff; color: #222; }
+.song-new .sn-f { display: grid; gap: 4px; margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
+.song-new textarea { min-height: 220px; }
+.pend { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 10px; background: #f3c969; color: #4a3800; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: none; vertical-align: middle; }
+.pend-bar { margin: 1em 0; padding: 10px 12px; border: 1px solid #f0d58a; background: #fff8e3; border-radius: 10px; font-size: 14px; color: #5a4600; }
+.pend-bar p { margin: 0 0 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pend-bar p:last-child { margin: 0; }
+.ghost-btn { font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; border: 1px solid #c0392b; color: #c0392b; background: #fff; }
+.list-title .novos-filtro { display: block; margin-top: 10px; font: inherit; font-size: 16px; letter-spacing: 0; text-transform: none; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.7); background: rgba(255,255,255,.15); color: #fff; max-width: 100%; }
+.list-title .novos-filtro option { color: #222; }
+.sim-list { display: grid; gap: 4px; margin: 0 0 10px; }
+.sim-list b { color: #8a5a00; }
+.sim-list a { color: var(--green-ink); text-decoration: underline; }
+.sim-list a small { margin-left: 6px; color: #8a6d00; text-decoration: none; }
+#app-dlg-msg { white-space: pre-line; }
+.song-new h2 { font-size: 22px; margin-bottom: 12px; }
+dialog h2:focus, dialog h2:focus-visible { outline: none; box-shadow: none; }
+.song-new .sn-gen { display: flex; gap: 10px; margin: 0 0 6px; }
+.song-new .sn-gen-btn { flex: 1; padding: 10px 8px; border-radius: 10px; border: 1.5px solid var(--green-ink); background: #fff; color: var(--green-ink); font: inherit; font-size: 15px; font-weight: 700; }
+.song-new .sn-gen-btn:disabled { opacity: .5; }
+.song-new .sn-pdf-name:empty { display: none; }
+.song-new .sn-f { min-width: 0; }
+.song-new .sn-f select, .song-new .sn-f input { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; text-overflow: ellipsis; }
+.song-new .sn-files { margin: 0 0 12px; }
+.song-new .sn-flabel { margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
+.song-new #sn-flist { list-style: none; margin: 0 0 8px; padding: 0; font-size: 14px; }
+.song-new #sn-flist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid #eef3f0; }
+/* Gravação a tocar */
+.mini-player { position: fixed; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom, 0px)); z-index: 60; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 16px; background: var(--green-ink); color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,.28); max-width: 560px; margin: 0 auto; }
+.mini-player[hidden] { display: none; }
+.mini-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); color: #fff; }
+.mini-btn svg { width: 20px; height: 20px; fill: currentColor; }
+.mini-btn .i-pause { display: none; }
+.mini-btn.playing .i-play { display: none; }
+.mini-btn.playing .i-pause { display: block; }
+.mini-info { flex: 1; min-width: 0; color: #fff; text-decoration: none; display: grid; }
+.mini-info b, .mini-info small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-info b { font-size: 14px; }
+.mini-info small { font-size: 12px; opacity: .85; }
+body.has-mini .view, body.has-mini .pdfpages { padding-bottom: calc(84px + var(--safe-bottom, 0px)); }
+.pdf-block { max-width: none; }
+/* aviso de instalação (2.ª abertura) */
+.coach { padding: 6px 8px; border-radius: 10px; background: #e3f5ec; box-shadow: 0 0 0 2px var(--green-ink); animation: coach 1.4s ease-in-out 3; }
+@keyframes coach { 50% { box-shadow: 0 0 0 5px rgba(14,127,88,.35); } }
+.coach-hint { margin: 0 0 6px; font-size: 13px; color: var(--green-ink); }
+/* Tutorial */
+.tour { position: fixed; inset: 0; z-index: 70; }
+.tour.center { background: rgba(0,0,0,.55); }
+.tour-hole { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0,0,0,.55); pointer-events: none; transition: all .25s ease; outline: 2px solid #fff; }
+.tour-box { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; background: #fff; color: #333; border-radius: 14px; padding: 14px 16px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+.tour.center .tour-box { top: 50%; transform: translateY(-50%); }
+.tour-msg { margin: 0 0 12px; font-size: 15px; line-height: 1.45; }
+.tour-nav { display: flex; align-items: center; gap: 10px; }
+.tour-n { flex: 1; font-size: 12px; color: #888; }
+.tour-skip { background: none; border: 0; color: #777; font: inherit; font-size: 14px; padding: 8px; }
+.tour-next { background: var(--green-ink); color: #fff; border: 0; border-radius: 18px; padding: 8px 18px; font: inherit; font-size: 14px; font-weight: 700; }
+.btn-ic { width: 1.15em; height: 1.15em; vertical-align: -.2em; margin-right: 6px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+dialog.tour { border-radius: 0; color: inherit; position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; }
+dialog.tour::backdrop { background: transparent; }
+dialog.tour.center { background: rgba(0,0,0,.55); }
+/* "+" nas secções da folha e procura de cânticos */
+.rows li.swipe.sec4.open > a { transform: translateX(-214px); }
+.rows li.swipe .sw-actions .sw-add { font-size: 26px; font-weight: 300; background: rgba(0,0,0,.35); }
+.sec-add { width: min(92vw, 420px); }
+.sec-add h2 { font-size: 22px; }
+.sec-add #sa-q { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid #cfdcd6; border-radius: 10px; margin: 4px 0 6px; }
+.sec-add #sa-list { list-style: none; margin: 0 0 10px; padding: 0; max-height: 50dvh; overflow-y: auto; }
+.sec-add #sa-list button { display: grid; width: 100%; text-align: left; padding: 9px 4px; border: 0; border-bottom: 1px solid #eef3f0; background: none; font: inherit; color: #222; }
+.sec-add #sa-list button small { color: #888; font-size: 12px; }
+.sec-add #sa-list button:disabled { opacity: .5; }
+.sec-add .sa-sec { display: grid; gap: 4px; margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--green-ink); }
+.sec-add .sa-sec[hidden] { display: none; }
+.sec-add .sa-sec select { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid #cfdcd6; border-radius: 10px; background: #fff; color: #222; }
+.sec-add .sa-search { position: relative; margin: 4px 0 6px; }
+.sec-add .sa-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: #888; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.sec-add .sa-search #sa-q { margin: 0; padding-left: 38px; }
+
+/* Maiúsculas como na página inicial: títulos, nomes de cânticos em listas, etiquetas, botões pequenos e procura
+   (a letra, as descrições e os botões das janelas ficam em minúsculas, para se lerem bem) */
+.song h1, dialog h2, .pdf-title, .admin-title, .list-title { text-transform: uppercase; letter-spacing: .06em; }
+dialog h2 { font-size: 22px; }
+#sa-list b, .tpl-apply b, .col-pick span, .sim-list a, .perfil-opt b, .pdf-src, .song-new .sn-f, .song-new .sn-flabel,
+.sec-add .sa-sec, .up-files li span, #sn-flist li span, .mini-info b, .pend-bar p:first-child, .shared-foot,
+.col-edit, .col-share, .sn-gen-btn, .edit-btn, .ghost-btn, .pick-canc, .install-line span, .tour-msg + .tour-nav .tour-n { text-transform: uppercase; letter-spacing: .05em; }
+#sa-list small, .tpl-apply small, .col-pick small, .sim-list small, .perfil-opt small { text-transform: none; letter-spacing: 0; }
+input::placeholder, textarea::placeholder { text-transform: uppercase; letter-spacing: .06em; }
+.perfil-admin, .meta a.pdf, .lang-chip, .lang-switch button, .src-chip, .moments, .pdf-more button, .col-pick-new, .pick-top button { text-transform: uppercase; letter-spacing: .05em; }
+/* Versão de teste: aviso na capa e no canto da página inicial */
+.splash-in { display: grid; justify-items: center; gap: 10px; }
+.splash-sub { margin: 0; font-family: var(--serif); font-size: clamp(14px, 4vw, 22px); letter-spacing: .3em; text-transform: uppercase; opacity: 0; animation: splash-sub .6s ease 1s forwards; }
+@keyframes splash-sub { to { opacity: .9; } }
+.topbar-left-spacer { display: grid; place-items: center; }
+.test-tag { font-size: 9.5px; line-height: 1.2; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; text-align: center; color: #fff; opacity: .85; }
+/* procurar cântico na folha: janela fixa no topo; a caixa de procura não se mexe, só a lista de resultados desliza */
+dialog.sec-add[open] { display: flex; flex-direction: column; margin: calc(var(--safe-top, 0px) + 14px) auto auto; height: min(78dvh, 640px); max-height: none; overflow: hidden; }
+dialog.sec-add h2, dialog.sec-add .sa-sec, dialog.sec-add .sa-search, dialog.sec-add #sa-msg, dialog.sec-add .info-actions { flex: none; }
+dialog.sec-add #sa-list { flex: 1; min-height: 0; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* janelas com caixas de texto ou conteúdo que muda: ficam no topo do ecrã (não saltam ao escrever nem com o teclado) */
+dialog.top-dlg[open] { margin: calc(var(--safe-top, 0px) + 14px) auto auto; max-height: calc(100dvh - var(--safe-top, 0px) - 28px); }
+.sec-add .sa-sec { margin-top: 2px; }
+.perfis-line { margin: 0 0 12px; }
+</style></head>
+<body class="perfil-gestor">
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste</p></div></div>
+
+  <!-- Entrada (Google) -->
+  <section id="view-login" class="view login" hidden="">
+    <div class="login-box">
+      <h1>CANCIONEIRO</h1>
+      <button id="btn-google" class="google-btn">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"></path><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6z"></path><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6C6.5 42.6 14.6 48 24 48z"></path></svg>
+        Entrar com Google
+      </button>
+      <p class="login-msg" id="login-msg"></p>
+      <p class="login-note">Acesso reservado. <a href="privacidade.html">Privacidade</a></p>
+    </div>
+  </section>
+
+  <!-- Índice / listas (fundo verde) -->
+  <section id="view-list" class="view green">
+    <div class="topfill" aria-hidden="true"></div>
+    <header class="topbar">
+      <button class="icon-btn" id="btn-back-list" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <span class="topbar-left-spacer" id="topbar-spacer"><span class="test-tag">Versão<br>Teste</span></span>
+      <h1 class="brand" id="list-brand"><span>CANCIONEIRO</span></h1>
+      <button class="icon-btn perfil-btn" id="btn-perfil" aria-label="Perfil: Gestor" title="Perfil: Gestor"><svg viewBox="0 0 24 24" class="perfil-ic"><circle cx="12" cy="12" r="7.5" style="fill:currentColor"></circle></svg><i>i</i></button>
+    </header>
+    <div class="searchrow">
+    <button class="icon-btn" id="btn-menu" aria-label="Coleções">
+      <svg viewBox="0 0 24 24"><circle cx="4" cy="6" r="1.2"></circle><circle cx="4" cy="12" r="1.2"></circle><circle cx="4" cy="18" r="1.2"></circle><path d="M8 6h13M8 12h13M8 18h13"></path></svg>
+    </button>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5L21 21"></path></svg>
+      <input id="search" type="search" placeholder="PROCURAR CÂNTICO OU LETRA" autocomplete="off" autocorrect="off" spellcheck="false" style="">
+      <button id="search-clear" class="clear" aria-label="Limpar" hidden="">×</button>
+      <button id="btn-mic" class="mic" aria-label="Ouvir e identificar cântico" title="Ouvir e identificar">
+        <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg>
+      </button>
+    </div>
+    </div>
+    <h2 class="list-title" id="list-title">Novos Cânticos<small class="col-meta">1 por aprovar — abra o cântico para aprovar ou recusar</small><select class="novos-filtro" id="novos-filtro" aria-label="Mostrar"><option value="todos" selected="">Todos</option><option value="aprovados">Aprovados</option><option value="pendentes">Por aprovar</option><option value="canc">No Cancioneiro</option><option value="nao-canc">Ainda não no Cancioneiro</option><option value="coro">No Coro</option><option value="nao-coro">Ainda não no Coro</option></select></h2>
+    <ul class="rows" id="rows"><li><a href="#/cantico/novo_por_aprovar"><span class="t">Cântico acrescentado (por aprovar)<small class="pend">por aprovar</small><span class="a">Exemplo</span></span><span class="n">14</span></a></li><li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li></ul>
+    <p class="status" id="status"></p>
+  </section>
+
+  <!-- Cântico (fundo branco) -->
+  <section id="view-song" class="view white" hidden="">
+    <header class="songbar">
+      <button class="icon-btn" id="btn-back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <div class="spacer"></div>
+      <button class="icon-btn fav-toggle" id="btn-fav" aria-label="Adicionar aos preferidos" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg></button>
+      <button class="icon-btn" id="btn-share" aria-label="Partilhar" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button>
+      <button class="icon-btn" id="btn-theme" aria-label="Modo claro / escuro" title="Modo claro / escuro"><svg viewBox="0 0 24 24"><path class="moon" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path><g class="sun"><circle cx="12" cy="12" r="4" style="fill:none;stroke:currentColor"></circle><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"></path></g></svg></button>
+      <button class="icon-btn" id="btn-chords" aria-label="Mostrar acordes" title="Acordes" hidden=""><svg viewBox="0 0 24 24"><path d="M9 18V5.5l10-2V16"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="16.5" cy="16" r="2.5"></circle></svg></button>
+      <button class="icon-btn txt" id="font-dec" aria-label="Diminuir letra"><span class="a">A</span><span class="s">−</span></button>
+      <button class="icon-btn txt big" id="font-inc" aria-label="Aumentar letra"><span class="a">A</span><span class="s">+</span></button>
+    </header>
+    <article id="song" class="song"></article>
+  </section>
+
+  <!-- Gestão de utilizadores (perfil Gestor) -->
+  <section id="view-admin" class="view white" hidden="">
+    <header class="songbar">
+      <button class="icon-btn" id="admin-back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <h1 class="admin-title">Utilizadores</h1>
+      <div class="spacer"></div>
+    </header>
+    <div id="admin" class="admin"></div>
+  </section>
+
+  <!-- Livros (gaveta lateral): Preferidos, Cancioneiro, Coro, Songbook, CANTI 2024 -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <aside class="drawer-panel" role="dialog" aria-label="Coleções">
+      <div class="drawer-top"><h2 class="drawer-title">COLEÇÕES</h2></div>
+      <div class="drawer-body">
+        <button class="icon-btn drawer-close" id="drawer-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>
+        </button>
+        <ul class="az books" id="az"></ul>
+      </div>
+    </aside>
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+  </div>
+
+  <!-- Ouvir e identificar -->
+  <div id="listen" class="listen" hidden="">
+    <div class="sheet" role="dialog" aria-label="Ouvir e identificar cântico">
+      <div class="pulse" id="listen-pulse"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg></div>
+      <canvas class="listen-eq" id="listen-eq" width="280" height="60" aria-hidden="true"></canvas>
+      <p class="listen-status" id="listen-status">A ouvir…</p>
+      <div class="listen-progress"><div id="listen-bar"></div></div>
+      <p class="listen-text" id="listen-text"></p>
+      <div class="listen-langs" id="listen-langs" role="group" aria-label="Língua do cântico"></div>
+      <p class="listen-hint" id="listen-hint"></p>
+      <p class="listen-diag" id="listen-diag"></p>
+      <div class="listen-actions">
+        <button id="listen-cancel">Cancelar</button>
+        <button id="listen-stop" class="primary">Procurar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Partitura (PDF) -->
+  <div id="pdfview" class="pdfview" hidden="">
+    <header class="pdfbar">
+      <button class="pdf-back" id="pdf-back" aria-label="Voltar ao cântico">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg><span>Voltar</span>
+      </button>
+      <span class="pdf-title" id="pdf-title"></span>
+      <button class="icon-btn" id="pdf-download" aria-label="Descarregar PDF" title="Descarregar PDF" hidden=""><svg viewBox="0 0 24 24"><path d="M12 3.5v12"></path><path d="M7.5 11.5l4.5 4.5 4.5-4.5"></path><path d="M5 20.5h14"></path></svg></button>
+      <button class="icon-btn txt" id="pdf-zoom-out" aria-label="Reduzir">−</button>
+      <button class="icon-btn txt" id="pdf-zoom-in" aria-label="Ampliar">+</button>
+    </header>
+    <div class="pdfpages" id="pdfpages"></div>
+  </div>
+
+  <!-- Informação -->
+  <dialog id="info">
+    <button type="button" class="dlg-x" id="info-x" aria-label="Fechar">×</button>
+    <div class="info-body" tabindex="-1" autofocus="">
+    <h2>Cancioneiro</h2>
+    <p class="info-install"><button type="button" class="install-line" id="info-install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M12 8.5v7M8.5 12h7"></path></svg><span>Adicionar a app ao ecrã principal</span></button></p>
+    <p class="share-app"><button type="button" class="install-line" id="info-share-app"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg><span>Partilhar a app</span></button></p>
+    <p class="share-app"><button type="button" class="install-line" id="info-tour"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 8.5l5.5 3.5-5.5 3.5z"></path></svg><span>Ver o tutorial</span></button></p>
+    <p><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" class="o"></circle><path d="M15.5 15.5L21 21"></path></svg> Procure por título, autor, número, página do livro ou qualquer palavra da letra ou da tradução. <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="6" r="1.2"></circle><circle cx="4" cy="12" r="1.2"></circle><circle cx="4" cy="18" r="1.2"></circle><path d="M8 6h13M8 12h13M8 18h13"></path></svg> abre as coleções: Preferidos, Cancioneiro<span class="coro-only">, Coro, Songbook e CANTI 2024</span>.</p>
+    <p>Marque cânticos com a <svg class="ic star-o" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg> para os encontrar depois em <svg class="ic star-f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg> Preferidos, nas coleções (guardados na sua conta e disponíveis em qualquer dispositivo).</p>
+    <p>Toque em <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg> e deixe o telemóvel ouvir alguns segundos de um cântico: a app reconhece a língua, transcreve o que ouve e pára sozinha quando encontra o cântico.</p>
+    <p>Em cada cântico: <b>A−</b>/<b>A+</b> ajusta o tamanho da letra, <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg> alterna entre modo claro e escuro, <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg> partilha (copia o endereço do cântico<span class="coro-only"> ou a letra</span>)<span class="coro-only">, <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l10-2V16"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="16.5" cy="16" r="2.5"></circle></svg> mostra ou esconde os acordes</span> e os botões de idioma alternam entre o original e a tradução.</p>
+    <p class="coro-only">Nos cânticos do Coro há <b>gravações</b> de cada voz (soprano, contralto, tenor, baixo) e partituras.</p>
+    <p class="perfil-help">O símbolo no canto superior direito mostra o perfil ativo<span id="perfil-list"> (<span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"></circle></svg>&nbsp;Cancioneiro</span>, <span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"></circle><text x="12" y="12.4" text-anchor="middle" dominant-baseline="central" style="fill:currentColor;stroke:none;font:700 9.5px Lato, -apple-system, Helvetica, Arial, sans-serif">C</text></svg>&nbsp;Coro</span>, <span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5" style="fill:currentColor"></circle><text x="12" y="12.4" text-anchor="middle" dominant-baseline="central" style="fill:var(--ic-bg);stroke:none;font:700 9.5px Lato, -apple-system, Helvetica, Arial, sans-serif">M</text></svg>&nbsp;Maestro</span>, <span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5" style="fill:currentColor"></circle></svg>&nbsp;Gestor</span>)</span>; toque nele para mudar de perfil ou ver esta informação.</p>
+    <p class="maestro-only">Como <b>Maestro</b>: no fim de cada cântico pode <b>Editar letra</b> (a letra original fica guardada e pode ser reposta) e <b>Promover ao Cancioneiro</b> um cântico do Coro ou dos livros (ou retirá-lo, se foi promovido). Em <b>Gestão de utilizadores</b> (no menu do perfil) pode mudar perfis entre Cancioneiro, Coro e Maestro.</p>
+    <p class="gestor-only">Como <b>Gestor</b>: em <b>Gestão de utilizadores</b> acrescenta ou retira pessoas, muda perfis e decide os pedidos de acesso, que também chegam por email.</p>
+    <label class="src-row coro-only">Mostrar cânticos de:
+      <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
+    </label>
+    <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-03 v139</p>
+    <p class="small" id="info-user">Sessão: demo@localhost</p>
+    <p class="small" id="info-sync"></p>
+    <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
+    </div>
+    <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button type="button" id="info-close">Fechar</button></form>
+  </dialog>
+
+  <!-- Coleção: criar / editar (Maestro) -->
+  <dialog id="col-dlg" class="col-dlg top-dlg">
+    <h2 id="col-dlg-title">Nova folha</h2>
+    <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off" style=""></label>
+    <label class="col-field">Público<select id="col-aud"><option value="coro">Coro</option><option value="cancioneiro">Cancioneiro</option></select></label>
+    <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
+    <p class="small" id="col-msg" role="status"></p>
+    <div class="edit-actions"><button type="button" id="col-del" class="ghost danger">Apagar</button><span></span><button type="button" id="col-cancel" class="ghost">Cancelar</button><button type="button" id="col-save">Guardar</button></div>
+  </dialog>
+  <!-- Coleção: escolher onde pôr o cântico -->
+  <dialog id="col-pick" class="col-dlg">
+    <h2 tabindex="-1" autofocus="">Folhas</h2>
+    <div id="col-pick-list" class="col-pick-list"></div>
+    <form method="dialog" class="info-actions"><span></span><button type="button" id="col-pick-close">Fechar</button></form>
+  </dialog>
+
+  <!-- Templates de secções (Maestro) -->
+  <dialog id="tpl-dlg" class="col-dlg">
+    <h2 tabindex="-1" autofocus="">Templates</h2>
+    <p class="small">Toque num template para acrescentar as suas secções no fim da folha.</p>
+    <div id="tpl-list" class="col-pick-list"></div>
+    <form method="dialog" class="info-actions"><span></span><button type="button" id="tpl-close">Fechar</button></form>
+  </dialog>
+  <dialog id="tpl-edit" class="col-dlg top-dlg">
+    <h2 id="tpl-edit-title" tabindex="-1" autofocus="">Novo template</h2>
+    <label class="col-field">Nome<input id="tpl-name" maxlength="60" autocomplete="off" style=""></label>
+    <label class="col-field">Secções (uma por linha)<textarea id="tpl-secs" rows="7" style=""></textarea></label>
+    <p class="small" id="tpl-msg" role="status"></p>
+    <div class="edit-actions"><button type="button" id="tpl-del" class="ghost danger">Apagar</button><span></span><button type="button" id="tpl-cancel" class="ghost">Cancelar</button><button type="button" id="tpl-save">Guardar</button></div>
+  </dialog>
+
+  <!-- Janela genérica da app (mensagens, confirmações, texto, escolha) — em vez das do sistema -->
+  <dialog id="app-dlg" class="col-dlg app-dlg">
+    <h2 id="app-dlg-title" tabindex="-1" autofocus=""></h2>
+    <p id="app-dlg-msg" class="app-dlg-msg"></p>
+    <input id="app-dlg-input" maxlength="80" autocomplete="off" hidden="" style="">
+    <div id="app-dlg-list" class="col-pick-list" hidden=""></div>
+    <div class="edit-actions"><span><button type="button" id="app-dlg-extra" class="ghost" hidden=""></button></span><button type="button" id="app-dlg-cancel" class="ghost">Cancelar</button><button type="button" id="app-dlg-ok">OK</button></div>
+  </dialog>
+
+  <!-- Escolher perfil -->
+  <dialog id="perfis" class="perfis">
+    <h2 tabindex="-1" autofocus="">Perfil</h2>
+    <p class="perfis-install"><button type="button" class="install-line" id="perfis-install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M12 8.5v7M8.5 12h7"></path></svg><span>Adicionar a app ao ecrã principal</span></button></p>
+    <p class="perfis-line coro-only"><button type="button" class="install-line" id="perfis-newsong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>Acrescentar um cântico</span></button></p>
+    <div id="perfis-list" class="perfis-list"></div>
+    <form method="dialog" class="info-actions perfis-actions"><button type="button" id="perfis-close">Fechar</button><i class="perfil-i" id="perfil-info" role="button" tabindex="0" aria-label="Informação e ajuda" title="Informação e ajuda">i</i></form>
+  </dialog>
+
+  <!-- Gravação a tocar (fica por cima da app) -->
+  <div id="mini-player" class="mini-player" hidden="">
+    <button type="button" id="mini-play" class="mini-btn" aria-label="Pausa"><svg viewBox="0 0 24 24" class="i-play"><path d="M8 5v14l11-7z"></path></svg><svg viewBox="0 0 24 24" class="i-pause"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg></button>
+    <a href="#" id="mini-info" class="mini-info"><b id="mini-title"></b><small id="mini-label"></small></a>
+    <button type="button" id="mini-stop" class="mini-btn" aria-label="Parar"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"></path></svg></button>
+  </div>
+
+  <!-- Acrescentar um cântico a uma secção da folha -->
+  <dialog id="sec-add" class="sec-add">
+    <h2 id="sa-title" tabindex="-1" autofocus="">Acrescentar</h2>
+    <div class="sa-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5L21 21"></path></svg><input id="sa-q" type="search" placeholder="Procurar cântico" autocomplete="off" autocorrect="off" spellcheck="false" style=""></div>
+    <label class="sa-sec" id="sa-sec" hidden="">Secção<select id="sa-sel"></select></label>
+    <p class="small" id="sa-msg"></p>
+    <ul id="sa-list"></ul>
+    <div class="info-actions"><span></span><button type="button" id="sa-close" class="ghost">Fechar</button></div>
+  </dialog>
+
+  <!-- Novo cântico: escrever, ler de um endereço ou de um PDF -->
+  <dialog id="song-new" class="editor song-new top-dlg" open="">
+    <h2 tabindex="-1" autofocus="" id="sn-h2">Novo cântico</h2>
+    <div class="sn-gen" id="sn-gen">
+      <button type="button" id="sn-url-go" class="sn-gen-btn">Gerar de URL</button>
+      <button type="button" id="sn-pdf" class="sn-gen-btn">Gerar de PDF</button>
+    </div>
+    <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off" style=""></label>
+    <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off" style=""></label>
+    <label class="sn-f">Categoria<select id="sn-cat" data-prev="lang:pt"><option value="lang:pt">Cânticos em português</option><option value="lang:it">Cânticos italianos</option><option value="lang:la">Cânticos em latim</option><option value="lang:en">Cânticos ingleses, irlandeses e americanos</option><option value="lang:es">Cânticos espanhóis e sul-americanos</option><option value="lang:fr">Cânticos franceses</option><option value="lang:outros">Outras línguas</option><optgroup label="Outras categorias"><option value="tag:Categoria||Juventude">Juventude</option></optgroup><optgroup label="Coro"><option value="tag:Coro CLU||Para a Missa">Coro — para a Missa</option><option value="tag:Coro CLU||Para Gestos">Coro — para Gestos</option><option value="tag:Coro CLU||Outras">Coro — outras músicas</option></optgroup><optgroup label="Coro — momentos da Missa"><option value="tag:Coro CLU — momento||Entrada">Entrada</option><option value="tag:Coro CLU — momento||Ofertório">Ofertório</option><option value="tag:Coro CLU — momento||Comunhão">Comunhão</option><option value="tag:Coro CLU — momento||Ação de Graças">Ação de Graças</option><option value="tag:Coro CLU — momento||Nossa Senhora">Nossa Senhora</option><option value="tag:Coro CLU — momento||Advento">Advento</option><option value="tag:Coro CLU — momento||Natal">Natal</option><option value="tag:Coro CLU — momento||Quaresma">Quaresma</option><option value="tag:Coro CLU — momento||Páscoa">Páscoa</option><option value="tag:Coro CLU — momento||Geral">Geral</option><option value="tag:Coro CLU — momento||A aprender">A aprender</option></optgroup><optgroup label="Songbook"><option value="tag:Songbook||English songs">English songs</option><option value="tag:Songbook||Spirituals">Spirituals</option><option value="tag:Songbook||Rock – pop – folk">Rock – pop – folk</option><option value="tag:Songbook||Songs">Songs</option><option value="tag:Songbook||Hymns">Hymns</option><option value="tag:Songbook||Latin songs">Latin songs</option><option value="tag:Songbook||Troubadour-songs">Troubadour-songs</option><option value="tag:Songbook||Italian songs">Italian songs</option><option value="tag:Songbook||Italian folk songs">Italian folk songs</option><option value="tag:Songbook||French songs">French songs</option><option value="tag:Songbook||Spanish songs">Spanish songs</option><option value="tag:Songbook||Brasilian songs">Brasilian songs</option><option value="tag:Songbook||German songs">German songs</option><option value="tag:Songbook||African songs">African songs</option></optgroup><optgroup label="CANTI 2024"><option value="tag:CANTI 2024||Canti per la liturgia">Canti per la liturgia</option><option value="tag:CANTI 2024||Canti della nostra storia">Canti della nostra storia</option><option value="tag:CANTI 2024||Canti di montagna">Canti di montagna</option><option value="tag:CANTI 2024||Canti popolari regionali">Canti popolari regionali</option><option value="tag:CANTI 2024||Canti per bambini">Canti per bambini</option><option value="tag:CANTI 2024||Canzoni italiane">Canzoni italiane</option><option value="tag:CANTI 2024||Canti stranieri">Canti stranieri</option></optgroup><option value="nova">+ Nova categoria…</option></select></label>
+    <label class="sn-f">Idioma<select id="sn-lang"><option value="pt">Português</option><option value="it">Italiano</option><option value="en">Inglês</option><option value="la">Latim</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="gl">Galego-português</option><option value="cu">Eslavo eclesiástico</option><option value="fur">Friulano</option><option value="nap">Napolitano</option><option value="ln">Lingala</option><option value="ru">Russo</option><option value="sw">Suaíli</option><option value="de">Alemão</option><option value="xx">Outra língua</option></select></label>
+    <label class="sn-f">Letra<textarea id="sn-text" spellcheck="false" autocapitalize="off" style=""></textarea></label>
+    <div class="sn-files" id="sn-files" hidden="">
+      <p class="sn-flabel">Gravações e partituras</p>
+      <ul id="sn-flist"></ul>
+      <div class="sn-gen"><button type="button" id="sn-add-rec" class="sn-gen-btn">+ Gravação</button><button type="button" id="sn-add-score" class="sn-gen-btn">+ Partitura</button></div>
+    </div>
+    <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint">Fica logo disponível para todos.</span></p>
+    <p class="small sn-pdf-name" id="sn-pdf-name"></p>
+    <p class="small" id="sn-msg" role="status"></p>
+    <div class="edit-actions"><span></span><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
+  </dialog>
+
+  <!-- Editar letra -->
+  <dialog id="editor" class="editor top-dlg">
+    <h2>Editar letra</h2>
+    <p class="small" id="edit-title"></p>
+    <textarea id="edit-text" spellcheck="false" autocapitalize="off" style=""></textarea>
+    <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. A edição aparece em todos os modos; a letra original (do site ou da pasta do Coro) fica guardada e pode ser reposta com "Repor original".</p>
+    <p class="small" id="edit-msg" role="status"></p>
+    <div class="edit-actions">
+      <button type="button" id="edit-reset" class="ghost">Repor original</button>
+      <span></span>
+      <button type="button" id="edit-cancel" class="ghost">Cancelar</button>
+      <button type="button" id="edit-save">Guardar</button>
+    </div>
+  </dialog>
+
+  
+  
+  
+
+
+</body></html>

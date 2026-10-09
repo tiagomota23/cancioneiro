@@ -66,7 +66,8 @@ só aceita deste repositório, do ramo main e deste workflow. Se falhar, o GitHu
 ## Mapa visual da app
 `tools/screens/capture.mjs` abre cada ecrã da app no modo `?demo` (dados fictícios de `tools/screens/fixture.mjs`: só textos de
 domínio público, nunca letras da base de dados) e guarda em `tools/screens/out/` (fora do git) uma imagem por ecrã (`png/`,
-telemóvel 390 px) e o HTML de cada ecrã (`html/`, para importar no Figma com o plugin html.to.design).
+telemóvel 390 px) e o HTML de cada ecrã em `mapa/`.
+As páginas de cada ecrã ficam também em `mapa/` (publicadas no site, sem indexação) para o Figma: plugin html.to.design → endereço `…/cancioneiro/mapa/<ecrã>.html`.
 O supabase-js é substituído por `tools/screens/supabase-stub.js` (o modo de demonstração não usa a base de dados).
 Uso: `NODE_PATH=$(npm root -g) node tools/screens/capture.mjs [ecrã ...]` (precisa do Playwright com o Chromium).
 As imagens alimentam o Design «Cancioneiro — mapa da app» no claude.ai: a cada nova versão da app, gerar de novo e atualizar o Design.
