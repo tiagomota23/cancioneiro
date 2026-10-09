@@ -4,7 +4,9 @@
 create or replace function public.backup_schema() returns text language plpgsql stable security definer set search_path = public, pg_catalog as $$
 declare
   out text := '-- Cancioneiro: esquema da base de dados (gerado por public.backup_schema em ' || now()::text || E')\n'
-           || E'-- Ordem: extensões, tabelas, restrições, índices, funções, RLS e políticas, permissões, gatilhos, agendamentos, armazenamento.\n\n';
+           || E'-- Ordem: extensões, tabelas, restrições, índices, funções, RLS e políticas, permissões, gatilhos, agendamentos, armazenamento.\n'
+           || E'-- As funções saem por ordem alfabética e referem-se umas às outras: não validar o corpo ao criar.\n'
+           || E'set check_function_bodies = off;\n\n';
   r record; cols text;
 begin
   out := out || E'-- Extensões\n';

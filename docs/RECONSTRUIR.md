@@ -20,9 +20,10 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
 2. Supabase: se o projeto hmfjbyiesghqhwhqgnem já não existe, cria um projeto novo e atualiza `config.js`, as funções e o SQL
    com o novo endereço e a nova chave pública. Aplica `esquema.sql` (pela Management API: POST /v1/projects/<ref>/database/query);
    se alguma instrução falhar por já existir, continua. Os agendamentos pg_cron usam o endereço das funções: corrige-o se mudou.
-3. Dados: carrega `dados.json` tabela a tabela (ordem: songs, song_sources, song_tags, song_files, allowed_emails, collections,
-   collection_songs, collection_sections, collection_templates, drive_folders, song_edits, sync_log, drive_sync_log; favorites
-   só se os utilizadores forem os mesmos). Usa o modo service_role; respeita as colunas geradas e de identidade.
+3. Dados: `node tools/backup/restaurar-dados.mjs dados.json > dados.sql` e aplica dados.sql (uma só transação; respeita as
+   colunas geradas e de identidade; favorites só entram para utilizadores que já existam em auth.users — depois de os
+   utilizadores entrarem, volta a correr só essa tabela com `--tabela=favorites`). Se o pedido for grande demais para a
+   Management API, gera e aplica uma tabela de cada vez com `--tabela=<nome>`, pela ordem do script.
 4. Segredos das funções: pede-me GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET (cliente OAuth do Drive), GROQ_API_KEY e RESEND_API_KEY
    e guarda-os no Supabase. Configura o login Google (Authentication → Providers → Google) com o cliente OAuth do login, o
    Site URL e a lista de redireccionamentos (só o endereço da app). Guia-me passo a passo no que tiver de ser eu.
@@ -38,7 +39,8 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
 
 ## À mão (resumo dos mesmos passos)
 1. **Código:** `git clone cancioneiro.bundle cancioneiro` → push para o GitHub → Settings → Pages → ramo `main`, pasta raiz.
-2. **Base de dados:** projeto Supabase → SQL Editor → colar `esquema.sql` → Run. Importar `dados.json` (precisa de um pequeno script).
+2. **Base de dados:** projeto Supabase → SQL Editor → colar `esquema.sql` → Run. Importar `dados.json`:
+   `node tools/backup/restaurar-dados.mjs dados.json > dados.sql` e correr dados.sql (psql ou SQL Editor).
 3. **Login:** Google Cloud → cliente OAuth (Web) com redirect `https://<ref>.supabase.co/auth/v1/callback`; Supabase →
    Authentication → Providers → Google (client id/secret); URL Configuration → Site URL e Redirect URLs = endereço da app.
 4. **Segredos das funções:** Supabase → Edge Functions → Secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth do Drive,

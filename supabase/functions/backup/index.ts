@@ -46,9 +46,10 @@ Deno.serve(async req => {
       return json({ objects });
     }
     if (op === 'data') {
-      // tudo o que é preciso para reconstruir (sem registos de acesso, pedidos, convites nem estado do Drive, que são transitórios ou secretos)
+      // tudo o que é preciso para reconstruir (sem registos de acesso, pedidos, convites, índice e estado do Drive, que são transitórios, secretos ou se refazem sozinhos;
+      // song_shares vai, para os links de partilha já enviados continuarem a funcionar)
       const T = ['songs?order=number', 'song_sources', 'song_tags', 'song_files?order=id', 'collections', 'collection_songs', 'collection_sections',
-        'collection_templates', 'allowed_emails?order=email', 'drive_folders', 'favorites', 'song_edits?order=id', 'sync_log?order=id', 'drive_sync_log?order=id'];
+        'collection_templates', 'song_shares', 'allowed_emails?order=email', 'drive_folders', 'favorites', 'song_edits?order=id', 'sync_log?order=id', 'drive_sync_log?order=id'];
       const out = {};
       for (const t of T) out[t.split('?')[0]] = await all(t.includes('?') ? t.replace('?', '?select=*&') : t + '?select=*');
       return json(out);
