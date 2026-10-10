@@ -188,7 +188,8 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 4. **Serif só em títulos.** O «i» de informação é sempre Marcellus 24 px 700 itálico, cor de destaque, num botão de 44 px.
 5. **Nome da app** na barra de topo em \`fs-title\` (o \`fs-display\` não cabe entre os dois botões de 44 px).
 6. **Ligações** sempre \`accent\`, também nas janelas.
-7. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
+7. **Texto sobre a cor da marca** sempre \`on-brand\` sem transparência (autores, números, cabeçalhos incluídos): branco a ≥ 4,5:1 em \`brand\` e \`brand-deep\`.
+8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 
 ## Exceções documentadas
 
