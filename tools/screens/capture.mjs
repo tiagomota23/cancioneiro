@@ -14,7 +14,7 @@ const only = process.argv.slice(2);
 fs.mkdirSync(path.join(OUT, 'png'), { recursive: true });
 const MAPA = path.join(ROOT, 'mapa');
 fs.mkdirSync(MAPA, { recursive: true });
-const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
+const css = ['theme.css', 'styles.css'].map(f => fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
 const browser = await chromium.launch();
 const manifest = [];
 for (const s of SCREENS) {

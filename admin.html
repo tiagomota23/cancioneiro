@@ -9,26 +9,26 @@
   <title>Cancioneiro · Pedido de acesso</title>
   <link rel="icon" href="icons/icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
   <style>
-    :root { --g1: #1fb385; --g2: #12966a; --ink: #0e7f58; --red: #c0392b; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
-      font-family: Lato, -apple-system, Helvetica, Arial, sans-serif; color: #333;
-      background: linear-gradient(180deg, var(--g1), var(--g2)); }
-    .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 30px rgba(0,0,0,.18); text-align: center; }
-    h1 { font-family: Marcellus, Georgia, serif; font-weight: 400; letter-spacing: .14em; color: var(--g2); font-size: 22px; margin: 0 0 18px; }
-    .who { background: #f3faf7; border: 1px solid #d8e9e1; border-radius: 12px; padding: 14px; margin: 14px 0 18px; }
+      font-family: var(--sans); color: var(--text);
+      background: linear-gradient(180deg, var(--brand), var(--brand-deep)); }
+    .card { width: 100%; max-width: 440px; background: var(--surface); border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 30px color-mix(in srgb, var(--shadow) 18%, transparent); text-align: center; }
+    h1 { font-family: var(--serif); font-weight: 400; letter-spacing: .14em; color: var(--brand-deep); font-size: 22px; margin: 0 0 18px; }
+    .who { background: var(--tint-soft); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; margin: 14px 0 18px; }
     .who b { display: block; font-size: 17px; }
-    .who span { color: #555; overflow-wrap: anywhere; }
+    .who span { color: var(--text-muted); overflow-wrap: anywhere; }
     p { line-height: 1.5; margin: 8px 0; }
-    button { font: 700 16px Lato, sans-serif; border: 0; border-radius: 24px; padding: 13px 26px; color: #fff; cursor: pointer; width: 100%; margin-top: 6px; }
-    button.ok { background: var(--ink); }
-    button.no { background: var(--red); }
+    button { font: 700 16px var(--sans); border: 0; border-radius: 24px; padding: 13px 26px; color: var(--on-accent); cursor: pointer; width: 100%; margin-top: 6px; }
+    button.ok { background: var(--light-accent); }
+    button.no { background: var(--danger); }
     button:disabled { opacity: .5; }
-    select { font: 16px Lato, sans-serif; width: 100%; padding: 11px 12px; border: 1px solid #cfe0d8; border-radius: 12px; background: #fff; color: #333; margin: 4px 0 8px; }
+    select { font: 16px var(--sans); width: 100%; padding: 11px 12px; border: 1px solid var(--field-border); border-radius: 12px; background: var(--surface); color: var(--text); margin: 4px 0 8px; }
     .msg { font-size: 15px; }
-    .small { color: #777; font-size: 13px; }
-    a { color: var(--ink); }
+    .small { color: var(--text-faint); font-size: 13px; }
+    a { color: var(--light-accent); }
   </style>
 </head>
 <body>

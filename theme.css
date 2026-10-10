@@ -1,0 +1,80 @@
+/* ============================================================================================================
+   TEMA DO CANCIONEIRO — todas as cores e letras da app estão aqui (e só aqui).
+   Para mudar o aspeto: altere os valores abaixo. styles.css só tem a disposição e usa estes nomes.
+   Também usado por admin.html, drive.html e privacidade.html.
+   Fora deste ficheiro (mudar à mão se a cor principal mudar): ícones (icons/*.png), manifest.json (theme_color,
+   background_color) e <meta name="theme-color"> nas páginas HTML (cor da barra do telemóvel).
+   Depois de mudar: subir a versão da app (app.js, index.html, sw.js), como em qualquer alteração.
+   ============================================================================================================ */
+:root {
+  /* Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço) */
+  --serif: "Marcellus", "Optima", Georgia, serif;    /* títulos, capa, nome da app */
+  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;  /* tudo o resto */
+
+  /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
+  --brand: #1fb385;
+  --brand-deep: #12966a;
+  --on-brand: #fff;            /* texto e símbolos sobre a cor da marca */
+
+  /* Destaque: botões, ligações, ícones e acordes sobre fundo claro */
+  --light-accent: #0e7f58;
+  --on-accent: #fff;           /* texto sobre botões de destaque, de perigo e avisos escuros */
+
+  /* Páginas dos cânticos — modo claro */
+  --light-paper: #ffffff;      /* fundo */
+  --light-ink: #4a4a4a;        /* letra */
+  --light-ink-soft: #7d7d7d;   /* autor, notas, número */
+  --light-chord: #0e7f58;      /* acordes */
+  --light-title: #333;         /* título do cântico */
+  --light-pdf-bg: #f2f2f2;     /* fundo à volta das partituras */
+
+  /* Páginas dos cânticos — modo escuro */
+  --dark-paper: #121614;
+  --dark-ink: #d8dcd9;
+  --dark-ink-soft: #9aa39e;
+  --dark-chord: #5fcf90;
+  --dark-accent: #5fcf90;
+  --dark-title: #eef1ef;
+  --dark-pdf-bg: #222;
+  --dark-pdf-title: #eee;
+
+  /* Janelas, cartões e campos (sempre claros) */
+  --surface: #fff;
+  --text: #333;                /* texto principal */
+  --text-strong: #222;         /* texto escrito em campos */
+  --text-body: #444;           /* mensagens das janelas */
+  --text-muted: #555;
+  --text-subtle: #666;
+  --text-faint: #777;
+  --text-hint: #888;
+  --text-dim: #999;
+  --placeholder: #a8a8a8;
+  --line: #eee;                /* separadores */
+  --line-tint: #eef3f0;
+  --divider: rgba(128,128,128,.2); /* separadores das gravações (servem em claro e escuro) */
+  --border: #ccc;
+  --border-strong: #bbb;
+  --field-border: #ccd8d2;
+  --card-border: #dde7e2;
+  --dash-border: #b9cfc5;
+  --dash-border-soft: #c9dcd3;
+  --chip-bg: #e8e8e8;          /* letras do índice A–Z, barra de progresso */
+  --tint: #e3f5ec;             /* realce de destaque suave */
+  --tint-soft: #f3faf7;
+  --meter-idle: #cfd8d4;       /* barras do microfone em silêncio */
+  --shadow: #000;              /* sombras e véus escuros (usado com transparência) */
+  --toast-bg: rgba(20,20,20,.88);
+
+  /* Estados */
+  --star: #e3a008;             /* preferido */
+  --danger: #c0392b;           /* apagar, erro */
+  --danger-deep: #8e1f14;      /* apagar: confirmar */
+  --danger-border: #e3b3ad;
+  --pending-bg: #f3c969;       /* etiqueta "por aprovar" */
+  --pending-ink: #4a3800;
+  --warn-bg: #fff8e3;          /* caixa de aviso */
+  --warn-border: #f0d58a;
+  --warn-ink: #5a4600;
+  --warn-strong: #8a5a00;
+  --warn-soft: #8a6d00;
+}
