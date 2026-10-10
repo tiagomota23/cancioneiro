@@ -47,7 +47,7 @@
   ];
   // Categorias do índice (como na versão italiana, agrupadas por língua)
   const CATEGORIES = [
-    { id: 'todos', label: 'Todos os cânticos', test: () => true },
+    { id: 'todos', label: 'Todos os cânticos', short: 'Todos', test: () => true },
     { id: 'pt', lang: 'pt', label: 'Cânticos em português', test: s => s.language === 'pt' || s.language === 'gl' },
     { id: 'it', lang: 'it', label: 'Cânticos italianos', test: s => s.language === 'it' || s.language === 'nap' || s.language === 'fur' },
     { id: 'la', lang: 'la', label: 'Cânticos em latim', test: s => s.language === 'la' },
@@ -67,13 +67,22 @@
     ...BOOKS.flatMap(b => b.secs.map((sec, i) => ({ id: b.id + '-' + i, head: i === 0 ? b.head : null, tg: [b.grp, sec], label: sec, test: s => hasTag(s, b.grp, sec) }))),
   ];
 
+  // nome curto (a secção já diz o resto): sem "Cânticos", "Coro — para (a)", "Canti" nem "songs"
+  const catName = c => {
+    if (c.short) return c.short;
+    const t = c.label.replace(/^Cânticos\s+/i, '').replace(/^Coro — (para (a )?)?/i, '').replace(/^Canti\s+/i, '').replace(/[\s-]songs$/i, '');
+    return t ? t[0].toUpperCase() + t.slice(1) : c.label;
+  };
+  // secção da categoria (o título por cima dela na página inicial); as primeiras são do Cancioneiro
+  const catHead = c => c.id === 'todos' ? 'Cancioneiro' : c.head;
+  const catSection = id => { let h = 'Cancioneiro'; for (const c of allCategories()) { if (catHead(c)) h = catHead(c); if (c.id === id) return h; } return h; };
   // categorias próprias (dos cânticos novos): etiquetas do grupo "Categoria"
   const allCategories = () => {
     const own = [...new Set(allSongs.flatMap(s => (s.tags || []).filter(t => t.grp === 'Categoria').map(t => t.tag)))].sort((a, b) => a.localeCompare(b, 'pt'));
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v150';
+  const APP_VERSION = '2026-10-10 v151';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -863,11 +872,17 @@
     }
     if (!catId) {
       title.hidden = true;
+      // o título da secção vai por cima da primeira categoria da secção que tenha cânticos
+      let pending = null;
       rows.innerHTML = allCategories().map(c => {
+        if (catHead(c)) pending = catHead(c);
         const n = songs.filter(c.test).length;
         if (!n) return '';
-        return (c.head ? `<li class="cat-head">${esc(c.head)}</li>` : '') +
-          `<li><a href="#/lista/${c.id}"><span class="t">${esc(c.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
+        // no perfil Cancioneiro só há esta secção: sem o título "Cancioneiro"
+        const head = pending === 'Cancioneiro' && lvl() < 2 ? null : pending;
+        pending = null;
+        return (head ? `<li class="cat-head">${esc(head)}</li>` : '') +
+          `<li><a href="#/lista/${c.id}"><span class="t">${esc(catName(c))}</span><span class="n">${n}</span>${chev}</a></li>`;
       }).join('');
       if (!songs.length) $('status').textContent = 'A carregar…';
       return;
@@ -908,8 +923,7 @@
     }
     const cat = allCategories().find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
-    const book = BOOKS.find(b => cat.id.startsWith(b.id + '-'));
-    title.textContent = cat.id.startsWith('momento-') ? 'Coro — ' + cat.label : book ? book.head + ' — ' + cat.label : cat.label;
+    title.innerHTML = `<small class="list-kicker">${esc(catSection(cat.id))}</small>${esc(catName(cat))}`;
     rows.innerHTML = songs.filter(cat.test)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
@@ -1563,7 +1577,7 @@
     for (const c of list) {
       const head = c.lang ? null : c.head;
       if (head) { html += (open ? '</optgroup>' : '') + `<optgroup label="${esc(head)}">`; open = true; }
-      html += `<option value="${esc(catValue(c))}">${esc(c.label)}</option>`;
+      html += `<option value="${esc(catValue(c))}">${esc(catName(c))}</option>`;
     }
     $('sn-cat').innerHTML = html + (open ? '</optgroup>' : '') + '<option value="nova">+ Nova categoria…</option>';
     $('sn-cat').value = sel || 'lang:' + (LANG_IDS.includes($('sn-lang').value) ? $('sn-lang').value : 'pt');
