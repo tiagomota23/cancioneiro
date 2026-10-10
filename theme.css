@@ -1,5 +1,5 @@
 /* ============================================================================================================
-   TEMA DO CANCIONEIRO — todas as cores e letras da app estão aqui (e só aqui).
+   TEMA DO CANCIONEIRO — todas as cores, letras, tamanhos e formas da app estão aqui (e só aqui).
    Para mudar o aspeto: altere os valores abaixo. styles.css só tem a disposição e usa estes nomes.
    Também usado por admin.html, drive.html e privacidade.html.
    Fora deste ficheiro (mudar à mão se a cor principal mudar): ícones (icons/*.png), manifest.json (theme_color,
@@ -10,6 +10,25 @@
   /* Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço) */
   --serif: "Marcellus", "Optima", Georgia, serif;    /* títulos, capa, nome da app */
   --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;  /* tudo o resto */
+  /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
+  --fs-caps: 11px;             /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
+  --ls-caps: .12em;
+  --fs-small: 13px;            /* texto secundário, botões pequenos, notas */
+  --fs-ui: 15px;               /* botões, linhas de opção, texto das janelas */
+  --fs-field: 16px;            /* campos (16 evita o zoom do iPhone) */
+  --fs-title: 22px;            /* títulos (letra serif, maiúsculas) */
+  --fs-display: 35px;          /* nome da app na capa e na entrada */
+
+  /* Formas e tamanhos */
+  --radius-sm: 6px;            /* coisas pequenas: barras de progresso, letras do índice */
+  --radius: 10px;              /* cartões, linhas de opção, campos */
+  --radius-lg: 14px;           /* janelas */
+  --pill: 999px;               /* todos os botões e chips */
+  --h-btn: 40px;
+  --h-btn-sm: 32px;
+  --h-field: 44px;
+  --h-chip: 24px;
+  --hit: 44px;                 /* área mínima de toque dos botões de símbolo */
 
   /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
   --brand: #1fb385;
@@ -23,7 +42,7 @@
   /* Páginas dos cânticos — modo claro */
   --light-paper: #ffffff;      /* fundo */
   --light-ink: #4a4a4a;        /* letra */
-  --light-ink-soft: #7d7d7d;   /* autor, notas, número */
+  --light-ink-soft: #767676;   /* autor, notas, número */
   --light-chord: #0e7f58;      /* acordes */
   --light-title: #333;         /* título do cântico */
   --light-pdf-bg: #f2f2f2;     /* fundo à volta das partituras */
@@ -41,23 +60,12 @@
   /* Janelas, cartões e campos (sempre claros) */
   --surface: #fff;
   --text: #333;                /* texto principal */
-  --text-strong: #222;         /* texto escrito em campos */
-  --text-body: #444;           /* mensagens das janelas */
-  --text-muted: #555;
-  --text-subtle: #666;
-  --text-faint: #777;
-  --text-hint: #888;
-  --text-dim: #999;
-  --placeholder: #a8a8a8;
-  --line: #eee;                /* separadores */
-  --line-tint: #eef3f0;
-  --divider: rgba(128,128,128,.2); /* separadores das gravações (servem em claro e escuro) */
-  --border: #ccc;
-  --border-strong: #bbb;
-  --field-border: #ccd8d2;
-  --card-border: #dde7e2;
-  --dash-border: #b9cfc5;
-  --dash-border-soft: #c9dcd3;
+  --text-soft: #666;           /* texto secundário */
+  --text-faint: #767676;       /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
+  --border: #ccd8d2;           /* campos, cartões, linhas de opção */
+  --border-dash: #b9cfc5;      /* botões tracejados "+ novo" */
+  --line: #e6ece9;             /* separadores */
+  --divider: rgba(128,128,128,.2); /* separadores nas páginas dos cânticos (servem em claro e escuro) */
   --chip-bg: #e8e8e8;          /* letras do índice A–Z, barra de progresso */
   --tint: #e3f5ec;             /* realce de destaque suave */
   --tint-soft: #f3faf7;
