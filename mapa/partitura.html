@@ -18,98 +18,99 @@
   
   
 <base href="https://tiagomota23.github.io/cancioneiro/"><style>/* ============================================================================================================
-   TEMA DO CANCIONEIRO — todas as cores, letras, tamanhos e formas da app estão aqui (e só aqui).
-   Para mudar o aspeto: altere os valores abaixo. styles.css só tem a disposição e usa estes nomes.
-   Também usado por admin.html, drive.html e privacidade.html.
-   Fora deste ficheiro (mudar à mão se a cor principal mudar): ícones (icons/*.png), manifest.json (theme_color,
+   TEMA DO CANCIONEIRO — GERADO a partir de design/tokens.json (node tools/theme/build.mjs). NÃO EDITAR À MÃO.
+   Todas as cores, letras, tamanhos e formas da app estão em design/tokens.json; styles.css só tem a disposição
+   e usa estes nomes. Também usado por admin.html, drive.html e privacidade.html.
+   Fora daqui (mudar à mão se a cor da marca mudar): ícones (icons/*.png), manifest.json (theme_color,
    background_color) e <meta name="theme-color"> nas páginas HTML (cor da barra do telemóvel).
-   Depois de mudar: subir a versão da app (app.js, index.html, sw.js), como em qualquer alteração.
+   Depois de mudar: gerar este ficheiro e subir a versão da app (app.js, index.html, sw.js).
    ============================================================================================================ */
 :root {
   /* Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço) */
-  --serif: "Marcellus", "Optima", Georgia, serif;    /* títulos, capa, nome da app */
-  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;  /* tudo o resto */
+  --serif: "Marcellus", "Optima", Georgia, serif; /* títulos, capa, nome da app */
+  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif; /* tudo o resto */
+
   /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
-  --fs-caps: 11px;             /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
-  --ls-caps: .12em;
-  --fs-small: 13px;            /* texto secundário, botões pequenos, notas */
-  --fs-ui: 15px;               /* botões, linhas de opção, texto das janelas */
-  --fs-field: 16px;            /* campos (16 evita o zoom do iPhone) */
-  --fs-title: 22px;            /* títulos (letra serif, maiúsculas) */
-  --fs-display: 35px;          /* nome da app na capa e na entrada */
+  --fs-caps: 11px;              /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
+  --fs-small: 13px;             /* texto secundário, botões pequenos, notas */
+  --fs-ui: 15px;                /* botões, linhas de opção, texto das janelas */
+  --fs-field: 16px;             /* campos (16 evita o zoom do iPhone) */
+  --fs-title: 22px;             /* títulos (letra serif, maiúsculas) */
+  --fs-display: 35px;           /* nome da app na capa e na entrada */
 
-  /* Formas e tamanhos */
-  --radius-sm: 6px;            /* coisas pequenas: barras de progresso, letras do índice */
-  --radius: 10px;              /* cartões, linhas de opção, campos */
-  --radius-lg: 14px;           /* janelas */
-  --pill: 999px;               /* todos os botões e chips */
-  --h-btn: 40px;
-  --h-btn-sm: 32px;
-  --h-field: 44px;
-  --h-chip: 24px;
-  --hit: 44px;                 /* área mínima de toque dos botões de símbolo */
-  --icon: 22px;                /* símbolos nos botões */
-  --icon-sm: 16px;             /* símbolos no meio do texto e nos botões pequenos */
-  --icon-lg: 32px;             /* microfone grande (a ouvir) */
-  --stroke: 1.8;               /* espessura do traço de todos os símbolos */
-  --ls-chip: .08em;            /* espaçamento das maiúsculas: chips, etiquetas e linhas das listas */
-  --ls-row: .05em;             /*   títulos das linhas de opção */
+  /* Espaçamento das maiúsculas, por função */
+  --ls-caps: .12em;             /* Espaçamento das maiúsculas nos cabeçalhos de secção e rótulos dos campos. */
+  --ls-chip: .08em;             /* espaçamento das maiúsculas: chips, etiquetas e linhas das listas */
+  --ls-row: .05em;              /* títulos das linhas de opção */
 
-  /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
-  --brand: #1fb385;
-  --brand-deep: #12966a;
-  --on-brand: #fff;            /* texto e símbolos sobre a cor da marca */
+  /* Cantos */
+  --radius-sm: 6px;             /* coisas pequenas: barras de progresso, letras do índice */
+  --radius: 10px;               /* cartões, linhas de opção, campos */
+  --radius-lg: 14px;            /* janelas */
+  --pill: 999px;                /* todos os botões e chips */
 
-  /* Destaque: botões, ligações, ícones e acordes sobre fundo claro */
-  --light-accent: #0e7f58;
-  --on-accent: #fff;           /* texto sobre botões de destaque, de perigo e avisos escuros */
+  /* Alturas e símbolos */
+  --h-btn: 40px;                /* Altura dos botões. */
+  --h-btn-sm: 32px;             /* Altura dos botões pequenos. */
+  --h-field: 44px;              /* Altura dos campos. */
+  --h-chip: 24px;               /* Altura dos chips. */
+  --hit: 44px;                  /* área mínima de toque dos botões de símbolo */
+  --icon: 22px;                 /* símbolos nos botões */
+  --icon-sm: 16px;              /* símbolos no meio do texto e nos botões pequenos */
+  --icon-lg: 32px;              /* microfone grande (a ouvir) */
+  --stroke: 1.8;                /* espessura do traço de todos os símbolos */
 
-  /* Páginas dos cânticos — modo claro */
-  --light-paper: #ffffff;      /* fundo */
-  --light-ink: #4a4a4a;        /* letra */
-  --light-ink-soft: #767676;   /* autor, notas, número */
-  --light-chord: #0e7f58;      /* acordes */
-  --light-title: #333;         /* título do cântico */
-  --light-pdf-bg: #f2f2f2;     /* fundo à volta das partituras */
-
-  /* Páginas dos cânticos — modo escuro */
-  --dark-paper: #121614;
-  --dark-ink: #d8dcd9;
-  --dark-ink-soft: #9aa39e;
-  --dark-chord: #5fcf90;
-  --dark-accent: #5fcf90;
-  --dark-title: #eef1ef;
-  --dark-pdf-bg: #222;
-  --dark-pdf-title: #eee;
-
-  /* Janelas, cartões e campos (sempre claros) */
-  --surface: #fff;
-  --text: #333;                /* texto principal */
-  --text-soft: #666;           /* texto secundário */
-  --text-faint: #767676;       /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
-  --border: #ccd8d2;           /* campos, cartões, linhas de opção */
-  --border-dash: #b9cfc5;      /* botões tracejados "+ novo" */
-  --line: #e6ece9;             /* separadores */
+  /* Cores (um par claro/escuro gera --light-… e --dark-…) */
+  --brand: #1fb385;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). */
+  --brand-deep: #12966a;        /* Fim do degradê da marca; títulos das janelas. */
+  --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
+  --light-accent: #0e7f58;      /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
+  --dark-accent: #5fcf90;       /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
+  --on-accent: #fff;            /* texto sobre botões de destaque, de perigo e avisos escuros */
+  --light-paper: #ffffff;       /* Fundo das páginas dos cânticos. */
+  --dark-paper: #121614;        /* Fundo das páginas dos cânticos. */
+  --light-ink: #4a4a4a;         /* Letra dos cânticos. */
+  --dark-ink: #d8dcd9;          /* Letra dos cânticos. */
+  --light-ink-soft: #767676;    /* Autor, notas e número nas páginas dos cânticos. */
+  --dark-ink-soft: #9aa39e;     /* Autor, notas e número nas páginas dos cânticos. */
+  --light-chord: #0e7f58;       /* Acordes. */
+  --dark-chord: #5fcf90;        /* Acordes. */
+  --light-title: #333;          /* Título do cântico. */
+  --dark-title: #eef1ef;        /* Título do cântico. */
+  --light-pdf-bg: #f2f2f2;      /* Fundo à volta das partituras. */
+  --dark-pdf-bg: #222;          /* Fundo à volta das partituras. */
+  --light-pdf-title: #0e7f58;   /* Título na barra da partitura. */
+  --dark-pdf-title: #eee;       /* Título na barra da partitura. */
+  --surface: #fff;              /* surface */
+  --text: #333;                 /* texto principal */
+  --text-soft: #666;            /* texto secundário */
+  --text-faint: #767676;        /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
+  --border: #ccd8d2;            /* campos, cartões, linhas de opção */
+  --border-dash: #b9cfc5;       /* botões tracejados "+ novo" */
+  --line: #e6ece9;              /* separadores */
   --divider: rgba(128,128,128,.2); /* separadores nas páginas dos cânticos (servem em claro e escuro) */
-  --chip-bg: #e8e8e8;          /* letras do índice A–Z, barra de progresso */
-  --tint: #e3f5ec;             /* realce de destaque suave */
-  --tint-soft: #f3faf7;
-  --meter-idle: #cfd8d4;       /* barras do microfone em silêncio */
-  --shadow: #000;              /* sombras e véus escuros (usado com transparência) */
-  --toast-bg: rgba(20,20,20,.88);
+  --chip-bg: #e8e8e8;           /* letras do índice A–Z, barra de progresso */
+  --tint: #e3f5ec;              /* realce de destaque suave */
+  --tint-soft: #f3faf7;         /* Realce de destaque muito suave. */
+  --meter-idle: #cfd8d4;        /* barras do microfone em silêncio */
+  --shadow: #000;               /* sombras e véus escuros (usado com transparência) */
+  --toast-bg: rgba(20,20,20,.88); /* toast-bg */
+  --star: #e3a008;              /* preferido */
+  --danger: #c0392b;            /* apagar, erro */
+  --danger-deep: #8e1f14;       /* Apagar: botão de confirmação. */
+  --danger-border: #e3b3ad;     /* Contorno dos botões de perigo. */
+  --pending-bg: #f3c969;        /* etiqueta "por aprovar" */
+  --pending-ink: #4a3800;       /* Texto da etiqueta «por aprovar». */
+  --warn-bg: #fff8e3;           /* caixa de aviso */
+  --warn-border: #f0d58a;       /* Contorno da caixa de aviso. */
+  --warn-ink: #5a4600;          /* Texto da caixa de aviso. */
+  --warn-strong: #8a5a00;       /* Destaque forte na caixa de aviso. */
+  --warn-soft: #8a6d00;         /* Texto secundário na caixa de aviso. */
 
-  /* Estados */
-  --star: #e3a008;             /* preferido */
-  --danger: #c0392b;           /* apagar, erro */
-  --danger-deep: #8e1f14;      /* apagar: confirmar */
-  --danger-border: #e3b3ad;
-  --pending-bg: #f3c969;       /* etiqueta "por aprovar" */
-  --pending-ink: #4a3800;
-  --warn-bg: #fff8e3;          /* caixa de aviso */
-  --warn-border: #f0d58a;
-  --warn-ink: #5a4600;
-  --warn-strong: #8a5a00;
-  --warn-soft: #8a6d00;
+  /* Opacidades derivadas */
+  --on-brand-line: color-mix(in srgb, var(--on-brand) 22%, transparent); /* Separadores das linhas sobre a cor da marca: on-brand a esta opacidade (hoje --row-line em styles.css). */
+  --on-brand-outline: color-mix(in srgb, var(--on-brand) 70%, transparent); /* Contorno de chips e seletores sobre a cor da marca: on-brand a esta opacidade. */
+  --scrim: color-mix(in srgb, var(--shadow) 45%, transparent); /* Véu por trás das janelas e do ecrã de ouvir: shadow a esta opacidade. */
 }
 
 /* Cores e letras: theme.css. Aqui só a mecânica dos modos claro/escuro (as páginas dos cânticos mudam; o resto não). */
@@ -121,7 +122,7 @@
   --accent: var(--light-accent);
   --song-h1: var(--light-title);
   --pdf-bg: var(--light-pdf-bg);
-  --row-line: color-mix(in srgb, var(--on-brand) 22%, transparent);
+  --pdf-title: var(--light-pdf-title);
   --fs: 18px;
   --safe-top: env(safe-area-inset-top, 0px);
   /* iOS 26 desfoca uma faixa logo abaixo da barra de estado (cerca de 28 pt): quando há barra de estado,
@@ -241,7 +242,7 @@ body::before {
   display: flex; align-items: center; gap: 12px;
   min-height: 48px; padding: 10px 14px;
   color: var(--on-brand); text-decoration: none;
-  border-bottom: 1px solid var(--row-line);
+  border-bottom: 1px solid var(--on-brand-line);
 }
 .rows li a:active { background: color-mix(in srgb, var(--on-brand) 8%, transparent); }
 .rows .t {
@@ -329,7 +330,7 @@ dialog {
   border: 0; border-radius: var(--radius-lg); max-width: min(92vw, 420px); padding: 20px 22px;
   color: var(--text); font-size: var(--fs-ui); line-height: 1.45;
 }
-dialog::backdrop { background: color-mix(in srgb, var(--shadow) 45%, transparent); }
+dialog::backdrop { background: var(--scrim); }
 dialog a { color: var(--accent); }
 dialog form { text-align: right; }
 
@@ -341,7 +342,7 @@ dialog form { text-align: right; }
 /* Ouvir e identificar */
 .search .mic svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
 .listen {
-  position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--shadow) 45%, transparent);
+  position: fixed; inset: 0; z-index: 40; background: var(--scrim);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .listen .sheet {
@@ -381,7 +382,7 @@ dialog form { text-align: right; }
 .drawer-close { flex: none; margin: 6px 2px 0 4px; color: var(--on-brand); align-self: flex-start; }
 .az {
   flex: 1; min-width: 0; list-style: none; margin: 0; padding: 4px 0 calc(24px + var(--safe-bottom));
-  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--row-line);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--on-brand-line);
 }
 .az .letter {
   position: sticky; top: 0; z-index: 1;
@@ -483,10 +484,10 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 .pdf-msg { margin-top: 40px; color: var(--text-soft); }
 body.pdf-open { overflow: hidden; }
 .pdfview { background: var(--pdf-bg); }
-.pdf-title { color: var(--pdf-title, inherit); }
+.pdf-title { color: var(--pdf-title); }
 
 /* Fontes, Coro CLU, gravações */
-.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; opacity: .9; border-bottom: 1px solid var(--row-line); }
+.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; opacity: .9; border-bottom: 1px solid var(--on-brand-line); }
 .rows li.src-note a { color: inherit; }
 .src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--fs-ui); margin: 10px 0; }
 .recs { margin: 1.6em 0 .6em; font-size: 15px; }
@@ -858,7 +859,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .lang-chip, .pick-canc.on, .listen-langs button.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 .pick-canc.on, .listen-langs button.on { color: var(--on-accent); }
 .pick-canc:disabled { opacity: 1; }
-.list-title .col-edit { color: var(--on-brand); border-color: color-mix(in srgb, var(--on-brand) 70%, transparent); vertical-align: middle; margin-left: 10px; }
+.list-title .col-edit { color: var(--on-brand); border-color: var(--on-brand-outline); vertical-align: middle; margin-left: 10px; }
 .lang-switch { display: inline-flex; height: var(--h-chip); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); overflow: hidden; }
 .lang-switch button { height: 100%; padding: 0 10px; color: var(--accent); font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .lang-switch button.on { background: var(--accent); color: var(--paper); }
@@ -889,7 +890,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 }
 input::placeholder, textarea::placeholder { color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
 .list-title .novos-filtro { display: block; box-sizing: border-box; height: var(--h-btn); max-width: 100%; margin-top: 10px; padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--on-brand) 70%, transparent); border-radius: var(--radius); background: color-mix(in srgb, var(--on-brand) 15%, transparent);
+  border: 1px solid var(--on-brand-outline); border-radius: var(--radius); background: color-mix(in srgb, var(--on-brand) 15%, transparent);
   color: var(--on-brand); font: 400 var(--fs-field) var(--sans); letter-spacing: 0; text-transform: none; }
 .list-title .novos-filtro option { color: var(--text); }
 
@@ -1073,7 +1074,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v146</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v147</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
