@@ -42,8 +42,8 @@
   --stroke: 1.8;                /* espessura do traço de todos os símbolos */
 
   /* Cores (um par claro/escuro gera --light-… e --dark-…) */
-  --brand: #1fb385;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). */
-  --brand-deep: #12966a;        /* Fim do degradê da marca; títulos das janelas. */
+  --brand: #10835c;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). Texto branco a 4,75:1. */
+  --brand-deep: #0b6b4b;        /* Fim do degradê da marca; títulos das janelas. Texto branco a 6,5:1. */
   --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
   --light-accent: #0e7f58;      /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
   --dark-accent: #5fcf90;       /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
