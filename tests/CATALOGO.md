@@ -67,11 +67,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-05 | Cântico partilhado sozinho guardado e aberto sem rede (v150) | ui | média | V | ✓ |
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
-| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com «não publicada» (v159/v160) | ui | alta | V | ☐ por correr |
+| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
 | FUN-38 | Editar ↔ Publicar: fundo branco, botões Publicar/Definições, estado guardado depois de recarregar (v159) | ui | alta | V | ☐ por correr |
 | FUN-39 | Folha em edição: menus do cântico (Abrir/Subir/Descer/Remover, confirmação) e da secção (Mudar o nome/Apagar) (v159) | ui | alta | V | ☐ por correr |
 | FUN-40 | «+ Adicionar cântico» por secção com pré-preenchimento do momento da Missa (Comunhão sim, Saída não); «+ Adicionar secção» no fim (v159) | ui | média | V | ☐ por correr |
-| FUN-41 | Sem deslizar nas folhas, publicadas ou em edição (v159) | ui | média | V | ☐ por correr |
+| FUN-42 | Folha em edição: cada ação grava logo (acrescentar, remover, mover, mudar o nome, nova/apagar secção, Definições) — recarregar mostra a mudança (v160) | ui | alta | V | ☐ por correr |
 | MAN-10 | Entrada real com Google (telemóvel e computador/janela), pedido de acesso, email ao Gestor, autorizar pelo link | manual | crítica | M | ☐ |
 | MAN-11 | Pesquisa por voz real (iPhone e Android): microfone, transcrição Groq, identifica o cântico | manual | alta | M | ☐ |
 | MAN-12 | Gravar/enviar gravação e partitura real (Maestro), apagar ficheiro enviado | manual | alta | M | ☐ |
@@ -148,7 +148,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
 | USA-17 | Interruptores das Folhas: role=switch, aria-checked, Espaço/Enter, confirmação ao retirar, fixo desativado (v148) | ui | média | V | ✓ |
-| USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha) (v149/v154) | ui | média | V | ✓ |
+| USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ! |

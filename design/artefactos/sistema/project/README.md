@@ -56,9 +56,8 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 
 - Etiqueta «VERSÃO TESTE»: 9,5 px 700 maiúsculas (11 px não cabe no espaço de 44 px).
 - Botão «Entrar com Google»: regras da Google (branco, pílula, 16 px, sombra, «G» de 20 px).
-- Ações de deslizar (subir, descer, remover, +): quadradas, da altura da linha (≈ 59 px).
 - Letra dos cânticos: fora da escala, por desenho.
-- Símbolos de texto (A−/A+ 19 e 24 px, «+» de deslizar 26 px, setas 18–20 px) só dentro de botões de símbolo.
+- Símbolos de texto (A−/A+ 19 e 24 px, setas 18–20 px) só dentro de botões de símbolo.
 
 ## Não sincronizado (ainda)
 

@@ -951,6 +951,30 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .topbar :focus-visible, .searchrow > :focus-visible, .rows :focus-visible, .drawer :focus-visible, .list-title :focus-visible { outline-color: var(--on-brand); }
 .list-title .col-meta, .list-title .col-btns { font-family: var(--sans); }
 .search .clear svg, .dlg-x svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
+/* caixa de procura: anel de foco visível (o campo em si não tem contorno) */
+.search:focus-within { box-shadow: 0 0 0 2px var(--accent), 0 2px 10px color-mix(in srgb, var(--shadow) 12%, transparent); }
+/* nome do utilizador que se pode mudar (Gestão): área de toque de 44 px sem mudar o desenho */
+.adm-name[role=button] { position: relative; }
+.adm-name[role=button]::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--hit); transform: translateY(-50%); }
+
+/* Folha em edição (Maestro / Gestor): fundo branco; a barra de cima e a procura continuam verdes */
+body.col-editing::before { background: var(--surface); }
+body.col-editing .topbar { background: var(--brand); box-shadow: 0 0 0 100vmax var(--brand); clip-path: inset(0 -100vmax); }
+body.col-editing #view-list { color: var(--text); }
+body.col-editing .list-title, body.col-editing .list-title .col-meta { color: var(--brand-deep); }
+body.col-editing .list-title .col-share { color: var(--accent); }
+body.col-editing .list-title .col-edit { color: var(--accent); border-color: var(--accent); }
+body.col-editing .list-title .col-edit.col-publish { background: var(--accent); color: var(--on-accent); }
+body.col-editing .rows li a { color: var(--text); border-bottom-color: var(--line); }
+body.col-editing .rows li a:active { background: var(--tint-soft); }
+body.col-editing .rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); }
+body.col-editing .rows .chev { color: var(--text-faint); opacity: 1; }
+body.col-editing .status { color: var(--text-soft); }
+/* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
+.rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
+  font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
+.rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
+body.col-editing #view-list .shared-foot { color: var(--text-soft); }
 </style></head>
 <body class="shared-view no-session">
   <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste</p></div></div>
@@ -1016,7 +1040,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 11/10, 13:43</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 12/10, 00:30</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->
@@ -1111,6 +1135,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off" style=""></label>
     <label class="col-field">Público<select id="col-aud"><option value="coro">Coro</option><option value="cancioneiro">Cancioneiro</option></select></label>
     <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
+    <label class="col-field" id="col-tpl-field" hidden="">Template<select id="col-tpl-sel"></select></label>
     <p class="small" id="col-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="col-del" class="ghost danger">Apagar</button><span></span><button type="button" id="col-cancel" class="ghost">Cancelar</button><button type="button" id="col-save">Guardar</button></div>
   </dialog>
@@ -1124,7 +1149,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <!-- Templates de secções (Maestro) -->
   <dialog id="tpl-dlg" class="col-dlg">
     <h2 tabindex="-1" autofocus="">Templates</h2>
-    <p class="small">Toque num template para acrescentar as suas secções no fim da folha.</p>
+    <p class="small" id="tpl-hint">Toque num template para acrescentar as suas secções no fim da folha.</p>
     <div id="tpl-list" class="col-pick-list"></div>
     <form method="dialog" class="info-actions"><span></span><button type="button" id="tpl-close">Fechar</button></form>
   </dialog>

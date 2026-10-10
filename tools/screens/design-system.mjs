@@ -64,19 +64,18 @@ const C = {
     readme: `Botões de ação: pílula, letra Lato, sem maiúsculas, em dois tamanhos e três cores.
 
 - **Normal** — altura \`--h-btn\`, \`--fs-ui\` 400, espaço 0 18 px. Classes: \`dialog form button\`, \`.edit-actions button\`, \`.info-actions button\`, \`.tour-next\`, \`.sn-gen-btn\`.
-- **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e ações no título das listas verdes (\`.col-edit\`: contorno \`--on-brand-outline\`, texto \`--on-brand\`, toque de 44 px). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
+- **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e ações no título da folha (\`.col-edit\`: na folha publicada «Editar» com contorno \`--on-brand-outline\` e texto \`--on-brand\`; na folha em edição, sobre branco, «Publicar» \`.col-publish\` cheio de \`--accent\` e «Definições» com contorno \`--accent\`; toque de 44 px). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
 - **Cores** — destaque (cheio, \`--accent\` / \`--on-accent\`); secundário (\`.ghost\`: \`--surface\` com contorno e texto \`--accent\`); perigo (\`.ghost.danger\`, \`.ghost-btn\`, \`.adm-no\`, \`.adm-del\`: contorno \`--danger-border\`, texto \`--danger\`). Confirmar apagar: fundo \`--danger\`.
 - Nunca em maiúsculas; nunca outro raio que não \`--pill\`. Exceção: o botão «Entrar com Google» segue as regras da Google.`,
     html: `<div class="ds col"><dialog open><form class="row" onsubmit="return false"><button>Guardar</button><button class="ghost">Cancelar</button></form><div class="edit-actions row" style="margin-top:12px"><button class="ghost danger">Apagar</button></div></dialog>
-<div class="pend-bar row"><button class="edit-btn">Aprovar</button><button class="ghost-btn">Recusar</button></div><div class="brand-bg row list-title" style="margin:0;font-size:inherit"><button class="col-edit" style="margin:0">Editar</button><button class="col-edit" style="margin:0">Template</button><button class="col-edit" style="margin:0">+ Cântico</button></div></div>` },
+<div class="pend-bar row"><button class="edit-btn">Aprovar</button><button class="ghost-btn">Recusar</button></div><div class="brand-bg row list-title" style="margin:0;font-size:inherit"><button class="col-edit" style="margin:0">Editar</button></div></div>` },
   BotoesSimbolo: { group: 'Ações', h: 150, title: 'Botões de símbolo',
     readme: `Botões só com símbolo: área de toque de \`--hit\` (44 px), pílula, símbolo de \`--icon\` com traço \`--stroke\`.
 
 - Ativos na cor \`--accent\`; inativos (fechar, limpar) em \`--text-faint\`.
 - O «×» de fechar é sempre o símbolo desenhado (M6 6l12 12M18 6L6 18), nunca um carácter. Classes: \`.dlg-x\`, \`.search .clear\`.
 - O «i» de informação (\`.perfil-i\`) é Marcellus 24 px 700 itálico na cor de destaque — o mesmo na barra de topo e na janela Perfil.
-- Sobre a cor da marca o símbolo é \`--on-brand\` (\`.col-share\`, botões do leitor \`.mini-btn\`).
-- Exceção: as ações de deslizar (subir, descer, remover) são quadradas e da altura da linha.`,
+- Sobre a cor da marca o símbolo é \`--on-brand\` (\`.col-share\`, botões do leitor \`.mini-btn\`).`,
     html: `<div class="ds row"><dialog open style="position:relative;width:220px;height:60px;padding:0"><button class="dlg-x" aria-label="Fechar">${x}</button><form onsubmit="return false" style="padding:8px"><button class="perfil-i" aria-label="Informação">i</button></form></dialog>
 <span class="pick-star" aria-label="Preferido">★</span>
 <div class="brand-bg row"><span class="mini-btn" aria-label="Pausa">❚❚</span></div></div>` },
@@ -145,6 +144,7 @@ const C = {
 
 - Listas verdes (início, menu, folhas): título \`--fs-small\` 400 maiúsculas \`--ls-chip\`; autor (itálico), número, página do livro e notas \`--fs-small\` sem espaçamento; separador \`--on-brand-line\`.
 - Título de secção (\`.rows .cat-head\`, \`.col-sec .sec-line\`, \`.az .cat-head\` no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, espaço 28 px acima e 8 px abaixo, traço de 1 px \`--on-brand\` por baixo. As linhas por baixo ficam em Lato: a diferença de letra separa a secção dos itens. Igual na página inicial, nas folhas e no menu (secções «Os meus cânticos», «Livros», «Folhas»; secções vazias não aparecem).
+- Folha em edição (\`body.col-editing\`): a lista passa a fundo branco e a barra de topo fica verde. Texto \`--text\`, títulos de secção \`--brand-deep\` com traço \`--brand-deep\`, separador \`--line\`. «+ Adicionar cântico» (\`li.col-add\`) no fim de cada secção: \`--accent\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\`, 44 px. «+ Adicionar secção» (\`li.col-add-end\`) no fim: tracejado \`--border-dash\`, \`--radius\`, como «+ novo». Tocar num cântico ou numa secção abre a janela de escolha (linhas de opção).
 - Listas claras (\`.adm-list\`, \`#sn-flist\`, \`#sa-list\`): separador só em baixo, \`--line\`, espaço 12 px.
 - Gravações (\`.recs li\`): espaço 6 px (o botão de 40 px já dá ≥ 52 px) e separador \`--divider\`, que serve em claro e escuro.`,
     html: `<div class="ds col"><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="cat-head">Coro</li>${[['Amazing Grace', 'John Newton (1779)', '2'], ['Salve Regina', 'Antífona mariana', '1']].map(([t, a, n]) => `<li style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--on-brand-line)"><span><span style="display:block;font-size:var(--fs-small);text-transform:uppercase;letter-spacing:var(--ls-chip)">${t}</span><span style="display:block;font-size:var(--fs-small);font-style:italic">${a}</span></span><span style="font-size:var(--fs-small)">${n}</span></li>`).join('')}</ul></div>
@@ -215,9 +215,8 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 
 - Etiqueta «VERSÃO TESTE»: 9,5 px 700 maiúsculas (11 px não cabe no espaço de 44 px).
 - Botão «Entrar com Google»: regras da Google (branco, pílula, 16 px, sombra, «G» de 20 px).
-- Ações de deslizar (subir, descer, remover, +): quadradas, da altura da linha (≈ 59 px).
 - Letra dos cânticos: fora da escala, por desenho.
-- Símbolos de texto (A−/A+ 19 e 24 px, «+» de deslizar 26 px, setas 18–20 px) só dentro de botões de símbolo.
+- Símbolos de texto (A−/A+ 19 e 24 px, setas 18–20 px) só dentro de botões de símbolo.
 
 ## Não sincronizado (ainda)
 

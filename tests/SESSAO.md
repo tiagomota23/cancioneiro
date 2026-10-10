@@ -32,7 +32,7 @@ Uso também, sem as alterar, `tools/screens/harness.mjs` (servidor local do modo
 
 ## Níveis e quando correr
 
-**Regra do Tiago (2026-10-10): só correr a bateria de testes quando ele o pedir.** Pedidos da sessão principal ficam registados e respondidos com «aguarda autorização do Tiago»; preparar e atualizar testes pode fazer-se sem os correr.
+**Regra do Tiago (2026-10-10): só correr a bateria de testes quando ele o pedir. Exceção confirmada por ele: a corrida completa semanal pedida pela sessão principal às segundas (~09:47 Lisboa) está autorizada.** Pedidos da sessão principal ficam registados e respondidos com «aguarda autorização do Tiago»; preparar e atualizar testes pode fazer-se sem os correr.
 
 
 - **Rápido** (`node tests/run.mjs`, ~5 min): depois de cada versão (a sessão principal pede «run tests for vNNN»). Mais os testes do que a mudança tocou (`--only=` ou `--dim=`). Se a mudança acrescenta ecrãs, funções ou tabelas, acrescentar testes e dizer quais no relatório.
