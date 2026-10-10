@@ -147,6 +147,7 @@ a{color:#0f7a57}a:hover{color:#0a5a40}
 <div style="display: flex; flex-direction: column; gap: 10px; max-width: 1600px">
 <h1 style="margin: 0; font-family: ${SERIF}; font-weight: 400; font-size: 44px; letter-spacing: 3px; color: ${C.green}">Padrão de design</h1>
 <p style="margin: 0; font-size: 17px; line-height: 26px; color: ${C.soft}">As regras de estilo da app${version ? ` (versão ${version})` : ''}. Os valores vêm de <b>theme.css</b>, a fonte de verdade: este quadro é gerado a partir dele e atualizado com o mapa. Cada elemento novo usa estes nomes (${tok('--…')}) e um dos componentes abaixo; o catálogo de elementos mostra o que a app tem de facto e serve para encontrar desvios.</p>
+<p style="margin: 0; font-size: 17px; line-height: 26px; color: ${C.soft}"><b>Para mudar um valor:</b> edite-o no sistema de design <a href="https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC">Cancioneiro</a> — a mudança segue para design/tokens.json, a app (nova versão) e este quadro.</p>
 </div>
 ${sLetra}
 ${sCor}
