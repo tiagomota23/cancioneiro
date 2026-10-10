@@ -13,6 +13,7 @@
   "adm-del": "32 px em linha densa",
   "usr-role": "linha densa",
   "search": "caixa de pesquisa 40 px (decisão v156)",
-  "btn-edit": "«Editar cântico» 40 px, altura padrão (v148/v156)"
+  "btn-edit": "«Editar cântico» 40 px, altura padrão (v148/v156)",
+  "adm-add>button": "«Acrescentar» em Gestão, linha densa (especificação v148)"
  }
 }

@@ -722,7 +722,7 @@ async function suites(full) {
           if (a.content !== 'none' && a.position === 'absolute') { const px = v => parseFloat(v) || 0; w = Math.max(w, w - px(a.left) - px(a.right)); h = Math.max(h, h - px(a.top) - px(a.bottom)); }
           // campo dentro de uma caixa maior que recebe o toque (ex.: pesquisa): conta a caixa
           if (e.tagName === 'INPUT' && e.parentElement) { const pr = e.parentElement.getBoundingClientRect(); w = Math.max(w, pr.width); h = Math.max(h, pr.height); }
-          return { id: e.id || e.className.baseVal || e.className || e.tagName, w: Math.round(w), h: Math.round(h), inl: getComputedStyle(e).display === 'inline' }; })
+          return { id: e.id || e.className.baseVal || e.className || ((e.parentElement?.closest('[id]')?.id || '') + '>' + e.tagName.toLowerCase()), w: Math.round(w), h: Math.round(h), inl: getComputedStyle(e).display === 'inline' }; })
         .filter(x => (x.w < 44 || x.h < 44) && !x.inl && !/^#\//.test(x.id)));
       for (const x of s) small.push(`${name}: ${String(x.id).slice(0, 30)} ${x.w}×${x.h}`);
     });
