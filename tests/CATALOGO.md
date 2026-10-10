@@ -67,7 +67,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-05 | Cântico partilhado sozinho guardado e aberto sem rede (v150) | ui | média | V | ✓ |
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
-| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com «· não publicada» (v160) | ui | alta | V | ☐ por correr |
+| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
 | FUN-38 | Editar ↔ Publicar: fundo branco, botões Publicar/Definições, estado guardado depois de recarregar (v159) | ui | alta | V | ☐ por correr |
 | FUN-39 | Folha em edição: menus do cântico (Abrir/Subir/Descer/Remover, confirmação) e da secção (Mudar o nome/Apagar) (v159) | ui | alta | V | ☐ por correr |
 | FUN-40 | «+ Adicionar cântico» por secção com pré-preenchimento do momento da Missa (Comunhão sim, Saída não); «+ Adicionar secção» no fim (v159) | ui | média | V | ☐ por correr |
