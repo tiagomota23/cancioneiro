@@ -1,0 +1,219 @@
+{
+ "version": "155",
+ "level": "quick",
+ "date": "2026-10-10",
+ "secs": 1,
+ "results": [
+  {
+   "id": "EST-01",
+   "title": "APP_VERSION, ?v=N (index.html) e CACHE (sw.js) coincidem",
+   "status": "pass",
+   "detail": "v155",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "app.js APP_VERSION · index.html ?v= · sw.js CACHE",
+   "ms": 7
+  },
+  {
+   "id": "EST-02",
+   "title": "APP_VERSION tem a data e o formato «AAAA-MM-DD vN»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 3
+  },
+  {
+   "id": "EST-03",
+   "title": "sw.js: todos os ficheiros do SHELL existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "sw.js SHELL",
+   "ms": 1
+  },
+  {
+   "id": "EST-04",
+   "title": "sw.js: a versão do supabase-js no CDN e no index.html é a mesma da CSP",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "LNK-01",
+   "title": "Todas as referências locais (href/src) das páginas existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 1
+  },
+  {
+   "id": "LNK-02",
+   "title": "manifest.json: ícones existem, start_url e scope relativos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 1
+  },
+  {
+   "id": "LNK-03",
+   "title": "Ficheiros referidos no app.js (vendor, worker, sw) existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 2
+  },
+  {
+   "id": "SEG-01",
+   "title": "CSP presente em index/admin/drive com object-src none e base-uri self",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-02",
+   "title": "Hash CSP dos scripts inline (admin.html, drive.html) corresponde ao conteúdo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "admin.html / drive.html <meta CSP>",
+   "ms": 3
+  },
+  {
+   "id": "SEG-03",
+   "title": "supabase-js do CDN tem SRI (integrity + crossorigin) e versão fixa",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-04",
+   "title": "Nenhum segredo no repositório (service_role, chaves Groq/Resend/Google, tokens)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 63
+  },
+  {
+   "id": "SEG-05",
+   "title": "config.js só tem a chave anon (role=anon)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 0
+  },
+  {
+   "id": "SEG-06",
+   "title": "Nenhuma letra de cântico versionada (songs.json, seed/ fora do repositório)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 16
+  },
+  {
+   "id": "SEG-07",
+   "title": "Ficheiros vendor (pdf.js, pdf-lib) iguais à referência",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 42
+  },
+  {
+   "id": "SEG-08",
+   "title": "Funções do servidor: CORS do conteudo só para o GitHub Pages; OIDC com repo/ramo/workflow fixos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 2
+  },
+  {
+   "id": "SEG-09",
+   "title": "Workflows: permissões mínimas, ações com versão, sem segredos em claro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-10",
+   "title": "SQL do repositório: o filtro «approved» da política «leitura familia» (novos.sql) está no esquema",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "SEG-11",
+   "title": "conteudo «shared» com songs:true devolve só os campos previstos e a letra sem acordes (noChords)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts (op shared)",
+   "ms": 1
+  },
+  {
+   "id": "USA-01",
+   "title": "theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 394
+  },
+  {
+   "id": "USA-05",
+   "title": "Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (design/tokens.json)",
+   "status": "pass",
+   "detail": "brand #10835c 4.75:1, brand-deep #0b6b4b 6.52:1",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "média",
+   "ms": 2
+  },
+  {
+   "id": "USA-02",
+   "title": "styles.css não usa cores fixas fora de theme.css (exceto na secção COMPONENTES documentada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "USA-03",
+   "title": "Botões só com ícone têm aria-label (index.html)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 0
+  },
+  {
+   "id": "USA-04",
+   "title": "viewport não bloqueia o zoom (maximum-scale=1 / user-scalable=no)",
+   "status": "warn",
+   "detail": "viewport «width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover» impede ampliar com os dedos (WCAG 1.4.4); A−/A+ compensa só na letra",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 0
+  }
+ ]
+}

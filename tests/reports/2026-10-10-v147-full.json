@@ -1,0 +1,1310 @@
+{
+ "version": "147",
+ "level": "full",
+ "date": "2026-10-10",
+ "secs": 466,
+ "results": [
+  {
+   "id": "EST-01",
+   "title": "APP_VERSION, ?v=N (index.html) e CACHE (sw.js) coincidem",
+   "status": "pass",
+   "detail": "v147",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "app.js APP_VERSION · index.html ?v= · sw.js CACHE",
+   "ms": 3
+  },
+  {
+   "id": "EST-02",
+   "title": "APP_VERSION tem a data e o formato «AAAA-MM-DD vN»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "EST-03",
+   "title": "sw.js: todos os ficheiros do SHELL existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "sw.js SHELL",
+   "ms": 0
+  },
+  {
+   "id": "EST-04",
+   "title": "sw.js: a versão do supabase-js no CDN e no index.html é a mesma da CSP",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "LNK-01",
+   "title": "Todas as referências locais (href/src) das páginas existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 0
+  },
+  {
+   "id": "LNK-02",
+   "title": "manifest.json: ícones existem, start_url e scope relativos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 0
+  },
+  {
+   "id": "LNK-03",
+   "title": "Ficheiros referidos no app.js (vendor, worker, sw) existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 2
+  },
+  {
+   "id": "SEG-01",
+   "title": "CSP presente em index/admin/drive com object-src none e base-uri self",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-02",
+   "title": "Hash CSP dos scripts inline (admin.html, drive.html) corresponde ao conteúdo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "admin.html / drive.html <meta CSP>",
+   "ms": 1
+  },
+  {
+   "id": "SEG-03",
+   "title": "supabase-js do CDN tem SRI (integrity + crossorigin) e versão fixa",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-04",
+   "title": "Nenhum segredo no repositório (service_role, chaves Groq/Resend/Google, tokens)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 36
+  },
+  {
+   "id": "SEG-05",
+   "title": "config.js só tem a chave anon (role=anon)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 0
+  },
+  {
+   "id": "SEG-06",
+   "title": "Nenhuma letra de cântico versionada (songs.json, seed/ fora do repositório)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 7
+  },
+  {
+   "id": "SEG-07",
+   "title": "Ficheiros vendor (pdf.js, pdf-lib) iguais à referência",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 8
+  },
+  {
+   "id": "SEG-08",
+   "title": "Funções do servidor: CORS do conteudo só para o GitHub Pages; OIDC com repo/ramo/workflow fixos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-09",
+   "title": "Workflows: permissões mínimas, ações com versão, sem segredos em claro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-10",
+   "title": "SQL do repositório: o filtro «approved» da política «leitura familia» (novos.sql) está no esquema",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "USA-01",
+   "title": "theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 135
+  },
+  {
+   "id": "USA-02",
+   "title": "styles.css não usa cores fixas fora de theme.css (exceto na secção COMPONENTES documentada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "USA-03",
+   "title": "Botões só com ícone têm aria-label (index.html)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "USA-04",
+   "title": "viewport não bloqueia o zoom (maximum-scale=1 / user-scalable=no)",
+   "status": "warn",
+   "detail": "viewport «width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover» impede ampliar com os dedos (WCAG 1.4.4); A−/A+ compensa só na letra",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "LNK-10",
+   "title": "Página principal responde 200 e é o Cancioneiro",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 333
+  },
+  {
+   "id": "LNK-11",
+   "title": "Versão publicada = versão do repositório (index.html ?v=, app.js, sw.js)",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "LNK-12",
+   "title": "Todos os recursos da página principal respondem 200",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "LNK-13",
+   "title": "Páginas auxiliares respondem: privacidade.html, admin.html, drive.html, manifest, ícones, vendor",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "LNK-14",
+   "title": "Endereço inexistente devolve 404 (sem expor listagem)",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "baixa",
+   "ms": 0
+  },
+  {
+   "id": "LNK-15",
+   "title": "Ligações externas das páginas (privacidade e outras) respondem",
+   "status": "pass",
+   "detail": "2 ligações; não verificadas (rede): supabase.com, groq.com, resend.com",
+   "dim": "Ligações e navegação — produção",
+   "sev": "baixa",
+   "ms": 1621
+  },
+  {
+   "id": "LNK-16",
+   "title": "drive.html mostra o texto do endereço como texto (sem HTML) e recusa ser emoldurada",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-20",
+   "title": "SRI do supabase-js corresponde ao ficheiro servido pelo CDN",
+   "status": "pass",
+   "detail": "registo npm (jsDelivr inacessível daqui)",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 310
+  },
+  {
+   "id": "SEG-21",
+   "title": "Sem sessão: tabelas não se leem pela API REST (songs, allowed_emails, access_log, favorites, song_shares, invites…)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 5821
+  },
+  {
+   "id": "SEG-22",
+   "title": "Sem sessão: funções RPC protegidas (my_rank, my_role, is_allowed, backup_schema, backup_objects, call_notify)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 1970
+  },
+  {
+   "id": "SEG-23",
+   "title": "Armazenamento: bucket «coro» privado (endereço público e lista sem sessão recusados)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 702
+  },
+  {
+   "id": "SEG-24",
+   "title": "Endereço assinado falso / adulterado é recusado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 461
+  },
+  {
+   "id": "SEG-25",
+   "title": "Auth: entrada só com Google; registo por email/telefone/anónimo desligado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 197
+  },
+  {
+   "id": "SEG-26",
+   "title": "conteudo: sem sessão → 403 em todas as operações (song, search, file, users, save, scrape…)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 2699
+  },
+  {
+   "id": "SEG-27",
+   "title": "conteudo «shared»: token mal formado → 400; token desconhecido → 410 (sem escrever nada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 544
+  },
+  {
+   "id": "SEG-28",
+   "title": "conteudo: CORS só devolve a origem do GitHub Pages (origem estranha não é refletida)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 123
+  },
+  {
+   "id": "SEG-29",
+   "title": "transcribe e notify: CORS «*» (aceitável só porque exigem sessão / token próprio)",
+   "status": "warn",
+   "detail": "transcribe responde a qualquer origem (Access-Control-Allow-Origin: *); a proteção é só o token. Sugestão: restringir à origem do GitHub Pages como no conteudo",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 119
+  },
+  {
+   "id": "SEG-30",
+   "title": "transcribe: sem sessão → 403 (não chega ao Groq)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 548
+  },
+  {
+   "id": "SEG-31",
+   "title": "backup e gravacoes: sem token OIDC / token forjado → 401",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 709
+  },
+  {
+   "id": "SEG-32",
+   "title": "notify: tipos inválidos / ids mal formados → 400 (sem enviar emails)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 826
+  },
+  {
+   "id": "SEG-33",
+   "title": "Erros das funções não expõem detalhes internos (pilha, chaves, nomes de tabelas)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 240
+  },
+  {
+   "id": "SEG-34",
+   "title": "Cabeçalhos do GitHub Pages: HTTPS forçado (HSTS) e tipo de conteúdo correto",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "DES-01",
+   "title": "Tamanho dos ficheiros da app (app.js, styles.css, theme.css, index.html) dentro do orçamento",
+   "status": "skip",
+   "detail": "tiagomota23.github.io inacessível a partir deste ambiente (política de rede)",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 0
+  },
+  {
+   "id": "DES-02",
+   "title": "Tempo de resposta do site e do Supabase (1 pedido cada, mediana de 3)",
+   "status": "pass",
+   "detail": "site não medido (inacessível daqui), auth 126 ms, função conteudo 117 ms",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 738
+  },
+  {
+   "id": "DES-03",
+   "title": "Arranque a frio da função conteudo (OPTIONS) abaixo de 5 s",
+   "status": "pass",
+   "detail": "173 ms",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 174
+  },
+  {
+   "id": "DB-RLS-01",
+   "title": "RLS ligada em todas as tabelas do esquema public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1161
+  },
+  {
+   "id": "DB-RLS-02",
+   "title": "anon sem nenhuma permissão em tabelas, vistas e sequências de public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1843
+  },
+  {
+   "id": "DB-RLS-03",
+   "title": "authenticated: permissões exatamente as esperadas (lista fechada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 687
+  },
+  {
+   "id": "DB-RLS-04",
+   "title": "songs: authenticated lê só colunas sem letra (lyrics, lyrics_edit, translation, source_hash nunca)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 767
+  },
+  {
+   "id": "DB-RLS-05",
+   "title": "Política «leitura familia» esconde cânticos novos por aprovar a quem não os acrescentou (perfil Coro)",
+   "status": "fail",
+   "detail": "um perfil Coro vê (título, autor, quem acrescentou) um cântico novo por aprovar de outra pessoa. A política em produção não tem o filtro «approved or my_rank() >= 3 or added_by = email» que está em supabase/novos.sql",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "evidence": "((( SELECT my_rank() AS my_rank) >= 2) OR ((( SELECT my_rank() AS my_rank) = 1) AND (cancioneiro OR in_cancioneiro_collection(slug))))",
+   "where": "Supabase: policy «leitura familia» em public.songs (comparar com supabase/novos.sql)",
+   "ms": 1386
+  },
+  {
+   "id": "DB-RLS-06",
+   "title": "Leitura por perfil (contagens): anon/sem acesso 0; Cancioneiro sem ficheiros nem etiquetas; Coro+ tudo",
+   "status": "pass",
+   "detail": "{\"anon\":\"negado\",\"stranger\":{\"songs\":0,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":0},\"cancioneiro\":{\"songs\":455,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":4},\"coro\":{\"songs\":1829,\"extra\":1374,\"files\":2375,\"tags\":2077,\"cols\":1,\"sync\":4},\"maestro\":{\"songs\":1829,\"extra\":1374,\"files\":2375,\"tags\":2077,\"cols\":1,\"sync\":4},\"gestor\":{\"songs\":1829,\"extra\":1374,\"files\":2375,\"tags\":2077,\"cols\":1,\"sync\":4}}",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 5523
+  },
+  {
+   "id": "DB-RLS-07",
+   "title": "Escrita por perfil (em rollback): coleções só Maestro+; letra/emails/registos nunca pelo browser",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 30303
+  },
+  {
+   "id": "DB-RLS-08",
+   "title": "Preferidos: cada pessoa só lê / apaga os seus (outro user_id invisível)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 714
+  },
+  {
+   "id": "DB-RLS-09",
+   "title": "Coleções: Coro não vê coleção expirada; Cancioneiro não vê coleção do Coro; Cancioneiro vê cântico de coleção ativa para o Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 2451
+  },
+  {
+   "id": "DB-RLS-10",
+   "title": "Coleções: máximo de 10 cânticos por folha (gatilho)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "baixa",
+   "ms": 716
+  },
+  {
+   "id": "DB-FN-01",
+   "title": "Funções SECURITY DEFINER com search_path fixo e sem EXECUTE para anon",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 764
+  },
+  {
+   "id": "DB-FN-02",
+   "title": "my_rank()/my_role(): sem acesso → 0/null; cada perfil → o seu nível",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 3492
+  },
+  {
+   "id": "DB-FN-03",
+   "title": "Funções de backup e gatilhos não executáveis por authenticated",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 667
+  },
+  {
+   "id": "DB-ST-01",
+   "title": "Bucket «coro» privado, com tipos e tamanho limitados e sem políticas de leitura direta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 2152
+  },
+  {
+   "id": "DB-ST-02",
+   "title": "Partilhas: tokens com ≥ 16 caracteres (≥ 96 bits) e validade ≤ 24 h (cânticos)",
+   "status": "pass",
+   "detail": "1 partilhas",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 669
+  },
+  {
+   "id": "INT-01",
+   "title": "Ficheiros dos cânticos existem no armazenamento (song_files → storage.objects)",
+   "status": "pass",
+   "detail": "2375 ficheiros; livros por página: livros/songbook.pdf, livros/canti2024.pdf",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1355
+  },
+  {
+   "id": "INT-02",
+   "title": "Partituras antigas (songs.pdf_url internas) existem no armazenamento",
+   "status": "pass",
+   "detail": "34 internas; 12 ligações externas (ver INT-12)",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 739
+  },
+  {
+   "id": "INT-12",
+   "title": "Partituras externas (pdf_url http/https) ainda respondem",
+   "status": "skip",
+   "detail": "anfitriões inacessíveis daqui: www.corolaudate.pt, www.canticos.pt, coralesangiorgio.altervista.org",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 1437
+  },
+  {
+   "id": "INT-03",
+   "title": "Objetos órfãos no armazenamento (sem cântico nem livro)",
+   "status": "pass",
+   "detail": "1401 objetos",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 670
+  },
+  {
+   "id": "INT-04",
+   "title": "Cânticos: número único, título e letra presentes, fontes válidas",
+   "status": "pass",
+   "detail": "1829 cânticos",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 717
+  },
+  {
+   "id": "INT-05",
+   "title": "Cancioneiro: cânticos do site original estão todos no Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 661
+  },
+  {
+   "id": "INT-06",
+   "title": "Coleções: cânticos e secções apontam para coleções e cânticos existentes; posições sem repetição",
+   "status": "pass",
+   "detail": "1 folhas",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 676
+  },
+  {
+   "id": "INT-07",
+   "title": "Limpezas automáticas a funcionar (partilhas, coleções, convites, pedidos antigos)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 747
+  },
+  {
+   "id": "INT-08",
+   "title": "Agendamentos pg_cron presentes e ativos (7 tarefas) e sem falhas recentes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1345
+  },
+  {
+   "id": "INT-09",
+   "title": "Verificações semanais recentes: site original (sync_log), Drive do Coro (drive_sync_log), saúde (health_log) — ≤ 8 dias e sem erro",
+   "status": "pass",
+   "detail": "sync 2026-10-05, drive 2026-10-08, saúde 2026-10-05",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 3398
+  },
+  {
+   "id": "INT-10",
+   "title": "Cópia de segurança semanal (GitHub Action «Cópia de segurança») concluída com sucesso há ≤ 8 dias",
+   "status": "pass",
+   "detail": "última boa 2026-10-09",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 520
+  },
+  {
+   "id": "INT-11",
+   "title": "Verificação semanal e conversão de gravações (GitHub Actions) sem falhas recentes",
+   "status": "pass",
+   "detail": "verificacao-semanal.yml 2026-10-05, converter-gravacoes.yml 2026-10-09",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 523
+  },
+  {
+   "id": "ESC-01",
+   "title": "Índices nas chaves estrangeiras usadas pela app (song_files.song_slug, collection_sections.collection_id, song_shares.collection_id, access_log)",
+   "status": "warn",
+   "detail": "chaves estrangeiras sem índice: collection_songs.song_slug, favorites.slug, song_files.song_slug, song_edits.song_slug, collection_sections.collection_id, song_shares.song_slug, song_shares.collection_id",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "baixa",
+   "ms": 910
+  },
+  {
+   "id": "ESC-02",
+   "title": "Plano da lista de cânticos (perfil Coro, como a app pede) abaixo de 300 ms",
+   "status": "warn",
+   "detail": "418 ms",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "evidence": "{\"Node Type\":\"Index Scan\",\"Parallel Aware\":false,\"Async Capable\":false,\"Scan Direction\":\"Forward\",\"Index Name\":\"songs_number_idx\",\"Relation Name\":\"songs\",\"Alias\":\"s\",\"Startup Cost\":0.8,\"Total Cost\":93353.64,\"Plan Rows\":623,\"Plan Width\":158,\"Actual Startup Time\":1.771,\"Actual Total Time\":417.368,\"Act",
+   "ms": 1093
+  },
+  {
+   "id": "ESC-03",
+   "title": "Limites do plano Supabase: base de dados < 400 MB, armazenamento < 800 MB, access_log < 200 mil linhas",
+   "status": "pass",
+   "detail": "BD 22 MB, armazenamento 441 MB, access_log 398",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 671
+  },
+  {
+   "id": "ESC-04",
+   "title": "access_log: consulta de limites por pessoa usa o índice (user_id, kind, at)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 715
+  },
+  {
+   "id": "FUN-01.gestor",
+   "title": "Arranque no perfil gestor: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "20 linhas, 2737 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3341
+  },
+  {
+   "id": "FUN-01.maestro",
+   "title": "Arranque no perfil maestro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "20 linhas, 2453 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3024
+  },
+  {
+   "id": "FUN-01.coro",
+   "title": "Arranque no perfil coro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "20 linhas, 2451 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3033
+  },
+  {
+   "id": "FUN-01.cancioneiro",
+   "title": "Arranque no perfil cancioneiro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "8 linhas, 2437 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3007
+  },
+  {
+   "id": "FUN-02",
+   "title": "Pesquisa por título, autor e letra; limpar repõe o índice",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6873
+  },
+  {
+   "id": "FUN-03",
+   "title": "Cântico: título, letra, botões de idioma (original ↔ tradução)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3516
+  },
+  {
+   "id": "FUN-04",
+   "title": "A−/A+ mudam o tamanho da letra e a escolha fica guardada",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 7533
+  },
+  {
+   "id": "FUN-05",
+   "title": "Modo escuro: o botão alterna o tema e fica guardado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3589
+  },
+  {
+   "id": "FUN-06",
+   "title": "Acordes: Coro vê e esconde acordes; Cancioneiro nunca vê acordes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6996
+  },
+  {
+   "id": "FUN-07",
+   "title": "Preferidos (Coro): ☆ marca e desmarca; lista Preferidos atualiza",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4814
+  },
+  {
+   "id": "FUN-08",
+   "title": "Menu ☰: abre a gaveta com livros e folhas; fecha no fundo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4072
+  },
+  {
+   "id": "FUN-09",
+   "title": "Folhas por perfil: Coro vê a do Coro; Cancioneiro só a do Cancioneiro; expirada só para Maestro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 10664
+  },
+  {
+   "id": "FUN-10",
+   "title": "Folha com secções (Maestro): secções, cânticos, botões Editar/Template/+ Cântico, partilhar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3354
+  },
+  {
+   "id": "FUN-11",
+   "title": "Nova folha: criar no diálogo aparece na gaveta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5564
+  },
+  {
+   "id": "FUN-12",
+   "title": "Template: diálogo de templates abre a partir da folha",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 3700
+  },
+  {
+   "id": "FUN-13",
+   "title": "Novo cântico (Coro): formulário, guardar, aparece em Novos Cânticos por aprovar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6348
+  },
+  {
+   "id": "FUN-14",
+   "title": "Editar letra (Maestro): editor abre, guarda e mostra «Letra editada» com Repor original",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4956
+  },
+  {
+   "id": "FUN-15",
+   "title": "Gravações: tocar abre o mini-leitor; parar fecha-o",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5073
+  },
+  {
+   "id": "FUN-16",
+   "title": "Partitura: visor PDF desenha a página, zoom +/− e Voltar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4498
+  },
+  {
+   "id": "FUN-17",
+   "title": "Partilhar cântico: gera endereço #/p/<código> (copiado ou mostrado)",
+   "status": "pass",
+   "detail": "menu de partilha: #/p/demo_salve_regina",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5111
+  },
+  {
+   "id": "FUN-18",
+   "title": "Endereço partilhado sem conta: só letra (sem acordes) e tradução, com botão de entrar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3052
+  },
+  {
+   "id": "FUN-19",
+   "title": "Endereço partilhado inválido: mensagem clara (sem ecrã em branco)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3675
+  },
+  {
+   "id": "FUN-20",
+   "title": "Folha partilhada sem conta: lista com secções e abre cânticos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4540
+  },
+  {
+   "id": "FUN-21",
+   "title": "Gestão de utilizadores: Gestor vê utilizadores e pedidos; Coro não tem acesso",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 7658
+  },
+  {
+   "id": "FUN-22",
+   "title": "Perfil: menu mostra só perfis até ao da pessoa; mudar de perfil esconde funções",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5021
+  },
+  {
+   "id": "FUN-23",
+   "title": "Terminar sessão: volta ao ecrã de entrada e limpa a lista",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3940
+  },
+  {
+   "id": "FUN-24",
+   "title": "Ecrã de entrada (sem sessão): botão Google e ligação de privacidade",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3025
+  },
+  {
+   "id": "FUN-25",
+   "title": "Tutorial: aparece na 1.ª vez e «Saltar» fecha-o sem voltar a aparecer",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8470
+  },
+  {
+   "id": "FUN-26",
+   "title": "Instalar a app: linha «Adicionar ao ecrã principal» no Perfil e na Informação",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 3913
+  },
+  {
+   "id": "FUN-27",
+   "title": "Pesquisa por voz: abre a janela «A ouvir», mostra línguas e Cancelar fecha (sem transcrever)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4792
+  },
+  {
+   "id": "FUN-28",
+   "title": "Exportar PDF de uma folha (pdf-lib): abre no visor e «Descarregar» dá um PDF",
+   "status": "pass",
+   "detail": "partilhado application/pdf:2719",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 12002
+  },
+  {
+   "id": "FUN-29",
+   "title": "Rotas: endereços desconhecidos e cânticos inexistentes não partem a app",
+   "status": "fail",
+   "detail": "erros JS: pageerror: URI malformed",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4828
+  },
+  {
+   "id": "FUN-30",
+   "title": "Ligação direta a um cântico sobrevive a recarregar a página",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5456
+  },
+  {
+   "id": "FUN-31",
+   "title": "Categorias e livros: lista latim, Songbook, Novos Cânticos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 3618
+  },
+  {
+   "id": "FUN-32",
+   "title": "Maestro: aprovar cântico novo por aprovar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 3034
+  },
+  {
+   "id": "LNK-20",
+   "title": "Todas as ligações internas (#/…) visíveis no índice, gaveta e cântico abrem um ecrã válido",
+   "status": "pass",
+   "detail": "28 ligações",
+   "dim": "Ligações e navegação — app",
+   "sev": "média",
+   "ms": 10619
+  },
+  {
+   "id": "SEG-40",
+   "title": "XSS: títulos, autores, letras, rótulos e etiquetas com HTML não executam (lista, pesquisa, cântico, folha, partilha)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 8311
+  },
+  {
+   "id": "SEG-41",
+   "title": "XSS: nome de folha e de secção com HTML não executam",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 4044
+  },
+  {
+   "id": "SEG-42",
+   "title": "Letra protegida: copiar, menu de contexto e selecionar texto bloqueados na letra",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "baixa",
+   "ms": 2995
+  },
+  {
+   "id": "SEG-43",
+   "title": "Modo ?demo não funciona fora de localhost (só em localhost/127.0.0.1)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 2
+  },
+  {
+   "id": "SEG-44",
+   "title": "CSP do index.html não bloqueia nada da app em uso normal (modo real simulado)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "alta",
+   "ms": 3226
+  },
+  {
+   "id": "EST-10",
+   "title": "Sessão longa: 150 navegações sem erros, memória e nós DOM estáveis",
+   "status": "pass",
+   "detail": "heap 10 → 10 MB, nós 499 → 578",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 14339
+  },
+  {
+   "id": "EST-11",
+   "title": "Service worker regista-se, guarda a app e abre sem rede (offline)",
+   "status": "pass",
+   "detail": "caches cancioneiro-v147; 20 linhas sem rede",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 10371
+  },
+  {
+   "id": "EST-12",
+   "title": "Service worker: ao mudar de versão apaga as caches antigas (exceto cancioneiro-media)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "EST-13",
+   "title": "localStorage corrompido não impede a app de abrir",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — interface",
+   "sev": "média",
+   "ms": 3027
+  },
+  {
+   "id": "RES-01",
+   "title": "Supabase em baixo, com sessão guardada: a capa sai e há mensagem (não fica presa)",
+   "status": "pass",
+   "detail": "2357 ms; «Não foi possível carregar os cânticos. Verifique a ligação à internet.»",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 5055
+  },
+  {
+   "id": "RES-02",
+   "title": "Supabase lento (7 s por pedido): a app abre com a sessão guardada em ≤ 12 s",
+   "status": "pass",
+   "detail": "2356 ms",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 2527
+  },
+  {
+   "id": "RES-03",
+   "title": "Função conteudo com erro 500 ao abrir um cântico: mensagem no cântico, sem erro JS",
+   "status": "pass",
+   "detail": "      Não foi possível carregar a letra. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 4551
+  },
+  {
+   "id": "RES-04",
+   "title": "Limite de uso (429): a mensagem do servidor chega à pessoa",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 4595
+  },
+  {
+   "id": "RES-05",
+   "title": "Sessão expirada (401 e renovação recusada): não fica em ciclo, mostra entrada ou mensagem",
+   "status": "pass",
+   "detail": "Não foi possível carregar os cânticos. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 9530
+  },
+  {
+   "id": "RES-06",
+   "title": "Partitura indisponível (armazenamento 403): mensagem «Não foi possível abrir a partitura»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 6274
+  },
+  {
+   "id": "RES-07",
+   "title": "Sem rede a meio: marcar preferido repõe o estado e avisa",
+   "status": "pass",
+   "detail": "Não foi possível guardar o preferido. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 5080
+  },
+  {
+   "id": "RES-08",
+   "title": "Dados incompletos (sem autor, letra vazia, sem ficheiros, número em falta) não partem a app",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 5927
+  },
+  {
+   "id": "RES-09",
+   "title": "Sessão guardada sem Supabase e sem cópia da lista: mensagem em vez de ecrã vazio",
+   "status": "pass",
+   "detail": "Não foi possível carregar os cânticos. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 5563
+  },
+  {
+   "id": "ESC-10",
+   "title": "Índice com 2000 cânticos: abre e desenha em tempo razoável",
+   "status": "pass",
+   "detail": "20 linhas, abriu em 2439 ms (inclui capa de 2 s), tarefas longas 0 ms",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "média",
+   "ms": 2815
+  },
+  {
+   "id": "ESC-11",
+   "title": "Pesquisa em 2000 cânticos: resposta < 400 ms por tecla",
+   "status": "pass",
+   "detail": "máx. 17 ms",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "média",
+   "ms": 3086
+  },
+  {
+   "id": "ESC-12",
+   "title": "Métricas de carregamento (FCP, LCP, CLS) no telemóvel",
+   "status": "pass",
+   "detail": "FCP 84 ms, LCP 84 ms, CLS 0.000 (local, sem rede real)",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "baixa",
+   "ms": 3296
+  },
+  {
+   "id": "USA-10",
+   "title": "Alvos de toque ≥ 44×44 px (botões e ligações visíveis)",
+   "status": "warn",
+   "detail": "16 alvos < 44 px: índice: search 236×21; cântico: on 57×24; cântico: BUTTON 172×24; cântico: pdf 90×24; cântico: btn-edit 133×32; cântico: rec 40×40; folha: search 236×21; folha: col-edit 66×24; folha: col-tpl 85×24; folha: col-addsong 88×24; folha: sec-line 386×39; gestão: adm-ok 86×32",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 12065
+  },
+  {
+   "id": "USA-11",
+   "title": "Ecrãs pequenos (320 px) e paisagem: sem deslocamento horizontal",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 30752
+  },
+  {
+   "id": "USA-12",
+   "title": "Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro",
+   "status": "warn",
+   "detail": "91 textos abaixo de AA: índice/light: span.test-tag «VersãoTeste» 3.75; índice/light: span «CANCIONEIRO» 3.75; índice/light: text «M» 3.75; índice/light: span.t «Todos os cânticos» 3.75; índice/light: span.n «27» 3.75; índice/light: span.t «Cânticos em portug» 3.75; índice/light: span.n «7» 3.75; índice/light: span.t «Cânticos italianos» 3.75; índice/light: span.n «4» 3.75; índice/light: span.t «Cânticos em latim» 3.75",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 18026
+  },
+  {
+   "id": "USA-13",
+   "title": "Teclado: Tab percorre os controlos com foco visível; Escape fecha diálogos",
+   "status": "warn",
+   "detail": "sem indicação de foco: search",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 4214
+  },
+  {
+   "id": "USA-14",
+   "title": "Nomes acessíveis: todos os botões e ligações visíveis têm texto ou aria-label; idioma da página pt",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 12025
+  },
+  {
+   "id": "USA-15",
+   "title": "Diálogos têm título e botão de fechar visível",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 3099
+  },
+  {
+   "id": "USA-16",
+   "title": "Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens",
+   "status": "pass",
+   "detail": "--accent #0e7f58; Editar rgb(14, 127, 88) / rgb(255, 255, 255)",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 3004
+  },
+  {
+   "id": "COM-01",
+   "title": "Computador (Chromium 1280×800, rato): índice, cântico e gaveta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 3030
+  },
+  {
+   "id": "COM-02",
+   "title": "WebKit (Safari) disponível para testes",
+   "status": "skip",
+   "detail": "Playwright WebKit não está instalado neste ambiente (só Chromium em /opt/pw-browsers); testes Safari ficam manuais (ver MAN-01..03)",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 6
+  },
+  {
+   "id": "COM-03",
+   "title": "PWA: manifest válido (nome, ícones 192 e 512, display standalone, theme_color)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 0
+  }
+ ]
+}

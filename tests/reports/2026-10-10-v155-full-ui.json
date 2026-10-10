@@ -1,0 +1,198 @@
+{
+ "version": "155",
+ "level": "full",
+ "date": "2026-10-10",
+ "secs": 169,
+ "results": [
+  {
+   "id": "FUN-03",
+   "title": "Cântico: título, letra, botões de idioma (original ↔ tradução)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4746
+  },
+  {
+   "id": "FUN-08",
+   "title": "Menu ☰: abre a gaveta com livros e folhas; fecha no fundo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4150
+  },
+  {
+   "id": "FUN-09",
+   "title": "Folhas por perfil: Coro vê a do Coro; Cancioneiro só a do Cancioneiro; expirada só para Maestro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 10870
+  },
+  {
+   "id": "FUN-10",
+   "title": "Folha com secções (Maestro): secções, cânticos, botões Editar/Template/+ Cântico, partilhar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3362
+  },
+  {
+   "id": "FUN-29",
+   "title": "Rotas: endereços desconhecidos e cânticos inexistentes não partem a app",
+   "status": "fail",
+   "detail": "erros JS: pageerror: URI malformed",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4852
+  },
+  {
+   "id": "FUN-31",
+   "title": "Categorias e livros: lista latim, Songbook, Novos Cânticos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 3631
+  },
+  {
+   "id": "FUN-33",
+   "title": "Página inicial: cada secção com cânticos tem título; perfil Cancioneiro sem título por cima de «Todos os cânticos»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6068
+  },
+  {
+   "id": "FUN-34",
+   "title": "Páginas de categoria: antetítulo (.list-kicker) com a secção para Coro+; nenhum no perfil Cancioneiro",
+   "status": "pass",
+   "detail": "19 categorias: Cancioneiro, Coro, Momentos da Missa, Songbook, CANTI 2024",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 10079
+  },
+  {
+   "id": "FUN-35",
+   "title": "Menu ☰ em secções: «Os meus cânticos», «Livros», «Folhas»; secção vazia escondida; Livros do Cancioneiro só com o Cancioneiro",
+   "status": "pass",
+   "detail": "Cancioneiro Os meus cânticos/Livros; Maestro Os meus cânticos/Livros/Folhas",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 13902
+  },
+  {
+   "id": "FUN-36",
+   "title": "Tutorial (Maestro): o passo que aponta para «+ Nova folha» encontra o elemento",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 12863
+  },
+  {
+   "id": "SHR-01",
+   "title": "Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados",
+   "status": "pass",
+   "detail": "3 cânticos guardados",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3578
+  },
+  {
+   "id": "SHR-02",
+   "title": "Folha partilhada: abrir um cântico não pede nada à rede (vem da memória) e abre sem rede",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3916
+  },
+  {
+   "id": "SHR-03",
+   "title": "Folha partilhada sem rede depois de recarregar (service worker + armazenamento)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 9804
+  },
+  {
+   "id": "SHR-04",
+   "title": "Partilhas expiradas são apagadas do armazenamento ao abrir",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 3521
+  },
+  {
+   "id": "SHR-05",
+   "title": "Cântico partilhado sozinho também fica guardado e abre sem rede",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4130
+  },
+  {
+   "id": "SHR-06",
+   "title": "Preferidos: letras descarregadas ao abrir (como as folhas)",
+   "status": "warn",
+   "detail": "letras dos preferidos não guardadas: de_colores, santa_lucia (no modo demo o pré-carregamento pode estar desligado; confirmar no modo real)",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 7600
+  },
+  {
+   "id": "LNK-20",
+   "title": "Todas as ligações internas (#/…) visíveis no índice, gaveta e cântico abrem um ecrã válido",
+   "status": "pass",
+   "detail": "28 ligações",
+   "dim": "Ligações e navegação — app",
+   "sev": "média",
+   "ms": 10744
+  },
+  {
+   "id": "USA-10",
+   "title": "Alvos de toque ≥ 44×44 px (botões e ligações visíveis)",
+   "status": "warn",
+   "detail": "9 alvos < 44 px: índice: search 236×21; cântico: btn-edit 151×40; cântico: rec 40×40; folha: search 236×21; gestão: adm-ok 86×32; gestão: adm-no 77×32; gestão: adm-name 328×19; gestão: adm-del 71×32; gestão: BUTTON 101×32",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 12167
+  },
+  {
+   "id": "USA-12",
+   "title": "Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 18381
+  },
+  {
+   "id": "USA-17",
+   "title": "Interruptores «Cancioneiro»/«Coro» nas Folhas: role=switch, aria-checked atualiza, teclado (Espaço/Enter), fixo desativado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 9186
+  },
+  {
+   "id": "USA-18",
+   "title": "Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice, gaveta, títulos)",
+   "status": "fail",
+   "detail": "2 problemas: #/lista/colecao-demo1: texto «⇈» opacidade 0.35; #/lista/colecao-demo1: texto «↓» opacidade 0.35",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "evidence": "rgb(16,131,92) / rgb(11,107,75)",
+   "ms": 9794
+  }
+ ]
+}
