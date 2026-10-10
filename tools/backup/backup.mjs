@@ -8,6 +8,7 @@
 //   outros/                   ficheiros do armazenamento que não pertencem a nenhum cântico
 //   base-de-dados/            dados.json (todas as tabelas), esquema.sql (estrutura completa para reconstruir)
 //   codigo/                   cancioneiro.bundle (repositório git completo) e cancioneiro-codigo.zip
+//   ambiente/                 AMBIENTE.md e as instruções de cada sessão do Claude (docs/sessoes/): para recriar o ambiente de desenvolvimento
 //   removidos/                o que deixou de existir no Cancioneiro (nada é apagado)
 // É incremental: o estado (o que já foi copiado e com que impressão digital) fica em .estado.json na pasta da cópia.
 // Os registos da Action são públicos (repositório público): só se escrevem contagens, nunca letras nem tokens.
@@ -18,7 +19,7 @@ const FN = 'https://hmfjbyiesghqhwhqgnem.supabase.co/functions/v1/backup';
 const ROOT_NAME = 'Cancioneiro — cópia de segurança';
 const FOLDER = 'application/vnd.google-apps.folder', SHORTCUT = 'application/vnd.google-apps.shortcut';
 const { ACTIONS_ID_TOKEN_REQUEST_URL: TURL, ACTIONS_ID_TOKEN_REQUEST_TOKEN: TTOK } = process.env;
-const FILES = { bundle: process.argv[2], zip: process.argv[3], manual: 'docs/MANUAL.md', rebuild: 'docs/RECONSTRUIR.md' };
+const FILES = { bundle: process.argv[2], zip: process.argv[3], manual: 'docs/MANUAL.md', rebuild: 'docs/RECONSTRUIR.md', env: 'docs/AMBIENTE.md', sessions: 'docs/sessoes' };
 if (!TURL) { console.error('Só corre na GitHub Action (permissions: id-token: write)'); process.exit(1); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sha = b => crypto.createHash('sha256').update(b).digest('hex').slice(0, 32);
@@ -114,7 +115,7 @@ const root = found.files[0]?.id || await mkFolder(ROOT_NAME, 'root');
 const stateFile = (await g('GET', `files?q=${encodeURIComponent(`name='.estado.json' and '${root}' in parents and trashed=false`)}&fields=files(id)`)).files[0];
 const S = stateFile ? await (await g('GET', `files/${stateFile.id}?alt=media`, { raw: true })).json() : { folders: {}, songs: {}, files: {} };
 S.folders ||= {}; S.songs ||= {}; S.files ||= {};
-for (const f of ['canticos', 'livros', 'outros', 'base-de-dados', 'codigo', 'removidos']) S.folders[f] ||= (await findChild(root, f, true))?.id || await mkFolder(f, root);
+for (const f of ['canticos', 'livros', 'outros', 'base-de-dados', 'codigo', 'ambiente', 'removidos']) S.folders[f] ||= (await findChild(root, f, true))?.id || await mkFolder(f, root);
 // guarda o estado de tempos a tempos (se a Action parar a meio, a próxima continua daí)
 let dirty = 0, saving = Promise.resolve();
 function saveState(force) { // um de cada vez (os envios correm em paralelo)
@@ -250,6 +251,14 @@ if (FILES.bundle && fs.existsSync(FILES.bundle)) await put('code:bundle', 'canci
 if (FILES.zip && fs.existsSync(FILES.zip)) await put('code:zip', 'cancioneiro-codigo.zip', S.folders.codigo, 'application/zip', fs.readFileSync(FILES.zip));
 for (const [k, path, name] of [['doc:manual', FILES.manual, 'MANUAL.md'], ['doc:rebuild', FILES.rebuild, 'RECONSTRUIR.md']])
   if (fs.existsSync(path)) await put(k, name, root, 'text/markdown; charset=UTF-8', fs.readFileSync(path));
+// ambiente de desenvolvimento: AMBIENTE.md e as instruções de cada sessão (docs/sessoes/*.md)
+const envDocs = [['doc:ambiente', FILES.env, 'AMBIENTE.md'],
+  ...(fs.existsSync(FILES.sessions) ? fs.readdirSync(FILES.sessions).filter(f => f.endsWith('.md')).sort().map(f => ['doc:sessao:' + f, `${FILES.sessions}/${f}`, f]) : [])]
+  .filter(([, path]) => fs.existsSync(path));
+for (const [k, path, name] of envDocs) await put(k, name, S.folders.ambiente, 'text/markdown; charset=UTF-8', fs.readFileSync(path));
+for (const k of Object.keys(S.files).filter(k => k.startsWith('doc:sessao:') && !envDocs.some(([e]) => e === k))) { // sessão que deixou de existir
+  await move(S.files[k].id, S.files[k].parent, S.folders.removidos).catch(() => {}); delete S.files[k]; count('removidos');
+}
 // manual também como Google Doc (legível no telemóvel); se o Drive não converter Markdown, fica só o .md
 if (fs.existsSync(FILES.manual)) {
   const buf = fs.readFileSync(FILES.manual), h = sha(buf);
@@ -284,7 +293,7 @@ for (const s of data.songs) {
 }
 const copied = new Set(Object.keys(S.files).filter(k => k.startsWith('obj:') && ids.has(S.files[k].id)).map(k => k.slice(4).replace(/@[^@]*$/, '')));
 for (const o of objects) if (!copied.has(o.name)) faltam.push(`ficheiro ${o.name.split('/')[0]}/…`);
-for (const k of ['db:dados', 'db:esquema', 'code:bundle', 'code:zip', 'doc:manual', 'doc:rebuild']) if (!S.files[k] || !ids.has(S.files[k].id)) faltam.push(k);
+for (const k of ['db:dados', 'db:esquema', 'code:bundle', 'code:zip', 'doc:manual', 'doc:rebuild', ...envDocs.map(([k]) => k)]) if (!S.files[k] || !ids.has(S.files[k].id)) faltam.push(k);
 console.log(`Verificação: ${inv.length} itens no Drive · ${data.songs.length} cânticos · ${objects.length} ficheiros · ${extra.length} duplicados arrumados · ${missingExternal.length} partituras externas sem cópia · ${faltam.length} em falta`);
 S.last = { at: new Date().toISOString(), songs: data.songs.length, objects: objects.length, counts: st.counts, verificacao: { itens: inv.length, duplicados: extra.length, emFalta: faltam.length, externasSemCopia: missingExternal } };
 if (faltam.length) { await saveState(true); throw new Error(`Cópia incompleta: ${faltam.length} em falta (ex.: ${faltam.slice(0, 5).join(', ')})`); }

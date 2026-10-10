@@ -15,7 +15,8 @@ Para usar se o GitHub, o Supabase ou ambos se perderem. Tudo o que é preciso es
 
 ```
 Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê primeiro MANUAL.md e RECONSTRUIR.md.
-1. Repositório: `git clone cancioneiro.bundle` e faz push de todos os ramos para o repositório desta sessão; ativa o GitHub Pages
+1. Repositório: `git clone cancioneiro.bundle` e faz push de todos os ramos para o repositório desta sessão (os ramos estão
+   no bundle como refs/remotes/origin/*: `git fetch cancioneiro.bundle 'refs/remotes/origin/*:refs/heads/*'`); ativa o GitHub Pages
    no ramo main (raiz). Se o nome do utilizador ou do repositório mudou, atualiza os endereços (procura "tiagomota23").
 2. Supabase: se o projeto hmfjbyiesghqhwhqgnem já não existe, cria um projeto novo e atualiza `config.js`, as funções e o SQL
    com o novo endereço e a nova chave pública. Aplica `esquema.sql` (pela Management API: POST /v1/projects/<ref>/database/query);
@@ -34,6 +35,7 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
 7. Drive: dá-me as duas ligações para autorizar de novo: drive-auth (Drive do Coro, só leitura, conta tiago.mota@gmail.com) e
    drive-auth?para=copia (destino da cópia, outra conta, definida em drive_state → backup_target).
 8. Verifica: corre as Actions (verificação semanal, cópia de segurança), abre a app, entra com a minha conta e abre um cântico.
+9. Ambiente de desenvolvimento: no fim, segue docs/AMBIENTE.md para recriar as sessões webapp, design, testes e backup.
 Regras: nunca ponhas letras no repositório (é público); sobe a versão da app nos três sítios quando a mudares.
 ```
 
@@ -50,8 +52,11 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
 7. **Drive:** abrir `https://<ref>.supabase.co/functions/v1/drive-auth` (Drive do Coro, só leitura, conta do dono) e
    `…/drive-auth?para=copia` (destino da cópia, outra conta; antes definir `drive_state` → `backup_target` = `{"email": "…"}`).
 8. **Verificar:** abrir a app, entrar, abrir cânticos e ficheiros; correr as Actions.
+9. **Sessões do Claude:** recriar o ambiente e as quatro sessões (webapp, design, testes, backup) com `ambiente/AMBIENTE.md`
+   e as instruções em `ambiente/` (as mesmas que `docs/AMBIENTE.md` e `docs/sessoes/` no repositório).
 
 ## Se só a app ou só uma parte se perdeu
+- Só as sessões do Claude (ou os artefactos de design): passo 9.
 - Só o GitHub: passo 1 (o Supabase continua a funcionar; confirme que o endereço da app é o mesmo).
 - Só os ficheiros: passo 6. Só uma letra: está em `dados.json` e na pasta do cântico.
 - Um cântico apagado por engano: os dados estão em `dados.json` da cópia anterior (o Drive guarda versões de cada ficheiro).
