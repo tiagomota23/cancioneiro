@@ -581,6 +581,7 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .books .col-new .t { flex: none; }
 .books .t s { text-decoration-thickness: 1.5px; }
 .books .t small { font-size: 11px; text-transform: none; }
+.list-title .list-kicker { display: block; margin-bottom: 4px; font: 700 var(--fs-caps)/1.2 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; }
 .list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; }
 .rows li.swipe { position: relative; overflow: hidden; }
 .rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
@@ -984,7 +985,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Cânticos em latim</h2>
+    <h2 class="list-title" id="list-title"><small class="list-kicker">Cancioneiro</small>Em latim</h2>
     <ul class="rows" id="rows"><li><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/exemplo_22"><span class="t">Agnus Dei</span><span class="n">23</span></a></li><li><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li><a href="#/cantico/gaudeamus_igitur"><span class="t">Gaudeamus igitur<span class="a">Tradicional (séc. XVIII)</span></span><span class="n">10</span></a></li><li><a href="#/cantico/exemplo_21"><span class="t">Gloria in excelsis</span><span class="n">22</span></a></li><li><a href="#/cantico/exemplo_20"><span class="t">Kyrie eleison</span><span class="n">21</span></a></li><li><a href="#/cantico/pange_lingua"><span class="t">Pange lingua<span class="a">S. Tomás de Aquino</span></span><span class="n">11</span></a></li><li><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li></ul>
     <p class="status" id="status"></p>
   </section>
@@ -1084,7 +1085,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v150</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v152</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

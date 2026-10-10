@@ -49,7 +49,10 @@ ${alpha.length ? `.ds { ${alpha.map(t => `--${t.name}: color-mix(in srgb, var(--
 .ds .col, .ds.col { display: flex; flex-direction: column; gap: 10px; }
 .ds .lbl { font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-faint); margin: 6px 0 2px; }
 `;
-w('components/bundle.css', bridge + '\n' + comp);
+// regras de componentes fora da secção COMPONENTES que os cartões também mostram
+const EXTRA = ['.list-title .list-kicker'];
+const extra = styles.split('\n').filter(l => EXTRA.some(x => l.startsWith(x + ' {'))).join('\n');
+w('components/bundle.css', bridge + '\n' + comp + (extra ? '\n/* Fora da secção COMPONENTES */\n' + extra + '\n' : ''));
 
 // ---------- componentes: guia + pré-visualização com as classes reais da app ----------
 const x = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -126,14 +129,15 @@ const C = {
 - Classes: \`.perfil-opt\`, \`.tpl-apply\`, \`.col-pick\`, \`.perfil-admin\`, \`.tpl-edit\`.
 - «+ novo» (\`.col-pick-new\`): tracejado \`--border-dash\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\` em \`--accent\` — o mesmo texto nas listas verdes («+ Nova folha», «+ Novo cântico»).`,
     html: `<div class="ds"><dialog open><div class="col"><button class="tpl-apply"><b>Copiar letra</b><small>Título e letra, sem acordes</small></button><button class="perfil-opt"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/></svg><span><b>Coro</b><small>Todos os cânticos e livros, com acordes</small></span></button><button class="perfil-opt on"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg><span><b>Gestor</b><small>Gerir os utilizadores e os seus perfis</small></span></button><button class="col-pick-new">+ Nova folha</button></div></dialog></div>` },
-  Titulos: { group: 'Letra', h: 170, title: 'Títulos',
+  Titulos: { group: 'Letra', h: 200, title: 'Títulos',
     readme: `Títulos de janelas e de páginas: \`--serif\` (Marcellus) 400, \`--fs-title\`, maiúsculas, espaçamento .06em.
 
 - Nas janelas e na gestão: \`--brand-deep\`. Sobre a cor da marca (lista, menu): \`--on-brand\`.
 - O nome da app usa \`--fs-display\` só na capa e na entrada; na barra de topo usa \`--fs-title\`.
 - Marcellus só em títulos e no nome da app — nunca em botões, campos ou listas.
-- Cabeçalhos de secção (CORO, ENTRADA) e rótulos: \`--fs-caps\` 700 maiúsculas \`--ls-caps\`.`,
-    html: `<div class="ds col"><dialog open><h2>Nova folha</h2><p class="small">Um mês depois de expirar, a folha é apagada.</p></dialog><div class="brand-bg"><h2 class="list-title" style="margin:0">Cânticos em latim</h2></div></div>` },
+- Cabeçalhos de secção (CORO, ENTRADA) e rótulos: \`--fs-caps\` 700 maiúsculas \`--ls-caps\`.
+- Antetítulo (\`.list-title .list-kicker\`): o nome da secção por cima do título de uma categoria (ex.: «CANCIONEIRO» / «EM LATIM») — o mesmo estilo dos cabeçalhos de secção (\`--fs-caps\` 700, \`--ls-caps\`, \`--on-brand\` opaco), 4 px acima do título.`,
+    html: `<div class="ds col"><dialog open><h2>Nova folha</h2><p class="small">Um mês depois de expirar, a folha é apagada.</p></dialog><div class="brand-bg"><h2 class="list-title" style="margin:0"><small class="list-kicker">Cancioneiro</small>Em latim</h2></div></div>` },
   Listas: { group: 'Listas', h: 220, title: 'Linhas das listas',
     readme: `Linhas das listas.
 

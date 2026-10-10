@@ -581,6 +581,7 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .books .col-new .t { flex: none; }
 .books .t s { text-decoration-thickness: 1.5px; }
 .books .t small { font-size: 11px; text-transform: none; }
+.list-title .list-kicker { display: block; margin-bottom: 4px; font: 700 var(--fs-caps)/1.2 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; }
 .list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; }
 .rows li.swipe { position: relative; overflow: hidden; }
 .rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
@@ -985,7 +986,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     </div>
     </div>
     <h2 class="list-title" id="list-title" hidden=""></h2>
-    <ul class="rows" id="rows"><li><a href="#/lista/todos"><span class="t">Todos os cânticos</span><span class="n">23</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/pt"><span class="t">Cânticos em português</span><span class="n">6</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/it"><span class="t">Cânticos italianos</span><span class="n">3</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/la"><span class="t">Cânticos em latim</span><span class="n">7</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/en"><span class="t">Cânticos ingleses, irlandeses e americanos</span><span class="n">4</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/es"><span class="t">Cânticos espanhóis e sul-americanos</span><span class="n">2</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/fr"><span class="t">Cânticos franceses</span><span class="n">1</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/traducao"><span class="t">Cânticos com tradução</span><span class="n">2</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li></ul>
+    <ul class="rows" id="rows"><li><a href="#/lista/todos"><span class="t">Todos os cânticos</span><span class="n">23</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/pt"><span class="t">Em português</span><span class="n">6</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/it"><span class="t">Italianos</span><span class="n">3</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/la"><span class="t">Em latim</span><span class="n">7</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/en"><span class="t">Ingleses, irlandeses e americanos</span><span class="n">4</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/es"><span class="t">Espanhóis e sul-americanos</span><span class="n">2</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li><a href="#/lista/fr"><span class="t">Franceses</span><span class="n">1</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li><li class="cat-head">Outras categorias</li><li><a href="#/lista/traducao"><span class="t">Com tradução</span><span class="n">2</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></a></li></ul>
     <p class="status" id="status"></p>
   </section>
 
@@ -1084,7 +1085,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-10 v150</p>
+    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-10 v152</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
