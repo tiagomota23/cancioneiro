@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v159';
+  const APP_VERSION = '2026-10-10 v160';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2594,7 +2594,7 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}${c.published === false ? '<small> · em edição</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}${c.published === false ? '<small> · não publicada</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova folha</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
