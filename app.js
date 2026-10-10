@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v147';
+  const APP_VERSION = '2026-10-10 v148';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -199,6 +199,7 @@
   // No cântico: ☆ (preferido) ou, do perfil Maestro para cima, um livro que abre as coleções do cântico
   const ICON_STAR = '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>';
   const ICON_PAGE = '<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5"/>';
+  const PDF_IC = `<svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PAGE}</svg>`;
   const ICON_BOOK = '<path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/>';
   function refreshFavUI() {
     const fb = $('btn-fav'), slug = fb.dataset.slug;
@@ -956,11 +957,11 @@
     // letra digitalizada em mais do que um livro (Songbook e CANTI): um só botão, que mostra as duas juntas
     const scans = scores.filter(isBookScan);
     const pdf = scores.map((sc, i) => {
-      if (scans.length > 1 && isBookScan(sc)) return sc === scans[0] ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${esc(scans.map(x => x.label.split(',')[0]).join(' + '))}</a>` : '';
+      if (scans.length > 1 && isBookScan(sc)) return sc === scans[0] ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${PDF_IC}${esc(scans.map(x => x.label.split(',')[0]).join(' + '))}</a>` : '';
       const lbl = scores.length > 1 || pageOf(sc) ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
       return sc.url && /^https?:/.test(sc.url)
-        ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${esc(lbl)}</a>`
-        : `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${esc(lbl)}</a>`;
+        ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${PDF_IC}${esc(lbl)}</a>`
+        : `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${PDF_IC}${esc(lbl)}</a>`;
     }).join('');
     const srcs = (extrasOn() ? srcOf(s) : []).map(k => `<span class="src-chip src-${esc(k)}">${esc(SOURCES[k] || k)}</span>`).join('');
     const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
@@ -998,7 +999,7 @@
       <h1>${esc(s.title)}</h1>
       ${s.author ? `<p class="author">${esc(s.author)}</p>` : ''}
       ${rights}
-      <div class="meta">${sw}${pdf}</div>
+      <div class="meta">${sw}</div>${pdf ? `<div class="scores">${pdf}</div>` : ''}
       ${note}
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
@@ -2903,13 +2904,15 @@
     const s = bySlug.get(slug); if (!s) return;
     const original = srcOf(s).includes('original');
     const act = cols.filter(c => !expired(c) && colVisible(c));
+    // interruptor: uma linha com o nome e o controlo (role=switch); desativado = fixo (cânticos do Cancioneiro original)
+    const switchRow = (id, label, on, fixed) => `<button type="button" class="switch-row${on ? ' on' : ''}" id="${id}" role="switch" aria-checked="${on}"${fixed ? ' disabled' : ''}><span>${label}</span><span class="switch" aria-hidden="true"></span></button>`;
     const item = (key, label, sub, checked, disabled) => `<label class="col-pick${disabled ? ' dis' : ''}"><input type="checkbox" data-k="${esc(key)}"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span></label>`;
     // primeira linha: ☆/★ preferido e "+ Cancioneiro" (cheio se já está no Cancioneiro; só "Cancioneiro" se é do original)
     const inC = inCancioneiro(s);
     // cânticos novos já aprovados também podem ir para o livro do Coro
     const novo = srcOf(s).includes('novos') && s.approved !== false, inCoro = srcOf(s).includes('coro_clu');
     $('col-pick-list').innerHTML =
-      `<div class="pick-top">${novo ? `<button class="pick-canc${inCoro ? ' on' : ''}" id="pick-coro" aria-pressed="${inCoro}">+ Coro</button>` : ''}<button class="pick-canc${inC ? ' on' : ''}" id="pick-canc"${original ? ' disabled' : ''} aria-pressed="${inC}">${original ? 'Cancioneiro' : '+ Cancioneiro'}</button>` +
+      `<div class="pick-top">${novo ? switchRow('pick-coro', 'Coro', inCoro) : ''}${switchRow('pick-canc', 'Cancioneiro', inC, original)}` +
       `<button class="pick-star${isFav(slug) ? ' on' : ''}" id="pick-fav" aria-label="${isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos'}" aria-pressed="${isFav(slug)}"><svg viewBox="0 0 24 24">${ICON_STAR}</svg></button></div>` +
       act.map(c => item('c:' + c.id, c.title, `${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false)).join('') +
       `<button class="col-pick-new" id="col-pick-new">+ Nova folha</button>`;
@@ -2949,7 +2952,7 @@
         sg.sources = was ? (sg.sources || []).filter(x => x.source !== 'coro_clu') : [...(sg.sources || []), { source: 'coro_clu' }];
         store.set(CACHE_KEY, allSongs); toast(was ? 'Retirado do Coro' : 'Acrescentado ao Coro');
       } catch (e) { appAlert(e.message || 'Não foi possível.'); }
-      const on = srcOf(bySlug.get(slug)).includes('coro_clu'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.disabled = false; refresh();
+      const on = srcOf(bySlug.get(slug)).includes('coro_clu'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.disabled = false; refresh();
     };
     if (!original) $('pick-canc').onclick = async () => {
       const b = $('pick-canc'), was = inCancioneiro(bySlug.get(slug));
@@ -2957,7 +2960,7 @@
       if (was) tapConfirm(b); // 2.º toque: repõe o botão e retira
       b.disabled = true;
       await promote(slug, !was, true); // já confirmado
-      const on = inCancioneiro(bySlug.get(slug)); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.disabled = false; refreshFavUI();
+      const on = inCancioneiro(bySlug.get(slug)); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.disabled = false; refreshFavUI();
     };
     $('col-pick').showModal();
   }
