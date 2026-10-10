@@ -40,6 +40,7 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 - Raios: `radius-sm` 6px · `radius` 10px · `radius-lg` 14px · `pill` 999px. Pílula em todos os botões e chips; `radius` em cartões, campos e linhas de opção; `radius-lg` nas janelas.
 - Tamanhos: `h-btn` 40px · `h-btn-sm` 32px · `h-field` 44px · `h-chip` 24px · `hit` 44px · `icon` 22px · `icon-sm` 16px · `icon-lg` 32px · `stroke` 1.8.
 - Símbolos: `icon-sm` no texto, botões pequenos, setas e pesquisa; `icon` em botões de símbolo e linhas de opção; `icon-lg` só no microfone a ouvir. Traço `stroke` em todos (exceção: a estrela cheia da pesquisa, 1.2).
+- Folhas no menu: folha publicada = página simples (`ICON_PAGE`); por publicar = página com lápis no canto (`ICON_PAGE_DRAFT`), mesma classe `.book-ic.outline` (`--icon-sm`, traço `--stroke`), `role="img"` e nome «Não publicada». Só Maestro e Gestor veem folhas por publicar.
 
 ## Regras
 

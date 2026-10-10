@@ -717,6 +717,7 @@ dialog.tour.center { background: color-mix(in srgb, var(--shadow) 55%, transpare
 .splash-in { display: grid; justify-items: center; gap: 10px; }
 .splash-sub { margin: 0; font-family: var(--serif); font-size: clamp(14px, 4vw, 22px); letter-spacing: .3em; text-transform: uppercase; opacity: 0; animation: splash-sub .6s ease 1s forwards; }
 @keyframes splash-sub { to { opacity: 1; } }
+.splash-sub span { text-transform: none; } /* «v163» em minúscula */
 .topbar-left-spacer { display: grid; place-items: center; }
 .test-tag { font-size: 9.5px; line-height: 1.2; font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; text-align: center; color: var(--on-brand); }
 /* procurar cântico na folha: janela fixa no topo; a caixa de procura não se mexe, só a lista de resultados desliza */
@@ -959,7 +960,7 @@ body.col-editing .status { color: var(--text-soft); }
 body.col-editing #view-list .shared-foot { color: var(--text-soft); }
 </style></head>
 <body class="shared-view no-session">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste</p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v163</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1022,7 +1023,7 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 12/10, 00:37</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 12/10, 00:43</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->

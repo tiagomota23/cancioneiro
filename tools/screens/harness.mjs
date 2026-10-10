@@ -67,7 +67,9 @@ const demoCols = () => {
     sections: [{ id: 's1', title: 'Entrada', position: 0 }, { id: 's2', title: 'Comunhão', position: 2 }, { id: 's3', title: 'Nossa Senhora', position: 5 }],
     songs: [{ song_slug: 'veni_creator_spiritus', position: 1 }, { song_slug: 'adoro_te_devote', position: 3 }, { song_slug: 'ave_verum_corpus', position: 4 }, { song_slug: 'salve_regina', position: 6 }] },
   { id: 'demo2', title: 'Encontro de jovens', audience: 'cancioneiro', duration: '48h', expires_at: exp, created_by: 'demo@localhost', sections: [],
-    songs: [{ song_slug: 'amazing_grace', position: 0 }, { song_slug: 'de_colores', position: 1 }] }];
+    songs: [{ song_slug: 'amazing_grace', position: 0 }, { song_slug: 'de_colores', position: 1 }] },
+  { id: 'demo3', title: 'Missa do Natal', audience: 'coro', duration: '1w', expires_at: exp, created_by: 'demo@localhost', published: false, sections: [],
+    songs: [{ song_slug: 'salve_regina', position: 0 }] }];
 };
 
 // grupo, título, endereço, perfil, tema, ação antes da imagem, página inteira?

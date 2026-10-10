@@ -199,6 +199,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 - Raios: ${t('radius')}. Pílula em todos os botões e chips; \`radius\` em cartões, campos e linhas de opção; \`radius-lg\` nas janelas.
 - Tamanhos: ${t('size')}.
 - Símbolos: \`icon-sm\` no texto, botões pequenos, setas e pesquisa; \`icon\` em botões de símbolo e linhas de opção; \`icon-lg\` só no microfone a ouvir. Traço \`stroke\` em todos (exceção: a estrela cheia da pesquisa, 1.2).
+- Folhas no menu: folha publicada = página simples (\`ICON_PAGE\`); por publicar = página com lápis no canto (\`ICON_PAGE_DRAFT\`), mesma classe \`.book-ic.outline\` (\`--icon-sm\`, traço \`--stroke\`), \`role="img"\` e nome «Não publicada». Só Maestro e Gestor veem folhas por publicar.
 
 ## Regras
 

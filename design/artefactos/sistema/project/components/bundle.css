@@ -240,7 +240,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 /* Folha em edição (Maestro / Gestor): fundo branco; a barra de cima e a procura continuam verdes */
 body.col-editing::before { background: var(--surface); }
 body.col-editing .topbar { background: var(--brand); box-shadow: 0 0 0 100vmax var(--brand); clip-path: inset(0 -100vmax); }
-body.col-editing #view-list { color: var(--text); }
+body.col-editing #rows, body.col-editing #status { color: var(--text); } /* só a lista: a barra de cima e a procura continuam verdes, com texto branco */
 body.col-editing .list-title, body.col-editing .list-title .col-meta { color: var(--brand-deep); }
 body.col-editing .list-title .col-share { color: var(--accent); }
 body.col-editing .list-title .col-edit { color: var(--accent); border-color: var(--accent); }
