@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v149';
+  const APP_VERSION = '2026-10-10 v150';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -272,7 +272,9 @@
       if (!c) throw new Error('Esta folha já não está disponível.');
       if (b.slug) return demoApi('shared', { token: 'demo_' + b.slug });
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
-      return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items: withSongs(colItems(c)).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number }) };
+      const items = withSongs(colItems(c)).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number });
+      const songs = b.songs ? await Promise.all(items.filter(it => it.k === 'song').map(async it => { const x = await demoApi('shared', { token: 'demo_' + it.slug }); delete x.expires_at; return x; })) : undefined;
+      return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items, songs };
     }
     if (op === 'shared') {
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
@@ -1103,11 +1105,34 @@
 
   // ---------- Endereço partilhado (#/p/<código>[/<cântico>]): sem conta, ou sem acesso ao cântico / coleção → só letra e tradução ----------
   const sharedCache = new Map(); let sharedMode = 'orig', sharedBack = null;
+  // endereços partilhados guardados no telemóvel até expirarem (a lista de uma folha traz a letra de todos os cânticos)
+  const SHARED_KEY = 'cancioneiro.partilhados';
+  const sharedStore = () => { const all = store.get(SHARED_KEY, {}), now = Date.now(); let gone = false;
+    for (const k of Object.keys(all)) if (!(Date.parse(all[k].expires_at) > now)) { delete all[k]; gone = true; }
+    if (gone) store.set(SHARED_KEY, all); return all; };
+  function sharedKeep(token, d) {
+    const all = sharedStore(), exp = d.expires_at;
+    if (!exp) return;
+    if (d.items) {
+      for (const sg of d.songs || []) sharedCache.set(token + '/' + sg.slug, { ...sg, expires_at: exp, collection: d.collection });
+      all[token] = { expires_at: exp, list: { ...d, songs: undefined }, songs: d.songs || [] };
+    } else if (d.slug) all[token + (d.collection ? '/' + d.slug : '')] = { expires_at: exp, song: d };
+    try { store.set(SHARED_KEY, all); } catch (e) { /* sem espaço: fica só em memória */ }
+  }
+  function sharedFromStore(key) {
+    const all = sharedStore(), [token, slug] = key.split('/');
+    if (all[key]?.song) return all[key].song;
+    const e = all[token];
+    if (!e) return null;
+    if (!slug) return e.list;
+    const sg = e.songs.find(x => x.slug === slug);
+    return sg ? { ...sg, expires_at: e.expires_at, collection: e.list.collection } : null;
+  }
   async function apiShared(token, slug) {
-    if (DEMO) return demoApi('shared', { token, slug });
+    if (DEMO) return demoApi('shared', { token, slug, songs: !slug });
     const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/conteudo', { method: 'POST',
       headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ op: 'shared', token, slug }) });
+      body: JSON.stringify({ op: 'shared', token, slug, songs: !slug }) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.message || 'Não foi possível abrir este endereço.');
     return d;
@@ -1116,12 +1141,20 @@
     const key = token + (slug ? '/' + slug : ''), here = () => location.hash === '#/p/' + key;
     sharedBack = slug ? '#/p/' + token : null;
     let d = sharedCache.get(key);
+    // a lista de uma folha vem sempre da rede quando há ligação (pode ter mudado); o resto, do que já está guardado
+    if (!d && (slug || !navigator.onLine)) { d = sharedFromStore(key); if (d) { sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); } }
     if (!d) {
       if (session && !allSongs.length) return; // espera pela lista de cânticos (route() volta a ser chamada)
       sharedView(!slug && sharedCache.get(token + ':col'));
       if (!$('view-song').hidden) $('song').innerHTML = '<p class="note lyr-wait">A carregar…</p>'; else { $('rows').innerHTML = ''; $('status').textContent = 'A carregar…'; }
-      try { d = await apiShared(token, slug); sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); }
-      catch (e) { if (here()) { sharedView(false); $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message.replace('coleção', 'folha'))}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
+      let err = null;
+      try { d = await apiShared(token, slug); sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); sharedKeep(token, d); }
+      catch (e) {
+        err = e;
+        const kept = !navigator.onLine || /fetch|network|Load failed/i.test(e.message) ? sharedFromStore(key) : null; // sem rede: o que ficou guardado
+        if (kept) { d = kept; sharedCache.set(key, d); if (d.items) sharedCache.set(token + ':col', 1); }
+      }
+      if (!d) { const e = { message: navigator.onLine ? (err && err.message) || 'Não foi possível abrir este endereço.' : 'Sem ligação à internet.' }; if (here()) { sharedView(false); $('song').innerHTML = `<h1>Cancioneiro</h1><p class="note">${esc(e.message.replace('coleção', 'folha'))}</p>${sharedFoot()}`; bindSharedLogin(); } return; }
       if (!here()) return;
     }
     if (d.items) return showSharedCollection(token, d);
@@ -2507,12 +2540,12 @@
   // cânticos de coleções ativas para o Cancioneiro: visíveis também no perfil Cancioneiro
   const colExtra = () => new Set(cols.filter(c => !expired(c) && c.audience === 'cancioneiro').flatMap(c => (c.songs || []).map(x => x.song_slug)));
   // Ao abrir: descarrega as letras e (do perfil Coro para cima) partituras, páginas dos livros e gravações
-  // dos cânticos das coleções ativas; apaga ficheiros guardados de cânticos que já não estão em coleções
+  // dos cânticos das coleções ativas e dos Preferidos; apaga ficheiros guardados de cânticos que já não estão em nenhuma
   let prefetching = false;
   async function prefetchCollections() {
     if (prefetching || DEMO || !navigator.onLine) return; prefetching = true;
     try {
-      const slugs = [...new Set(cols.filter(c => colVisible(c) && !expired(c)).flatMap(c => (c.songs || []).map(x => x.song_slug)))].filter(sl => bySlug.has(sl));
+      const slugs = [...new Set([...cols.filter(c => colVisible(c) && !expired(c)).flatMap(c => (c.songs || []).map(x => x.song_slug)), ...favs])].filter(sl => bySlug.has(sl));
       const keep = new Set();
       for (const sl of slugs) {
         try { await getLyrics(sl); } catch (e) { if (e instanceof Limit) break; }
@@ -3096,8 +3129,8 @@
     if (!DEMO) restoreSource();
     showList();
     load();
-    loadFavs();
-    loadCollections().then(() => setTimeout(prefetchCollections, 3000));
+    // descarrega os cânticos das folhas e dos Preferidos, depois de saber quais são
+    Promise.allSettled([loadFavs(), loadCollections()]).then(() => setTimeout(prefetchCollections, 3000));
     loadSyncInfo();
     startTour(); // 1.ª vez: tutorial (no fim, a proposta de instalar)
     started = true;
