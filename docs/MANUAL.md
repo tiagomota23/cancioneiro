@@ -205,6 +205,7 @@ Cancioneiro — cópia de segurança/
   outros/       ficheiros do armazenamento que não pertencem a nenhum cântico
   base-de-dados/  dados.json (todas as tabelas, com letras originais e editadas), esquema.sql (estrutura completa)
   codigo/       cancioneiro.bundle (repositório git com todo o histórico), cancioneiro-codigo.zip (versão atual)
+  ambiente/     AMBIENTE.md e as instruções de cada sessão do Claude (webapp, design, testes, backup), para recriar o ambiente de desenvolvimento
   removidos/    o que deixou de existir no Cancioneiro (nada é apagado)
   .estado.json  estado da cópia incremental (não mexer)
 ```
