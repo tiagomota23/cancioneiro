@@ -43,7 +43,9 @@ revoke execute on function public.in_cancioneiro_collection(text) from public, a
 grant execute on function public.in_cancioneiro_collection(text) to authenticated;
 drop policy if exists "leitura familia" on public.songs;
 create policy "leitura familia" on public.songs for select to authenticated
-  using ((select public.my_rank()) >= 2 or ((select public.my_rank()) = 1 and (cancioneiro or public.in_cancioneiro_collection(slug))));
+  using (((select public.my_rank()) >= 2 or ((select public.my_rank()) = 1 and (cancioneiro or public.in_cancioneiro_collection(slug))))
+         -- cânticos novos por aprovar: só o Maestro / Gestor e quem os acrescentou (como em novos.sql)
+         and (approved or (select public.my_rank()) >= 3 or added_by = lower(coalesce(auth.jwt() ->> 'email', ''))));
 
 -- Coleções expiradas há mais de 1 mês são apagadas (todos os dias às 04:30 UTC)
 select cron.schedule('cancioneiro-colecoes-limpeza', '30 4 * * *', $$ delete from public.collections where expires_at < now() - interval '1 month' $$);

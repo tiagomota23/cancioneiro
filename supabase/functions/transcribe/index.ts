@@ -1,7 +1,7 @@
 // Supabase Edge Function: recebe um pedaço de áudio e devolve a transcrição (Groq, Whisper large).
 // A chave GROQ_API_KEY fica guardada como segredo no Supabase (nunca na app).
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://tiagomota23.github.io', // só a app (como em conteudo)
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };

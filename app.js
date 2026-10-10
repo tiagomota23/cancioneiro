@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v155';
+  const APP_VERSION = '2026-10-10 v156';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2476,15 +2476,17 @@
 
   // ---------- Router ----------
   let lastListHash = '#/';
+  // endereço com % mal formado (ex.: copiado a meio): usa o texto tal como está em vez de rebentar
+  const safeDecode = t => { try { return decodeURIComponent(t); } catch (e) { return t; } };
   function route() {
     const h = location.hash || '#/';
     const p = h.match(/^#\/p\/([A-Za-z0-9_-]+)(?:\/([^/]+))?$/);
-    if (p) { closePdf(); showShared(p[1], p[2] ? decodeURIComponent(p[2]) : null); window.scrollTo(0, 0); return; }
+    if (p) { closePdf(); showShared(p[1], p[2] ? safeDecode(p[2]) : null); window.scrollTo(0, 0); return; }
     document.body.classList.remove('shared-view', 'no-session', 'shared-sub'); sharedBack = null;
     if (!session) return;
     const m = h.match(/^#\/cantico\/([^/]+)(\/partitura(?:\/(\d+))?)?$/);
     if (m) {
-      const slug = decodeURIComponent(m[1]);
+      const slug = safeDecode(m[1]);
       if (m[2]) {
         if (lastSongSlug !== slug || $('view-song').hidden) showSong(slug);
         songScroll = window.scrollY;
