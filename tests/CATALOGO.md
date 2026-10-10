@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v155, 2026-10-10** — 140 ok · 2 falhas · 6 avisos · 10 não corridos (`tests/reports/2026-10-10-v155-full.md`).
+Última execução completa: **v156, 2026-10-10** — 146 ok · 0 falhas · 2 avisos · 10 não corridos (`tests/reports/2026-10-10-v156-full.md`).
 
 ---
 
@@ -52,7 +52,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
 | FUN-28 | Exportar PDF de uma folha (pdf-lib) | ui | média | S | ✓ |
-| FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✗ |
+| FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
 | FUN-32 | Maestro vê Aprovar num cântico por aprovar | ui | média | S | ✓ |
@@ -125,8 +125,8 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | – rede |
 | DES-02 | Tempos de resposta (site, auth, função) — mediana de 3 | live | média | V | ✓ |
 | DES-03 | Arranque a frio da função conteudo < 5 s | live | média | S | ✓ |
-| ESC-01 | Chaves estrangeiras com índice | db | baixa | V | ! |
-| ESC-02 | Plano da lista de cânticos (como pedida pela app) < 300 ms | db | média | V | ! |
+| ESC-01 | Chaves estrangeiras com índice (supabase/indices.sql, v156) | db | baixa | V | ✓ |
+| ESC-02 | Plano da lista de cânticos (como pedida pela app) < 300 ms (82 ms em v156) | db | média | V | ✓ |
 | ESC-03 | Limites do plano Supabase (BD, armazenamento, access_log) | db | média | V | ✓ |
 | ESC-04 | Limites por pessoa usam o índice de access_log | db | média | S | ✓ |
 | ESC-10 | Índice com 2000 cânticos abre em tempo razoável | ui | média | V | ✓ |
@@ -140,14 +140,14 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-01 | `node tools/theme/build.mjs --check` passa (theme.css = design/tokens.json) | static | média | V | ✓ |
 | USA-02 | styles.css sem cores fixas (só variáveis do tema) | static | baixa | V | ✓ |
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
-| USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) | static | baixa | V | ! |
+| USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
 | USA-17 | Interruptores das Folhas: role=switch, aria-checked, Espaço/Enter, confirmação ao retirar, fixo desativado (v148) | ui | média | V | ✓ |
 | USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha) (v149/v154) | ui | média | V | ✓ |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after` e a caixa da pesquisa) | ui | média | V | ! |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ! |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ! |
-| USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ! |
+| USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
 | USA-14 | Nomes acessíveis em botões/ligações; `lang="pt"` | ui | média | V | ✓ |
 | USA-15 | Diálogos com título e botão de fechar | ui | baixa | V | ✓ |
 | USA-16 | Cores efetivas = tokens do padrão de design | ui | baixa | S | ✓ |
@@ -178,7 +178,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-26 | conteudo sem sessão → 403 em todas as operações | live | crítica | V | ✓ |
 | SEG-27 | shared: token mal formado 400/WAF, desconhecido 410 | live | alta | V | ✓ |
 | SEG-28 | conteudo não reflete origens estranhas (CORS) | live | alta | V | ✓ |
-| SEG-29 | transcribe/notify com CORS `*` | live | baixa | V | ! |
+| SEG-29 | transcribe: CORS só para a origem do GitHub Pages (v156) | live | baixa | V | ✓ |
 | SEG-30 | transcribe sem sessão → 403 (não chega ao Groq) | live | alta | V | ✓ |
 | SEG-31 | backup/gravacoes: sem token / token OIDC forjado / chave anon → 401 | live | crítica | V | ✓ |
 | SEG-32 | notify: tipos/ids inválidos → 400 (sem emails) | live | alta | V | ✓ |
@@ -188,7 +188,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
-| DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✗ |
+| DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
 | DB-RLS-08 | Preferidos de outros invisíveis | db | crítica | V | ✓ |

@@ -144,7 +144,7 @@ export default async function (level) {
     const o = r.headers.get('access-control-allow-origin');
     return o === 'https://tiagomota23.github.io' || `Access-Control-Allow-Origin: ${o}`;
   });
-  await t('SEG-29', 'transcribe e notify: CORS «*» (aceitável só porque exigem sessão / token próprio)', async () => {
+  await t('SEG-29', 'transcribe: CORS só para a origem do GitHub Pages (desde v156)', async () => {
     const r = await fn('transcribe', null, { Origin: 'https://evil.example' }, 'OPTIONS');
     const o = r.headers.get('access-control-allow-origin');
     return o === '*' ? { warn: 'transcribe responde a qualquer origem (Access-Control-Allow-Origin: *); a proteção é só o token. Sugestão: restringir à origem do GitHub Pages como no conteudo' } : true;

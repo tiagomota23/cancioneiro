@@ -726,8 +726,10 @@ async function suites(full) {
         .filter(x => (x.w < 44 || x.h < 44) && !x.inl && !/^#\//.test(x.id)));
       for (const x of s) small.push(`${name}: ${String(x.id).slice(0, 30)} ${x.w}×${x.h}`);
     });
-    const uniq = [...new Set(small)];
-    return uniq.length ? { warn: `${uniq.length} alvos < 44 px: ${uniq.slice(0, 12).join('; ')}` } : true;
+    // exceções decididas pela sessão principal (tests/baseline.json → tapExceptions): botões de 40 px e linhas densas de 32 px
+    const exc = JSON.parse(fs.readFileSync(path.join(TESTS, 'baseline.json'), 'utf8')).tapExceptions || {};
+    const uniq = [...new Set(small)].filter(x => !Object.keys(exc).some(k => x.includes(': ' + k + ' ')));
+    return uniq.length ? { warn: `${uniq.length} alvos < 44 px: ${uniq.slice(0, 12).join('; ')}` } : { pass: 'exceções aceites: ' + Object.keys(exc).join(', ') };
   });
   await t('USA-11', 'Ecrãs pequenos (320 px) e paisagem: sem deslocamento horizontal', async () => {
     const bad = [];
@@ -768,7 +770,10 @@ async function suites(full) {
     const seen = [], noRing = [];
     for (let i = 0; i < 8; i++) {
       await page.keyboard.press('Tab'); await sleep(60);
-      const f = await page.evaluate(() => { const e = document.activeElement; if (!e || e === document.body) return null; const st = getComputedStyle(e); return { id: e.id || e.className || e.tagName, ring: st.outlineStyle !== 'none' && parseFloat(st.outlineWidth) > 0 || st.boxShadow !== 'none' }; });
+      const f = await page.evaluate(() => { const e = document.activeElement; if (!e || e === document.body) return null;
+        // o anel pode estar no próprio elemento ou numa caixa à volta (:focus-within, ex.: .search)
+        const ring = x => { const st = getComputedStyle(x); return st.outlineStyle !== 'none' && parseFloat(st.outlineWidth) > 0 || st.boxShadow !== 'none'; };
+        return { id: e.id || e.className || e.tagName, ring: ring(e) || (!!e.parentElement && e.parentElement.matches(':focus-within') && ring(e.parentElement)) }; });
       if (f) { seen.push(f.id); if (!f.ring) noRing.push(f.id); }
     }
     await page.click('#btn-perfil'); await sleep(300);
