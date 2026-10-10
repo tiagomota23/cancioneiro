@@ -719,7 +719,7 @@ async function suites(full) {
         .map(e => { const r = e.getBoundingClientRect(); let w = r.width, h = r.height;
           // área de toque alargada por ::after (position:absolute com inset negativo), como nos segmentados e botões pequenos
           const a = getComputedStyle(e, '::after');
-          if (a.content !== 'none' && a.position === 'absolute') { const px = v => parseFloat(v) || 0; w = Math.max(w, w - px(a.left) - px(a.right)); h = Math.max(h, h - px(a.top) - px(a.bottom)); }
+          if (a.content !== 'none' && a.position === 'absolute') { const px = v => parseFloat(v) || 0; w = Math.max(w, w - px(a.left) - px(a.right), px(a.width)); h = Math.max(h, h - px(a.top) - px(a.bottom), px(a.height)); } // inset negativo ou tamanho próprio (ex.: height: var(--hit))
           // campo dentro de uma caixa maior que recebe o toque (ex.: pesquisa): conta a caixa
           if (e.tagName === 'INPUT' && e.parentElement) { const pr = e.parentElement.getBoundingClientRect(); w = Math.max(w, pr.width); h = Math.max(h, pr.height); }
           return { id: e.id || e.className.baseVal || e.className || ((e.parentElement?.closest('[id]')?.id || '') + '>' + e.tagName.toLowerCase()), w: Math.round(w), h: Math.round(h), inl: getComputedStyle(e).display === 'inline' }; })
