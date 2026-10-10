@@ -11,11 +11,12 @@
   --serif: "Marcellus", "Optima", Georgia, serif; /* títulos, capa, nome da app */
   --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif; /* tudo o resto */
 
-  /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
+  /* Escala de letra (fora da letra dos cânticos): só estes tamanhos, pesos 400 e 700 */
   --fs-caps: 11px;              /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
   --fs-small: 13px;             /* texto secundário, botões pequenos, notas */
   --fs-ui: 15px;                /* botões, linhas de opção, texto das janelas */
   --fs-field: 16px;             /* campos (16 evita o zoom do iPhone) */
+  --fs-section: 19px;           /* títulos de secção nas listas verdes (página inicial, folhas, menu) */
   --fs-title: 22px;             /* títulos (letra serif, maiúsculas) */
   --fs-display: 35px;           /* nome da app na capa e na entrada */
 

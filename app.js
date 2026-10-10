@@ -79,10 +79,10 @@
   // categorias próprias (dos cânticos novos): etiquetas do grupo "Categoria"
   const allCategories = () => {
     const own = [...new Set(allSongs.flatMap(s => (s.tags || []).filter(t => t.grp === 'Categoria').map(t => t.tag)))].sort((a, b) => a.localeCompare(b, 'pt'));
-    const i = CATEGORIES.findIndex(c => c.id === 'traducao');
+    const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v153';
+  const APP_VERSION = '2026-10-10 v154';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3032,10 +3032,16 @@
   // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };
   function renderBooks() {
-    $('az').innerHTML = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2).map(b => {
+    const row = b => {
       const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
-    }).join('') + renderCollectionsMenu();
+    };
+    // três secções com título: Os meus cânticos (Preferidos), Livros e Folhas; uma secção vazia não aparece
+    const sec = (title, body) => body ? `<li class="cat-head">${title}</li>${body}` : '';
+    const books = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2);
+    $('az').innerHTML = sec('Os meus cânticos', books.filter(b => b.id === 'favoritos').map(row).join('')) +
+      sec('Livros', books.filter(b => b.id !== 'favoritos').map(row).join('')) +
+      sec('Folhas', renderCollectionsMenu());
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }
   function openDrawer() {

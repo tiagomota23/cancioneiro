@@ -26,7 +26,7 @@ const list = (fam) => { const l = doc[fam]?.tokens; if (!Array.isArray(l)) error
 // letra: famílias e escala de tamanhos
 const ty = doc.type || {};
 for (const [k, v] of Object.entries(ty.families || {})) add('Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço)', k, v, k === 'serif' ? 'títulos, capa, nome da app' : 'tudo o resto');
-for (const g of ty.groups || []) for (const st of g.styles || []) add('Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700', st.name, st.fontSize, st.usage);
+for (const g of ty.groups || []) for (const st of g.styles || []) add('Escala de letra (fora da letra dos cânticos): só estes tamanhos, pesos 400 e 700', st.name, st.fontSize, st.usage);
 if (!ty.families || !ty.groups) errors.push('família «type» incompleta (families, groups)');
 for (const t of list('tracking')) add('Espaçamento das maiúsculas, por função', t.name, t.value, t.usage);
 for (const t of list('radius')) add('Cantos', t.name, t.value, t.usage);
