@@ -11,8 +11,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const TOKENS = path.join(ROOT, 'design/tokens.json');
 const OUT = path.join(ROOT, 'theme.css');
 const USES = ['styles.css', 'admin.html', 'drive.html', 'privacidade.html'];
-// opacidades derivadas: a cor de base de cada uma (o token pode trazer "base"; senão, esta tabela)
-const ALPHA_BASE = { 'on-brand-line': 'on-brand', 'on-brand-outline': 'on-brand', scrim: 'shadow' };
 
 const doc = JSON.parse(fs.readFileSync(TOKENS, 'utf8'));
 const errors = [];
@@ -41,7 +39,7 @@ for (const t of list('color')) {
 }
 // opacidades: cor de base a esta percentagem (muda sozinha se a base mudar)
 for (const t of list('alpha')) {
-  const base = t.base || ALPHA_BASE[t.name];
+  const base = t.base; // a cor de base (outro token de cor)
   if (!base) { errors.push(`opacidade «${t.name}» sem cor de base`); continue; }
   if (!/^\d+(\.\d+)?%$/.test(String(t.value).trim())) { errors.push(`opacidade «${t.name}»: valor tem de ser uma percentagem`); continue; }
   add('Opacidades derivadas', t.name, `color-mix(in srgb, var(--${base}) ${String(t.value).trim()}, transparent)`, t.usage);
