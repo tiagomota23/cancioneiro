@@ -321,12 +321,18 @@ Deno.serve(async (req) => {
       await rest(`song_shares?token=eq.${token}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ views: sh.views + 1 }) });
       const c = await songs();
       if (col && !b.slug) { // lista da coleção: secções e títulos
-        const meta = new Map((await rest(`songs?slug=in.(${col.songs.map(x => `"${x.song_slug}"`).join(',') || '""'})&select=slug,title,author,number`)).map(x => [x.slug, x]));
+        const meta = new Map((await rest(`songs?slug=in.(${col.songs.map(x => `"${x.song_slug}"`).join(',') || '""'})&select=slug,title,author,number,language,translation_language`)).map(x => [x.slug, x]));
         const items = [...col.sections.map(x => ({ k: 'sec', title: x.title, pos: x.position })),
-          ...col.songs.filter(x => meta.has(x.song_slug)).map(x => ({ k: 'song', ...meta.get(x.song_slug), pos: x.position }))]
+          ...col.songs.filter(x => meta.has(x.song_slug)).map(x => { const m = meta.get(x.song_slug); return { k: 'song', slug: m.slug, title: m.title, author: m.author, number: m.number, pos: x.position }; })]
           .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1))
           .filter((it, i, all) => it.k !== 'sec' || all[i + 1]?.k === 'song'); // só secções com cânticos
-        return out({ collection: { id: col.id, title: col.title, audience: col.audience }, items, expires_at: until });
+        // com songs: true, devolve também a letra de todos os cânticos (a página guarda-os: abrem logo e sem rede; conta como uma abertura)
+        const full = b.songs ? items.filter(it => it.k === 'song' && c.bySlug.has(it.slug)).map(it => {
+          const s = c.bySlug.get(it.slug), m = meta.get(it.slug);
+          return { slug: it.slug, title: m.title, author: m.author, number: m.number, language: m.language, translation_language: m.translation_language,
+            lyrics: noChords(s.eff), translation: s.translation || null };
+        }) : undefined;
+        return out({ collection: { id: col.id, title: col.title, audience: col.audience }, items, expires_at: until, songs: full });
       }
       const slug = col ? String(b.slug) : sh.song_slug;
       if (col && !col.songs.some(x => x.song_slug === slug)) return out({ error: 'não encontrado' }, 404);
