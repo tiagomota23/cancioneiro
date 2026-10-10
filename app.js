@@ -73,7 +73,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-09 v141';
+  const APP_VERSION = '2026-10-10 v142';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -628,10 +628,14 @@
   const HALLUCINATIONS = /(amara\.org|legendas|subt[ií]tulos|sottotitoli|obrigad[oa] por|thank you for watching|thanks for watching|inscreva-se|\[m[uú]sica\]|\(m[uú]sica\))/i;
   function cleanText(t) { return t.replace(/[♪♫🎵🎶]/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim(); }
 
+  // Cores do tema (theme.css), para o que é desenhado à mão: microfone e PDF
+  const themeColor = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const themeRgb = (n, dflt) => { const h = themeColor(n).replace('#', ''); const p = h.length === 3 ? [...h].map(c => c + c) : h.match(/../g) || [];
+    const v = p.slice(0, 3).map(x => parseInt(x, 16) / 255); return v.length === 3 && v.every(x => x >= 0) ? v : dflt; };
   // Equalizador (mostra que o som está mesmo a chegar) + diagnóstico
   function drawEq() {
     if (!rec || !rec.analyser) return;
-    const cv = $('listen-eq'), g = cv.getContext('2d');
+    const cv = $('listen-eq'), g = cv.getContext('2d'), on = themeColor('--brand') || '#1fb385', idle = themeColor('--meter-idle') || '#cfd8d4';
     const data = new Uint8Array(rec.analyser.frequencyBinCount);
     rec.analyser.getByteFrequencyData(data);
     const bars = 28, w = cv.width / bars, useful = Math.floor(data.length * 0.22);
@@ -642,7 +646,7 @@
       for (let k = s; k < e; k++) v = Math.max(v, data[k]);
       peak = Math.max(peak, v);
       const h = Math.max(3, (v / 255) * cv.height);
-      g.fillStyle = v > 20 ? '#1fb385' : '#cfd8d4';
+      g.fillStyle = v > 20 ? on : idle;
       g.beginPath();
       if (g.roundRect) g.roundRect(i * w + 2, (cv.height - h) / 2, w - 4, h, 2); else g.rect(i * w + 2, (cv.height - h) / 2, w - 4, h);
       g.fill();
@@ -1204,7 +1208,7 @@
       msg(e instanceof Limit ? e.message : 'Não foi possível gerar o PDF. Verifique a ligação à internet.');
     }
   }
-  const GREEN = [0.06, 0.5, 0.35];
+  const GREEN = () => themeRgb('--light-accent', [0.06, 0.5, 0.35]); // PDF em papel branco: sempre a cor do modo claro
   function layoutLyrics(L, doc, F, colTitle, items, coro) {
     const W = 595.28, H = 841.89, M = 34, GAP = 18;
     // título da coleção: centrado, a toda a largura da 1.ª página, com um traço por baixo
@@ -1212,7 +1216,7 @@
       for (const w of words) { const t = cur ? cur + ' ' + w : w; if (cur && F.b.widthOfTextAtSize(t, TS) > W - 2 * M) { out.push(cur); cur = w; } else cur = t; }
       out.push(cur); return out; })();
     const headH = tLines.length * TS * 1.2 + 22;
-    const green = L.rgb(...GREEN), grey = L.rgb(0.45, 0.45, 0.45), ink = L.rgb(0.1, 0.1, 0.1);
+    const green = L.rgb(...GREEN()), grey = L.rgb(0.45, 0.45, 0.45), ink = L.rgb(0.1, 0.1, 0.1);
     // blocos que não se partem: secção + título + 1.ª estrofe ficam juntos; estrofes curtas também
     const build = (fs, colW) => {
       const units = []; let pend = [];
@@ -1338,7 +1342,7 @@
     return new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/png'))).arrayBuffer());
   }
   async function appendScores(L, doc, F, songsIn, msg) {
-    const W = 595.28, H = 841.89, M = 30, grey = L.rgb(0.45, 0.45, 0.45), green = L.rgb(...GREEN);
+    const W = 595.28, H = 841.89, M = 30, grey = L.rgb(0.45, 0.45, 0.45), green = L.rgb(...GREEN());
     const bytesOf = async x => x.blob ? new Uint8Array(await x.blob.arrayBuffer()) : new Uint8Array(await (await fetch(x.url)).arrayBuffer());
     let page = null, y = 0;
     const newPage = () => { page = doc.addPage([W, H]); y = H - M; };

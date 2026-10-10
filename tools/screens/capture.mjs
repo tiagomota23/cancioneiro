@@ -111,7 +111,7 @@ const only = process.argv.slice(2);
 fs.mkdirSync(path.join(OUT, 'png'), { recursive: true });
 const MAPA = path.join(ROOT, 'mapa');
 fs.mkdirSync(MAPA, { recursive: true });
-const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
+const css = ['theme.css', 'styles.css'].map(f => fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
 const browser = await chromium.launch();
 // o browser fica sem proxy (o servidor local é localhost); os pedidos externos (supabase-js, fontes) passam pelo Node, com cache
 const ext = new Map();
