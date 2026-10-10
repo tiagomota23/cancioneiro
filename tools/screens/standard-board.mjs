@@ -184,3 +184,6 @@ const HGT = Math.min(Math.ceil(h * 1.06), 8000); // folga: aqui sem as fontes La
 fs.writeFileSync(path.join(OUT, 'Padrao.dc.html'), page(HGT));
 fs.writeFileSync(path.join(OUT, 'quadros-padrao.json'), JSON.stringify({ file: 'Padrao.dc.html', title: 'Padrão de design', w: W, h: HGT }));
 console.log(`Padrao.dc.html ${W}×${HGT}${h > 8000 ? ' AVISO: mais de 8000 px' : ''}`);
+// espelho do artefacto no repositório: design/artefactos/mapa/project (publicar com root=design/artefactos/mapa)
+const MAPA_PROJ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../design/artefactos/mapa/project');
+for (const f of ['Padrao.dc.html']) fs.copyFileSync(path.join(OUT, f), path.join(MAPA_PROJ, f));

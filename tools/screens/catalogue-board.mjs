@@ -137,3 +137,6 @@ for (const part of PARTS) {
 fs.rmSync(path.join(DIR, '_medir.html'));
 fs.writeFileSync(path.join(DIR, 'quadros.json'), JSON.stringify(PARTS.map(({ file, title, h }) => ({ file, title, w: W, h }))));
 await browser.close();
+// espelho do artefacto no repositório: design/artefactos/mapa/project (publicar com root=design/artefactos/mapa)
+const MAPA_PROJ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../design/artefactos/mapa/project');
+for (const f of PARTS.map(p => p.file)) fs.copyFileSync(path.join(DIR, f), path.join(MAPA_PROJ, f));

@@ -1,0 +1,43 @@
+{
+ "v": 3,
+ "layout": "files",
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-10T07:39:39Z"
+ },
+ "title": "Cancioneiro",
+ "namespace": "Cancioneiro",
+ "libraries": [],
+ "sections": {},
+ "groups": [
+  "Logos"
+ ],
+ "assetGroups": {
+  "Logos": {
+   "name": "Logos",
+   "tile": "m",
+   "order": [
+    "icon-512.png"
+   ],
+   "files": {
+    "icon-512.png": {
+     "name": "icon-512.png",
+     "blob": "5f9a4a725a785edd04b8b995266c0339",
+     "size": 13907,
+     "type": "image/png"
+    }
+   }
+  }
+ },
+ "blobs": {},
+ "docs": {
+  "readme": "project/README.md",
+  "sections": []
+ },
+ "lastChange": {
+  "by": "Tiago",
+  "at": "2026-10-10T09:13:13Z",
+  "via": "GitHub · tiagomota23/cancioneiro (v152)",
+  "note": "Antetítulo das categorias (.list-kicker) no cartão Títulos."
+ }
+}

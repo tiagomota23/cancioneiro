@@ -3,15 +3,16 @@
 //   styles.css (secção COMPONENTES) → project/components/bundle.css, para as pré-visualizações usarem o CSS real da app
 //   + README (regras e exceções), um cartão por componente e a capa.
 // Os valores vivem em design/tokens.json; este script só os espelha. Uso: node tools/screens/design-system.mjs [sha]
-//   → out/design-system/project/…
+//   → design/artefactos/sistema/project/… (o espelho do artefacto no repositório; publicar com root=design/artefactos/sistema)
+// O índice project/design-system.json não é gerado aqui (tem o lastChange e o registo do logo): editar à mão e enviar no fim.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
-const OUT = path.join(HERE, 'out', 'design-system', 'project');
-fs.rmSync(path.dirname(OUT), { recursive: true, force: true });
+const OUT = path.join(ROOT, 'design', 'artefactos', 'sistema', 'project');
+fs.rmSync(path.join(OUT, 'components'), { recursive: true, force: true }); // os cartões são todos gerados; o índice fica
 const w = (p, s) => { const f = path.join(OUT, p); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s); };
 const sha = process.argv[2] || '';
 
@@ -254,5 +255,9 @@ svg{position:absolute;left:0;top:0}
 <h1 class="name">Cancioneiro</h1>
 <p class="tag">Verde da marca, texto calmo, um estilo por elemento.</p>
 </div></body></html>
+`);
+w('assets/Logos/README.md', `# Logos
+
+O ícone da app (512 × 512 px, PNG), tal como está em \`icons/icon-512.png\` no repositório, no degradê da marca (\`brand\` → \`brand-deep\`). Também existem as versões de 180 e 192 px para o iPhone e o Android. Mudar a cor da marca em tokens.json não muda este ficheiro: recolorir os ícones à mão, com \`manifest.json\` e a meta theme-color.
 `);
 console.log('ok', OUT);

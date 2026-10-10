@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Cancioneiro — mapa da app</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&amp;family=Lato:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0f7a57}a:hover{color:#0a5a40}
+</style>
+</helmet>
+<div style="width: 1100px; height: 640px; box-sizing: border-box; padding: 64px 72px; background: #0b6b4b; color: #ffffff; font-family: Lato, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 32px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85">Mapa da app · versão 152 · 10 out 2026</p>
+<h1 style="margin: 0; font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: 64px; letter-spacing: 8px">CANCIONEIRO</h1>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; max-width: 820px">Todos os ecrãs da app real, num telemóvel de 390 px, com dados de demonstração (textos de domínio público). Atualizado a cada nova versão da app.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85">Secções</h2>
+<a href="Fluxo.dc.html" style="color: #ffffff; font-size: 18px">Fluxo de navegação — todos os caminhos desde a entrada</a>
+<a href="Padrao.dc.html" style="color: #ffffff; font-size: 18px">Padrão de design e catálogo — regras, tokens e todos os elementos (sistema de design «Cancioneiro»)</a>
+<a href="Entrada.dc.html" style="color: #ffffff; font-size: 18px">Entrada e partilha</a>
+<a href="Listas.dc.html" style="color: #ffffff; font-size: 18px">Listas — índice, pesquisa, categorias, livros</a>
+<a href="Navegacao.dc.html" style="color: #ffffff; font-size: 18px">Navegação — menu, perfil, informação, tutorial</a>
+<a href="Folhas.dc.html" style="color: #ffffff; font-size: 18px">Folhas — secções, ações, criar, adicionar</a>
+<a href="Cantico.dc.html" style="color: #ffffff; font-size: 18px">Cântico — letra, acordes, tradução, gravações, partitura</a>
+<a href="Edicao.dc.html" style="color: #ffffff; font-size: 18px">Edição e gestão de utilizadores</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85">Perfis (cada um pode tudo o que os anteriores podem)</h2>
+<p style="margin: 0; font-size: 16px; line-height: 1.45"><b>Cancioneiro</b> — só os cânticos do Cancioneiro, sem acordes, partituras nem gravações.</p>
+<p style="margin: 0; font-size: 16px; line-height: 1.45"><b>Coro</b> — todos os cânticos e livros, com acordes, partituras e gravações.</p>
+<p style="margin: 0; font-size: 16px; line-height: 1.45"><b>Maestro</b> — edita letras, cria folhas, promove cânticos ao Cancioneiro.</p>
+<p style="margin: 0; font-size: 16px; line-height: 1.45"><b>Gestor</b> — gestão de utilizadores. Os ecrãs são do Gestor, salvo indicação.</p>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1100,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

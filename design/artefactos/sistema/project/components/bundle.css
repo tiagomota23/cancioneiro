@@ -1,0 +1,229 @@
+/* Cancioneiro — ponte para as pré-visualizações (gerado por tools/screens/design-system.mjs; não editar aqui).
+   As cores, raios, tamanhos e espaçamentos vêm de tokens.css (este Design System) com os mesmos nomes que a app usa.
+   Os tamanhos de letra são fixados aqui a partir de tokens.json: uma mudança de tamanho no Design System
+   aparece nestas pré-visualizações depois de chegar à app (ver README, «Como uma mudança chega à app»). */
+:root {
+  --sans: var(--font-sans); --serif: var(--font-serif);
+  --fs-caps: 11px;
+  --fs-small: 13px;
+  --fs-ui: 15px;
+  --fs-field: 16px;
+  --fs-title: 22px;
+  --fs-display: 35px;
+  --light-accent: #0e7f58;
+  --a-on-brand-line: var(--on-brand-line);
+  --a-on-brand-outline: var(--on-brand-outline);
+  --a-scrim: var(--scrim);
+}
+.ds { font-family: var(--sans); color: var(--text); }
+.ds { --on-brand-line: color-mix(in srgb, var(--on-brand) var(--a-on-brand-line), transparent); --on-brand-outline: color-mix(in srgb, var(--on-brand) var(--a-on-brand-outline), transparent); --scrim: color-mix(in srgb, var(--shadow) var(--a-scrim), transparent); }
+:where(.ds) button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.ds dialog { position: static; display: block; margin: 0; padding: 18px 20px; border: 0; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); max-width: 100%; box-sizing: border-box; }
+.ds .brand-bg { background: linear-gradient(180deg, var(--brand), var(--brand-deep)); color: var(--on-brand); padding: 14px; border-radius: var(--radius); }
+.ds .row, .ds.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.ds .col, .ds.col { display: flex; flex-direction: column; gap: 10px; }
+.ds .lbl { font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-faint); margin: 6px 0 2px; }
+
+/* =====================================================================================================
+   COMPONENTES — um só estilo para cada tipo de elemento (tamanhos, formas e cores vêm de theme.css)
+   ===================================================================================================== */
+
+/* Títulos: letra serif, maiúsculas */
+dialog h2, .list-title, .admin-title, .admin h2, .drawer-title, .listen-status {
+  font-family: var(--serif); font-weight: 400; font-size: var(--fs-title); letter-spacing: .06em; text-transform: uppercase;
+}
+dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
+.list-title { margin: 14px 18px 6px; }
+.admin-title { margin: 0 0 0 4px; color: var(--brand-deep); }
+.admin h2 { color: var(--brand-deep); margin: 22px 0 8px; }
+.drawer-title { margin: 6px 0 4px 60px; color: var(--on-brand); }
+.listen-status { margin: 4px 0; color: var(--brand-deep); }
+.song h1 { text-transform: uppercase; letter-spacing: .06em; }
+.pdf-title { text-transform: uppercase; letter-spacing: var(--ls-row); }
+
+/* Etiquetas em maiúsculas (cabeçalhos de secção, rótulos de campos) */
+.rows li.cat-head, .rows li.col-sec .sec-line, .recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .sec-add .sa-sec {
+  font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase;
+}
+.rows li.cat-head { padding: 20px 14px 6px; color: var(--on-brand); }
+.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: var(--on-brand); text-decoration: none; border-bottom: 0; min-height: 0; }
+.recs h2 { color: var(--accent); margin: 0 0 8px; }
+.col-field, .song-new .sn-f, .sec-add .sa-sec { display: grid; gap: 4px; margin: 10px 0; color: var(--text-soft); min-width: 0; }
+.sec-add .sa-sec[hidden] { display: none; }
+.song-new .sn-flabel { margin: 0 0 4px; color: var(--text-soft); }
+dialog .small, .admin .small { font-size: var(--fs-small); color: var(--text-soft); }
+.admin .small { line-height: 1.5; margin-top: 18px; }
+
+/* Botões: sempre em pílula, letra Lato, sem maiúsculas.
+   Normal (40 px): destaque (cheio), secundário (contorno), perigo (contorno vermelho). Pequeno (32 px): as mesmas três cores. */
+dialog form button, .edit-actions button, .info-actions button, .listen-actions button, .tour-next, .pdf-more button, .song-new .sn-gen-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;
+  height: var(--h-btn); padding: 0 18px; border-radius: var(--pill); border: 1px solid var(--accent);
+  font: 400 var(--fs-ui)/1 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap;
+  background: var(--accent); color: var(--on-accent);
+}
+dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost, .listen-actions button:not(.primary), .pdf-more button, .song-new .sn-gen-btn {
+  background: var(--surface); color: var(--accent);
+}
+.edit-actions button.ghost.danger { border-color: var(--danger-border); color: var(--danger); }
+.edit-btn, .ghost-btn, .admin button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;
+  height: var(--h-btn-sm); padding: 0 14px; border-radius: var(--pill); border: 1px solid var(--accent);
+  font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap;
+  background: var(--accent); color: var(--on-accent); box-shadow: none;
+}
+.edit-btn svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+.ghost-btn, .admin button.adm-del, .admin button.adm-no { background: var(--surface); border-color: var(--danger-border); color: var(--danger); }
+/* fora das linhas densas (lista de utilizadores, barra de aprovação), o botão é o normal de 40 px; «Editar cântico» é secundário */
+.edit-bar .edit-btn, .edit-bar .ghost-btn { height: var(--h-btn); padding: 0 18px; font-weight: 400; font-size: var(--fs-ui); }
+.edit-bar .edit-btn { background: none; color: var(--accent); }
+.edit-bar .ghost-btn { background: none; }
+.listen-actions button { flex: 1; }
+.song-new .sn-gen-btn { flex: 1; }
+.edit-actions button:disabled, .song-new .sn-gen-btn:disabled, .edit-btn:disabled, .ghost-btn:disabled, .admin button:disabled { opacity: .5; }
+
+/* Botões de símbolo: área de toque de 44 × 44 (o desenho pode ser mais pequeno) */
+.search .mic { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -12px -2px 0; display: grid; place-items: center; color: var(--accent); flex: none; }
+.search .clear { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -8px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
+.dlg-x { position: absolute; top: 6px; right: 6px; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: var(--pill); color: var(--text-faint); background: color-mix(in srgb, var(--surface) 90%, transparent); z-index: 1; }
+.up-del { display: inline-grid; place-items: center; min-width: var(--hit); height: var(--hit); padding: 0 4px; border-radius: var(--pill); color: var(--ink-soft); }
+.up-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+.up-del.armed { background: var(--danger); color: var(--on-accent); }
+.mini-btn { flex: none; width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
+.list-title .col-share { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -10px -6px -10px 2px; vertical-align: middle; color: var(--on-brand); }
+.list-title .col-share svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+.pick-star { width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; border: 0; color: var(--accent); }
+dialog form button.perfil-i { width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: var(--pill); background: none; color: var(--accent);
+  font-family: var(--serif); font-weight: 700; font-style: italic; font-size: 24px; line-height: 1; cursor: pointer; }
+dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
+
+/* Botões de texto: cor de destaque */
+.install-line { display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0; background: none; border: 0; box-shadow: none;
+  color: var(--accent); font: 400 var(--fs-ui)/1.3 var(--sans); text-align: left; }
+.revert-link { font-size: var(--fs-small); color: var(--accent); text-decoration: underline; padding: 6px 2px; text-transform: none; letter-spacing: 0; }
+.tour-skip { min-height: var(--hit); background: none; border: 0; border-radius: var(--pill); color: var(--text-faint); font: 400 var(--fs-ui) var(--sans); padding: 0 8px; }
+.tour-n { flex: 1; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-faint); }
+
+/* Linhas de opção (escolhas dentro das janelas) */
+.perfil-opt, .tpl-apply, .col-pick, .perfil-admin, .tpl-edit {
+  box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: 400 var(--fs-ui)/1.35 var(--sans); text-align: left; text-decoration: none; outline: none;
+}
+.perfil-opt, .col-pick, .perfil-admin { display: flex; align-items: center; gap: 12px; }
+.perfil-admin { justify-content: space-between; }
+.tpl-apply { display: block; flex: 1; }
+.tpl-edit { display: inline-flex; align-items: center; flex: none; color: var(--accent); }
+.perfil-opt b, .tpl-apply b, .col-pick span, .perfil-admin, .tpl-edit { font-weight: 700; text-transform: uppercase; letter-spacing: var(--ls-row); }
+.perfil-opt b, .tpl-apply b { display: block; font-size: var(--fs-ui); }
+.perfil-opt small, .tpl-apply small, .col-pick small {
+  display: block; margin-top: 2px; font-size: var(--fs-small); font-weight: 400; line-height: 1.35; color: var(--text-soft); text-transform: none; letter-spacing: 0;
+}
+.perfil-opt svg { width: var(--icon); height: var(--icon); flex: none; color: var(--accent); --ic-bg: var(--surface); }
+.perfil-opt.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.perfil-opt.on svg { --ic-bg: var(--accent); }
+.perfil-opt.on svg, .perfil-opt.on small { color: var(--on-accent); }
+.col-pick input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--light-accent); }
+
+/* "+ novo": tracejado nas janelas; nas listas verdes, o mesmo texto */
+.col-pick-new { display: flex; align-items: center; width: 100%; min-height: var(--hit); margin-top: 4px; padding: 0 14px; border: 1px dashed var(--border-dash);
+  border-radius: var(--radius); background: none; color: var(--accent); text-align: left; }
+.col-pick-new, .rows li.col-add-sec button, .books .col-new, .books .col-new .t { font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
+.rows li.col-add-sec button { width: 100%; min-height: var(--hit); text-align: left; padding: 14px; color: var(--on-brand); }
+.books .col-new { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; color: var(--on-brand); }
+
+/* Etiquetas (Tag): só informação, nunca se tocam — sem contorno, fundo suave da própria cor */
+.src-chip, .lang-chip, .moments {
+  display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-chip); padding: 0 10px; border-radius: var(--pill);
+  background: color-mix(in srgb, currentColor 12%, transparent); color: var(--ink-soft);
+  font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; white-space: nowrap;
+}
+.src-chip.src-coro_clu, .lang-chip { color: var(--accent); }
+
+/* Partitura: ligação em linha (como as gravações), com símbolo */
+.scores { display: flex; flex-wrap: wrap; gap: 0 18px; margin: -.8em 0 .8em; }
+.pdf { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit); color: var(--accent); font: 400 var(--fs-ui)/1.2 var(--sans); text-decoration: none; }
+.pdf-ic { width: var(--icon-sm); height: var(--icon-sm); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linejoin: round; }
+
+/* Interruptor (Switch): linha com o nome e o controlo; ligado = destaque */
+.switch-row { display: inline-flex; align-items: center; gap: 10px; min-height: var(--hit); padding: 0 4px; border: 0; background: none;
+  color: var(--text); font: 400 var(--fs-ui)/1 var(--sans); text-transform: none; letter-spacing: 0; }
+.switch { position: relative; flex: none; width: 36px; height: 22px; border-radius: var(--pill); background: var(--border); transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--shadow) 25%, transparent); transition: transform .15s; }
+.switch-row.on .switch { background: var(--accent); }
+.switch-row.on .switch::after { transform: translateX(14px); }
+.switch-row:disabled { opacity: 1; cursor: default; }
+.switch-row.armed { padding: 0 14px; border-radius: var(--pill); }
+
+/* Segmentado: controlo de escolha (idioma do cântico, língua a ouvir) — 32 px, área de toque de 44 */
+.lang-switch, .listen-langs { display: inline-flex; height: var(--h-btn-sm); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); }
+.listen-langs { display: flex; width: fit-content; max-width: 100%; margin: 0 auto 16px; }
+.lang-switch button, .listen-langs button { position: relative; height: 100%; padding: 0 14px; border: 0; border-radius: 0; background: none;
+  color: var(--accent); font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.lang-switch button::after, .listen-langs button::after { content: ""; position: absolute; inset: -6px 0; }
+.lang-switch button:first-child, .listen-langs button:first-child { border-radius: var(--pill) 0 0 var(--pill); }
+.lang-switch button:last-child, .listen-langs button:last-child { border-radius: 0 var(--pill) var(--pill) 0; }
+.lang-switch button.on { background: var(--accent); color: var(--paper); }
+.listen-langs button.on { background: var(--accent); color: var(--on-accent); }
+
+/* Botões pequenos na cor da marca (ações do título da folha): contorno branco, área de toque de 44 */
+.list-title .col-edit { position: relative; display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-btn-sm); padding: 0 14px;
+  border: 1px solid var(--on-brand-outline); border-radius: var(--pill); background: none; color: var(--on-brand);
+  font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; vertical-align: middle; margin-left: 10px; }
+.list-title .col-edit::after { content: ""; position: absolute; inset: -6px 0; }
+
+/* Campos: 44 px, cantos de 10, contorno fino; ao escrever, contorno de destaque */
+.col-field input, .col-field select, #app-dlg-input, .song-new input, .song-new select, .sec-add #sa-q, .sec-add .sa-sec select,
+.admin select, .admin input, .src-row select {
+  box-sizing: border-box; height: var(--h-field); max-width: 100%; padding: 0 12px; margin: 0;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text);
+  font: 400 var(--fs-field) var(--sans); letter-spacing: 0; text-transform: none;
+}
+.col-field input, .col-field select, #app-dlg-input, .song-new .sn-f select, .song-new .sn-f input, .sec-add #sa-q, .sec-add .sa-sec select { width: 100%; }
+.song-new .sn-f select, .song-new .sn-f input { min-width: 0; text-overflow: ellipsis; }
+#app-dlg-input { display: block; margin: 4px 0 14px; }
+#app-dlg-input[hidden] { display: none; }
+.sec-add #sa-q { margin: 4px 0 6px; }
+.sec-add .sa-search #sa-q { margin: 0; padding-left: 40px; }
+.admin select, .admin input { background: var(--paper); color: var(--ink); }
+.col-field textarea, .editor textarea, .song-new textarea {
+  box-sizing: border-box; display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.45 var(--sans); resize: vertical;
+}
+.editor textarea { min-height: 45dvh; font-family: ui-monospace, Menlo, monospace; }
+.song-new textarea { min-height: 220px; }
+:is(.col-field, .song-new, .sec-add, .admin, .src-row) :is(input, select, textarea):focus, #app-dlg-input:focus, .editor textarea:focus {
+  outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent);
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
+.list-title .novos-filtro { display: block; box-sizing: border-box; height: var(--h-btn); max-width: 100%; margin-top: 10px; padding: 0 10px;
+  border: 1px solid var(--on-brand-outline); border-radius: var(--radius); background: color-mix(in srgb, var(--on-brand) 15%, transparent);
+  color: var(--on-brand); font: 400 var(--fs-field) var(--sans); letter-spacing: 0; text-transform: none; }
+.list-title .novos-filtro option { color: var(--text); }
+
+/* Listas em fundo claro: um separador por baixo de cada linha */
+.recs li, .adm-list li, .song-new #sn-flist li, .sec-add #sa-list button { border: 0; border-bottom: 1px solid var(--line); }
+.recs li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 0; border-bottom-color: var(--divider); }
+.adm-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 0; }
+.song-new #sn-flist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; }
+.sec-add #sa-list button { display: grid; width: 100%; text-align: left; padding: 12px 4px; background: none; font: inherit; color: var(--text); }
+.sec-add #sa-list button small { color: var(--text-soft); font-size: var(--fs-small); }
+.adm-who span, .adm-who small, .adm-lock { font-size: var(--fs-small); color: var(--ink-soft); }
+
+/* Etiquetas e textos em maiúsculas (como a página inicial) */
+#sa-list b, .sim-list a, .up-files li span, #sn-flist li span, .mini-info b, .pend-bar p:first-child { text-transform: uppercase; letter-spacing: var(--ls-row); }
+.shared-foot { font-size: var(--fs-caps); font-weight: 700; text-transform: uppercase; letter-spacing: var(--ls-chip); }
+#sa-list small, .sim-list small { text-transform: none; letter-spacing: 0; }
+.pend { display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-chip); margin-left: 8px; padding: 0 10px; border-radius: var(--pill); background: var(--pending-bg); color: var(--pending-ink);
+  font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; vertical-align: middle; }
+.rows .badge { font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); border: 1px solid color-mix(in srgb, var(--on-brand) 50%, transparent);
+  border-radius: var(--pill); padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
+
+/* Foco do teclado: anel na cor de destaque (em vez do do navegador); em fundo de marca, branco */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.topbar :focus-visible, .searchrow > :focus-visible, .rows :focus-visible, .drawer :focus-visible, .list-title :focus-visible { outline-color: var(--on-brand); }
+.list-title .col-meta, .list-title .col-btns { font-family: var(--sans); }
+.search .clear svg, .dlg-x svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
+
+/* Fora da secção COMPONENTES */
+.list-title .list-kicker { display: block; margin-bottom: 4px; font: 700 var(--fs-caps)/1.2 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; }
