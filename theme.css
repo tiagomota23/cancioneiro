@@ -29,6 +29,12 @@
   --h-field: 44px;
   --h-chip: 24px;
   --hit: 44px;                 /* área mínima de toque dos botões de símbolo */
+  --icon: 22px;                /* símbolos nos botões */
+  --icon-sm: 16px;             /* símbolos no meio do texto e nos botões pequenos */
+  --icon-lg: 32px;             /* microfone grande (a ouvir) */
+  --stroke: 1.8;               /* espessura do traço de todos os símbolos */
+  --ls-chip: .08em;            /* espaçamento das maiúsculas: chips, etiquetas e linhas das listas */
+  --ls-row: .05em;             /*   títulos das linhas de opção */
 
   /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
   --brand: #1fb385;
