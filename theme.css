@@ -20,8 +20,8 @@
   --fs-display: 35px;           /* nome da app na capa e na entrada */
 
   /* Espaçamento das maiúsculas, por função */
-  --ls-caps: .12em;             /* cabeçalhos de secção e rótulos de campos */
-  --ls-chip: .08em;             /* chips, etiquetas e títulos das linhas das listas */
+  --ls-caps: .12em;             /* Espaçamento das maiúsculas nos cabeçalhos de secção e rótulos dos campos. */
+  --ls-chip: .08em;             /* espaçamento das maiúsculas: chips, etiquetas e linhas das listas */
   --ls-row: .05em;              /* títulos das linhas de opção */
 
   /* Cantos */
@@ -31,46 +31,38 @@
   --pill: 999px;                /* todos os botões e chips */
 
   /* Alturas e símbolos */
-  --h-btn: 40px;                /* botão normal */
-  --h-btn-sm: 32px;             /* botão pequeno */
-  --h-field: 44px;              /* campo */
-  --h-chip: 24px;               /* chip */
+  --h-btn: 40px;                /* Altura dos botões. */
+  --h-btn-sm: 32px;             /* Altura dos botões pequenos. */
+  --h-field: 44px;              /* Altura dos campos. */
+  --h-chip: 24px;               /* Altura dos chips. */
   --hit: 44px;                  /* área mínima de toque dos botões de símbolo */
   --icon: 22px;                 /* símbolos nos botões */
   --icon-sm: 16px;              /* símbolos no meio do texto e nos botões pequenos */
   --icon-lg: 32px;              /* microfone grande (a ouvir) */
   --stroke: 1.8;                /* espessura do traço de todos os símbolos */
 
-  /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
-  --brand: #1fb385;
-  --brand-deep: #12966a;
+  /* Cores (um par claro/escuro gera --light-… e --dark-…) */
+  --brand: #1fb385;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). */
+  --brand-deep: #12966a;        /* Fim do degradê da marca; títulos das janelas. */
   --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
-  --on-brand-line: color-mix(in srgb, var(--on-brand) 22%, transparent); /* separadores das listas sobre a cor da marca */
-  --on-brand-outline: color-mix(in srgb, var(--on-brand) 70%, transparent); /* contorno de chips e campos sobre a cor da marca */
-
-  /* Destaque: botões, ligações, ícones e acordes sobre fundo claro (nas páginas dos cânticos muda com o modo escuro) */
-  --light-accent: #0e7f58;      /* botões, ligações, ícones; no escuro, mais claro */
-  --dark-accent: #5fcf90;       /* botões, ligações, ícones; no escuro, mais claro */
+  --light-accent: #0e7f58;      /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
+  --dark-accent: #5fcf90;       /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
   --on-accent: #fff;            /* texto sobre botões de destaque, de perigo e avisos escuros */
-
-  /* Páginas dos cânticos — modo claro / modo escuro */
-  --light-paper: #ffffff;       /* fundo */
-  --dark-paper: #121614;        /* fundo */
-  --light-ink: #4a4a4a;         /* letra */
-  --dark-ink: #d8dcd9;          /* letra */
-  --light-ink-soft: #767676;    /* autor, notas, número */
-  --dark-ink-soft: #9aa39e;     /* autor, notas, número */
-  --light-chord: #0e7f58;       /* acordes */
-  --dark-chord: #5fcf90;        /* acordes */
-  --light-title: #333;          /* título do cântico */
-  --dark-title: #eef1ef;        /* título do cântico */
-  --light-pdf-bg: #f2f2f2;      /* fundo à volta das partituras */
-  --dark-pdf-bg: #222;          /* fundo à volta das partituras */
-  --light-pdf-title: #0e7f58;   /* título na barra da partitura */
-  --dark-pdf-title: #eee;       /* título na barra da partitura */
-
-  /* Janelas, cartões e campos (sempre claros) */
-  --surface: #fff;
+  --light-paper: #ffffff;       /* Fundo das páginas dos cânticos. */
+  --dark-paper: #121614;        /* Fundo das páginas dos cânticos. */
+  --light-ink: #4a4a4a;         /* Letra dos cânticos. */
+  --dark-ink: #d8dcd9;          /* Letra dos cânticos. */
+  --light-ink-soft: #767676;    /* Autor, notas e número nas páginas dos cânticos. */
+  --dark-ink-soft: #9aa39e;     /* Autor, notas e número nas páginas dos cânticos. */
+  --light-chord: #0e7f58;       /* Acordes. */
+  --dark-chord: #5fcf90;        /* Acordes. */
+  --light-title: #333;          /* Título do cântico. */
+  --dark-title: #eef1ef;        /* Título do cântico. */
+  --light-pdf-bg: #f2f2f2;      /* Fundo à volta das partituras. */
+  --dark-pdf-bg: #222;          /* Fundo à volta das partituras. */
+  --light-pdf-title: #0e7f58;   /* Título na barra da partitura. */
+  --dark-pdf-title: #eee;       /* Título na barra da partitura. */
+  --surface: #fff;              /* surface */
   --text: #333;                 /* texto principal */
   --text-soft: #666;            /* texto secundário */
   --text-faint: #767676;        /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
@@ -80,22 +72,24 @@
   --divider: rgba(128,128,128,.2); /* separadores nas páginas dos cânticos (servem em claro e escuro) */
   --chip-bg: #e8e8e8;           /* letras do índice A–Z, barra de progresso */
   --tint: #e3f5ec;              /* realce de destaque suave */
-  --tint-soft: #f3faf7;
+  --tint-soft: #f3faf7;         /* Realce de destaque muito suave. */
   --meter-idle: #cfd8d4;        /* barras do microfone em silêncio */
   --shadow: #000;               /* sombras e véus escuros (usado com transparência) */
-  --scrim: color-mix(in srgb, var(--shadow) 45%, transparent); /* véu por trás das janelas */
-  --toast-bg: rgba(20,20,20,.88); /* Estados */
-
-  /* Estados */
+  --toast-bg: rgba(20,20,20,.88); /* toast-bg */
   --star: #e3a008;              /* preferido */
   --danger: #c0392b;            /* apagar, erro */
-  --danger-deep: #8e1f14;       /* apagar: confirmar */
-  --danger-border: #e3b3ad;
+  --danger-deep: #8e1f14;       /* Apagar: botão de confirmação. */
+  --danger-border: #e3b3ad;     /* Contorno dos botões de perigo. */
   --pending-bg: #f3c969;        /* etiqueta "por aprovar" */
-  --pending-ink: #4a3800;
+  --pending-ink: #4a3800;       /* Texto da etiqueta «por aprovar». */
   --warn-bg: #fff8e3;           /* caixa de aviso */
-  --warn-border: #f0d58a;
-  --warn-ink: #5a4600;
-  --warn-strong: #8a5a00;
-  --warn-soft: #8a6d00;
+  --warn-border: #f0d58a;       /* Contorno da caixa de aviso. */
+  --warn-ink: #5a4600;          /* Texto da caixa de aviso. */
+  --warn-strong: #8a5a00;       /* Destaque forte na caixa de aviso. */
+  --warn-soft: #8a6d00;         /* Texto secundário na caixa de aviso. */
+
+  /* Opacidades derivadas */
+  --on-brand-line: color-mix(in srgb, var(--on-brand) 22%, transparent); /* Separadores das linhas sobre a cor da marca: on-brand a esta opacidade (hoje --row-line em styles.css). */
+  --on-brand-outline: color-mix(in srgb, var(--on-brand) 70%, transparent); /* Contorno de chips e seletores sobre a cor da marca: on-brand a esta opacidade. */
+  --scrim: color-mix(in srgb, var(--shadow) 45%, transparent); /* Véu por trás das janelas e do ecrã de ouvir: shadow a esta opacidade. */
 }

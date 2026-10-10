@@ -10,28 +10,41 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const TOKENS = path.join(ROOT, 'design/tokens.json');
 const OUT = path.join(ROOT, 'theme.css');
-const FAMILIES = ['type', 'tracking', 'radius', 'size', 'color'];
 const USES = ['styles.css', 'admin.html', 'drive.html', 'privacidade.html'];
+// opacidades derivadas: a cor de base de cada uma (o token pode trazer "base"; senão, esta tabela)
+const ALPHA_BASE = { 'on-brand-line': 'on-brand', 'on-brand-outline': 'on-brand', scrim: 'shadow' };
 
 const doc = JSON.parse(fs.readFileSync(TOKENS, 'utf8'));
 const errors = [];
-const vars = []; // [{family, group, name, value, usage}]
-for (const fam of FAMILIES) {
-  const list = doc[fam]?.tokens;
-  if (!Array.isArray(list)) { errors.push(`família «${fam}» em falta`); continue; }
-  const themes = doc[fam].themes || [];
-  for (const t of list) {
-    if (!/^[a-z][a-z0-9-]*$/.test(t.name || '')) { errors.push(`${fam}: nome inválido «${t.name}»`); continue; }
-    if (t.value && typeof t.value === 'object') { // par claro/escuro → --light-<nome> e --dark-<nome>
-      for (const th of themes) {
-        const v = t.value[th];
-        if (typeof v !== 'string' || !v.trim()) errors.push(`${fam}: «${t.name}» sem valor para ${th}`);
-        else vars.push({ family: fam, group: t.group, name: `${th}-${t.name}`, value: v.trim(), usage: t.usage });
-      }
-    } else if (typeof t.value === 'string' && t.value.trim()) vars.push({ family: fam, group: t.group, name: t.name, value: t.value.trim(), usage: t.usage });
-    else errors.push(`${fam}: «${t.name}» sem valor`);
-    for (const v of typeof t.value === 'object' && t.value ? Object.values(t.value) : [t.value]) if (/[;{}]/.test(String(v))) errors.push(`${fam}: «${t.name}» tem ; { ou } no valor`);
-  }
+const vars = []; // [{group, name, value, usage}] pela ordem em que ficam em theme.css
+const add = (group, name, value, usage) => {
+  if (!/^[a-z][a-z0-9-]*$/.test(name || '')) return errors.push(`nome inválido «${name}»`);
+  if (typeof value !== 'string' || !value.trim()) return errors.push(`«${name}» sem valor`);
+  if (/[;{}]/.test(value)) return errors.push(`«${name}» tem ; { ou } no valor`);
+  vars.push({ group, name, value: value.trim(), usage });
+};
+const list = (fam) => { const l = doc[fam]?.tokens; if (!Array.isArray(l)) errors.push(`família «${fam}» em falta`); return l || []; };
+
+// letra: famílias e escala de tamanhos
+const ty = doc.type || {};
+for (const [k, v] of Object.entries(ty.families || {})) add('Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço)', k, v, k === 'serif' ? 'títulos, capa, nome da app' : 'tudo o resto');
+for (const g of ty.groups || []) for (const st of g.styles || []) add('Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700', st.name, st.fontSize, st.usage);
+if (!ty.families || !ty.groups) errors.push('família «type» incompleta (families, groups)');
+for (const t of list('tracking')) add('Espaçamento das maiúsculas, por função', t.name, t.value, t.usage);
+for (const t of list('radius')) add('Cantos', t.name, t.value, t.usage);
+for (const t of list('size')) add('Alturas e símbolos', t.name, t.value, t.usage);
+// cores: um par {claro, escuro} gera --light-<nome> e --dark-<nome>
+const themes = (doc.color?.themes || []).map(th => typeof th === 'string' ? th : th.id);
+for (const t of list('color')) {
+  if (t.value && typeof t.value === 'object') for (const th of themes) add('Cores (um par claro/escuro gera --light-… e --dark-…)', `${th}-${t.name}`, t.value[th], t.usage);
+  else add('Cores (um par claro/escuro gera --light-… e --dark-…)', t.name, t.value, t.usage);
+}
+// opacidades: cor de base a esta percentagem (muda sozinha se a base mudar)
+for (const t of list('alpha')) {
+  const base = t.base || ALPHA_BASE[t.name];
+  if (!base) { errors.push(`opacidade «${t.name}» sem cor de base`); continue; }
+  if (!/^\d+(\.\d+)?%$/.test(String(t.value).trim())) { errors.push(`opacidade «${t.name}»: valor tem de ser uma percentagem`); continue; }
+  add('Opacidades derivadas', t.name, `color-mix(in srgb, var(--${base}) ${String(t.value).trim()}, transparent)`, t.usage);
 }
 const seen = new Set();
 for (const v of vars) { if (seen.has(v.name)) errors.push(`nome repetido: --${v.name}`); seen.add(v.name); }
