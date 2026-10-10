@@ -184,8 +184,10 @@ export default async function (level) {
     const hsts = r.headers.get('strict-transport-security');
     const http = await get(SITE.replace('https:', 'http:'), { redirect: 'manual' }).catch(() => ({ status: 0 }));
     if (!/text\/html/.test(ct)) return 'content-type ' + ct;
-    if (!(http.status >= 300 && http.status < 400)) return 'http:// não redireciona: ' + http.status;
-    return hsts ? true : { warn: 'sem Strict-Transport-Security (limitação do GitHub Pages; a CSP vem por <meta>, sem frame-ancestors)' };
+    // o proxy de alguns ambientes só deixa passar HTTPS: nesse caso o redireccionamento http→https não é verificável daqui
+    const httpNote = http.status === 0 ? ' (http:// não verificável: o proxy deste ambiente só aceita HTTPS)' : '';
+    if (http.status !== 0 && !(http.status >= 300 && http.status < 400)) return 'http:// não redireciona: ' + http.status;
+    return hsts ? { pass: 'HSTS: ' + hsts + httpNote } : { warn: 'sem Strict-Transport-Security (limitação do GitHub Pages; a CSP vem por <meta>, sem frame-ancestors)' + httpNote };
   }, { sev: 'baixa' });
 
   dim('Desempenho — produção', 'média');

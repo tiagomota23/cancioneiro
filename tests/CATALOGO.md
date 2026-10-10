@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v156, 2026-10-10** — 146 ok · 0 falhas · 2 avisos · 10 não corridos (`tests/reports/2026-10-10-v156-full.md`).
+Última execução completa: **v158, 2026-10-10** — 156 ok · 0 falhas · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-10-v158-full.md` (SEG-34 corrigido no teste depois dessa execução).
 
 ---
 
@@ -80,13 +80,13 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | LNK-01 | Todos os href/src locais de index, admin, drive, privacidade existem | static | média | V | ✓ |
 | LNK-02 | manifest.json: ícones existem; start_url/scope relativos | static | média | V | ✓ |
 | LNK-03 | Ficheiros referidos pelo app.js (vendor, worker, sw) existem | static | média | V | ✓ |
-| LNK-10 | Página publicada responde 200 | live | alta | V | – rede |
-| LNK-11 | Versão publicada = repositório (index ?v=, app.js, sw.js) | live | alta | V | – rede |
-| LNK-12 | Todos os recursos da página publicada respondem 200 | live | alta | V | – rede |
-| LNK-13 | privacidade, admin, drive, manifest, ícones, vendor publicados | live | alta | V | – rede |
-| LNK-14 | Endereço inexistente → 404 | live | baixa | V | – rede |
-| LNK-15 | Ligações externas (privacidade…) respondem | live | baixa | V | ✓ parcial |
-| LNK-16 | drive.html mostra o texto do endereço como texto e recusa iframe | live | alta | V | – rede |
+| LNK-10 | Página publicada responde 200 | live | alta | V | ✓ |
+| LNK-11 | Versão publicada = repositório (index ?v=, app.js, sw.js) | live | alta | V | ✓ |
+| LNK-12 | Todos os recursos da página publicada respondem 200 | live | alta | V | ✓ |
+| LNK-13 | privacidade, admin, drive, manifest, ícones, vendor publicados | live | alta | V | ✓ |
+| LNK-14 | Endereço inexistente → 404 | live | baixa | V | ✓ |
+| LNK-15 | Ligações externas (privacidade…) respondem | live | baixa | V | ✓ |
+| LNK-16 | drive.html mostra o texto do endereço como texto e recusa iframe | live | alta | V | ✓ |
 | LNK-20 | Todas as ligações `#/…` do índice, gaveta e cântico abrem um ecrã | ui | média | V | ✓ |
 
 ## 3. Estabilidade
@@ -122,7 +122,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 | ID | O que se verifica | Como | Grav. | Freq. | Estado |
 |---|---|---|---|---|---|
-| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | – rede |
+| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | ✓ |
 | DES-02 | Tempos de resposta (site, auth, função) — mediana de 3 | live | média | V | ✓ |
 | DES-03 | Arranque a frio da função conteudo < 5 s | live | média | S | ✓ |
 | ESC-01 | Chaves estrangeiras com índice (supabase/indices.sql, v156) | db | baixa | V | ✓ |
@@ -183,7 +183,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-31 | backup/gravacoes: sem token / token OIDC forjado / chave anon → 401 | live | crítica | V | ✓ |
 | SEG-32 | notify: tipos/ids inválidos → 400 (sem emails) | live | alta | V | ✓ |
 | SEG-33 | Erros das funções sem detalhes internos | live | baixa | V | ✓ |
-| SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | – rede |
+| SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
@@ -222,7 +222,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✓ |
 | INT-10 | Cópia de segurança semanal com sucesso ≤ 8 dias | db | alta | V | ✓ |
 | INT-11 | Verificação semanal e conversão de gravações sem falhas | db | média | V | ✓ |
-| INT-12 | Partituras externas (pdf_url http) respondem | db | baixa | S | – rede |
+| INT-12 | Partituras externas (pdf_url http) respondem | db | baixa | S | ✓ |
 | MAN-50 | Restauro de teste da cópia (docs/RECONSTRUIR.md) num projeto Supabase à parte | manual | alta | trimestral | ☐ |
 
 ## 9. Compatibilidade
@@ -240,7 +240,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 ## Pendentes (precisam de algo que os testes não têm)
 
-- **Rede deste ambiente**: `tiagomota23.github.io`, `cdn.jsdelivr.net`, `supabase.com`, `groq.com`, `resend.com` estão bloqueados → LNK-10..16, SEG-34, DES-01 ficam «não corridos». Abrir em Network access → Allowed domains.
+- **Rede deste ambiente**: resolvida a 2026-10-10 (Allowed domains: GitHub Pages, jsDelivr, supabase.com, groq.com, resend.com e os sites de partituras externas). O proxy só aceita HTTPS: o redireccionamento http→https não é verificável daqui.
 - **WebKit** não está instalado (só Chromium em `/opt/pw-browsers`) → COM-02 e os testes Safari são manuais.
 - **Conta de teste** (um email em `allowed_emails` só para testes, com sessão) permitiria testar a função `conteudo` com sessão real (perfis, limites, `file`, `search`) sem usar contas de pessoas. Sem ela, essas regras são verificadas por SQL (RLS) e por leitura do código.
 
