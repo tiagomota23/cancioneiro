@@ -55,6 +55,29 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
 9. **Sessões do Claude:** recriar o ambiente e as quatro sessões (webapp, design, testes, backup) com `ambiente/AMBIENTE.md`
    e as instruções em `ambiente/` (as mesmas que `docs/AMBIENTE.md` e `docs/sessoes/` no repositório).
 
+## Configuração que não está no repositório nem na cópia
+Registo do que está configurado à mão (outubro 2026). Os valores secretos não estão aqui: recriam-se.
+- **Supabase Auth:** Site URL `https://tiagomota23.github.io/cancioneiro/`; lista de redireccionamentos só com esse endereço.
+  Só o login Google (email, telefone e anónimo desligados); `disable_signup` = false (o acesso é controlado por allowed_emails).
+  jwt_exp 3600, sem limite de sessão nem de inatividade. Modelos de email por omissão (não usados), sem SMTP próprio.
+- **Segredos das funções:** `GROQ_API_KEY`, `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth do Drive).
+  Os SUPABASE_* são postos pelo próprio Supabase.
+- **Funções e verify_jwt:** transcribe false, sync-songs **true**, notify **true**, drive-auth false, drive-sync false,
+  conteudo false, gravacoes false, backup false. (Em 10/out/2026 as publicadas coincidiam com `supabase/functions/` em main.)
+- **Google Cloud, dois clientes OAuth (Web):**
+  (a) login: id `627200817574-ht0695cvjhn96rrogggk14u6fdktvs33.apps.googleusercontent.com`, redirect
+  `https://<ref>.supabase.co/auth/v1/callback`, segredo guardado no Supabase (Auth → Google);
+  (b) Drive: `GOOGLE_CLIENT_ID/SECRET`, redirect `https://<ref>.supabase.co/functions/v1/drive-auth`; âmbitos drive.readonly
+  (Drive do Coro, tiago.mota@gmail.com) e drive.file (destino da cópia). Os refresh tokens ficam em drive_state
+  (`google`, `backup_google`) e refazem-se com o passo 7.
+  Nome do projeto Google Cloud, estado do ecrã de consentimento e utilizadores de teste: (a confirmar com o Tiago).
+- **GitHub Pages:** ramo main, raiz, sem domínio próprio (`https://tiagomota23.github.io/cancioneiro/`).
+- **Resend:** remetente `Cancioneiro <onboarding@resend.dev>` (domínio de teste da Resend: só entrega ao dono da conta,
+  tiago.mota@gmail.com). Sem domínio verificado.
+- **Groq:** modelo whisper-large-v3-turbo (api.groq.com/openai/v1); limites na app de 150/h e 600/dia por utilizador.
+- **pg_cron e bucket `coro`:** estão em esquema.sql.
+- **Ambiente de desenvolvimento (sessões do Claude):** ver AMBIENTE.md.
+
 ## Se só a app ou só uma parte se perdeu
 - Só as sessões do Claude (ou os artefactos de design): passo 9.
 - Só o GitHub: passo 1 (o Supabase continua a funcionar; confirme que o endereço da app é o mesmo).
