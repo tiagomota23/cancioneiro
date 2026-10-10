@@ -39,7 +39,11 @@ A Action «Cópia de segurança» (GitHub, segunda 07:30 UTC) e as outras Action
 - **Cancioneiro** (tipo Design System): https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC
 - **Cancioneiro — mapa da app** (tipo Design): https://claude.ai/artifact/XSy9co1TGzzPDxUGSzjgxT
 
-As fontes de ambos estão no repositório (ver docs/sessoes/design.md); se se perderem, a sessão design reconstrói-os a partir dele.
+Fontes no repositório (a design publica só a partir delas e faz commit depois de cada publicação):
+`design/artefactos/sistema/project/` (gerado por tools/screens/design-system.mjs a partir de design/tokens.json e styles.css) e
+`design/artefactos/mapa/project/` (*.dc.html, canvas.json). As cerca de 700 imagens do mapa não se guardam: regeneram-se com
+os scripts de tools/screens/ e voltam a ligar-se com religar-blobs.mjs (ids em design/artefactos/*/blobs*). Procedimento
+completo em docs/sessoes/design.md.
 
 ## 5. Recriar tudo do zero
 1. Reconstruir a app e os dados (RECONSTRUIR.md). No fim o repositório está no GitHub com todos os ramos.
