@@ -839,4 +839,4 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .search:focus-within { box-shadow: 0 0 0 2px var(--accent), 0 2px 10px color-mix(in srgb, var(--shadow) 12%, transparent); }
 /* nome do utilizador que se pode mudar (Gestão): área de toque de 44 px sem mudar o desenho */
 .adm-name[role=button] { position: relative; }
-.adm-name[role=button]::after { content: ""; position: absolute; inset: -12px 0; }
+.adm-name[role=button]::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--hit); transform: translateY(-50%); }
