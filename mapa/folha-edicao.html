@@ -951,8 +951,32 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .topbar :focus-visible, .searchrow > :focus-visible, .rows :focus-visible, .drawer :focus-visible, .list-title :focus-visible { outline-color: var(--on-brand); }
 .list-title .col-meta, .list-title .col-btns { font-family: var(--sans); }
 .search .clear svg, .dlg-x svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
+/* caixa de procura: anel de foco visível (o campo em si não tem contorno) */
+.search:focus-within { box-shadow: 0 0 0 2px var(--accent), 0 2px 10px color-mix(in srgb, var(--shadow) 12%, transparent); }
+/* nome do utilizador que se pode mudar (Gestão): área de toque de 44 px sem mudar o desenho */
+.adm-name[role=button] { position: relative; }
+.adm-name[role=button]::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--hit); transform: translateY(-50%); }
+
+/* Folha em edição (Maestro / Gestor): fundo branco; a barra de cima e a procura continuam verdes */
+body.col-editing::before { background: var(--surface); }
+body.col-editing .topbar { background: var(--brand); box-shadow: 0 0 0 100vmax var(--brand); clip-path: inset(0 -100vmax); }
+body.col-editing #view-list { color: var(--text); }
+body.col-editing .list-title, body.col-editing .list-title .col-meta { color: var(--brand-deep); }
+body.col-editing .list-title .col-share { color: var(--accent); }
+body.col-editing .list-title .col-edit { color: var(--accent); border-color: var(--accent); }
+body.col-editing .list-title .col-edit.col-publish { background: var(--accent); color: var(--on-accent); }
+body.col-editing .rows li a { color: var(--text); border-bottom-color: var(--line); }
+body.col-editing .rows li a:active { background: var(--tint-soft); }
+body.col-editing .rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); }
+body.col-editing .rows .chev { color: var(--text-faint); opacity: 1; }
+body.col-editing .status { color: var(--text-soft); }
+/* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
+.rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
+  font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
+.rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
+body.col-editing #view-list .shared-foot { color: var(--text-soft); }
 </style></head>
-<body class="perfil-gestor">
+<body class="perfil-gestor col-editing">
   <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste</p></div></div>
 
   <!-- Entrada (Google) -->
@@ -992,8 +1016,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button><button class="col-edit" id="col-addsong">+ Cântico</button></span><small class="col-meta">Coro · até 17/10/2026 13:43</small></h2>
-    <ul class="rows" id="rows"><li class="col-sec swipe sec4" data-key="sec:s1"><div class="sw-actions"><button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button><button data-a="up" aria-label="Subir" disabled="">⇈</button><button data-a="down" aria-label="Descer">⇊</button><button data-a="del" class="sw-del" aria-label="Apagar secção"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#" class="sec-line" role="button" title="Mudar o nome">Entrada</a></li><li class="swipe open" data-key="veni_creator_spiritus"><div class="sw-actions"><button data-a="up" aria-label="Subir">↑</button><button data-a="down" aria-label="Descer">↓</button><button data-a="del" class="sw-del" aria-label="Remover da folha"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec swipe sec4" data-key="sec:s2"><div class="sw-actions"><button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button><button data-a="up" aria-label="Subir">⇈</button><button data-a="down" aria-label="Descer">⇊</button><button data-a="del" class="sw-del" aria-label="Apagar secção"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#" class="sec-line" role="button" title="Mudar o nome">Comunhão</a></li><li class="swipe" data-key="adoro_te_devote"><div class="sw-actions"><button data-a="up" aria-label="Subir">↑</button><button data-a="down" aria-label="Descer">↓</button><button data-a="del" class="sw-del" aria-label="Remover da folha"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li class="swipe" data-key="ave_verum_corpus"><div class="sw-actions"><button data-a="up" aria-label="Subir">↑</button><button data-a="down" aria-label="Descer">↓</button><button data-a="del" class="sw-del" aria-label="Remover da folha"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec swipe sec4" data-key="sec:s3"><div class="sw-actions"><button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button><button data-a="up" aria-label="Subir">⇈</button><button data-a="down" aria-label="Descer">⇊</button><button data-a="del" class="sw-del" aria-label="Apagar secção"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#" class="sec-line" role="button" title="Mudar o nome">Nossa Senhora</a></li><li class="swipe" data-key="salve_regina"><div class="sw-actions"><button data-a="up" aria-label="Subir">↑</button><button data-a="down" aria-label="Descer" disabled="">↓</button><button data-a="del" class="sw-del" aria-label="Remover da folha"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"></path></svg></button></div><button class="sw-more" aria-label="Opções">⋯</button><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li></ul>
+    <h2 class="list-title" id="list-title">Missa de domingo<span class="col-btns"><button class="col-edit col-publish" id="col-mode">Publicar</button><button class="col-edit" id="col-set">Definições</button></span><small class="col-meta">Em edição — só os Maestros veem esta folha · Coro · até 18/10/2026 00:29</small></h2>
+    <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s1">Entrada</a></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s2">Comunhão</a></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s3">Nossa Senhora</a></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
     <p class="status" id="status"></p>
   </section>
 
@@ -1092,7 +1116,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v155</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v160</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1106,6 +1130,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off" style=""></label>
     <label class="col-field">Público<select id="col-aud"><option value="coro">Coro</option><option value="cancioneiro">Cancioneiro</option></select></label>
     <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
+    <label class="col-field" id="col-tpl-field" hidden="">Template<select id="col-tpl-sel"></select></label>
     <p class="small" id="col-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="col-del" class="ghost danger">Apagar</button><span></span><button type="button" id="col-cancel" class="ghost">Cancelar</button><button type="button" id="col-save">Guardar</button></div>
   </dialog>
@@ -1119,7 +1144,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <!-- Templates de secções (Maestro) -->
   <dialog id="tpl-dlg" class="col-dlg">
     <h2 tabindex="-1" autofocus="">Templates</h2>
-    <p class="small">Toque num template para acrescentar as suas secções no fim da folha.</p>
+    <p class="small" id="tpl-hint">Toque num template para acrescentar as suas secções no fim da folha.</p>
     <div id="tpl-list" class="col-pick-list"></div>
     <form method="dialog" class="info-actions"><span></span><button type="button" id="tpl-close">Fechar</button></form>
   </dialog>
@@ -1209,4 +1234,4 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   
 
 
-</body></html>
+<div class="toast" role="status">Folha em edição — escondida até a publicar</div></body></html>

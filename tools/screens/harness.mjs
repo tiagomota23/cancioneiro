@@ -61,7 +61,6 @@ const BASE = `http://localhost:${server.address().port}/`;
 // ---------- ecrãs ----------
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
 const click = (page, sel) => page.locator(sel).first().click();
-const swipeLeft = (page, sel) => page.evaluate(s => { const el = document.querySelector(s); el && el.classList.add('sw-open'); }, sel);
 const demoCols = () => {
   const exp = new Date(Date.now() + 7 * 864e5).toISOString();
   return [{ id: 'demo1', title: 'Missa de domingo', audience: 'coro', duration: '1w', expires_at: exp, created_by: 'demo@localhost',
@@ -86,7 +85,7 @@ export const SCREENS = [
   { id: 'info', group: 'Navegação', title: 'ⓘ Informação', perfil: 'cancioneiro', act: async p => { await click(p, '#btn-perfil'); await sleep(500); } },
   { id: 'tutorial', group: 'Navegação', title: 'Tutorial (1.º passo)', tour: true, act: async () => { await sleep(1200); } },
   { id: 'folha', group: 'Folhas', title: 'Folha com secções', hash: '#/lista/colecao-demo1', full: true },
-  { id: 'folha-acoes', group: 'Folhas', title: 'Folha — remover / subir / descer', hash: '#/lista/colecao-demo1', act: async p => { await p.evaluate(() => document.querySelectorAll('#rows li.swipe')[1]?.classList.add('open')); await sleep(300); } },
+  { id: 'folha-edicao', group: 'Folhas', title: 'Folha em edição', hash: '#/lista/colecao-demo1', act: async p => { await p.locator('#col-mode').first().click(); await sleep(2300); } },
   { id: 'folha-nova', group: 'Folhas', title: 'Nova folha', act: async p => { await click(p, '#btn-menu'); await sleep(500); await click(p, '.col-new'); await sleep(500); } },
   { id: 'folha-adicionar', group: 'Folhas', title: 'Adicionar a uma folha', hash: '#/cantico/amazing_grace', act: async p => { await click(p, '#btn-fav'); await sleep(600); } },
   { id: 'cantico-acordes', group: 'Cântico', title: 'Cântico com acordes', hash: '#/cantico/amazing_grace', full: true },
