@@ -837,3 +837,6 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .search .clear svg, .dlg-x svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
 /* caixa de procura: anel de foco visível (o campo em si não tem contorno) */
 .search:focus-within { box-shadow: 0 0 0 2px var(--accent), 0 2px 10px color-mix(in srgb, var(--shadow) 12%, transparent); }
+/* nome do utilizador que se pode mudar (Gestão): área de toque de 44 px sem mudar o desenho */
+.adm-name[role=button] { position: relative; }
+.adm-name[role=button]::after { content: ""; position: absolute; inset: -12px 0; }
