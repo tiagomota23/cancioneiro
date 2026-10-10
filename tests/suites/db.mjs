@@ -93,6 +93,7 @@ export default async function (level) {
   });
   await t('DB-RLS-09', 'Coleções: Coro não vê coleção expirada; Cancioneiro não vê coleção do Coro; Cancioneiro vê cântico de coleção ativa para o Cancioneiro', async () => {
     const setup = `insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0a1','t','coro','24h', now() - interval '1 hour'), ('00000000-0000-4000-8000-00000000c0a2','t','coro','24h', now() + interval '1 day'), ('00000000-0000-4000-8000-00000000c0a3','t','cancioneiro','24h', now() + interval '1 day');
+      update public.collections set published = true where id in ('00000000-0000-4000-8000-00000000c0a1','00000000-0000-4000-8000-00000000c0a2','00000000-0000-4000-8000-00000000c0a3');
       insert into public.collection_songs (collection_id, song_slug) values ('00000000-0000-4000-8000-00000000c0a3', (select slug from public.songs where not cancioneiro and approved order by slug limit 1));`;
     const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text, true); set local role authenticated;
       select (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a1')::int expirada, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a2')::int coro, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a3')::int canc,
@@ -103,6 +104,21 @@ export default async function (level) {
     if (ca.coro) bad.push('Cancioneiro vê coleção do Coro'); if (!ca.canc || !ca.cantico) bad.push('Cancioneiro não vê a coleção / cântico da coleção');
     if (!ma.expirada) bad.push('Maestro não vê expirada (para renovar)');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify({ co, ca, ma }) } : true;
+  });
+  await t('DB-RLS-11', 'Folhas por publicar (published=false): invisíveis a Coro e Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro/Gestor; novas começam por publicar', async () => {
+    const setup = `insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0c1','t','cancioneiro','24h', now() + interval '1 day');
+      insert into public.collection_songs (collection_id, song_slug) values ('00000000-0000-4000-8000-00000000c0c1', (select slug from public.songs where not cancioneiro and approved order by slug limit 1));`;
+    const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text, true); set local role authenticated;
+      select (select published from public.collections where id='00000000-0000-4000-8000-00000000c0c1') pub, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0c1')::int col,
+        (select count(*) from public.collection_songs where collection_id='00000000-0000-4000-8000-00000000c0c1')::int cs,
+        (select count(*) from public.songs where slug=(select song_slug from public.collection_songs where collection_id='00000000-0000-4000-8000-00000000c0c1'))::int cantico; rollback;`;
+    const r = {}; for (const w of ['cancioneiro', 'coro', 'maestro', 'gestor']) [r[w]] = await sql(q(w));
+    const bad = [];
+    if (r.cancioneiro.col || r.cancioneiro.cantico) bad.push('Cancioneiro vê a folha ou o cântico dela');
+    if (r.coro.col || r.coro.cs) bad.push('Coro vê a folha por publicar');
+    if (!r.maestro.col || !r.gestor.col) bad.push('Maestro/Gestor não veem a folha por publicar');
+    if (r.maestro.pub !== false) bad.push('nova folha não começa por publicar (published=' + r.maestro.pub + ')');
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : true;
   });
   await t('DB-RLS-10', 'Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
     try {
