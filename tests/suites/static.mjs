@@ -157,6 +157,15 @@ export default async function (level) {
     return /lyrics: noChords\(s\.eff\)/.test(m[0]) || 'letra sem noChords';
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (op shared)' });
 
+  await t('SEG-12', 'conteudo: folha por publicar → endereço partilhado «expirado», share 409, e não conta para o Cancioneiro (colSet)', () => {
+    const c = read('supabase/functions/conteudo/index.ts');
+    const bad = [];
+    if (!/sh\.collection_id && \(!col \|\| col\.published === false\)/.test(c)) bad.push('shared não recusa folha por publicar');
+    if (!/col\.published === false\) return out\([^)]*409\)/.test(c)) bad.push('share não devolve 409');
+    if (!/collections\.published=is\.true/.test(c)) bad.push('colSet não filtra published');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
+
   dim('Usabilidade — padrão de design', 'baixa');
   await t('USA-01', 'theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)', () => {
     try { execFileSync(process.execPath, ['tools/theme/build.mjs', '--check'], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }); return true; }
