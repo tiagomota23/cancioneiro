@@ -36,8 +36,8 @@
  },
  "lastChange": {
   "by": "Tiago",
-  "at": "2026-10-10T09:13:13Z",
-  "via": "GitHub · tiagomota23/cancioneiro (v152)",
-  "note": "Antetítulo das categorias (.list-kicker) no cartão Títulos."
+  "at": "2026-10-10T12:50:00Z",
+  "via": "GitHub · tiagomota23/cancioneiro (v155)",
+  "note": "Títulos de secção em serif (opção B): token fs-section 19px; cartões Títulos e Listas."
  }
 }

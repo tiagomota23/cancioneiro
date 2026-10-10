@@ -20,10 +20,10 @@ Nomes: cada token tem o nome da variável CSS sem «--». Um par claro/escuro ge
 
 ## Letra
 
-Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (Lato) em tudo o resto. Seis tamanhos — `fs-caps` 11px, `fs-small` 13px, `fs-ui` 15px, `fs-field` 16px, `fs-title` 22px, `fs-display` 35px — e pesos 400 e 700.
+Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (Lato) em tudo o resto. Sete tamanhos — `fs-caps` 11px, `fs-small` 13px, `fs-ui` 15px, `fs-field` 16px, `fs-section` 19px, `fs-title` 22px, `fs-display` 35px — e pesos 400 e 700.
 
 - Títulos: serif 400, `fs-title`, maiúsculas, .06em. Nome da app na capa: `fs-display`, .14em.
-- Maiúsculas, um espaçamento por função: `ls-caps` .12em · `ls-chip` .08em · `ls-row` .05em. Títulos de linhas de opção `ls-row`; chips, etiquetas e linhas das listas verdes `ls-chip`; cabeçalhos de secção e rótulos `ls-caps`.
+- Maiúsculas, um espaçamento por função: `ls-caps` .12em · `ls-chip` .08em · `ls-row` .05em. Títulos de linhas de opção `ls-row`; títulos de secção (serif, `fs-section`), chips, etiquetas e linhas das listas verdes `ls-chip`; rótulos dos campos e antetítulos `ls-caps`.
 - Botões nunca em maiúsculas.
 
 ## Cor

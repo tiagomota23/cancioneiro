@@ -35,6 +35,7 @@ const rule = (n, title, text) => `<div style="display: flex; gap: 14px"><span st
 const typeRows = [
   ['--fs-display', SERIF, 400, 'none', '.14em', 'CANCIONEIRO', 'Nome da app — só na capa (splash) e na entrada'],
   ['--fs-title', SERIF, 400, 'uppercase', '.06em', 'Nova folha', 'Títulos de janelas e de páginas; nome da app na barra de topo'],
+  ['--fs-section', SERIF, 400, 'uppercase', 'var(--ls-chip)', 'Coro', 'Títulos de secção nas listas verdes (página inicial, folhas, menu), com traço por baixo'],
   ['--fs-field', SANS, 400, 'none', '0', 'Amazing Grace', 'Texto escrito nos campos (16 px evita o zoom do iPhone)'],
   ['--fs-ui', SANS, 400, 'none', '0', 'Guardar', 'Botões, linhas de opção, texto das janelas'],
   ['--fs-small', SANS, 400, 'none', '0', 'John Newton (1779) · 27', 'Texto secundário: autores, números, notas, botões pequenos (700)'],
@@ -48,12 +49,12 @@ const typeCard = typeRows.map(([k, fam, w, tr, ls, sample, use]) => {
 ${note(use)}</div>`;
 }).join('');
 const tracking = [
-  ['--ls-caps', 'Cabeçalhos de secção (CORO, ENTRADA), rótulos dos campos, títulos das gravações', 'Cânticos em latim'],
-  ['--ls-chip', 'Chips, etiquetas, títulos das linhas das listas verdes, linhas «+ novo», momentos, rodapé de partilha', 'Songbook, pág. 12'],
+  ['--ls-caps', 'Rótulos dos campos, títulos das gravações', 'Cânticos em latim'],
+  ['--ls-chip', 'Títulos de secção (serif), chips, etiquetas, títulos das linhas das listas verdes, linhas «+ novo», momentos, rodapé de partilha', 'Songbook, pág. 12'],
   ['--ls-row', 'Títulos das linhas de opção, nomes de ficheiros, título da partitura, primeira linha da barra «por aprovar»', 'Copiar endereço'],
 ].map(([k, use, s]) => card(`${label(k + ' · ' + v(k))}<p style="margin: 0; font-family: ${SANS}; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: ${v(k)}; color: #333">${s}</p>${note(use)}`));
 tracking.push(card(`${label('Serif e nome da app')}<p style="margin: 0; font-family: ${SERIF}; font-size: 20px; text-transform: uppercase; letter-spacing: .06em; color: #333">Títulos · .06em</p>${note('Títulos em serif: .06em. O nome da app em tamanho de capa: .14em.')}`));
-const sLetra = section('Letra', `Duas letras: ${tok('--serif')} (Marcellus) só para títulos e para o nome da app; ${tok('--sans')} (Lato) para tudo o resto. Seis tamanhos, pesos 400 e 700. A letra dos cânticos (estrofes, acordes, tamanho A−/A+) fica fora desta escala.`,
+const sLetra = section('Letra', `Duas letras: ${tok('--serif')} (Marcellus) só para títulos e para o nome da app; ${tok('--sans')} (Lato) para tudo o resto. Sete tamanhos, pesos 400 e 700. A letra dos cânticos (estrofes, acordes, tamanho A−/A+) fica fora desta escala.`,
   card(typeCard) + label('Espaçamento das maiúsculas — um valor por função') + grid(4, tracking));
 
 // ---------- 2. Cor ----------
@@ -122,7 +123,7 @@ const sRegras = section('Regras', null, card(rules.map(([t, x], i) => rule(i + 1
 
 // ---------- 6. Exceções documentadas ----------
 const exc = [
-  ['Etiqueta «VERSÃO TESTE»', '9,5 px 700 maiúsculas — a única exceção à escala de seis tamanhos (11 px não cabe no espaço de 44 px).'],
+  ['Etiqueta «VERSÃO TESTE»', '9,5 px 700 maiúsculas — a única exceção à escala de sete tamanhos (11 px não cabe no espaço de 44 px).'],
   ['Botão «Entrar com Google»', 'segue as regras da Google: branco, pílula, 16 px, sombra, «G» de 20 px.'],
   ['Ações de deslizar', 'Subir, Descer, Remover e + nas linhas da folha: quadradas e da altura da linha (≈ 59 px). Ocupam a linha toda, por isso não são pílula nem seguem a regra dos 44 px.'],
   ['Letra dos cânticos', 'estrofes, acordes, tamanho A−/A+ (--fs), peso 300 das estrofes e nota de direitos ficam fora da escala, por desenho.'],

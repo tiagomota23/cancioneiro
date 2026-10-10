@@ -112,7 +112,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 - v149: maiúsculas mantidas; verde da marca mais escuro (opção 3A, #10835c → #0b6b4b); texto sobre a marca sempre opaco.
 - 10 out 2026: títulos de secção nas listas verdes = opção B (Marcellus 19 px, token novo `fs-section`, linha por baixo),
   igual na página inicial, nas folhas e no menu de coleções (títulos novos «Os meus cânticos», «Livros», «Folhas»).
-  Especificação enviada à webapp; por implementar.
+  Implementado na v154. Antetítulo (.list-kicker) fica rótulo pequeno (fs-caps), por estar por cima de um título serif.
 - Quadros de opções ficam no mapa depois de decididos, com a escolhida marcada (`python3 tools/screens/opcoes-estado.py`;
   editar `ESTADO` quando a implementação sair).
 

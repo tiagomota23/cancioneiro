@@ -30,11 +30,12 @@
   --serif: "Marcellus", "Optima", Georgia, serif; /* títulos, capa, nome da app */
   --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif; /* tudo o resto */
 
-  /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
+  /* Escala de letra (fora da letra dos cânticos): só estes tamanhos, pesos 400 e 700 */
   --fs-caps: 11px;              /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
   --fs-small: 13px;             /* texto secundário, botões pequenos, notas */
   --fs-ui: 15px;                /* botões, linhas de opção, texto das janelas */
   --fs-field: 16px;             /* campos (16 evita o zoom do iPhone) */
+  --fs-section: 19px;           /* títulos de secção nas listas verdes (página inicial, folhas, menu) */
   --fs-title: 22px;             /* títulos (letra serif, maiúsculas) */
   --fs-display: 35px;           /* nome da app na capa e na entrada */
 
@@ -762,11 +763,17 @@ dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
 .pdf-title { text-transform: uppercase; letter-spacing: var(--ls-row); }
 
 /* Etiquetas em maiúsculas (cabeçalhos de secção, rótulos de campos) */
-.rows li.cat-head, .rows li.col-sec .sec-line, .recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .sec-add .sa-sec {
+.recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .sec-add .sa-sec {
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase;
 }
-.rows li.cat-head { padding: 20px 14px 6px; color: var(--on-brand); }
-.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: var(--on-brand); text-decoration: none; border-bottom: 0; min-height: 0; }
+/* Títulos de secção nas listas verdes (página inicial, folhas, menu): serif, maiores, com um traço branco por baixo */
+.rows li.cat-head, .rows li.col-sec .sec-line, .az li.cat-head {
+  display: block; padding: 28px 14px 8px; color: var(--on-brand); border-bottom: 1px solid var(--on-brand);
+  font: 400 var(--fs-section)/1.2 var(--serif); letter-spacing: var(--ls-chip); text-transform: uppercase;
+}
+.rows li.col-sec .sec-line { text-decoration: none; min-height: 0; }
+.az li.cat-head { padding-left: 22px; }
+.az li.cat-head:first-child { padding-top: 14px; }
 .recs h2 { color: var(--accent); margin: 0 0 8px; }
 .col-field, .song-new .sn-f, .sec-add .sa-sec { display: grid; gap: 4px; margin: 10px 0; color: var(--text-soft); min-width: 0; }
 .sec-add .sa-sec[hidden] { display: none; }
@@ -1103,7 +1110,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v152</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v155</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

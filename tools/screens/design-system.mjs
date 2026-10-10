@@ -135,15 +135,16 @@ const C = {
 
 - Nas janelas e na gestão: \`--brand-deep\`. Sobre a cor da marca (lista, menu): \`--on-brand\`.
 - O nome da app usa \`--fs-display\` só na capa e na entrada; na barra de topo usa \`--fs-title\`.
-- Marcellus só em títulos e no nome da app — nunca em botões, campos ou listas.
-- Cabeçalhos de secção (CORO, ENTRADA) e rótulos: \`--fs-caps\` 700 maiúsculas \`--ls-caps\`.
-- Antetítulo (\`.list-title .list-kicker\`): o nome da secção por cima do título de uma categoria (ex.: «CANCIONEIRO» / «EM LATIM») — o mesmo estilo dos cabeçalhos de secção (\`--fs-caps\` 700, \`--ls-caps\`, \`--on-brand\` opaco), 4 px acima do título.`,
+- Marcellus só em títulos e no nome da app — nunca em botões, campos ou linhas das listas.
+- Títulos de secção nas listas verdes (CORO, ENTRADA, «Livros» no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, traço \`--on-brand\` por baixo (ver Linhas das listas).
+- Rótulos dos campos: \`--fs-caps\` 700 maiúsculas \`--ls-caps\`.
+- Antetítulo (\`.list-title .list-kicker\`): o nome da secção por cima do título de uma categoria (ex.: «CANCIONEIRO» / «EM LATIM») — rótulo \`--fs-caps\` 700, \`--ls-caps\`, \`--on-brand\` opaco, 4 px acima do título; fica pequeno por estar por cima de um título serif.`,
     html: `<div class="ds col"><dialog open><h2>Nova folha</h2><p class="small">Um mês depois de expirar, a folha é apagada.</p></dialog><div class="brand-bg"><h2 class="list-title" style="margin:0"><small class="list-kicker">Cancioneiro</small>Em latim</h2></div></div>` },
   Listas: { group: 'Listas', h: 220, title: 'Linhas das listas',
     readme: `Linhas das listas.
 
 - Listas verdes (início, menu, folhas): título \`--fs-small\` 400 maiúsculas \`--ls-chip\`; autor (itálico), número, página do livro e notas \`--fs-small\` sem espaçamento; separador \`--on-brand-line\`.
-- Cabeçalho de secção (\`.cat-head\`, \`.sec-line\`): \`--fs-caps\` 700 \`--ls-caps\`, \`--on-brand\` a 75%.
+- Título de secção (\`.rows .cat-head\`, \`.col-sec .sec-line\`, \`.az .cat-head\` no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, espaço 28 px acima e 8 px abaixo, traço de 1 px \`--on-brand\` por baixo. As linhas por baixo ficam em Lato: a diferença de letra separa a secção dos itens. Igual na página inicial, nas folhas e no menu (secções «Os meus cânticos», «Livros», «Folhas»; secções vazias não aparecem).
 - Listas claras (\`.adm-list\`, \`#sn-flist\`, \`#sa-list\`): separador só em baixo, \`--line\`, espaço 12 px.
 - Gravações (\`.recs li\`): espaço 6 px (o botão de 40 px já dá ≥ 52 px) e separador \`--divider\`, que serve em claro e escuro.`,
     html: `<div class="ds col"><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="cat-head">Coro</li>${[['Amazing Grace', 'John Newton (1779)', '2'], ['Salve Regina', 'Antífona mariana', '1']].map(([t, a, n]) => `<li style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--on-brand-line)"><span><span style="display:block;font-size:var(--fs-small);text-transform:uppercase;letter-spacing:var(--ls-chip)">${t}</span><span style="display:block;font-size:var(--fs-small);font-style:italic">${a}</span></span><span style="font-size:var(--fs-small)">${n}</span></li>`).join('')}</ul></div>
@@ -178,10 +179,10 @@ Nomes: cada token tem o nome da variável CSS sem «--». Um par claro/escuro ge
 
 ## Letra
 
-Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\` (Lato) em tudo o resto. Seis tamanhos — ${Object.entries(fs_).map(([k, v]) => `\`${k}\` ${v}`).join(', ')} — e pesos 400 e 700.
+Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\` (Lato) em tudo o resto. Sete tamanhos — ${Object.entries(fs_).map(([k, v]) => `\`${k}\` ${v}`).join(', ')} — e pesos 400 e 700.
 
 - Títulos: serif 400, \`fs-title\`, maiúsculas, .06em. Nome da app na capa: \`fs-display\`, .14em.
-- Maiúsculas, um espaçamento por função: ${t('tracking')}. Títulos de linhas de opção \`ls-row\`; chips, etiquetas e linhas das listas verdes \`ls-chip\`; cabeçalhos de secção e rótulos \`ls-caps\`.
+- Maiúsculas, um espaçamento por função: ${t('tracking')}. Títulos de linhas de opção \`ls-row\`; títulos de secção (serif, \`fs-section\`), chips, etiquetas e linhas das listas verdes \`ls-chip\`; rótulos dos campos e antetítulos \`ls-caps\`.
 - Botões nunca em maiúsculas.
 
 ## Cor

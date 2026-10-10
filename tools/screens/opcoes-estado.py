@@ -13,9 +13,9 @@ ESTADO = {
      ('sim', '✓ Escolhida · implementada na v149'), ('nao', 'Não escolhida')]),
   'OpcoesSeccoes.dc.html': (
     'Decidido a 10 out 2026: <b>B — título em Marcellus</b>, igual na página inicial, nas folhas e no menu. '
-    '<b>A implementar</b> (especificação enviada à webapp).',
+    '<b>Implementado na v154.</b>',
     [('nao', 'Não escolhida'), ('nao', 'Não escolhida'),
-     ('sim', '✓ Escolhida · a implementar'), ('nao', 'Não escolhida')]),
+     ('sim', '✓ Escolhida · implementada na v154'), ('nao', 'Não escolhida')]),
 }
 EXTRA = 112  # altura da faixa + espaço
 
