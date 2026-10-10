@@ -314,9 +314,10 @@ Deno.serve(async (req) => {
       if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return out({ error: 'endereço inválido' }, 400);
       const [sh] = await rest(`song_shares?token=eq.${token}&select=song_slug,collection_id,expires_at,views`);
       // coleção: vale enquanto a coleção existir e não expirar
-      const col = sh?.collection_id ? (await rest(`collections?id=eq.${sh.collection_id}&select=id,title,audience,expires_at,songs:collection_songs(song_slug,position),sections:collection_sections(title,position)`))[0] : null;
+      const col = sh?.collection_id ? (await rest(`collections?id=eq.${sh.collection_id}&select=id,title,audience,expires_at,published,songs:collection_songs(song_slug,position),sections:collection_sections(title,position)`))[0] : null;
       const until = col ? col.expires_at : sh?.expires_at;
-      if (!sh || (sh.collection_id && !col) || Date.parse(until) <= Date.now()) return out({ error: 'expirado', message: sh?.collection_id ? 'Esta coleção já não está disponível.' : 'Este endereço já não é válido (os endereços partilhados duram 24 horas).' }, 410);
+      // folha em edição (ainda não publicada): como se não existisse
+      if (!sh || (sh.collection_id && (!col || col.published === false)) || Date.parse(until) <= Date.now()) return out({ error: 'expirado', message: sh?.collection_id ? 'Esta coleção já não está disponível.' : 'Este endereço já não é válido (os endereços partilhados duram 24 horas).' }, 410);
       if (sh.views >= (col ? SHARE_COL_VIEWS : SHARE_VIEWS)) return out({ error: 'limite', message: 'Este endereço foi aberto demasiadas vezes.' }, 429);
       await rest(`song_shares?token=eq.${token}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ views: sh.views + 1 }) });
       const c = await songs();
@@ -351,7 +352,7 @@ Deno.serve(async (req) => {
     let colSet = new Set();
     if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
-      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at)${aud}&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
+      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published)${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
       colSet = new Set(rows.map(r => r.song_slug));
     }
     // sem limite só para quem não cria coleções: um Maestro / Gestor não as pode usar para contornar os limites
@@ -382,8 +383,9 @@ Deno.serve(async (req) => {
       if (lvl < 3) return denied();
       const id = String(b.collection);
       if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
-      const [col] = await rest(`collections?id=eq.${id}&select=id,audience,expires_at`);
+      const [col] = await rest(`collections?id=eq.${id}&select=id,audience,expires_at,published`);
       if (!col || Date.parse(col.expires_at) <= Date.now()) return out({ error: 'Esta coleção já não está disponível.' }, 404);
+      if (col.published === false) return out({ error: 'Publique a folha antes de a partilhar.' }, 409);
       if (!(await limit(user, 'share', 'col:' + id))) return tooMany();
       const token = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18)))).replace(/\+/g, '-').replace(/\//g, '_');
       await rest('song_shares', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token, collection_id: id, created_by: user.email, expires_at: col.expires_at }) });

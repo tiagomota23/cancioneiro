@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v158';
+  const APP_VERSION = '2026-10-10 v159';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -844,6 +844,7 @@
 
   // ---------- Vistas ----------
   function show(id) {
+    document.body.classList.remove('col-editing'); // só a folha em edição tem fundo branco (showCollection volta a pôr)
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
   }
 
@@ -1990,7 +1991,7 @@
       if (L >= 3) st.push({ go: openPerfil, el: '.perfil-admin', msg: L >= 4 ? '«Gestão de utilizadores»: autorizar pedidos de acesso, mudar perfis e retirar acessos.' : '«Gestão de utilizadores»: mudar o perfil das pessoas entre Cancioneiro, Coro e Maestro.' });
       st.push({ go: openPerfil, el: '#perfil-info', msg: 'O «i» tem a ajuda, partilhar a app (com convite para um perfil) e «Ver o tutorial», para rever esta volta.' });
     }
-    if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe cânticos (pelo livro no topo de cada cântico), organiza-os por secções ou com um template, partilha-a e gera o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
+    if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe um template ao criá-la (ex.: Missa) e começa em edição (só os Maestros a veem), com «+ Adicionar cântico» em cada secção; «Publicar» mostra-a ao Coro, e depois pode partilhá-la e gerar o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
     st.push({ go: goHome, msg: 'Pronto! Pode rever este tutorial quando quiser no «i» → «Ver o tutorial».' });
     return st;
   }
@@ -2551,11 +2552,11 @@
   let cols = [];
   const colsKey = () => 'cancioneiro.colecoes.' + (session ? session.user.id : 'anon');
   const expired = c => Date.parse(c.expires_at) <= Date.now();
-  const colVisible = c => (lvl() >= 3 || !expired(c)) && (c.audience === 'cancioneiro' || lvl() >= 2);
+  const colVisible = c => (lvl() >= 3 || (!expired(c) && c.published !== false)) && (c.audience === 'cancioneiro' || lvl() >= 2);
   const colSongs = c => (c.songs || []).slice().sort((a, b) => a.position - b.position);
   const colFits = () => true; // qualquer cântico pode entrar numa coleção (o público Cancioneiro passa a vê-lo enquanto a coleção durar)
   // cânticos de coleções ativas para o Cancioneiro: visíveis também no perfil Cancioneiro
-  const colExtra = () => new Set(cols.filter(c => !expired(c) && c.audience === 'cancioneiro').flatMap(c => (c.songs || []).map(x => x.song_slug)));
+  const colExtra = () => new Set(cols.filter(c => !expired(c) && c.published !== false && c.audience === 'cancioneiro').flatMap(c => (c.songs || []).map(x => x.song_slug)));
   // Ao abrir: descarrega as letras e (do perfil Coro para cima) partituras, páginas dos livros e gravações
   // dos cânticos das coleções ativas e dos Preferidos; apaga ficheiros guardados de cânticos que já não estão em nenhuma
   let prefetching = false;
@@ -2584,7 +2585,7 @@
     if (!cols.length) cols = store.get(colsKey(), []);
     if (DEMO) { cols = store.get('cancioneiro.demo.cols', []); return; }
     try {
-      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,songs:collection_songs(song_slug,position),sections:collection_sections(id,title,position)').order('created_at');
+      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,published,songs:collection_songs(song_slug,position),sections:collection_sections(id,title,position)').order('created_at');
       if (!error && data) { cols = data; store.set(colsKey(), cols); }
     } catch (e) { /* sem rede: fica a cópia */ }
     if (lvl() < 2 && allSongs.length) applySource();
@@ -2593,7 +2594,7 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}${c.published === false ? '<small> · em edição</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova folha</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
@@ -2605,44 +2606,77 @@
   }
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
   const actions = (upOff, downOff, what, sec) => `<div class="sw-actions">${sec ? '<button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button>' : ''}<button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>${sec ? '⇈' : '↑'}</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>${sec ? '⇊' : '↓'}</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
+  // Folha: publicada (só leitura; só as secções com cânticos) ou em edição (Maestro / Gestor; fundo branco; tocar num
+  // cântico ou numa secção abre as ações; «+ Adicionar cântico» no fim de cada secção e «+ Adicionar secção» no fim)
   function showCollection(id) {
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
     title.hidden = false; $('status').textContent = '';
     if (!c || !colVisible(c)) { title.textContent = 'Folha'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta folha já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
-    const can = lvl() >= 3;
+    const can = lvl() >= 3, editing = can && c.published === false;
+    document.body.classList.toggle('col-editing', editing);
     const fim = new Date(c.expires_at);
-    // público e prazo só para quem gere (Maestro / Gestor)
-    // partilhar a coleção: só Maestro e Gestor
-    const shareBtn = can && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
-    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? `<span class="col-btns"><button class="col-edit" id="col-edit">Editar</button><button class="col-edit" id="col-tpl">Template</button><button class="col-edit" id="col-addsong">+ Cântico</button></span><small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>` : ''}`;
-    const items = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
-    rows.innerHTML = items.map((it, n) => {
-      if (it.k === 'sec') {
-        return `<li class="col-sec${can ? ' swipe sec4' : ''}" data-key="${esc(it.key)}">${can ? actions(n === 0, n === items.length - 1, 'Apagar secção', true) : ''}<a href="#" class="sec-line" ${can ? 'role="button" title="Mudar o nome"' : 'tabindex="-1"'}>${esc(it.ref.title)}</a></li>`;
-      }
-      const row = songRow(bySlug.get(it.key));
-      return can ? row.replace('<li>', `<li class="swipe" data-key="${esc(it.key)}">${actions(n === 0, n === items.length - 1, 'Remover da folha')}`) : row;
-    }).join('') + (can ? '<li class="col-add-sec"><button id="col-add-sec">+ Nova secção</button></li>' : '');
-    if (!items.some(it => it.k === 'song')) $('status').textContent = can ? 'Folha vazia. Abra um cântico e toque no livro, no topo, para o acrescentar.' : 'Folha vazia.';
-    if ($('col-share')) $('col-share').onclick = () => shareCollection(c); // só existe se a coleção tiver cânticos
-    rows.querySelectorAll('a.sec-line').forEach(a => a.addEventListener('click', e => {
-      e.preventDefault();
-      if (!can || a.closest('li').classList.contains('open') || a.dataset.moved === '1') return;
-      const sec = (c.sections || []).find(x => 'sec:' + x.id === a.closest('li').dataset.key);
-      appDialog({ title: 'Nome da secção', input: sec.title, extra: '+ Cântico' }).then(async v => {
-        const add = v && v.extra, t = ((add ? v.value : v) || '').trim().slice(0, 60);
-        if (t && t !== sec.title) await colSaveSection(c, sec, t);
-        if (add) openSectionAdd(c, sec.id, true);
+    const meta = `<small class="col-meta">${editing ? 'Em edição — só os Maestros veem esta folha · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
+    // partilhar: só Maestro / Gestor, e só a folha publicada com cânticos
+    const shareBtn = can && !editing && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    const btns = !can ? '' : editing
+      ? '<span class="col-btns"><button class="col-edit col-publish" id="col-mode">Publicar</button><button class="col-edit" id="col-set">Definições</button></span>'
+      : '<span class="col-btns"><button class="col-edit" id="col-mode">Editar</button></span>';
+    title.innerHTML = `${esc(c.title)}${shareBtn}${btns}${can ? meta : ''}`;
+    const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
+    if (!editing) {
+      const items = withSongs(all);
+      rows.innerHTML = items.map(it => it.k === 'sec'
+        ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
+        : songRow(bySlug.get(it.key))).join('');
+      rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
+      if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
+    } else {
+      // «+ Adicionar cântico» depois do último cântico de cada secção (e dos cânticos antes da primeira secção, se houver)
+      const addLine = secId => `<li class="col-add"><button type="button" data-sec="${esc(secId || '')}">+ Adicionar cântico</button></li>`;
+      let html = '', cur = null, open = false;
+      all.forEach(it => {
+        if (it.k === 'sec') { if (open) html += addLine(cur); cur = it.ref.id; open = true;
+          html += `<li class="col-sec"><a href="#" class="sec-line" data-key="${esc(it.key)}">${esc(it.ref.title)}</a></li>`; }
+        else { open = true; html += songRow(bySlug.get(it.key)).replace('<li>', `<li data-key="${esc(it.key)}">`); }
       });
-    }));
-    if (can) {
-      $('col-edit').onclick = () => openCollectionDlg(c);
-      $('col-tpl').onclick = () => openTemplates(c);
-      $('col-addsong').onclick = () => openSectionAdd(c, null, true);
+      if (open) html += addLine(cur);
+      rows.innerHTML = html + '<li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li>';
+      rows.querySelectorAll('li.col-add button[data-sec]').forEach(b => b.onclick = () => openSectionAdd(c, b.dataset.sec || null, false, true));
+      rows.querySelectorAll('li[data-key] > a, a.sec-line').forEach(a => a.addEventListener('click', e => { e.preventDefault(); colItemMenu(c, a.dataset.key || a.closest('li').dataset.key); }));
       $('col-add-sec').onclick = async () => { const v = await appPrompt('Nova secção', '', 'Por exemplo: Entrada, Comunhão'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
-      rows.querySelectorAll('li.swipe').forEach(li => bindSwipe(li, c));
+      if (!all.some(it => it.k === 'song')) $('status').textContent = 'Toque em «+ Adicionar cântico» para começar.';
     }
+    if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
+    if (can) {
+      $('col-mode').onclick = () => colSetPublished(c, editing);
+      if (editing) $('col-set').onclick = () => openCollectionDlg(c);
+    }
+  }
+  // Editar ↔ Publicar (só Maestro / Gestor): grava o estado da folha
+  async function colSetPublished(c, on) {
+    try {
+      if (!DEMO) { const { error } = await sb.from('collections').update({ published: on }).eq('id', c.id); if (error) throw error; }
+      c.published = on;
+      if (DEMO) demoSave(); else store.set(colsKey(), cols);
+      toast(on ? 'Folha publicada' : 'Folha em edição — escondida até a publicar');
+    } catch (e) { appAlert('Não foi possível mudar: ' + (e.message || e)); }
+    showCollection(c.id);
+  }
+  // ações de um cântico ou de uma secção, na folha em edição
+  async function colItemMenu(c, key) {
+    const items = colItems(c), i = items.findIndex(it => it.key === key); if (i < 0) return;
+    const it = items[i], sec = it.k === 'sec';
+    const list = sec ? [{ value: 'name', label: 'Mudar o nome' }] : [{ value: 'open', label: 'Abrir o cântico' }];
+    if (i > 0) list.push({ value: 'up', label: 'Subir' });
+    if (i < items.length - 1) list.push({ value: 'down', label: 'Descer' });
+    list.push({ value: 'del', label: sec ? 'Apagar secção' : 'Remover da folha', sub: sec ? 'Os cânticos ficam na folha' : '' });
+    const v = await appChoose(sec ? it.ref.title : (bySlug.get(key) || {}).title || 'Cântico', list);
+    if (!v) return;
+    if (v === 'open') { location.hash = '#/cantico/' + encodeURIComponent(key); return; }
+    if (v === 'name') { const t = await appPrompt('Nome da secção', it.ref.title); if (t && t.trim() && t.trim() !== it.ref.title) colSaveSection(c, it.ref, t.trim().slice(0, 60)); return; }
+    if (v === 'del' && !(await appConfirm(sec ? `Apagar a secção «${it.ref.title}»? Os cânticos ficam na folha.` : 'Remover este cântico da folha?', sec ? 'Apagar' : 'Remover'))) return;
+    await colAction(c, key, v);
   }
   // deslizar para a esquerda mostra: Subir, Descer, Remover (no computador: botão ⋯)
   function bindSwipe(li, c) {
@@ -2736,19 +2770,20 @@
   }
   async function openTemplates(c) {
     $('tpl-list').innerHTML = '<p class="small">A carregar…</p>';
+    $('tpl-hint').textContent = c ? 'Toque num template para acrescentar as suas secções no fim da folha.' : 'Toque num template para o usar na nova folha.';
     $('tpl-dlg').showModal();
     try { await loadTemplates(); } catch (e) { $('tpl-list').innerHTML = `<p class="small">Não foi possível carregar: ${esc(e.message || e)}</p>`; return; }
     $('tpl-list').innerHTML = tpls.map(t => `<div class="tpl-row" data-id="${esc(t.id)}"><button class="tpl-apply"><b>${esc(t.title)}</b><small>${esc(t.sections.join(' · '))}</small></button><button class="tpl-edit">Editar</button></div>`).join('') +
       `<button class="col-pick-new" id="tpl-new">+ Novo template</button>`;
     $('tpl-list').querySelectorAll('.tpl-row').forEach(r => {
       const t = tpls.find(x => x.id === r.dataset.id);
-      r.querySelector('.tpl-apply').onclick = () => applyTemplate(c, t);
+      r.querySelector('.tpl-apply').onclick = () => c ? applyTemplate(c, t) : ($('tpl-dlg').close(), fillTplSelect(t.id));
       r.querySelector('.tpl-edit').onclick = () => openTemplateEditor(c, t);
     });
     $('tpl-new').onclick = () => openTemplateEditor(c, null);
   }
   // aplicar: acrescenta no fim as secções do template que a coleção ainda não tem
-  async function applyTemplate(c, t) {
+  async function applyTemplate(c, t, quiet) {
     const have = new Set((c.sections || []).map(x => norm(x.title)));
     const add = t.sections.filter(x => !have.has(norm(x)));
     if (!add.length) { toast('A folha já tem estas secções'); $('tpl-dlg').close(); return; }
@@ -2802,9 +2837,10 @@
   // põe um cântico (acabado de acrescentar no fim) no fim da secção escolhida ('' = antes da primeira secção)
   // "+" numa secção da folha: procurar um cântico e acrescentá-lo no fim dessa secção
   // pick = true: botão no topo da folha, com a escolha da secção
-  function openSectionAdd(c, secId, pick) {
+  // fixed: secção já escolhida (pode ser null = antes da primeira secção), sem o seletor de secção
+  function openSectionAdd(c, secId, pick, fixed) {
     const secs = colItems(c).filter(it => it.k === 'sec').map(it => it.ref);
-    if (!pick && !secs.some(x => x.id === secId)) return;
+    if (!pick && !fixed && !secs.some(x => x.id === secId)) return;
     $('sa-sec').hidden = !pick || !secs.length;
     if (pick) {
       $('sa-sel').innerHTML = '<option value="">No início (sem secção)</option>' + secs.map(x => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('');
@@ -2812,16 +2848,25 @@
     }
     const curSec = () => pick ? ($('sa-sel').value || null) : secId;
     const secName = () => (secs.find(x => x.id === curSec()) || {}).title;
-    $('sa-title').textContent = 'Acrescentar cântico';
+    $('sa-title').textContent = secId && secName() ? 'Acrescentar a «' + secName() + '»' : 'Acrescentar cântico';
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
     const pool = allSongs.filter(s => s.approved !== false && (lvl() >= 2 || inCancioneiro(s)));
+    // secção com o nome de um momento da Missa (ex.: template «Missa»): mostra logo os cânticos desse momento
+    const momentOf = name => name ? MOMENTS.find(m => norm(m) === norm(name)) : null;
     const render = () => {
       const q = norm($('sa-q').value).trim();
-      if (q.length < 2) { $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.'; return; }
       const inCol = new Set((c.songs || []).map(x => x.song_slug));
-      const hits = pool.filter(s => s._t.includes(q) || (s._a || '').includes(q) || String(s.number) === q)
-        .sort((a, b) => (a._t.startsWith(q) ? 0 : 1) - (b._t.startsWith(q) ? 0 : 1) || a.title.localeCompare(b.title, 'pt')).slice(0, 40);
-      $('sa-msg').textContent = hits.length ? '' : 'Nenhum cântico encontrado.';
+      let hits;
+      if (q.length < 2) {
+        const m = momentOf(secName());
+        if (!m) { $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.'; return; }
+        hits = pool.filter(s => hasTag(s, 'Coro CLU — momento', m)).sort((a, b) => a.title.localeCompare(b.title, 'pt'));
+        $('sa-msg').textContent = hits.length ? `Cânticos de «${m}» (Momentos da Missa). Escreva para procurar outros.` : 'Escreva parte do título, do autor ou o número.';
+      } else {
+        hits = pool.filter(s => s._t.includes(q) || (s._a || '').includes(q) || String(s.number) === q)
+          .sort((a, b) => (a._t.startsWith(q) ? 0 : 1) - (b._t.startsWith(q) ? 0 : 1) || a.title.localeCompare(b.title, 'pt')).slice(0, 40);
+        $('sa-msg').textContent = hits.length ? '' : 'Nenhum cântico encontrado.';
+      }
       $('sa-list').innerHTML = hits.map(s => `<li><button type="button" data-slug="${esc(s.slug)}"${inCol.has(s.slug) ? ' disabled' : ''}><b>${esc(s.title)}</b>${s.author ? `<small>${esc(s.author)}</small>` : ''}${inCol.has(s.slug) ? '<small>já está na folha</small>' : ''}</button></li>`).join('');
       $('sa-list').querySelectorAll('button:not([disabled])').forEach(b => b.onclick = async () => {
         b.disabled = true;
@@ -2835,7 +2880,9 @@
       });
     };
     $('sa-q').oninput = render;
+    $('sa-sel').onchange = render;
     $('sa-close').onclick = () => $('sec-add').close();
+    render();
     $('sec-add').showModal(); setTimeout(() => $('sa-q').focus(), 50);
   }
   async function placeInSection(c, slug, secId) {
@@ -2875,8 +2922,25 @@
     $('col-dur').value = c ? c.duration : '1w';
     $('col-del').hidden = !c;
     $('col-msg').textContent = (c ? `Ao guardar, a folha fica disponível durante ${DURS[c.duration][0]} a partir de agora. ` : '') + 'Um mês depois de expirar, a folha é apagada.';
+    // o template só se escolhe ao criar a folha
+    $('col-tpl-field').hidden = !!c;
+    if (!c) fillTplSelect();
     $('col-dlg').showModal();
   }
+  async function fillTplSelect(sel) {
+    const s = $('col-tpl-sel');
+    s.innerHTML = '<option value="">Sem template</option>';
+    try { await loadTemplates(); } catch (e) { /* sem rede: fica só «Sem template» */ }
+    s.innerHTML = '<option value="">Sem template</option>' + (tpls || []).map(t => `<option value="${esc(t.id)}">${esc(t.title)} — ${esc(t.sections.join(', '))}</option>`).join('') +
+      '<option value="gerir">Criar ou mudar templates…</option>';
+    s.value = sel && (tpls || []).some(t => t.id === sel) ? sel : '';
+    s.dataset.prev = s.value;
+  }
+  $('col-tpl-sel').onchange = e => {
+    if (e.target.value !== 'gerir') { e.target.dataset.prev = e.target.value; return; }
+    e.target.value = e.target.dataset.prev || '';
+    openTemplates(null); // gerir os templates; escolher um volta à nova folha com ele selecionado
+  };
   async function saveCollection() {
     const title = $('col-name').value.trim().slice(0, 80);
     if (!title) { $('col-msg').textContent = 'Escreva um título.'; return; }
@@ -2884,18 +2948,20 @@
     const row = { title, audience, duration, expires_at: new Date(Date.now() + DURS[duration][1]).toISOString() };
     try {
       if (DEMO) {
-        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, songs: [], sections: [] });
+        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, published: false, songs: [], sections: [] });
         demoSave();
       } else if (dlgCol) {
         const { error } = await sb.from('collections').update(row).eq('id', dlgCol.id); if (error) throw error;
         Object.assign(dlgCol, row);
       } else {
-        const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by').single(); if (error) throw error;
+        const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by,published').single(); if (error) throw error;
         cols.push({ ...data, songs: [], sections: [] });
       }
       if (!DEMO) store.set(colsKey(), cols);
       $('col-dlg').close();
       const id = dlgCol ? dlgCol.id : cols[cols.length - 1].id;
+      const tpl = !dlgCol && (tpls || []).find(t => t.id === $('col-tpl-sel').value);
+      if (tpl) await applyTemplate(cols[cols.length - 1], tpl, true);
       location.hash = '#/lista/colecao-' + id; route();
     } catch (e) { $('col-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
   }
