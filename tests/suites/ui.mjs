@@ -493,11 +493,12 @@ async function suites(full) {
     if (!/Folha em edição/.test(m)) bad.push('Maestro não vê a folha por publicar');
     // v162: a marca é um ícone de rascunho (svg.book-ic role=img aria-label «Não publicada»), sem texto
     const icon = await withApp({ perfil: 'maestro' }, async ({ page }) => { await page.click('#btn-menu'); await sleep(400);
-      return { pass: JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('#az a[href^="#/lista/colecao-"]')].map(a => ({ t: a.textContent.trim(), draft: !!a.querySelector('svg.book-ic[role="img"][aria-label="Não publicada"]') })))) }; }).then(r => JSON.parse(r.pass || '[]'));
+      return { pass: JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('#az a[href^="#/lista/colecao-"]')].map(a => ({ t: a.textContent.trim(), text: [...a.childNodes].filter(n => n.nodeName.toLowerCase() !== 'svg').map(n => n.textContent).join(''), draft: !!a.querySelector('svg.book-ic[role="img"][aria-label="Não publicada"]') })))) }; }).then(r => JSON.parse(r.pass || '[]'));
     const ed = icon.find(x => /Folha em edição/.test(x.t)), pub = icon.find(x => /Missa de domingo/.test(x.t));
     if (!ed || !ed.draft) bad.push('folha por publicar sem o ícone «Não publicada» (svg.book-ic role=img)');
     if (pub && pub.draft) bad.push('folha publicada com o ícone de rascunho');
-    if (/não publicada/i.test(m)) bad.push('ainda há texto «não publicada» no menu');
+    // o <title> do ícone também diz «Não publicada»: conta só o texto fora dos svg
+    if (icon.some(x => /não publicada/i.test(x.text))) bad.push('ainda há texto «não publicada» no menu');
     const direct = await withApp({ perfil: 'coro', hash: '#/lista/colecao-demoE' }, async ({ page }) => ({ pass: await txt(page, '#rows') + '|' + await txt(page, '#status') }));
     if (/Veni Creator/i.test(direct.pass)) bad.push('Coro abre a folha por publicar pelo endereço');
     return bad.length ? bad.join('; ') : true;
