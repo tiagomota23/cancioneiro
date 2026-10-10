@@ -29,8 +29,10 @@ function harvest() {
   const seen = window.__catSeen || (window.__catSeen = new WeakSet());
   const VW = innerWidth, VH = innerHeight;
   const rgb = c => {
-    const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return c;
-    const [r, g, b, a = 1] = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+    let m = c.match(/rgba?\(([^)]+)\)/), k = 1;
+    if (!m) { m = c.match(/color\(srgb ([^)]+)\)/); k = 255; } // color-mix() dá color(srgb r g b / a), com valores de 0 a 1
+    if (!m) return c;
+    const [r, g, b, a = 1] = m[1].split(/[ ,/]+/).filter(Boolean).map(Number).map((x, i) => i < 3 ? x * k : x);
     if (+a === 0) return 'transparente';
     const hex = '#' + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
     return +a < 1 ? `${hex} ${Math.round(a * 100)}%` : hex;

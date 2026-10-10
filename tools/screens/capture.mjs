@@ -29,7 +29,7 @@ for (const s of SCREENS) {
     // HTML do ecrã (sem scripts, com o CSS da app) para o html.to.design
     const html = await page.evaluate(() => {
       const d = document.documentElement.cloneNode(true);
-      d.querySelectorAll('script, link[rel=stylesheet][href^="styles"], meta[http-equiv]').forEach(x => x.remove());
+      d.querySelectorAll('script, link[rel=stylesheet][href^="styles"], link[rel=stylesheet][href^="theme"], meta[http-equiv]').forEach(x => x.remove());
       return '<!doctype html>\n' + d.outerHTML;
     });
     fs.writeFileSync(path.join(MAPA, s.id + '.html'), html.replace('<head>', '<head><meta name="robots" content="noindex">').replace('</head>', `<base href="https://tiagomota23.github.io/cancioneiro/"><style>${css}</style></head>`));
