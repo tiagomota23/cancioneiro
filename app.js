@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'traducao');
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v152';
+  const APP_VERSION = '2026-10-10 v153';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -923,7 +923,8 @@
     }
     const cat = allCategories().find(c => c.id === catId) || CATEGORIES[0];
     title.hidden = false;
-    title.innerHTML = `<small class="list-kicker">${esc(catSection(cat.id))}</small>${esc(catName(cat))}`;
+    // no perfil Cancioneiro só há uma secção: sem o nome da secção por cima
+    title.innerHTML = `${lvl() >= 2 ? `<small class="list-kicker">${esc(catSection(cat.id))}</small>` : ''}${esc(catName(cat))}`;
     rows.innerHTML = songs.filter(cat.test)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
