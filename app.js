@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v161';
+  const APP_VERSION = '2026-10-10 v162';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -208,6 +208,7 @@
   // No cântico: ☆ (preferido) ou, do perfil Maestro para cima, um livro que abre as coleções do cântico
   const ICON_STAR = '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>';
   const ICON_PAGE = '<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5"/>';
+  const ICON_PAGE_DRAFT = '<path d="M12 21H6V3h8.5L19 7.5V11"/><path d="M14 3v5h5"/><path d="M19.2 13.3l2 2-5.7 5.7h-2v-2z"/>'; // folha com lápis: por publicar
   const PDF_IC = `<svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PAGE}</svg>`;
   const ICON_BOOK = '<path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/>';
   function refreshFavUI() {
@@ -2594,7 +2595,8 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}${c.published === false ? '<small> · não publicada</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+    // folha por publicar (só Maestro / Gestor a vê): folha com lápis em vez da folha simples
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}">${c.published === false ? `<svg class="book-ic outline" viewBox="0 0 24 24" role="img" aria-label="Não publicada"><title>Não publicada</title>${ICON_PAGE_DRAFT}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}<span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova folha</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
