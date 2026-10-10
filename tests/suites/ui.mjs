@@ -30,6 +30,9 @@ const demoCols = () => {
     songs: [{ song_slug: 'veni_creator_spiritus', position: 1 }, { song_slug: 'adoro_te_devote', position: 3 }, { song_slug: 'salve_regina', position: 4 }] },
   { id: 'demo2', title: 'Encontro de jovens', audience: 'cancioneiro', duration: '48h', expires_at: exp, created_by: 'demo@localhost', sections: [],
     songs: [{ song_slug: 'amazing_grace', position: 0 }, { song_slug: 'de_colores', position: 1 }] },
+  { id: 'demoE', title: 'Folha em edição', audience: 'coro', duration: '1w', expires_at: exp, created_by: 'demo@localhost', published: false,
+    sections: [{ id: 'e1', title: 'Entrada', position: 0 }, { id: 'e2', title: 'Comunhão', position: 2 }, { id: 'e3', title: 'Saída', position: 4 }],
+    songs: [{ song_slug: 'veni_creator_spiritus', position: 1 }, { song_slug: 'adoro_te_devote', position: 3 }] },
   { id: 'demo3', title: 'Folha expirada', audience: 'coro', duration: '24h', expires_at: old, created_by: 'demo@localhost', sections: [], songs: [{ song_slug: 'salve_regina', position: 0 }] }];
 };
 const fakeJwt = exp => ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', Buffer.from(JSON.stringify({ sub: '11111111-1111-4111-8111-111111111111', email: 'teste@example.invalid', role: 'authenticated', aud: 'authenticated', exp, iat: exp - 3600 })).toString('base64url'), 'assinatura-falsa'].join('.');
@@ -243,12 +246,14 @@ async function suites(full) {
     if (/Folha expirada/.test(seen.coro)) bad.push('Coro vê folha expirada');
     return bad.length ? bad.join('; ') : true;
   });
-  await t('FUN-10', 'Folha com secções (Maestro): secções, cânticos, botões Editar/Template/+ Cântico, partilhar', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+  await t('FUN-10', 'Folha publicada (Maestro): secções e cânticos só de leitura, só «Editar» e partilhar, sem «+ Adicionar»', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
     await page.waitForSelector('#rows li'); await sleep(300);
     const s = await txt(page, '#rows');
     if (!/Entrada/.test(s) || !/Comunhão/.test(s) || !/Veni Creator/i.test(s)) return 'conteúdo da folha: ' + s.slice(0, 150);
-    for (const id of ['#col-edit', '#col-tpl', '#col-addsong', '#col-add-sec', '#col-share']) if (!(await vis(page, id))) return 'falta ' + id;
-    return true;
+    if ((await txt(page, '#col-mode')).trim() !== 'Editar') return 'botão de modo: «' + (await txt(page, '#col-mode')) + '»';
+    if (!(await vis(page, '#col-share'))) return 'falta partilhar';
+    for (const sel of ['#col-set', '#col-tpl', '#col-addsong', 'li.col-add']) if (await count(page, sel)) return 'na vista publicada há ' + sel;
+    return (await page.evaluate(() => document.body.classList.contains('col-editing'))) ? 'fundo de edição na vista publicada' : true;
   }));
   await t('FUN-11', 'Nova folha: criar no diálogo aparece na gaveta', () => withApp({ perfil: 'maestro' }, async ({ page }) => {
     await page.click('#btn-menu'); await sleep(500);
@@ -259,10 +264,17 @@ async function suites(full) {
     await page.click('#btn-menu').catch(() => {}); await sleep(500);
     return /Folha de teste automática/.test(await txt(page, '#az')) || /Folha de teste automática/.test(await txt(page, '#list-title')) || 'folha nova não aparece';
   }));
-  await t('FUN-12', 'Template: diálogo de templates abre a partir da folha', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
-    await page.waitForSelector('#col-tpl'); await page.click('#col-tpl'); await sleep(600);
-    return (await page.evaluate(() => document.querySelector('#tpl-dlg').open)) || 'diálogo de templates não abriu';
-  }), { sev: 'média' });
+  await t('FUN-12', 'Template só no diálogo «Nova folha» (#col-tpl-sel); escondido ao mudar as definições de uma folha existente', () => withApp({ perfil: 'maestro' }, async ({ page }) => {
+    await page.click('#btn-menu'); await sleep(400); await page.click('.col-new'); await sleep(500);
+    if (!(await vis(page, '#col-tpl-sel'))) return 'Nova folha sem escolha de template';
+    const opts = await page.evaluate(() => [...document.querySelectorAll('#col-tpl-sel option')].map(o => o.textContent));
+    if (!opts.some(o => /Criar ou mudar templates/.test(o))) return 'falta «Criar ou mudar templates…»: ' + opts.join(' | ');
+    await page.click('#col-cancel'); await sleep(300);
+    await page.evaluate(() => { location.hash = '#/lista/colecao-demoE'; }); await sleep(600);
+    await page.click('#col-set'); await sleep(500);
+    if (!(await page.evaluate(() => document.querySelector('#col-dlg').open))) return '«Definições» não abriu o diálogo';
+    return !(await vis(page, '#col-tpl-sel')) || 'template visível ao editar uma folha existente';
+  }, ), { sev: 'média' });
   await t('FUN-13', 'Novo cântico (Coro): formulário, guardar, aparece em Novos Cânticos por aprovar', () => withApp({ perfil: 'coro', hash: '#/lista/livro-novos' }, async ({ page }) => {
     await page.waitForSelector('#novo-cantico'); await page.click('#novo-cantico'); await sleep(600);
     if (!(await page.evaluate(() => document.querySelector('#song-new').open))) return 'formulário não abriu';
@@ -472,6 +484,104 @@ async function suites(full) {
     }
     return 'não chegou ao passo «Nova folha»';
   }), { sev: 'média' });
+  // ---- v159/v160: folhas em edição / publicadas ----
+  await t('FUN-37', 'Folha por publicar: Coro e Cancioneiro não a veem; Maestro vê-a na gaveta com «não publicada»', async () => {
+    const menu = perfil => withApp({ perfil }, async ({ page }) => { await page.click('#btn-menu'); await sleep(400); return { pass: await txt(page, '#az') }; }).then(r => r.pass || '');
+    const bad = [];
+    for (const p of ['coro', 'cancioneiro']) if (/Folha em edição/.test(await menu(p))) bad.push(p + ' vê a folha por publicar');
+    const m = await menu('maestro');
+    if (!/Folha em edição/.test(m)) bad.push('Maestro não vê a folha por publicar');
+    // v162: a marca é um ícone de rascunho (svg.book-ic role=img aria-label «Não publicada»), sem texto
+    const icon = await withApp({ perfil: 'maestro' }, async ({ page }) => { await page.click('#btn-menu'); await sleep(400);
+      return { pass: JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('#az a[href^="#/lista/colecao-"]')].map(a => ({ t: a.textContent.trim(), text: [...a.childNodes].filter(n => n.nodeName.toLowerCase() !== 'svg').map(n => n.textContent).join(''), draft: !!a.querySelector('svg.book-ic[role="img"][aria-label="Não publicada"]') })))) }; }).then(r => JSON.parse(r.pass || '[]'));
+    const ed = icon.find(x => /Folha em edição/.test(x.t)), pub = icon.find(x => /Missa de domingo/.test(x.t));
+    if (!ed || !ed.draft) bad.push('folha por publicar sem o ícone «Não publicada» (svg.book-ic role=img)');
+    if (pub && pub.draft) bad.push('folha publicada com o ícone de rascunho');
+    // o <title> do ícone também diz «Não publicada»: conta só o texto fora dos svg
+    if (icon.some(x => /não publicada/i.test(x.text))) bad.push('ainda há texto «não publicada» no menu');
+    const direct = await withApp({ perfil: 'coro', hash: '#/lista/colecao-demoE' }, async ({ page }) => ({ pass: await txt(page, '#rows') + '|' + await txt(page, '#status') }));
+    if (/Veni Creator/i.test(direct.pass)) bad.push('Coro abre a folha por publicar pelo endereço');
+    return bad.length ? bad.join('; ') : true;
+  });
+  await t('FUN-38', 'Editar ↔ Publicar: modo muda o fundo e os botões e fica guardado depois de recarregar', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+    await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(600);
+    const ed = await page.evaluate(() => ({ body: document.body.classList.contains('col-editing'), mode: document.querySelector('#col-mode')?.textContent.trim(), set: !!document.querySelector('#col-set'), add: document.querySelectorAll('li.col-add').length, end: !!document.querySelector('li.col-add.col-add-end') }));
+    if (!ed.body || ed.mode !== 'Publicar' || !ed.set || !ed.add || !ed.end) return 'modo edição: ' + JSON.stringify(ed);
+    await page.reload(); await page.waitForSelector('#col-mode', { timeout: 10000 }); await sleep(400);
+    if ((await txt(page, '#col-mode')).trim() !== 'Publicar') return 'depois de recarregar não ficou em edição';
+    await page.click('#col-mode'); await sleep(600);
+    const pub = await page.evaluate(() => ({ body: document.body.classList.contains('col-editing'), mode: document.querySelector('#col-mode')?.textContent.trim() }));
+    if (pub.body || pub.mode !== 'Editar') return 'publicar: ' + JSON.stringify(pub);
+    await page.evaluate(() => { location.hash = '#/'; }); await sleep(300);
+    return !(await page.evaluate(() => document.body.classList.contains('col-editing'))) || 'fundo de edição ficou fora da folha';
+  }));
+  await t('FUN-39', 'Folha em edição: tocar num cântico abre Abrir/Subir/Descer/Remover; Descer muda a ordem; Remover pede confirmação', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    await page.waitForSelector('li[data-key] > a');
+    const order = () => page.evaluate(() => [...document.querySelectorAll('#rows li[data-key], #rows a.sec-line[data-key]')].map(l => l.dataset.key)); // cânticos e secções (Descer pode passar o cântico para a secção seguinte)
+    const o0 = await order();
+    await page.locator('li[data-key="veni_creator_spiritus"] > a').click(); await sleep(400);
+    const opts = await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()));
+    for (const w of ['Abrir o cântico', 'Subir', 'Descer', 'Remover da folha']) if (!opts.some(o => o.startsWith(w))) return 'menu do cântico sem «' + w + '»: ' + opts.join(' | ');
+    await page.locator('#app-dlg-list button').filter({ hasText: /^Descer/ }).click(); await sleep(600);
+    const o1 = await order();
+    if (o1.indexOf('veni_creator_spiritus') <= o0.indexOf('veni_creator_spiritus')) return `Descer não mudou a ordem: ${o0} → ${o1}`;
+    await page.locator('li[data-key="adoro_te_devote"] > a').click(); await sleep(400);
+    await page.locator('#app-dlg-list button').filter({ hasText: /^Remover/ }).click(); await sleep(400);
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'Remover não pediu confirmação';
+    await page.click('#app-dlg-ok'); await sleep(600);
+    if ((await order()).includes('adoro_te_devote')) return 'não removeu';
+    await page.locator('a.sec-line').filter({ hasText: 'Saída' }).click(); await sleep(400);
+    const sopts = await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()));
+    return ['Mudar o nome', 'Apagar secção'].every(w => sopts.some(o => o.startsWith(w))) || 'menu da secção: ' + sopts.join(' | ');
+  }));
+  await t('FUN-40', '«+ Adicionar cântico» por secção: Comunhão traz os cânticos do momento; Saída (não é momento) vem vazia; «+ Adicionar secção» no fim', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    await page.waitForSelector('li.col-add button[data-sec]');
+    const secs = await page.evaluate(() => [...document.querySelectorAll('li.col-add button[data-sec]')].map(b => b.dataset.sec));
+    if (!secs.includes('e2') || !secs.includes('e3')) return 'linhas «+ Adicionar cântico»: ' + secs.join(',');
+    if (!(await page.evaluate(() => document.querySelector('#rows li:last-child')?.matches('li.col-add.col-add-end')))) return '«+ Adicionar secção» não está no fim';
+    await page.click('li.col-add button[data-sec="e2"]'); await sleep(500);
+    const com = await page.evaluate(() => ({ n: document.querySelectorAll('#sa-list li').length, msg: document.querySelector('#sa-msg').textContent, t: document.querySelector('#sa-title').textContent }));
+    if (!com.n || !/Comunhão/.test(com.msg)) return 'Comunhão sem pré-preenchimento: ' + JSON.stringify(com);
+    await page.click('#sa-close'); await sleep(300);
+    await page.click('li.col-add button[data-sec="e3"]'); await sleep(500);
+    const sai = await page.evaluate(() => document.querySelectorAll('#sa-list li').length);
+    await page.click('#sa-close');
+    return sai === 0 ? { pass: `Comunhão: ${com.n} cânticos («${com.msg.slice(0, 50)}»)` } : `Saída mostra ${sai} cânticos`;
+  }));
+  await t('FUN-42', 'Folha em edição: cada ação grava logo (acrescentar, remover, mover, mudar o nome de cântico/secção, nova secção, Definições) — recarregar mostra a mudança', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    const state = () => page.evaluate(() => ({ items: [...document.querySelectorAll('#rows li[data-key], #rows a.sec-line[data-key]')].map(l => l.dataset.key + '=' + l.textContent.trim().slice(0, 30)), title: document.querySelector('#list-title')?.firstChild?.textContent || '', editing: document.body.classList.contains('col-editing') }));
+    const reload = async () => { await page.reload(); await page.waitForSelector('#col-mode', { timeout: 10000 }); await sleep(500); return state(); };
+    const choose = async (rowSel, label) => { await page.locator(rowSel).first().click(); await sleep(400); await page.locator('#app-dlg-list button').filter({ hasText: new RegExp('^' + label) }).first().click(); await sleep(500); };
+    const bad = [];
+    // 1. acrescentar cântico à secção Saída
+    await page.click('li.col-add button[data-sec="e3"]'); await sleep(400);
+    await page.fill('#sa-q', 'salve'); await sleep(500);
+    await page.locator('#sa-list button:not([disabled])').first().click(); await sleep(600); await page.click('#sa-close'); await sleep(300);
+    let r = await reload(); if (!r.items.some(x => x.startsWith('salve_regina'))) bad.push('acrescentar não ficou gravado');
+    // 2. mover (Subir) o cântico acrescentado
+    const before = r.items.indexOf(r.items.find(x => x.startsWith('salve_regina')));
+    await choose('li[data-key="salve_regina"] > a', 'Subir');
+    r = await reload(); if (r.items.findIndex(x => x.startsWith('salve_regina')) >= before) bad.push('mover não ficou gravado');
+    // 3. mudar o nome da secção Saída
+    await choose('a.sec-line[data-key$="e3"], a.sec-line:text-is("Saída")', 'Mudar o nome');
+    await page.fill('#app-dlg-input', 'Final'); await page.click('#app-dlg-ok'); await sleep(600);
+    r = await reload(); if (!r.items.some(x => /=Final$/.test(x))) bad.push('mudar o nome da secção não ficou gravado');
+    // 4. nova secção
+    await page.click('#col-add-sec'); await sleep(300); await page.fill('#app-dlg-input', 'Ofertório'); await page.click('#app-dlg-ok'); await sleep(600);
+    r = await reload(); if (!r.items.some(x => /=Ofertório$/.test(x))) bad.push('nova secção não ficou gravada');
+    // 5. remover cântico (com confirmação)
+    await choose('li[data-key="salve_regina"] > a', 'Remover'); await page.click('#app-dlg-ok'); await sleep(600);
+    r = await reload(); if (r.items.some(x => x.startsWith('salve_regina'))) bad.push('remover não ficou gravado');
+    // 6. apagar secção
+    await choose('a.sec-line:text-is("Ofertório")', 'Apagar'); await page.click('#app-dlg-ok'); await sleep(600);
+    r = await reload(); if (r.items.some(x => /=Ofertório$/.test(x))) bad.push('apagar secção não ficou gravado');
+    // 7. Definições: mudar o título
+    await page.click('#col-set'); await sleep(400); await page.fill('#col-name', 'Folha renomeada pelo teste'); await page.click('#col-save'); await sleep(700);
+    r = await reload(); if (!/Folha renomeada pelo teste/.test(r.title)) bad.push('Definições (título) não ficaram gravadas');
+    if (!r.editing) bad.push('depois de recarregar já não está em edição');
+    return bad.length ? bad.join('; ') : true;
+  }));
+
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {
     await sleep(500);
@@ -711,7 +821,7 @@ async function suites(full) {
 
   // ===================== Usabilidade e acessibilidade =====================
   dim('Usabilidade e acessibilidade', 'média');
-  const screens = [['índice', { perfil: 'maestro' }], ['cântico', { perfil: 'maestro', hash: '#/cantico/salve_regina' }], ['folha', { perfil: 'maestro', hash: '#/lista/colecao-demo1' }], ['gestão', { perfil: 'gestor', hash: '#/gestao' }]];
+  const screens = [['índice', { perfil: 'maestro' }], ['cântico', { perfil: 'maestro', hash: '#/cantico/salve_regina' }], ['folha', { perfil: 'maestro', hash: '#/lista/colecao-demo1' }], ['gestão', { perfil: 'gestor', hash: '#/gestao' }], ['folha-edição', { perfil: 'maestro', hash: '#/lista/colecao-demoE' }]];
   await t('USA-10', 'Alvos de toque ≥ 44×44 px (botões e ligações visíveis)', async () => {
     const small = [];
     for (const [name, o] of screens) await withApp(o, async ({ page }) => {
@@ -745,11 +855,14 @@ async function suites(full) {
   });
   await t('USA-12', 'Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro', async () => {
     const bad = [];
-    for (const scheme of ['light', 'dark']) for (const [name, o] of screens.slice(0, 3)) await withApp({ ...o, scheme }, async ({ page }) => {
+    for (const scheme of ['light', 'dark']) for (const [name, o] of [...screens.slice(0, 3), screens[4]]) await withApp({ ...o, scheme }, async ({ page }) => {
       const r = await page.evaluate(() => {
         const parse = c => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p[3] ?? 1 }; };
         const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
-        const bgOf = el => { for (let e = el; e; e = e.parentElement) { const st = getComputedStyle(e); if (st.backgroundImage && st.backgroundImage !== 'none') return 'img'; const c = parse(st.backgroundColor); if (c && c.a > 0.9) return c; } return { r: 255, g: 255, b: 255, a: 1 }; };
+        // fundo efetivo: o primeiro antepassado opaco; no body conta também o ::before (folha em edição: fundo branco por cima do verde)
+        const bgOf = el => { for (let e = el; e; e = e.parentElement) { const st = getComputedStyle(e);
+          if (e === document.body) { const b = getComputedStyle(e, '::before'); const bc = parse(b.backgroundColor); if (b.content !== 'none' && bc && bc.a > 0.9) return bc; }
+          if (st.backgroundImage && st.backgroundImage !== 'none') return 'img'; const c = parse(st.backgroundColor); if (c && c.a > 0.9) return c; } return { r: 255, g: 255, b: 255, a: 1 }; };
         const out = [];
         for (const el of document.querySelectorAll('body *')) {
           if (!el.childNodes.length || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
@@ -820,9 +933,9 @@ async function suites(full) {
     const fixed = await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page: p2 }) => { await p2.waitForSelector('#song h1'); await p2.click('#btn-fav'); await sleep(400); return { pass: String(await p2.evaluate(() => document.querySelector('#pick-canc')?.disabled)) }; });
     return fixed.pass === 'true' || 'cântico do original: pick-canc não está desativado';
   }));
-  await t('USA-18', 'Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice, gaveta, títulos)', async () => {
+  await t('USA-18', 'Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição)', async () => {
     const bad = [], ev = [];
-    for (const o of [{ perfil: 'coro' }, { perfil: 'maestro', act: 'menu' }, { perfil: 'maestro', hash: '#/lista/colecao-demo1' }]) await withApp(o, async ({ page }) => {
+    for (const o of [{ perfil: 'coro' }, { perfil: 'maestro', act: 'menu' }, { perfil: 'maestro', hash: '#/lista/colecao-demo1' }, { perfil: 'maestro', hash: '#/lista/colecao-demoE' }]) await withApp(o, async ({ page }) => {
       if (o.act === 'menu') { await page.click('#btn-menu'); await sleep(500); }
       const r = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
@@ -832,7 +945,9 @@ async function suites(full) {
         const probe = v => { const d = document.createElement('div'); d.style.color = `var(${v})`; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return rgb(c); };
         const brands = [probe('--brand'), probe('--brand-deep')].filter(Boolean);
         const isBrand = c => c && c[3] !== 0 && brands.some(b => Math.abs(b[0] - c[0]) + Math.abs(b[1] - c[1]) + Math.abs(b[2] - c[2]) < 6);
-        const bgOf = el => { for (let e = el; e; e = e.parentElement) { const st = getComputedStyle(e); const c = rgb(st.backgroundColor); if (c && (c[3] === undefined || c[3] > 0.9)) return c; const g = st.backgroundImage.match(/rgba?\([^)]+\)/g); if (g) return rgb(g[0]); } return null; };
+        const bgOf = el => { for (let e = el; e; e = e.parentElement) { const st = getComputedStyle(e);
+          if (e === document.body) { const b = getComputedStyle(e, '::before'); const bc = rgb(b.backgroundColor); if (b.content !== 'none' && bc && (bc[3] === undefined || bc[3] > 0.9)) return bc; }
+          const c = rgb(st.backgroundColor); if (c && (c[3] === undefined || c[3] > 0.9)) return c; const g = st.backgroundImage.match(/rgba?\([^)]+\)/g); if (g) return rgb(g[0]); } return null; };
         const op = el => { let o = 1; for (let e = el; e; e = e.parentElement) o *= +getComputedStyle(e).opacity; return o; };
         const out = [];
         for (const el of document.querySelectorAll('body *')) {

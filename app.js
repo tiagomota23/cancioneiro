@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v160';
+  const APP_VERSION = '2026-10-10 v162';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -208,6 +208,7 @@
   // No cântico: ☆ (preferido) ou, do perfil Maestro para cima, um livro que abre as coleções do cântico
   const ICON_STAR = '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>';
   const ICON_PAGE = '<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5"/>';
+  const ICON_PAGE_DRAFT = '<path d="M12 21H6V3h8.5L19 7.5V11"/><path d="M14 3v5h5"/><path d="M19.2 13.3l2 2-5.7 5.7h-2v-2z"/>'; // folha com lápis: por publicar
   const PDF_IC = `<svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PAGE}</svg>`;
   const ICON_BOOK = '<path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/>';
   function refreshFavUI() {
@@ -2594,7 +2595,8 @@
   function renderCollectionsMenu() {
     const vis = cols.filter(colVisible);
     if (!vis.length && lvl() < 3) return '';
-    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}"><svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg><span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}${c.published === false ? '<small> · não publicada</small>' : ''}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
+    // folha por publicar (só Maestro / Gestor a vê): folha com lápis em vez da folha simples
+    return vis.map(c => `<li><a href="#/lista/colecao-${c.id}">${c.published === false ? `<svg class="book-ic outline" viewBox="0 0 24 24" role="img" aria-label="Não publicada"><title>Não publicada</title>${ICON_PAGE_DRAFT}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}<span class="t">${expired(c) ? `<s title="Expirada">${esc(c.title)}</s>` : esc(c.title)}</span><span class="n">${colSongs(c).filter(x => bySlug.has(x.song_slug)).length}</span>${chev}</a></li>`).join('') +
       (lvl() >= 3 ? `<li><button class="col-new"><span class="t">+ Nova folha</span>${vis.length ? '' : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_PAGE}</svg>`}</button></li>` : '');
   }
   // itens de uma coleção pela ordem: cânticos e secções (linhas separadoras) partilham a mesma numeração
@@ -2605,7 +2607,6 @@
       .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
   }
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
-  const actions = (upOff, downOff, what, sec) => `<div class="sw-actions">${sec ? '<button data-a="add" class="sw-add" aria-label="Acrescentar um cântico a esta secção">+</button>' : ''}<button data-a="up" aria-label="Subir"${upOff ? ' disabled' : ''}>${sec ? '⇈' : '↑'}</button><button data-a="down" aria-label="Descer"${downOff ? ' disabled' : ''}>${sec ? '⇊' : '↓'}</button><button data-a="del" class="sw-del" aria-label="${what}">${TRASH}</button></div><button class="sw-more" aria-label="Opções">⋯</button>`;
   // Folha: publicada (só leitura; só as secções com cânticos) ou em edição (Maestro / Gestor; fundo branco; tocar num
   // cântico ou numa secção abre as ações; «+ Adicionar cântico» no fim de cada secção e «+ Adicionar secção» no fim)
   function showCollection(id) {
@@ -2677,37 +2678,6 @@
     if (v === 'name') { const t = await appPrompt('Nome da secção', it.ref.title); if (t && t.trim() && t.trim() !== it.ref.title) colSaveSection(c, it.ref, t.trim().slice(0, 60)); return; }
     if (v === 'del' && !(await appConfirm(sec ? `Apagar a secção «${it.ref.title}»? Os cânticos ficam na folha.` : 'Remover este cântico da folha?', sec ? 'Apagar' : 'Remover'))) return;
     await colAction(c, key, v);
-  }
-  // deslizar para a esquerda mostra: Subir, Descer, Remover (no computador: botão ⋯)
-  function bindSwipe(li, c) {
-    const a = li.querySelector('a'); let x0 = null, y0 = 0, dx = 0, dir = null;
-    const close = () => li.classList.remove('open');
-    a.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; dir = null; a.style.transition = 'none'; }, { passive: true });
-    // só conta como deslizar se o gesto for sobretudo para o lado (a deslizar a lista para cima/baixo não abre)
-    a.addEventListener('touchmove', e => {
-      if (x0 == null) return;
-      const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
-      if (!dir && Math.hypot(mx, my) > 8) { dir = Math.abs(mx) > Math.abs(my) * 1.5 ? 'x' : 'y'; if (dir === 'x') li.classList.add('drag'); } // os botões só aparecem a deslizar para o lado
-      if (dir !== 'x') { dx = 0; return; }
-      dx = mx;
-      const W = (li.querySelector('.sw-actions') || {}).offsetWidth || 144;
-      if (dx < 0 || li.classList.contains('open')) a.style.transform = `translateX(${Math.max(-W, Math.min(0, dx + (li.classList.contains('open') ? -W : 0)))}px)`;
-    }, { passive: true });
-    a.addEventListener('touchend', () => { a.dataset.moved = Math.abs(dx) > 10 ? '1' : ''; a.style.transition = ''; a.style.transform = ''; setTimeout(() => li.classList.remove('drag'), 220); if (dx < -40) { $('rows').querySelectorAll('li.open').forEach(x => x !== li && x.classList.remove('open')); li.classList.add('open'); } else if (dx > 30) close(); x0 = null; });
-    a.addEventListener('click', e => { if (Math.abs(dx) > 10 || li.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); if (Math.abs(dx) <= 10) close(); } }, true);
-    li.querySelector('.sw-more').onclick = e => { e.stopPropagation(); li.classList.toggle('open'); };
-    li.querySelectorAll('.sw-actions button').forEach(b => b.onclick = e => {
-      e.stopPropagation(); // o toque nos botões não fecha a linha
-      // remover pede confirmação: o caixote passa a ✓ e é preciso tocar outra vez
-      if (b.dataset.a === 'del' && !b.classList.contains('confirm')) {
-        b.classList.add('confirm');
-        b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-        setTimeout(() => { if (b.isConnected && b.classList.contains('confirm')) { b.classList.remove('confirm'); b.innerHTML = TRASH; } }, 4000);
-        return;
-      }
-      if (b.dataset.a === 'add') { li.classList.remove('open'); openSectionAdd(c, li.dataset.key.slice(4), true); return; }
-      colAction(c, li.dataset.key, b.dataset.a);
-    });
   }
   // grava as posições que mudaram (cânticos e secções numerados 1, 2, 3… pela nova ordem)
   async function colPersist(c, items) {
@@ -3080,12 +3050,6 @@
     };
     $('col-pick').showModal();
   }
-  const closeSwipes = e => { if (!e || !e.target.closest || !e.target.closest('li.swipe.open')) document.querySelectorAll('#rows li.open').forEach(x => x.classList.remove('open')); };
-  document.addEventListener('click', closeSwipes);
-  document.addEventListener('pointerdown', closeSwipes, { passive: true });
-  document.addEventListener('touchstart', closeSwipes, { passive: true });
-  addEventListener('scroll', () => closeSwipes(), { passive: true });
-  addEventListener('hashchange', () => closeSwipes());
 
   // Gaveta: os livros (Preferidos, Cancioneiro e, do perfil Coro para cima, Coro, Songbook e CANTI 2024)
   const BOOKS_LIST = [

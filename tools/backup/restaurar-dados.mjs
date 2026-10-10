@@ -2,7 +2,7 @@
 // já criada com esquema.sql. Uso: node restaurar-dados.mjs dados.json > dados.sql
 // Depois: psql "<ligação>" -f dados.sql   (ou cole no SQL Editor do Supabase; se for grande demais, use --tabela=<nome>
 // para gerar uma tabela de cada vez).
-// Corre numa só transação; respeita as colunas geradas e de identidade; favorites só para utilizadores que existam em auth.users.
+// Corre numa só transação; respeita as colunas geradas e de identidade; colunas que não estão na cópia ficam com o valor por omissão; favorites só para utilizadores que existam em auth.users.
 import { readFileSync } from 'node:fs';
 
 const [file, ...opts] = process.argv.slice(2);
@@ -22,11 +22,14 @@ for (const t of ORDEM) {
   const rows = dados[t];
   if (!rows?.length) { out.push(`-- ${t}: vazio`); continue; }
   const filtro = t === 'favorites' ? ' where r.user_id in (select id from auth.users)' : '';
+  // só as colunas que vêm na cópia: uma coluna nova (ex.: collections.published) fica com o valor por omissão ao carregar uma cópia antiga
+  const keys = [...new Set(rows.flatMap(Object.keys))].map(k => `'${k.replace(/'/g, "''")}'`).join(', ');
   out.push(`-- ${t}: ${rows.length} linhas`, `do $do$
 declare cols text;
 begin
   select string_agg(format('%I', column_name), ', ' order by ordinal_position) into cols
-    from information_schema.columns where table_schema = 'public' and table_name = '${t}' and is_generated = 'NEVER';
+    from information_schema.columns where table_schema = 'public' and table_name = '${t}' and is_generated = 'NEVER'
+      and column_name = any(array[${keys}]::text[]);
   execute format('insert into public.%I (%s) overriding system value select %s from json_populate_recordset(null::public.%I, $1) r${filtro} on conflict do nothing',
     '${t}', cols, (select string_agg('r.' || c, ', ') from unnest(string_to_array(cols, ', ')) c), '${t}')
   using ${lit(JSON.stringify(rows))}::json;
