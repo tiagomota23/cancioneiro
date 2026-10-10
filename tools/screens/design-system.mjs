@@ -45,8 +45,8 @@ ${alpha.length ? `.ds { ${alpha.map(t => `--${t.name}: color-mix(in srgb, var(--
 :where(.ds) button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 .ds dialog { position: static; display: block; margin: 0; padding: 18px 20px; border: 0; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); max-width: 100%; box-sizing: border-box; }
 .ds .brand-bg { background: linear-gradient(180deg, var(--brand), var(--brand-deep)); color: var(--on-brand); padding: 14px; border-radius: var(--radius); }
-.ds .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.ds .col { display: flex; flex-direction: column; gap: 10px; }
+.ds .row, .ds.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.ds .col, .ds.col { display: flex; flex-direction: column; gap: 10px; }
 .ds .lbl { font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-faint); margin: 6px 0 2px; }
 `;
 w('components/bundle.css', bridge + '\n' + comp);
@@ -56,15 +56,15 @@ const x = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L
 const pen = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
 const share = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 13v7h14v-7"/></svg>';
 const C = {
-  Botoes: { group: 'Ações', h: 210, title: 'Botões',
+  Botoes: { group: 'Ações', h: 260, title: 'Botões',
     readme: `Botões de ação: pílula, letra Lato, sem maiúsculas, em dois tamanhos e três cores.
 
 - **Normal** — altura \`--h-btn\`, \`--fs-ui\` 400, espaço 0 18 px. Classes: \`dialog form button\`, \`.edit-actions button\`, \`.info-actions button\`, \`.tour-next\`, \`.sn-gen-btn\`.
-- **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px. Classes: \`.edit-btn\`, \`.ghost-btn\`, \`.admin button\`.
+- **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e ações no título das listas verdes (\`.col-edit\`: contorno \`--on-brand-outline\`, texto \`--on-brand\`, toque de 44 px). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
 - **Cores** — destaque (cheio, \`--accent\` / \`--on-accent\`); secundário (\`.ghost\`: \`--surface\` com contorno e texto \`--accent\`); perigo (\`.ghost.danger\`, \`.ghost-btn\`, \`.adm-no\`, \`.adm-del\`: contorno \`--danger-border\`, texto \`--danger\`). Confirmar apagar: fundo \`--danger\`.
 - Nunca em maiúsculas; nunca outro raio que não \`--pill\`. Exceção: o botão «Entrar com Google» segue as regras da Google.`,
     html: `<div class="ds col"><dialog open><form class="row" onsubmit="return false"><button>Guardar</button><button class="ghost">Cancelar</button></form><div class="edit-actions row" style="margin-top:12px"><button class="ghost danger">Apagar</button></div></dialog>
-<div class="row"><button class="edit-btn">${pen}Editar cântico</button><button class="ghost-btn">Recusar</button></div></div>` },
+<div class="pend-bar row"><button class="edit-btn">Aprovar</button><button class="ghost-btn">Recusar</button></div><div class="brand-bg row list-title" style="margin:0;font-size:inherit"><button class="col-edit" style="margin:0">Editar</button><button class="col-edit" style="margin:0">Template</button><button class="col-edit" style="margin:0">+ Cântico</button></div></div>` },
   BotoesSimbolo: { group: 'Ações', h: 150, title: 'Botões de símbolo',
     readme: `Botões só com símbolo: área de toque de \`--hit\` (44 px), pílula, símbolo de \`--icon\` com traço \`--stroke\`.
 
@@ -84,17 +84,31 @@ const C = {
 - \`.tour-skip\` — \`--fs-ui\` em \`--text-faint\`.
 - Todas as ligações \`<a>\` dentro de janelas são \`--accent\`.`,
     html: `<div class="ds row"><button class="install-line">Adicionar a app ao ecrã principal</button><button class="revert-link">Entrar no Cancioneiro</button><button class="tour-skip">Saltar</button></div>` },
-  Chips: { group: 'Etiquetas', h: 170, title: 'Chips',
-    readme: `Etiquetas pequenas em pílula: altura \`--h-chip\`, \`--fs-caps\` 700 em maiúsculas com \`--ls-chip\`, contorno da cor do texto.
+  Etiquetas: { group: 'Etiquetas', h: 110, title: 'Etiquetas',
+    readme: `Etiquetas: só informação, nunca se tocam — sem contorno e sem estado de toque.
 
-- Neutro (\`.src-chip\`, \`.pdf\`): \`--ink-soft\`. Destaque (\`.src-coro_clu\`, \`.pick-canc\`): \`--accent\`.
-- Escolhido (\`.lang-chip\`, \`.pick-canc.on\`, \`.lang-switch button.on\`): cheio de \`--accent\`.
-- Sobre a cor da marca (\`.list-title .col-edit\`): texto \`--on-brand\`, contorno \`--on-brand-outline\`.
-- \`.lang-switch\` é um chip segmentado: anel desenhado por dentro (box-shadow inset 1 px), raio interior 0.
-- Etiqueta de estado \`.pend\` («por aprovar»): \`--pending-bg\` / \`--pending-ink\`.`,
-    html: `<div class="ds col"><div class="row"><span class="src-chip">Cancioneiro</span><span class="src-chip src-coro_clu">Coro</span><span class="lang-chip">Inglês</span><span class="pdf">Songbook, pág. 12</span><span class="pend">por aprovar</span></div>
-<div class="row"><button class="pick-canc">Cancioneiro</button><button class="pick-canc on">Cancioneiro</button><span class="lang-switch"><button class="on">Latim</button><button>Tradução</button></span></div>
-<div class="brand-bg row list-title" style="margin:0;font-size:inherit"><button class="col-edit" style="margin:0">Editar</button><button class="col-edit" style="margin:0">Template</button><button class="col-edit" style="margin:0">+ Cântico</button></div></div>` },
+- Pílula de \`--h-chip\`, \`--fs-caps\` 700 em maiúsculas com \`--ls-chip\`, fundo da própria cor a 12% (color-mix com currentColor).
+- Neutra (\`.src-chip\`, \`.moments\`): \`--ink-soft\`. Destaque (\`.src-coro_clu\`, \`.lang-chip\` — idioma atual): \`--accent\`, também com fundo suave, nunca cheio.
+- Estado (\`.pend\` «por aprovar»): cheio, \`--pending-bg\` / \`--pending-ink\`.
+- Tudo o que se toca é Botão, Ligação, Interruptor ou Segmentado — nunca uma etiqueta.`,
+    html: `<div class="ds row"><span class="src-chip">Cancioneiro</span><span class="src-chip">Songbook</span><span class="src-chip src-coro_clu">Coro</span><span class="lang-chip">Inglês</span><span class="moments">Nossa Senhora</span><span class="pend">por aprovar</span></div>` },
+  Interruptor: { group: 'Formulários', h: 130, title: 'Interruptor',
+    readme: `Interruptor: uma opção que se liga ou desliga (ex.: «Cancioneiro» e «Coro» na janela Folhas).
+
+- Linha \`.switch-row\` (role="switch", aria-checked) com altura mínima \`--hit\`; o texto à esquerda, o interruptor à direita.
+- Trilho 36 × 22 em pílula: \`--border\` desligado, \`--accent\` ligado; botão de 16 px em \`--surface\`.
+- Fixo (ex.: cântico do Cancioneiro original): mostra-se ligado, sem esbater.
+- Desligar algo com consequências pede confirmação: a linha passa a pílula vermelha «Confirmar: retirar» (\`.switch-row.armed\`).`,
+    html: `<div class="ds"><dialog open><div class="col"><button class="switch-row on" role="switch" aria-checked="true"><span>Cancioneiro</span><span class="switch" aria-hidden="true"></span></button><button class="switch-row" role="switch" aria-checked="false"><span>Coro</span><span class="switch" aria-hidden="true"></span></button></div></dialog></div>` },
+  Segmentado: { group: 'Formulários', h: 120, title: 'Segmentado',
+    readme: `Segmentado: escolher uma de várias opções que se excluem (ex.: original / tradução, idioma no ecrã de ouvir).
+
+- Altura \`--h-btn-sm\`, anel interior de 1 px \`--accent\`, pontas em pílula, \`--fs-small\` 700 sem maiúsculas; toque ≥ 44 px.
+- Escolhido: cheio de \`--accent\` (texto \`--paper\` nas páginas dos cânticos, \`--on-accent\` no ecrã de ouvir).
+- Classes: \`.lang-switch\`, \`.listen-langs\`.
+
+**Partitura** (\`.scores .pdf\`): não é etiqueta nem segmentado — é uma ligação com o símbolo de página (\`--icon-sm\`), \`--fs-ui\`, \`--accent\`, altura mínima \`--hit\`.`,
+    html: `<div class="ds row"><span class="lang-switch"><button class="on">Latim</button><button>Tradução · Português</button></span><div class="scores"><a class="pdf" href="#"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:var(--icon-sm);height:var(--icon-sm);fill:none;stroke:currentColor;stroke-width:var(--stroke)"><path d="M6 3h9l3 3v15H6z"/><path d="M9 10h6M9 14h6"/></svg>Songbook, pág. 12</a></div></div>` },
   Campos: { group: 'Formulários', h: 250, title: 'Campos',
     readme: `Campos de texto e de escolha: altura \`--h-field\`, raio \`--radius\`, contorno \`--border\`, \`--fs-field\` 400 (16 px evita o zoom do iPhone).
 
