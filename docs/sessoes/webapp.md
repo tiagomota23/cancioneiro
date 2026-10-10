@@ -74,9 +74,13 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - O Tiago aprovou: design system como fonte única (tokens), verde da marca #10835c/#0b6b4b (contraste 4,5:1, texto opaco
   sobre a marca), chips separados por função (etiqueta / interruptor / segmentado), botões pequenos só em linhas densas,
   maiúsculas mantidas como estão, nomes curtos das categorias na página inicial («Todos os cânticos» por extenso).
-- Folhas: dois estados guardados (`collections.published`): em edição (só Maestro/Gestor; fundo branco; tocar num item abre
-  ações; «+ Adicionar cântico» por secção, que mostra logo os cânticos do momento da Missa com o mesmo nome) e publicada
-  (só leitura, só secções com cânticos). Folhas novas começam em edição; o template só se escolhe ao criar.
+- Folhas: dois estados guardados (`collections.published`): por publicar (só Maestro/Gestor a vê) e publicada. A página
+  da folha é sempre só leitura (só secções com cânticos), com «Editar folha» no fim (como «Editar cântico»). A edição é
+  uma janela por cima (`#col-ed`, como «Editar cântico»): Coro/Cancioneiro em segmentado no topo, título e duração,
+  depois cânticos e secções — tocar num item mostra ↑ ↓ 🗑 por cima da linha, à direita (apagar pede confirmação); numa
+  secção escolhida o nome passa a botão para o mudar; «+ Adicionar cântico» por secção (mostra logo os cânticos do
+  momento da Missa com o mesmo nome) e «+ Adicionar secção». Cada mudança fica logo gravada; abrir a edição esconde a
+  folha até «Publicar». Folhas novas abrem logo a edição; o template só se escolhe ao criar.
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 

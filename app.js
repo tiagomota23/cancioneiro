@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-10 v163';
+  const APP_VERSION = '2026-10-11 v164';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -846,7 +846,6 @@
 
   // ---------- Vistas ----------
   function show(id) {
-    document.body.classList.remove('col-editing'); // só a folha em edição tem fundo branco (showCollection volta a pôr)
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
   }
 
@@ -2608,77 +2607,119 @@
       .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
   }
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
-  // Folha: publicada (só leitura; só as secções com cânticos) ou em edição (Maestro / Gestor; fundo branco; tocar num
-  // cântico ou numa secção abre as ações; «+ Adicionar cântico» no fim de cada secção e «+ Adicionar secção» no fim)
+  // Folha: na página, sempre só leitura (só as secções com cânticos). Maestro / Gestor: «Editar folha» no fim (como
+  // «Editar cântico») abre a edição por cima (janela col-ed): público, título, duração, cânticos e secções; cada mudança
+  // fica logo gravada. Enquanto está em edição a folha fica escondida (published = false) até «Publicar».
+  const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>';
+  const colUntil = c => { const fim = new Date(c.expires_at); return `${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}`; };
   function showCollection(id) {
     const c = cols.find(x => x.id === id);
     const title = $('list-title'), rows = $('rows');
     title.hidden = false; $('status').textContent = '';
     if (!c || !colVisible(c)) { title.textContent = 'Folha'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta folha já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
-    const can = lvl() >= 3, editing = can && c.published === false;
-    document.body.classList.toggle('col-editing', editing);
-    const fim = new Date(c.expires_at);
-    const meta = `<small class="col-meta">${editing ? 'Em edição — só os Maestros veem esta folha · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</small>`;
+    const can = lvl() >= 3, draft = c.published === false;
+    const meta = `<small class="col-meta">${draft ? 'Por publicar — só os Maestros veem esta folha · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${colUntil(c)}</small>`;
     // partilhar: só Maestro / Gestor, e só a folha publicada com cânticos
-    const shareBtn = can && !editing && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
-    const btns = !can ? '' : editing
-      ? '<span class="col-btns"><button class="col-edit col-publish" id="col-mode">Publicar</button><button class="col-edit" id="col-set">Definições</button></span>'
-      : '<span class="col-btns"><button class="col-edit" id="col-mode">Editar</button></span>';
-    title.innerHTML = `${esc(c.title)}${shareBtn}${btns}${can ? meta : ''}`;
+    const shareBtn = can && !draft && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? meta : ''}`;
     const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
-    if (!editing) {
-      const items = withSongs(all);
-      rows.innerHTML = items.map(it => it.k === 'sec'
-        ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
-        : songRow(bySlug.get(it.key))).join('');
-      rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
-      if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
-    } else {
-      // «+ Adicionar cântico» depois do último cântico de cada secção (e dos cânticos antes da primeira secção, se houver)
-      const addLine = secId => `<li class="col-add"><button type="button" data-sec="${esc(secId || '')}">+ Adicionar cântico</button></li>`;
-      let html = '', cur = null, open = false;
-      all.forEach(it => {
-        if (it.k === 'sec') { if (open) html += addLine(cur); cur = it.ref.id; open = true;
-          html += `<li class="col-sec"><a href="#" class="sec-line" data-key="${esc(it.key)}">${esc(it.ref.title)}</a></li>`; }
-        else { open = true; html += songRow(bySlug.get(it.key)).replace('<li>', `<li data-key="${esc(it.key)}">`); }
-      });
-      if (open) html += addLine(cur);
-      rows.innerHTML = html + '<li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li>';
-      rows.querySelectorAll('li.col-add button[data-sec]').forEach(b => b.onclick = () => openSectionAdd(c, b.dataset.sec || null, false, true));
-      rows.querySelectorAll('li[data-key] > a, a.sec-line').forEach(a => a.addEventListener('click', e => { e.preventDefault(); colItemMenu(c, a.dataset.key || a.closest('li').dataset.key); }));
-      $('col-add-sec').onclick = async () => { const v = await appPrompt('Nova secção', '', 'Por exemplo: Entrada, Comunhão'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
-      if (!all.some(it => it.k === 'song')) $('status').textContent = 'Toque em «+ Adicionar cântico» para começar.';
-    }
+    const items = withSongs(all);
+    rows.innerHTML = items.map(it => it.k === 'sec'
+      ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
+      : songRow(bySlug.get(it.key))).join('') +
+      (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button></p></li>` : '');
+    rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
+    if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
-    if (can) {
-      $('col-mode').onclick = () => colSetPublished(c, editing);
-      if (editing) $('col-set').onclick = () => openCollectionDlg(c);
-    }
+    if (can) $('col-mode').onclick = () => openColEditor(c);
+    if (edCol === c && $('col-ed').open) renderColEditor(c);
   }
-  // Editar ↔ Publicar (só Maestro / Gestor): grava o estado da folha
-  async function colSetPublished(c, on) {
+  // ---------- Editar folha (janela por cima da folha) ----------
+  let edCol = null, ceSel = null; // folha aberta na edição; item escolhido (mostra as setas e o caixote)
+  const ICON_UP = '<path d="M12 19V5M6 11l6-6 6 6"/>', ICON_DOWN = '<path d="M12 5v14M6 13l6 6 6-6"/>';
+  const colStore = () => { if (DEMO) demoSave(); else store.set(colsKey(), cols); };
+  async function openColEditor(c) {
+    edCol = c; ceSel = null;
+    $('ce-msg').textContent = '';
+    renderColEditor(c);
+    $('col-ed').showModal();
+    if (c.published !== false) await colSetPublished(c, false, true); // em edição: escondida até «Publicar»
+  }
+  function renderColEditor(c) {
+    $('ce-aud').querySelectorAll('button').forEach(b => { const on = b.dataset.v === c.audience; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    if (document.activeElement !== $('ce-name')) $('ce-name').value = c.title;
+    $('ce-dur').value = c.duration;
+    $('ce-until').textContent = `Disponível ${colUntil(c)}. Mudar a duração conta a partir de agora; um mês depois de expirar, a folha é apagada.`;
+    const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
+    // «+ Adicionar cântico» depois do último cântico de cada secção (e dos cânticos antes da primeira secção, se houver)
+    const addLine = secId => `<li class="col-add"><button type="button" data-sec="${esc(secId || '')}">+ Adicionar cântico</button></li>`;
+    // item escolhido: subir, descer e apagar por cima da linha, à direita
+    const acts = (i, sec) => `<span class="ce-acts"><button type="button" data-act="up" aria-label="Subir"${i === 0 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_UP}</svg></button>` +
+      `<button type="button" data-act="down" aria-label="Descer"${i === all.length - 1 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_DOWN}</svg></button>` +
+      `<button type="button" data-act="del" class="del" aria-label="${sec ? 'Apagar secção' : 'Remover da folha'}">${TRASH}</button></span>`;
+    let html = '', cur = null, open = false;
+    all.forEach((it, i) => {
+      const sel = it.key === ceSel;
+      if (it.k === 'sec') { if (open) html += addLine(cur); cur = it.ref.id; open = true;
+        html += `<li class="col-sec${sel ? ' sel' : ''}" data-key="${esc(it.key)}"><div class="sec-line" role="button" tabindex="0" aria-expanded="${sel}">${sel ? `<button type="button" class="ce-name" aria-label="Mudar o nome da secção ${esc(it.ref.title)}">${esc(it.ref.title)}${PENCIL}</button>` : esc(it.ref.title)}</div>${sel ? acts(i, true) : ''}</li>`; }
+      else { open = true; html += songRow(bySlug.get(it.key)).replace('<li>', `<li data-key="${esc(it.key)}"${sel ? ' class="sel"' : ''}>`).replace(/<\/li>$/, (sel ? acts(i, false) : '') + '</li>'); }
+    });
+    if (open || !all.length) html += addLine(cur);
+    const rows = $('ce-rows');
+    rows.innerHTML = html + '<li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li>';
+    rows.querySelectorAll('li.col-add button[data-sec]').forEach(b => b.onclick = () => openSectionAdd(c, b.dataset.sec || null, false, true));
+    rows.querySelectorAll('li[data-key]').forEach(li => li.addEventListener('click', async e => {
+      e.preventDefault();
+      const key = li.dataset.key, b = e.target.closest('button[data-act]');
+      if (b) { // subir / descer; apagar pede confirmação
+        const it = all.find(x => x.key === key), sec = it.k === 'sec';
+        if (b.dataset.act === 'del') {
+          if (!(await appConfirm(sec ? `Apagar a secção «${it.ref.title}»? Os cânticos ficam na folha.` : `Remover «${bySlug.get(key).title}» da folha?`, sec ? 'Apagar' : 'Remover'))) return;
+          ceSel = null;
+        }
+        return colAction(c, key, b.dataset.act);
+      }
+      if (e.target.closest('.ce-name')) { // nome da secção: mudar
+        const it = all.find(x => x.key === key);
+        const t = await appPrompt('Nome da secção', it.ref.title);
+        if (t && t.trim() && t.trim() !== it.ref.title) colSaveSection(c, it.ref, t.trim().slice(0, 60));
+        return;
+      }
+      ceSel = ceSel === key ? null : key; renderColEditor(c);
+    }));
+    rows.querySelectorAll('.sec-line[role=button]').forEach(d => d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } });
+    $('col-add-sec').onclick = async () => { const v = await appPrompt('Nova secção', '', 'Por exemplo: Entrada, Comunhão'); if (v && v.trim()) colSaveSection(c, null, v.trim().slice(0, 60)); };
+  }
+  // público, título e duração: gravados logo que mudam
+  async function colSaveMeta(c, patch) {
+    if (patch.duration) patch.expires_at = new Date(Date.now() + DURS[patch.duration][1]).toISOString();
     try {
-      if (!DEMO) { const { error } = await sb.from('collections').update({ published: on }).eq('id', c.id); if (error) throw error; }
-      c.published = on;
-      if (DEMO) demoSave(); else store.set(colsKey(), cols);
-      toast(on ? 'Folha publicada' : 'Folha em edição — escondida até a publicar');
-    } catch (e) { appAlert('Não foi possível mudar: ' + (e.message || e)); }
+      if (!DEMO) { const { error } = await sb.from('collections').update(patch).eq('id', c.id); if (error) throw error; }
+      Object.assign(c, patch); colStore(); $('ce-msg').textContent = '';
+    } catch (e) { $('ce-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
     showCollection(c.id);
   }
-  // ações de um cântico ou de uma secção, na folha em edição
-  async function colItemMenu(c, key) {
-    const items = colItems(c), i = items.findIndex(it => it.key === key); if (i < 0) return;
-    const it = items[i], sec = it.k === 'sec';
-    const list = sec ? [{ value: 'name', label: 'Mudar o nome' }] : [{ value: 'open', label: 'Abrir o cântico' }];
-    if (i > 0) list.push({ value: 'up', label: 'Subir' });
-    if (i < items.length - 1) list.push({ value: 'down', label: 'Descer' });
-    list.push({ value: 'del', label: sec ? 'Apagar secção' : 'Remover da folha', sub: sec ? 'Os cânticos ficam na folha' : '' });
-    const v = await appChoose(sec ? it.ref.title : (bySlug.get(key) || {}).title || 'Cântico', list);
-    if (!v) return;
-    if (v === 'open') { location.hash = '#/cantico/' + encodeURIComponent(key); return; }
-    if (v === 'name') { const t = await appPrompt('Nome da secção', it.ref.title); if (t && t.trim() && t.trim() !== it.ref.title) colSaveSection(c, it.ref, t.trim().slice(0, 60)); return; }
-    if (v === 'del' && !(await appConfirm(sec ? `Apagar a secção «${it.ref.title}»? Os cânticos ficam na folha.` : 'Remover este cântico da folha?', sec ? 'Apagar' : 'Remover'))) return;
-    await colAction(c, key, v);
+  $('ce-aud').onclick = e => { const b = e.target.closest('button[data-v]'); if (b && edCol && b.dataset.v !== edCol.audience) colSaveMeta(edCol, { audience: b.dataset.v }); };
+  $('ce-name').onchange = () => { const t = $('ce-name').value.trim().slice(0, 80); if (!edCol) return; if (!t) { $('ce-name').value = edCol.title; return; } if (t !== edCol.title) colSaveMeta(edCol, { title: t }); };
+  $('ce-dur').onchange = () => { if (edCol) colSaveMeta(edCol, { duration: $('ce-dur').value }); };
+  $('ce-close').onclick = () => { $('ce-name').onchange(); $('col-ed').close(); };
+  $('ce-pub').onclick = async () => { const c = edCol; if (!c) return; $('ce-name').onchange(); $('col-ed').close(); await colSetPublished(c, true); };
+  $('ce-del').onclick = async () => {
+    const c = edCol; if (!c || !(await appConfirm(`Apagar a folha «${c.title}»?`, 'Apagar'))) return;
+    try {
+      if (!DEMO) { const { error } = await sb.from('collections').delete().eq('id', c.id); if (error) throw error; }
+      cols = cols.filter(x => x !== c); colStore();
+      $('col-ed').close(); location.hash = '#/';
+    } catch (e) { $('ce-msg').textContent = 'Não foi possível apagar: ' + (e.message || e); }
+  };
+  // Editar ↔ Publicar (só Maestro / Gestor): grava o estado da folha
+  async function colSetPublished(c, on, quiet) {
+    try {
+      if (!DEMO) { const { error } = await sb.from('collections').update({ published: on }).eq('id', c.id); if (error) throw error; }
+      c.published = on; colStore();
+      if (!quiet) toast(on ? 'Folha publicada' : 'Folha em edição — escondida até a publicar');
+    } catch (e) { appAlert('Não foi possível mudar: ' + (e.message || e)); }
+    showCollection(c.id);
   }
   // grava as posições que mudaram (cânticos e secções numerados 1, 2, 3… pela nova ordem)
   async function colPersist(c, items) {
@@ -2883,19 +2924,14 @@
     } catch (e) { appAlert('Não foi possível guardar: ' + (e.message || e)); }
     showCollection(c.id);
   }
-  // criar / editar uma coleção
-  let dlgCol = null;
-  function openCollectionDlg(c) {
-    dlgCol = c;
-    $('col-dlg-title').textContent = c ? 'Editar folha' : 'Nova folha';
-    $('col-name').value = c ? c.title : '';
-    $('col-aud').value = c ? c.audience : 'coro';
-    $('col-dur').value = c ? c.duration : '1w';
-    $('col-del').hidden = !c;
-    $('col-msg').textContent = (c ? `Ao guardar, a folha fica disponível durante ${DURS[c.duration][0]} a partir de agora. ` : '') + 'Um mês depois de expirar, a folha é apagada.';
-    // o template só se escolhe ao criar a folha
-    $('col-tpl-field').hidden = !!c;
-    if (!c) fillTplSelect();
+  // nova folha: público, título, duração e template (o template só se escolhe aqui); depois abre a edição
+  let newAud = 'coro';
+  const setNewAud = v => { newAud = v; $('col-aud').querySelectorAll('button').forEach(b => { const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); };
+  $('col-aud').onclick = e => { const b = e.target.closest('button[data-v]'); if (b) setNewAud(b.dataset.v); };
+  function openCollectionDlg() {
+    $('col-name').value = ''; setNewAud('coro'); $('col-dur').value = '1w';
+    $('col-msg').textContent = 'Um mês depois de expirar, a folha é apagada.';
+    fillTplSelect();
     $('col-dlg').showModal();
   }
   async function fillTplSelect(sel) {
@@ -2915,38 +2951,25 @@
   async function saveCollection() {
     const title = $('col-name').value.trim().slice(0, 80);
     if (!title) { $('col-msg').textContent = 'Escreva um título.'; return; }
-    const audience = $('col-aud').value, duration = $('col-dur').value;
-    const row = { title, audience, duration, expires_at: new Date(Date.now() + DURS[duration][1]).toISOString() };
+    const duration = $('col-dur').value;
+    const row = { title, audience: newAud, duration, expires_at: new Date(Date.now() + DURS[duration][1]).toISOString() };
     try {
-      if (DEMO) {
-        if (dlgCol) Object.assign(dlgCol, row); else cols.push({ id: 'demo' + Date.now(), ...row, published: false, songs: [], sections: [] });
-        demoSave();
-      } else if (dlgCol) {
-        const { error } = await sb.from('collections').update(row).eq('id', dlgCol.id); if (error) throw error;
-        Object.assign(dlgCol, row);
-      } else {
+      let c;
+      if (DEMO) { c = { id: 'demo' + Date.now(), ...row, published: false, songs: [], sections: [] }; cols.push(c); }
+      else {
         const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by,published').single(); if (error) throw error;
-        cols.push({ ...data, songs: [], sections: [] });
+        c = { ...data, songs: [], sections: [] }; cols.push(c);
       }
-      if (!DEMO) store.set(colsKey(), cols);
+      colStore();
       $('col-dlg').close();
-      const id = dlgCol ? dlgCol.id : cols[cols.length - 1].id;
-      const tpl = !dlgCol && (tpls || []).find(t => t.id === $('col-tpl-sel').value);
-      if (tpl) await applyTemplate(cols[cols.length - 1], tpl, true);
-      location.hash = '#/lista/colecao-' + id; route();
+      const tpl = (tpls || []).find(t => t.id === $('col-tpl-sel').value);
+      if (tpl) await applyTemplate(c, tpl, true);
+      location.hash = '#/lista/colecao-' + c.id; route();
+      openColEditor(c); // folhas novas começam em edição
     } catch (e) { $('col-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); }
-  }
-  async function deleteCollection() {
-    if (!dlgCol || !tapConfirm($('col-del'), 'Confirmar: apagar')) return;
-    try {
-      if (!DEMO) { const { error } = await sb.from('collections').delete().eq('id', dlgCol.id); if (error) throw error; }
-      cols = cols.filter(x => x !== dlgCol); if (DEMO) demoSave(); else store.set(colsKey(), cols);
-      $('col-dlg').close(); location.hash = '#/';
-    } catch (e) { $('col-msg').textContent = 'Não foi possível apagar: ' + (e.message || e); }
   }
   $('col-save').onclick = saveCollection;
   $('col-cancel').onclick = () => $('col-dlg').close();
-  $('col-del').onclick = deleteCollection;
   // no cântico: adicionar a uma coleção (ou escolher entre várias)
   const fitting = s => cols.filter(c => colVisible(c) && colFits(c, s));
   function colLabel(s) {
