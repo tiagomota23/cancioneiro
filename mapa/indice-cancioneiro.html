@@ -4,7 +4,7 @@
   
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1ab07f">
+  <meta name="theme-color" content="#10835c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Cancioneiro">
@@ -61,8 +61,8 @@
   --stroke: 1.8;                /* espessura do traço de todos os símbolos */
 
   /* Cores (um par claro/escuro gera --light-… e --dark-…) */
-  --brand: #1fb385;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). */
-  --brand-deep: #12966a;        /* Fim do degradê da marca; títulos das janelas. */
+  --brand: #10835c;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). Texto branco a 4,75:1. */
+  --brand-deep: #0b6b4b;        /* Fim do degradê da marca; títulos das janelas. Texto branco a 6,5:1. */
   --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
   --light-accent: #0e7f58;      /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
   --dark-accent: #5fcf90;       /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
@@ -251,17 +251,17 @@ body::before {
 }
 .rows .a {
   display: block; margin-top: 3px;
-  font-size: var(--fs-small); letter-spacing: 0; text-transform: none; font-style: italic; opacity: .75;
+  font-size: var(--fs-small); letter-spacing: 0; text-transform: none; font-style: italic;
 }
 .rows .snip {
   display: block; margin-top: 4px;
-  font-size: var(--fs-small); letter-spacing: 0; text-transform: none; opacity: .85;
+  font-size: var(--fs-small); letter-spacing: 0; text-transform: none;
 }
-.rows mark { background: color-mix(in srgb, var(--on-brand) 28%, transparent); color: var(--on-brand); border-radius: 2px; padding: 0 1px; }
-.rows .n { font-size: var(--fs-small); opacity: .8; font-variant-numeric: tabular-nums; text-align: right; }
-.rows .bp { display: block; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; opacity: .85; margin-top: 2px; white-space: nowrap; }
+.rows mark { background: color-mix(in srgb, var(--shadow) 28%, transparent); color: var(--on-brand); border-radius: 2px; padding: 0 1px; }
+.rows .n { font-size: var(--fs-small); font-variant-numeric: tabular-nums; text-align: right; }
+.rows .bp { display: block; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; margin-top: 2px; white-space: nowrap; }
 .rows .chev { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); opacity: .7; flex: none; }
-.status { text-align: center; font-size: 13px; opacity: .85; padding: 16px; }
+.status { text-align: center; font-size: 13px; padding: 16px; }
 
 /* Cântico */
 .songbar {
@@ -395,16 +395,16 @@ dialog form { text-align: right; }
 .az a:active { background: color-mix(in srgb, var(--on-brand) 10%, transparent); }
 .az .t { flex: 1; min-width: 0; font-size: var(--fs-small); letter-spacing: var(--ls-chip); text-transform: uppercase;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.az .n { font-size: var(--fs-small); opacity: .9; font-variant-numeric: tabular-nums; text-align: right; }
-.az .n small { display: block; font-size: var(--fs-caps); opacity: .85; }
-.az .empty { padding: 20px; opacity: .85; font-size: var(--fs-ui); }
+.az .n { font-size: var(--fs-small); font-variant-numeric: tabular-nums; text-align: right; }
+.az .n small { display: block; font-size: var(--fs-caps); }
+.az .empty { padding: 20px; font-size: var(--fs-ui); }
 
 /* Preferidos */
 .star-btn svg { fill: currentColor; stroke: currentColor; stroke-width: 1.2; }
 .fav-toggle svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); }
 .fav-toggle.on svg { fill: currentColor; }
 .fav-toggle.on { color: var(--star); }
-.fav-empty { text-align: center; padding: 40px 28px; font-size: var(--fs-ui); line-height: 1.5; opacity: .9; }
+.fav-empty { text-align: center; padding: 40px 28px; font-size: var(--fs-ui); line-height: 1.5; }
 .listen-progress { height: 3px; background: var(--chip-bg); border-radius: var(--radius-sm); overflow: hidden; margin: 8px 24px 0; }
 .listen-progress div { height: 100%; width: 0; background: var(--brand); transition: width .5s linear; }
 .listen-hint { font-size: var(--fs-small); color: var(--text-faint); min-height: 1em; margin: -4px 0 14px; }
@@ -424,7 +424,7 @@ dialog form { text-align: right; }
   font-size: 16px; padding: 12px 22px; border-radius: 26px; box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow) 15%, transparent); }
 .google-btn svg { width: 20px; height: 20px; }
 .login-msg { min-height: 1.4em; margin: 18px 0 0; font-size: var(--fs-ui); }
-.login-note { font-size: var(--fs-small); opacity: .8; margin-top: 28px; }
+.login-note { font-size: var(--fs-small); margin-top: 28px; }
 .info-actions { display: flex; justify-content: space-between; gap: 10px; }
 
 /* ---- Adaptação a qualquer ecrã (larguras pequenas, paisagem, entalhe/notch) ---- */
@@ -486,7 +486,7 @@ body.pdf-open { overflow: hidden; }
 .pdf-title { color: var(--pdf-title); }
 
 /* Fontes, Coro CLU, gravações */
-.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; opacity: .9; border-bottom: 1px solid var(--on-brand-line); }
+.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; border-bottom: 1px solid var(--on-brand-line); }
 .rows li.src-note a { color: inherit; }
 .src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--fs-ui); margin: 10px 0; }
 .recs { margin: 1.6em 0 .6em; font-size: 15px; }
@@ -579,9 +579,9 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 
 /* Coleções */
 .books .col-new .t { flex: none; }
-.books .t s { text-decoration-thickness: 1.5px; opacity: .75; }
-.books .t small { font-size: 11px; opacity: .8; text-transform: none; }
-.list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 4px; }
+.books .t s { text-decoration-thickness: 1.5px; }
+.books .t small { font-size: 11px; text-transform: none; }
+.list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; }
 .rows li.swipe { position: relative; overflow: hidden; }
 .rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
 .rows li.swipe:not(.open):not(.drag) .sw-actions { visibility: hidden; }
@@ -633,7 +633,7 @@ html, body { touch-action: pan-x pan-y; }
 /* Se a app não arrancar (ficheiro não chegou), ao fim de 10 s a capa explica o que fazer */
 .splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: var(--on-brand); font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
 .splash.gone::after { display: none; }
-@keyframes splash-help { to { opacity: .9; } }
+@keyframes splash-help { to { opacity: 1; } }
 
 /* botão à espera de confirmação (2.º toque) */
 button.armed, .edit-actions button.ghost.armed { background: var(--danger) !important; color: var(--on-accent) !important; border-color: var(--danger) !important; }
@@ -650,7 +650,7 @@ body.shared-view #btn-fav, body.shared-view #btn-share, body.shared-view #btn-ch
 body.no-session.shared-sub #btn-back { display: inline-flex; }
 body.shared-view .searchrow, body.shared-view #btn-perfil { visibility: hidden; }
 body.shared-view .searchrow { height: 8px; overflow: hidden; }
-#view-list .shared-foot { color: color-mix(in srgb, var(--on-brand) 85%, transparent); }
+#view-list .shared-foot { color: var(--on-brand); }
 #view-list .shared-foot .revert-link { color: var(--on-brand); }
 #pdf-download svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
@@ -699,7 +699,7 @@ dialog h2:focus, dialog h2:focus-visible { outline: none; box-shadow: none; }
 .mini-info { flex: 1; min-width: 0; color: var(--on-accent); text-decoration: none; display: grid; }
 .mini-info b, .mini-info small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-info b { font-size: var(--fs-ui); }
-.mini-info small { font-size: var(--fs-small); opacity: .85; }
+.mini-info small { font-size: var(--fs-small); }
 body.has-mini .view, body.has-mini .pdfpages { padding-bottom: calc(84px + var(--safe-bottom, 0px)); }
 .pdf-block { max-width: none; }
 /* aviso de instalação (2.ª abertura) */
@@ -732,9 +732,9 @@ dialog.tour.center { background: color-mix(in srgb, var(--shadow) 55%, transpare
 /* Versão de teste: aviso na capa e no canto da página inicial */
 .splash-in { display: grid; justify-items: center; gap: 10px; }
 .splash-sub { margin: 0; font-family: var(--serif); font-size: clamp(14px, 4vw, 22px); letter-spacing: .3em; text-transform: uppercase; opacity: 0; animation: splash-sub .6s ease 1s forwards; }
-@keyframes splash-sub { to { opacity: .9; } }
+@keyframes splash-sub { to { opacity: 1; } }
 .topbar-left-spacer { display: grid; place-items: center; }
-.test-tag { font-size: 9.5px; line-height: 1.2; font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; text-align: center; color: var(--on-brand); opacity: .85; }
+.test-tag { font-size: 9.5px; line-height: 1.2; font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; text-align: center; color: var(--on-brand); }
 /* procurar cântico na folha: janela fixa no topo; a caixa de procura não se mexe, só a lista de resultados desliza */
 dialog.sec-add[open] { display: flex; flex-direction: column; margin: calc(var(--safe-top, 0px) + 14px) auto auto; height: min(78dvh, 640px); max-height: none; overflow: hidden; }
 dialog.sec-add h2, dialog.sec-add .sa-sec, dialog.sec-add .sa-search, dialog.sec-add #sa-msg, dialog.sec-add .info-actions { flex: none; }
@@ -764,8 +764,8 @@ dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
 .rows li.cat-head, .rows li.col-sec .sec-line, .recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .sec-add .sa-sec {
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase;
 }
-.rows li.cat-head { padding: 20px 14px 6px; color: var(--on-brand); opacity: .75; }
-.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: var(--on-brand); text-decoration: none; opacity: .75; border-bottom: 0; min-height: 0; }
+.rows li.cat-head { padding: 20px 14px 6px; color: var(--on-brand); }
+.rows li.col-sec .sec-line { display: block; padding: 20px 14px 6px; color: var(--on-brand); text-decoration: none; border-bottom: 0; min-height: 0; }
 .recs h2 { color: var(--accent); margin: 0 0 8px; }
 .col-field, .song-new .sn-f, .sec-add .sa-sec { display: grid; gap: 4px; margin: 10px 0; color: var(--text-soft); min-width: 0; }
 .sec-add .sa-sec[hidden] { display: none; }
@@ -847,8 +847,8 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick-new { display: flex; align-items: center; width: 100%; min-height: var(--hit); margin-top: 4px; padding: 0 14px; border: 1px dashed var(--border-dash);
   border-radius: var(--radius); background: none; color: var(--accent); text-align: left; }
 .col-pick-new, .rows li.col-add-sec button, .books .col-new, .books .col-new .t { font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
-.rows li.col-add-sec button { width: 100%; min-height: var(--hit); text-align: left; padding: 14px; color: var(--on-brand); opacity: .85; }
-.books .col-new { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; color: var(--on-brand); opacity: .9; }
+.rows li.col-add-sec button { width: 100%; min-height: var(--hit); text-align: left; padding: 14px; color: var(--on-brand); }
+.books .col-new { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; color: var(--on-brand); }
 
 /* Etiquetas (Tag): só informação, nunca se tocam — sem contorno, fundo suave da própria cor */
 .src-chip, .lang-chip, .moments {
@@ -1084,7 +1084,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-10 v148</p>
+    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-10 v149</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
