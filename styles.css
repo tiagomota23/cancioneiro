@@ -7,7 +7,7 @@
   --accent: var(--light-accent);
   --song-h1: var(--light-title);
   --pdf-bg: var(--light-pdf-bg);
-  --row-line: color-mix(in srgb, var(--on-brand) 22%, transparent);
+  --pdf-title: var(--light-pdf-title);
   --fs: 18px;
   --safe-top: env(safe-area-inset-top, 0px);
   /* iOS 26 desfoca uma faixa logo abaixo da barra de estado (cerca de 28 pt): quando há barra de estado,
@@ -127,7 +127,7 @@ body::before {
   display: flex; align-items: center; gap: 12px;
   min-height: 48px; padding: 10px 14px;
   color: var(--on-brand); text-decoration: none;
-  border-bottom: 1px solid var(--row-line);
+  border-bottom: 1px solid var(--on-brand-line);
 }
 .rows li a:active { background: color-mix(in srgb, var(--on-brand) 8%, transparent); }
 .rows .t {
@@ -215,7 +215,7 @@ dialog {
   border: 0; border-radius: var(--radius-lg); max-width: min(92vw, 420px); padding: 20px 22px;
   color: var(--text); font-size: var(--fs-ui); line-height: 1.45;
 }
-dialog::backdrop { background: color-mix(in srgb, var(--shadow) 45%, transparent); }
+dialog::backdrop { background: var(--scrim); }
 dialog a { color: var(--accent); }
 dialog form { text-align: right; }
 
@@ -227,7 +227,7 @@ dialog form { text-align: right; }
 /* Ouvir e identificar */
 .search .mic svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
 .listen {
-  position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--shadow) 45%, transparent);
+  position: fixed; inset: 0; z-index: 40; background: var(--scrim);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .listen .sheet {
@@ -267,7 +267,7 @@ dialog form { text-align: right; }
 .drawer-close { flex: none; margin: 6px 2px 0 4px; color: var(--on-brand); align-self: flex-start; }
 .az {
   flex: 1; min-width: 0; list-style: none; margin: 0; padding: 4px 0 calc(24px + var(--safe-bottom));
-  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--row-line);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; border-left: 1px solid var(--on-brand-line);
 }
 .az .letter {
   position: sticky; top: 0; z-index: 1;
@@ -369,10 +369,10 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 .pdf-msg { margin-top: 40px; color: var(--text-soft); }
 body.pdf-open { overflow: hidden; }
 .pdfview { background: var(--pdf-bg); }
-.pdf-title { color: var(--pdf-title, inherit); }
+.pdf-title { color: var(--pdf-title); }
 
 /* Fontes, Coro CLU, gravações */
-.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; opacity: .9; border-bottom: 1px solid var(--row-line); }
+.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; opacity: .9; border-bottom: 1px solid var(--on-brand-line); }
 .rows li.src-note a { color: inherit; }
 .src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--fs-ui); margin: 10px 0; }
 .recs { margin: 1.6em 0 .6em; font-size: 15px; }
@@ -744,7 +744,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .lang-chip, .pick-canc.on, .listen-langs button.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 .pick-canc.on, .listen-langs button.on { color: var(--on-accent); }
 .pick-canc:disabled { opacity: 1; }
-.list-title .col-edit { color: var(--on-brand); border-color: color-mix(in srgb, var(--on-brand) 70%, transparent); vertical-align: middle; margin-left: 10px; }
+.list-title .col-edit { color: var(--on-brand); border-color: var(--on-brand-outline); vertical-align: middle; margin-left: 10px; }
 .lang-switch { display: inline-flex; height: var(--h-chip); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); overflow: hidden; }
 .lang-switch button { height: 100%; padding: 0 10px; color: var(--accent); font: 700 var(--fs-caps)/1 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .lang-switch button.on { background: var(--accent); color: var(--paper); }
@@ -775,7 +775,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 }
 input::placeholder, textarea::placeholder { color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
 .list-title .novos-filtro { display: block; box-sizing: border-box; height: var(--h-btn); max-width: 100%; margin-top: 10px; padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--on-brand) 70%, transparent); border-radius: var(--radius); background: color-mix(in srgb, var(--on-brand) 15%, transparent);
+  border: 1px solid var(--on-brand-outline); border-radius: var(--radius); background: color-mix(in srgb, var(--on-brand) 15%, transparent);
   color: var(--on-brand); font: 400 var(--fs-field) var(--sans); letter-spacing: 0; text-transform: none; }
 .list-title .novos-filtro option { color: var(--text); }
 

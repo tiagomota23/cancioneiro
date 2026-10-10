@@ -55,7 +55,8 @@ deixam um pedido em `job_requests` (só a base de dados escreve lá) e as Action
 |---|---|
 | `index.html` | página única; Content-Security-Policy (scripts só da app e do endereço exato do supabase-js, com SRI) |
 | `app.js` | toda a lógica (listas, cântico, folhas, perfis, gestão, identificação pelo som, modo `?demo`) |
-| `theme.css` | tema: todas as cores, letras, tamanhos e formas (também usado por admin.html, drive.html e privacidade.html); para mudar o aspeto, basta mudar este ficheiro |
+| `design/tokens.json` | **fonte única do design**: todas as cores, letras, tamanhos e formas (espelhada na página «Design System» do claude.ai) |
+| `theme.css` | gerado a partir de design/tokens.json com `node tools/theme/build.mjs` (não editar à mão; `--check` verifica); usado também por admin.html, drive.html e privacidade.html |
 | `styles.css` | disposição e mecânica do modo claro/escuro (sem cores próprias: usa os nomes de theme.css) |
 | `config.js` | endereço do Supabase e chave pública (anon) |
 | `sw.js` | service worker: funciona sem rede, cache por versão |

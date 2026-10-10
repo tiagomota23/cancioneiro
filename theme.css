@@ -1,92 +1,99 @@
 /* ============================================================================================================
-   TEMA DO CANCIONEIRO — todas as cores, letras, tamanhos e formas da app estão aqui (e só aqui).
-   Para mudar o aspeto: altere os valores abaixo. styles.css só tem a disposição e usa estes nomes.
-   Também usado por admin.html, drive.html e privacidade.html.
-   Fora deste ficheiro (mudar à mão se a cor principal mudar): ícones (icons/*.png), manifest.json (theme_color,
+   TEMA DO CANCIONEIRO — GERADO a partir de design/tokens.json (node tools/theme/build.mjs). NÃO EDITAR À MÃO.
+   Todas as cores, letras, tamanhos e formas da app estão em design/tokens.json; styles.css só tem a disposição
+   e usa estes nomes. Também usado por admin.html, drive.html e privacidade.html.
+   Fora daqui (mudar à mão se a cor da marca mudar): ícones (icons/*.png), manifest.json (theme_color,
    background_color) e <meta name="theme-color"> nas páginas HTML (cor da barra do telemóvel).
-   Depois de mudar: subir a versão da app (app.js, index.html, sw.js), como em qualquer alteração.
+   Depois de mudar: gerar este ficheiro e subir a versão da app (app.js, index.html, sw.js).
    ============================================================================================================ */
 :root {
   /* Letras (carregadas do Google Fonts em index.html; se mudar de letra, mude também esse endereço) */
-  --serif: "Marcellus", "Optima", Georgia, serif;    /* títulos, capa, nome da app */
-  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif;  /* tudo o resto */
-  /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
-  --fs-caps: 11px;             /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
-  --ls-caps: .12em;
-  --fs-small: 13px;            /* texto secundário, botões pequenos, notas */
-  --fs-ui: 15px;               /* botões, linhas de opção, texto das janelas */
-  --fs-field: 16px;            /* campos (16 evita o zoom do iPhone) */
-  --fs-title: 22px;            /* títulos (letra serif, maiúsculas) */
-  --fs-display: 35px;          /* nome da app na capa e na entrada */
+  --serif: "Marcellus", "Optima", Georgia, serif; /* títulos, capa, nome da app */
+  --sans: "Lato", -apple-system, "Helvetica Neue", Arial, sans-serif; /* tudo o resto */
 
-  /* Formas e tamanhos */
-  --radius-sm: 6px;            /* coisas pequenas: barras de progresso, letras do índice */
-  --radius: 10px;              /* cartões, linhas de opção, campos */
-  --radius-lg: 14px;           /* janelas */
-  --pill: 999px;               /* todos os botões e chips */
-  --h-btn: 40px;
-  --h-btn-sm: 32px;
-  --h-field: 44px;
-  --h-chip: 24px;
-  --hit: 44px;                 /* área mínima de toque dos botões de símbolo */
-  --icon: 22px;                /* símbolos nos botões */
-  --icon-sm: 16px;             /* símbolos no meio do texto e nos botões pequenos */
-  --icon-lg: 32px;             /* microfone grande (a ouvir) */
-  --stroke: 1.8;               /* espessura do traço de todos os símbolos */
-  --ls-chip: .08em;            /* espaçamento das maiúsculas: chips, etiquetas e linhas das listas */
-  --ls-row: .05em;             /*   títulos das linhas de opção */
+  /* Escala de letra (fora da letra dos cânticos): só estes seis tamanhos, pesos 400 e 700 */
+  --fs-caps: 11px;              /* etiquetas em maiúsculas, negrito: cabeçalhos de secção, chips */
+  --fs-small: 13px;             /* texto secundário, botões pequenos, notas */
+  --fs-ui: 15px;                /* botões, linhas de opção, texto das janelas */
+  --fs-field: 16px;             /* campos (16 evita o zoom do iPhone) */
+  --fs-title: 22px;             /* títulos (letra serif, maiúsculas) */
+  --fs-display: 35px;           /* nome da app na capa e na entrada */
+
+  /* Espaçamento das maiúsculas, por função */
+  --ls-caps: .12em;             /* cabeçalhos de secção e rótulos de campos */
+  --ls-chip: .08em;             /* chips, etiquetas e títulos das linhas das listas */
+  --ls-row: .05em;              /* títulos das linhas de opção */
+
+  /* Cantos */
+  --radius-sm: 6px;             /* coisas pequenas: barras de progresso, letras do índice */
+  --radius: 10px;               /* cartões, linhas de opção, campos */
+  --radius-lg: 14px;            /* janelas */
+  --pill: 999px;                /* todos os botões e chips */
+
+  /* Alturas e símbolos */
+  --h-btn: 40px;                /* botão normal */
+  --h-btn-sm: 32px;             /* botão pequeno */
+  --h-field: 44px;              /* campo */
+  --h-chip: 24px;               /* chip */
+  --hit: 44px;                  /* área mínima de toque dos botões de símbolo */
+  --icon: 22px;                 /* símbolos nos botões */
+  --icon-sm: 16px;              /* símbolos no meio do texto e nos botões pequenos */
+  --icon-lg: 32px;              /* microfone grande (a ouvir) */
+  --stroke: 1.8;                /* espessura do traço de todos os símbolos */
 
   /* Cor da marca: fundo da página inicial, menu, capa (degradê de --brand para --brand-deep) */
   --brand: #1fb385;
   --brand-deep: #12966a;
-  --on-brand: #fff;            /* texto e símbolos sobre a cor da marca */
+  --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
+  --on-brand-line: color-mix(in srgb, var(--on-brand) 22%, transparent); /* separadores das listas sobre a cor da marca */
+  --on-brand-outline: color-mix(in srgb, var(--on-brand) 70%, transparent); /* contorno de chips e campos sobre a cor da marca */
 
-  /* Destaque: botões, ligações, ícones e acordes sobre fundo claro */
-  --light-accent: #0e7f58;
-  --on-accent: #fff;           /* texto sobre botões de destaque, de perigo e avisos escuros */
+  /* Destaque: botões, ligações, ícones e acordes sobre fundo claro (nas páginas dos cânticos muda com o modo escuro) */
+  --light-accent: #0e7f58;      /* botões, ligações, ícones; no escuro, mais claro */
+  --dark-accent: #5fcf90;       /* botões, ligações, ícones; no escuro, mais claro */
+  --on-accent: #fff;            /* texto sobre botões de destaque, de perigo e avisos escuros */
 
-  /* Páginas dos cânticos — modo claro */
-  --light-paper: #ffffff;      /* fundo */
-  --light-ink: #4a4a4a;        /* letra */
-  --light-ink-soft: #767676;   /* autor, notas, número */
-  --light-chord: #0e7f58;      /* acordes */
-  --light-title: #333;         /* título do cântico */
-  --light-pdf-bg: #f2f2f2;     /* fundo à volta das partituras */
-
-  /* Páginas dos cânticos — modo escuro */
-  --dark-paper: #121614;
-  --dark-ink: #d8dcd9;
-  --dark-ink-soft: #9aa39e;
-  --dark-chord: #5fcf90;
-  --dark-accent: #5fcf90;
-  --dark-title: #eef1ef;
-  --dark-pdf-bg: #222;
-  --dark-pdf-title: #eee;
+  /* Páginas dos cânticos — modo claro / modo escuro */
+  --light-paper: #ffffff;       /* fundo */
+  --dark-paper: #121614;        /* fundo */
+  --light-ink: #4a4a4a;         /* letra */
+  --dark-ink: #d8dcd9;          /* letra */
+  --light-ink-soft: #767676;    /* autor, notas, número */
+  --dark-ink-soft: #9aa39e;     /* autor, notas, número */
+  --light-chord: #0e7f58;       /* acordes */
+  --dark-chord: #5fcf90;        /* acordes */
+  --light-title: #333;          /* título do cântico */
+  --dark-title: #eef1ef;        /* título do cântico */
+  --light-pdf-bg: #f2f2f2;      /* fundo à volta das partituras */
+  --dark-pdf-bg: #222;          /* fundo à volta das partituras */
+  --light-pdf-title: #0e7f58;   /* título na barra da partitura */
+  --dark-pdf-title: #eee;       /* título na barra da partitura */
 
   /* Janelas, cartões e campos (sempre claros) */
   --surface: #fff;
-  --text: #333;                /* texto principal */
-  --text-soft: #666;           /* texto secundário */
-  --text-faint: #767676;       /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
-  --border: #ccd8d2;           /* campos, cartões, linhas de opção */
-  --border-dash: #b9cfc5;      /* botões tracejados "+ novo" */
-  --line: #e6ece9;             /* separadores */
+  --text: #333;                 /* texto principal */
+  --text-soft: #666;            /* texto secundário */
+  --text-faint: #767676;        /* dicas, marcadores, símbolos inativos (contraste 4.5:1 em branco) */
+  --border: #ccd8d2;            /* campos, cartões, linhas de opção */
+  --border-dash: #b9cfc5;       /* botões tracejados "+ novo" */
+  --line: #e6ece9;              /* separadores */
   --divider: rgba(128,128,128,.2); /* separadores nas páginas dos cânticos (servem em claro e escuro) */
-  --chip-bg: #e8e8e8;          /* letras do índice A–Z, barra de progresso */
-  --tint: #e3f5ec;             /* realce de destaque suave */
+  --chip-bg: #e8e8e8;           /* letras do índice A–Z, barra de progresso */
+  --tint: #e3f5ec;              /* realce de destaque suave */
   --tint-soft: #f3faf7;
-  --meter-idle: #cfd8d4;       /* barras do microfone em silêncio */
-  --shadow: #000;              /* sombras e véus escuros (usado com transparência) */
-  --toast-bg: rgba(20,20,20,.88);
+  --meter-idle: #cfd8d4;        /* barras do microfone em silêncio */
+  --shadow: #000;               /* sombras e véus escuros (usado com transparência) */
+  --scrim: color-mix(in srgb, var(--shadow) 45%, transparent); /* véu por trás das janelas */
+  --toast-bg: rgba(20,20,20,.88); /* Estados */
 
   /* Estados */
-  --star: #e3a008;             /* preferido */
-  --danger: #c0392b;           /* apagar, erro */
-  --danger-deep: #8e1f14;      /* apagar: confirmar */
+  --star: #e3a008;              /* preferido */
+  --danger: #c0392b;            /* apagar, erro */
+  --danger-deep: #8e1f14;       /* apagar: confirmar */
   --danger-border: #e3b3ad;
-  --pending-bg: #f3c969;       /* etiqueta "por aprovar" */
+  --pending-bg: #f3c969;        /* etiqueta "por aprovar" */
   --pending-ink: #4a3800;
-  --warn-bg: #fff8e3;          /* caixa de aviso */
+  --warn-bg: #fff8e3;           /* caixa de aviso */
   --warn-border: #f0d58a;
   --warn-ink: #5a4600;
   --warn-strong: #8a5a00;
