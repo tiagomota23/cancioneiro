@@ -584,17 +584,6 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .books .t small { font-size: 11px; text-transform: none; }
 .list-title .list-kicker { display: block; margin-bottom: 4px; font: 700 var(--fs-caps)/1.2 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; }
 .list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; }
-.rows li.swipe { position: relative; overflow: hidden; }
-.rows li.swipe > a { position: relative; z-index: 1; transition: transform .2s; padding-right: 44px; }
-.rows li.swipe:not(.open):not(.drag) .sw-actions { visibility: hidden; }
-.rows li.swipe.open > a { transform: translateX(-170px); }
-.rows li.swipe .sw-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
-.rows li.swipe .sw-actions button { width: 44px; color: var(--on-brand); background: color-mix(in srgb, var(--shadow) 25%, transparent); font-size: 18px; }
-.rows li.swipe .sw-actions button:disabled { opacity: .35; }
-.rows li.swipe .sw-actions .sw-del { width: 82px; font-size: 13px; font-weight: 700; background: var(--danger); }
-.rows li.swipe .sw-more { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); z-index: 2; width: 34px; height: 34px; color: var(--on-brand); font-size: 18px; opacity: .8; }
-.rows li.swipe.open .sw-more { opacity: 0; pointer-events: none; }
-@media (hover: none) { .rows li.swipe .sw-more { display: none; } .rows li.swipe > a { padding-right: 14px; } }
 .col-dlg { width: min(420px, calc(100vw - 32px)); }
 .col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
 
@@ -603,10 +592,6 @@ input, select, textarea { font-size: max(16px, 1em); }
 html, body { touch-action: pan-x pan-y; }
 .pdfview, .pdfview * { touch-action: auto; }
 
-.rows li.swipe .sw-actions .sw-del { width: 56px; }
-.rows li.swipe .sw-actions .sw-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: var(--on-accent); stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.rows li.swipe .sw-actions .sw-del.confirm { background: var(--danger-deep); }
-.rows li.swipe.open > a { transform: translateX(-144px); }
 .fav-toggle.book svg { fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linejoin: round; }
 .fav-toggle.book.on svg { fill: color-mix(in srgb, var(--light-accent) 18%, transparent); }
 .fav-toggle.book.on { color: var(--accent); }
@@ -615,7 +600,6 @@ html, body { touch-action: pan-x pan-y; }
 /* Secções dentro de uma coleção */
 /* como os títulos "Coro" e "Coro — momentos da Missa" do índice */
 .rows li.col-sec { border-bottom: 0; }
-.rows li.col-sec .sw-actions button { font-size: 20px; }
 
 /* Coleções do cântico: ☆/★ à esquerda e "+ Cancioneiro" à direita, pequenos */
 .pick-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; margin-bottom: 6px; }
@@ -721,8 +705,6 @@ dialog.tour { border-radius: 0; color: inherit; position: fixed; inset: 0; width
 dialog.tour::backdrop { background: transparent; }
 dialog.tour.center { background: color-mix(in srgb, var(--shadow) 55%, transparent); }
 /* "+" nas secções da folha e procura de cânticos */
-.rows li.swipe.sec4.open > a { transform: translateX(-214px); }
-.rows li.swipe .sw-actions .sw-add { font-size: 26px; font-weight: 400; background: color-mix(in srgb, var(--shadow) 35%, transparent); }
 .sec-add { width: min(92vw, 420px); }
 .sec-add #sa-list { list-style: none; margin: 0 0 10px; padding: 0; max-height: 50dvh; overflow-y: auto; }
 .sec-add #sa-list button:disabled { opacity: .5; }
@@ -960,7 +942,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 /* Folha em edição (Maestro / Gestor): fundo branco; a barra de cima e a procura continuam verdes */
 body.col-editing::before { background: var(--surface); }
 body.col-editing .topbar { background: var(--brand); box-shadow: 0 0 0 100vmax var(--brand); clip-path: inset(0 -100vmax); }
-body.col-editing #view-list { color: var(--text); }
+body.col-editing #rows, body.col-editing #status { color: var(--text); } /* só a lista: a barra de cima e a procura continuam verdes, com texto branco */
 body.col-editing .list-title, body.col-editing .list-title .col-meta { color: var(--brand-deep); }
 body.col-editing .list-title .col-share { color: var(--accent); }
 body.col-editing .list-title .col-edit { color: var(--accent); border-color: var(--accent); }
@@ -1116,7 +1098,7 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v160</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v162</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
