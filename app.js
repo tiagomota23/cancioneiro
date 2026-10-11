@@ -76,13 +76,17 @@
   // secção da categoria (o título por cima dela na página inicial); as primeiras são do Cancioneiro
   const catHead = c => c.id === 'todos' ? 'Cancioneiro' : c.head;
   const catSection = id => { let h = 'Cancioneiro'; for (const c of allCategories()) { if (catHead(c)) h = catHead(c); if (c.id === id) return h; } return h; };
+  // categorias da secção Cancioneiro (de «Todos os cânticos» a «Com copyright»): só os cânticos do Cancioneiro,
+  // em todos os perfis (do Coro para cima, os outros estão nas outras secções)
+  const inCancSec = c => { const i = CATEGORIES.indexOf(c); return i >= 0 && i <= CATEGORIES.findIndex(x => x.id === 'copyright'); };
+  const catSongs = c => inCancSec(c) ? songs.filter(s => inCancioneiro(s) && c.test(s)) : songs.filter(c.test);
   // categorias próprias (dos cânticos novos): etiquetas do grupo "Categoria"
   const allCategories = () => {
     const own = [...new Set(allSongs.flatMap(s => (s.tags || []).filter(t => t.grp === 'Categoria').map(t => t.tag)))].sort((a, b) => a.localeCompare(b, 'pt'));
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v188';
+  const APP_VERSION = '2026-10-11 v189';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -879,7 +883,7 @@
       let pending = null;
       rows.innerHTML = allCategories().map(c => {
         if (catHead(c)) pending = catHead(c);
-        const n = songs.filter(c.test).length;
+        const n = catSongs(c).length;
         if (!n) return '';
         // no perfil Cancioneiro só há esta secção: sem o título "Cancioneiro"
         const head = pending === 'Cancioneiro' && lvl() < 2 ? null : pending;
@@ -928,7 +932,7 @@
     title.hidden = false;
     // no perfil Cancioneiro só há uma secção: sem o nome da secção por cima
     title.innerHTML = `${lvl() >= 2 ? `<small class="list-kicker">${esc(catSection(cat.id))}</small>` : ''}${esc(catName(cat))}`;
-    rows.innerHTML = songs.filter(cat.test)
+    rows.innerHTML = catSongs(cat)
       .sort((a, b) => a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' }))
       .map(s => songRow(s)).join('');
   }
