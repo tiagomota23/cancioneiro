@@ -751,6 +751,10 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .col-pick.on small { color: var(--on-accent); }
 .col-pick[aria-disabled=true] { cursor: default; }
+.col-pick > span { flex: 1; min-width: 0; }
+.pick-ic { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
+.pick-ic.fill { fill: currentColor; stroke: none; }
+.col-pick.on .pick-ic { color: var(--on-accent); }
 .pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
 .pick-head:first-child { margin-top: 0; }

@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v185';
+  const APP_VERSION = '2026-10-11 v186';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3117,14 +3117,16 @@
   function openSongCollections(slug) {
     const s = bySlug.get(slug); if (!s) return;
     const act = cols.filter(c => !expired(c) && colVisible(c));
-    const row = (k, label, sub, on, fixed) => `<button type="button" class="col-pick${on ? ' on' : ''}" data-k="${esc(k)}" aria-pressed="${on}"${fixed ? ' aria-disabled="true"' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>${on ? `<svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true">${ICON_CHECK}</svg>` : ''}</button>`;
+    // símbolo à esquerda do nome, como no menu: estrela (Preferidos), livro (Cancioneiro), folha (folhas; com lápis se por publicar)
+    const ic = (svg, fill) => `<svg class="pick-ic${fill ? ' fill' : ''}" viewBox="0 0 24 24" aria-hidden="true">${svg}</svg>`;
+    const row = (k, label, sub, on, fixed, icon) => `<button type="button" class="col-pick${on ? ' on' : ''}" data-k="${esc(k)}" aria-pressed="${on}"${fixed ? ' aria-disabled="true"' : ''}>${icon || ''}<span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>${on ? `<svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true">${ICON_CHECK}</svg>` : ''}</button>`;
     const render = () => {
       const sg = bySlug.get(slug), original = srcOf(sg).includes('original'), inC = inCancioneiro(sg);
       $('col-pick-list').innerHTML = '<p class="pick-head">Coleções</p>' +
-        row('cancioneiro', 'Cancioneiro', original ? 'Faz parte do Cancioneiro original — não pode ser retirado' : inC ? 'Tocar para retirar' : 'Tocar para acrescentar', inC, original) +
-        row('fav', 'Preferidos', 'Só para si', isFav(slug)) +
+        row('cancioneiro', 'Cancioneiro', original ? 'Faz parte do Cancioneiro original — não pode ser retirado' : inC ? 'Tocar para retirar' : 'Tocar para acrescentar', inC, original, ic(ICON_BOOK)) +
+        row('fav', 'Preferidos', 'Só para si', isFav(slug), false, ic(ICON_STAR, true)) +
         '<p class="pick-head">Folhas</p>' +
-        act.map(c => row('c:' + c.id, c.title, `${c.published === false ? 'Por publicar · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug))).join('') +
+        act.map(c => row('c:' + c.id, c.title, `${c.published === false ? 'Por publicar · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false, ic(c.published === false ? ICON_PAGE_DRAFT : ICON_PAGE))).join('') +
         `<button class="col-pick-new" id="col-pick-new">+ Nova folha</button>`;
       $('col-pick-list').querySelectorAll('.col-pick').forEach(b => b.onclick = () => pick(b.dataset.k, b.classList.contains('on'), b));
       $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(); };
