@@ -179,6 +179,18 @@ async function suites(full) {
     await sw.nth(1).click(); await sleep(400);
     return /misericórdia/i.test(await txt(page, '#song')) || 'tradução não aparece';
   }));
+  await t('FUN-03b', 'Versão noutra língua (translation_language ≠ pt): botão só com a língua («Espanhol», sem «Tradução ·») e nota «Versão em espanhol»; tradução pt mantém «Tradução · Português» (v192)', () => withApp({ perfil: 'coro', hash: '#/cantico/versao_es', songs: [...fixture, { ...fixture.find(x => x.slug === 'de_colores'), slug: 'versao_es', number: 9200, title: 'Cântico com versão espanhola', language: 'en', translation: [{ type: 'verse', lines: ['Versión de ejemplo'] }], translation_language: 'es' }] }, async ({ page }) => {
+    await page.waitForSelector('#song .lang-switch button');
+    const b = page.locator('#song .lang-switch button[data-mode="trad"]');
+    const label = (await b.textContent()).trim();
+    if (/Tradução/.test(label) || !/^Espanhol$/i.test(label)) return 'botão: «' + label + '»';
+    await b.click(); await sleep(400);
+    const note = (await txt(page, '#song .note')).trim();
+    if (!/^Versão em espanhol$/i.test(note)) return 'nota: «' + note + '»';
+    await page.evaluate(() => { location.hash = '#/cantico/salve_regina'; }); await sleep(600);
+    const pt = (await page.locator('#song .lang-switch button[data-mode="trad"]').textContent()).trim();
+    return /^Tradução · Português$/.test(pt) || 'tradução pt: «' + pt + '»';
+  }), { sev: 'média' });
   await t('FUN-04', 'A−/A+ mudam o tamanho da letra e a escolha fica guardada', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     const fs0 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs'));
     await page.click('#font-inc'); await page.click('#font-inc'); await sleep(200);
@@ -563,13 +575,14 @@ async function suites(full) {
     const out = ['Pange lingua', 'Cântico no livro'].filter(x => s.includes(x));
     return out.length ? 'a lista Cancioneiro mostra cânticos fora do Cancioneiro: ' + out.join(', ') : true;
   }));
-  await t('FUN-46', '«Todos os cânticos» (Coro+): secção no fim da página inicial com categorias tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190)', async () => {
+  await t('FUN-46', '«Todos os cânticos» (Coro+): secção no fim da página inicial com categorias tema-* (7, com Gestos); ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190/v191)', async () => {
     const bad = [];
     await withApp({ perfil: 'coro' }, async ({ page }) => {
       const r = await page.evaluate(() => { const li = [...document.querySelectorAll('#rows > li')]; const heads = li.filter(x => x.classList.contains('cat-head')).map(x => x.textContent.trim()); const i = li.findIndex(x => x.classList.contains('cat-head') && /^Todos os cânticos$/.test(x.textContent.trim()));
         return { heads, after: i < 0 ? [] : li.slice(i + 1).map(x => x.querySelector('a')?.getAttribute('href') || '#head') }; });
       if (r.heads[r.heads.length - 1] !== 'Todos os cânticos') bad.push('Coro: a última secção não é «Todos os cânticos»: ' + r.heads.join(' | '));
-      if (!r.after.length || r.after.some(h => !/^#\/lista\/tema-(liturgia|espirituais|movimento|infantis|populares|autor)$/.test(h))) bad.push('Coro: categorias depois de «Todos os cânticos»: ' + r.after.join(', '));
+      // v191: 7 categorias, incluindo tema-gestos (o fixture tem «Para Gestos»? se não, a categoria vazia não aparece)
+      if (!r.after.length || r.after.some(h => !/^#\/lista\/tema-(liturgia|espirituais|movimento|infantis|gestos|populares|autor)$/.test(h))) bad.push('Coro: categorias depois de «Todos os cânticos»: ' + r.after.join(', '));
       await page.evaluate(() => { location.hash = '#/lista/tema-liturgia'; }); await sleep(600);
       if (!/Salve Regina/.test(await txt(page, '#rows'))) bad.push('tema-liturgia sem «Salve Regina» (latim)');
       await page.evaluate(() => { location.hash = '#/'; }); await sleep(300);
@@ -582,7 +595,7 @@ async function suites(full) {
     await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       await page.waitForSelector('#btn-edit'); await page.click('#btn-edit'); await sleep(500);
       const opts = await page.evaluate(() => [...document.querySelectorAll('#sn-cat option, #sn-cat optgroup')].map(o => (o.label || o.textContent || '').trim()));
-      if (opts.some(o => /Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis e de gestos|Populares e tradicionais|Pop, rock/.test(o))) bad.push('seletor de categoria de «Editar cântico» tem temas');
+      if (opts.some(o => /^(Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis|Gestos|Populares e tradicionais|Pop, rock.*)$/.test(o))) bad.push('seletor de categoria de «Editar cântico» tem temas');
     });
     return bad.length ? bad.join('; ') : true;
   });

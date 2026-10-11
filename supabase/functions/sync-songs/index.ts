@@ -166,7 +166,7 @@ Deno.serve(async () => {
     if (divs.length < 50) throw new Error('site original: só ' + divs.length + ' cânticos encontrados (página incompleta?)');
     const existing = [];
     for (let from = 0; ; from += 1000) {
-      const pageRows = await rest('songs?select=slug,number,title,pdf_url,source_hash&order=number', { headers: { Range: `${from}-${from + 999}` } });
+      const pageRows = await rest('songs?select=slug,number,title,pdf_url,source_hash,translation_language&order=number', { headers: { Range: `${from}-${from + 999}` } });
       existing.push(...pageRows);
       if (pageRows.length < 1000) break;
     }
@@ -181,6 +181,8 @@ Deno.serve(async () => {
       const p = parseSong(d.slug, d.body);
       if (!p.title || !p.lyrics.length) continue;
       const fields = { title: p.title, author: p.author, lyrics: p.lyrics, translation: p.translation, translation_language: p.translation_language, has_chords: p.has_chords, source_hash: h };
+      // versão noutra língua juntada na app (ex.: Os crocodilos + Dos cocodrilos em espanhol): o site não a tem, não a apagar
+      if (cur && !p.translation && cur.translation_language && cur.translation_language !== 'pt') { delete fields.translation; delete fields.translation_language; }
       if (!cur) {
         inserts.push({ slug: p.slug, number: nextNumber++, language: p.language, pdf_url: pdfFor(p.pdf_src, null), ...fields });
         log.added.push(p.title);
