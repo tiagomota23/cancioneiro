@@ -204,6 +204,12 @@ export default async function (level) {
       order by s.slug`);
     return r.length ? { warn: `${r.length} cânticos sem categoria (a classificar pela sessão principal): ${r.slice(0, 8).map(x => x.slug).join(', ')}` } : true;
   }, { sev: 'baixa' });
+  await t('INT-15', 'Etiquetas «Tema» só com os nomes das categorias de «Todos os cânticos» (v191: sem «Infantis e de gestos»)', async () => {
+    const r = await sql(`select tag, count(*)::int n from public.song_tags where grp = 'Tema' group by 1 order by 1`);
+    const ok = ['Liturgia e Missa', 'Espirituais e gospel', 'Cânticos do Movimento', 'Infantis', 'Gestos', 'Populares e tradicionais', 'Pop, rock e canções de autor'];
+    const bad = r.filter(x => !ok.includes(x.tag));
+    return bad.length ? 'etiquetas Tema desconhecidas: ' + bad.map(x => `${x.tag} (${x.n})`).join(', ') : { pass: r.map(x => `${x.tag} ${x.n}`).join(', ') };
+  }, { sev: 'baixa' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

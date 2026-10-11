@@ -563,13 +563,14 @@ async function suites(full) {
     const out = ['Pange lingua', 'Cântico no livro'].filter(x => s.includes(x));
     return out.length ? 'a lista Cancioneiro mostra cânticos fora do Cancioneiro: ' + out.join(', ') : true;
   }));
-  await t('FUN-46', '«Todos os cânticos» (Coro+): secção no fim da página inicial com categorias tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190)', async () => {
+  await t('FUN-46', '«Todos os cânticos» (Coro+): secção no fim da página inicial com categorias tema-* (7, com Gestos); ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190/v191)', async () => {
     const bad = [];
     await withApp({ perfil: 'coro' }, async ({ page }) => {
       const r = await page.evaluate(() => { const li = [...document.querySelectorAll('#rows > li')]; const heads = li.filter(x => x.classList.contains('cat-head')).map(x => x.textContent.trim()); const i = li.findIndex(x => x.classList.contains('cat-head') && /^Todos os cânticos$/.test(x.textContent.trim()));
         return { heads, after: i < 0 ? [] : li.slice(i + 1).map(x => x.querySelector('a')?.getAttribute('href') || '#head') }; });
       if (r.heads[r.heads.length - 1] !== 'Todos os cânticos') bad.push('Coro: a última secção não é «Todos os cânticos»: ' + r.heads.join(' | '));
-      if (!r.after.length || r.after.some(h => !/^#\/lista\/tema-(liturgia|espirituais|movimento|infantis|populares|autor)$/.test(h))) bad.push('Coro: categorias depois de «Todos os cânticos»: ' + r.after.join(', '));
+      // v191: 7 categorias, incluindo tema-gestos (o fixture tem «Para Gestos»? se não, a categoria vazia não aparece)
+      if (!r.after.length || r.after.some(h => !/^#\/lista\/tema-(liturgia|espirituais|movimento|infantis|gestos|populares|autor)$/.test(h))) bad.push('Coro: categorias depois de «Todos os cânticos»: ' + r.after.join(', '));
       await page.evaluate(() => { location.hash = '#/lista/tema-liturgia'; }); await sleep(600);
       if (!/Salve Regina/.test(await txt(page, '#rows'))) bad.push('tema-liturgia sem «Salve Regina» (latim)');
       await page.evaluate(() => { location.hash = '#/'; }); await sleep(300);
@@ -582,7 +583,7 @@ async function suites(full) {
     await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       await page.waitForSelector('#btn-edit'); await page.click('#btn-edit'); await sleep(500);
       const opts = await page.evaluate(() => [...document.querySelectorAll('#sn-cat option, #sn-cat optgroup')].map(o => (o.label || o.textContent || '').trim()));
-      if (opts.some(o => /Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis e de gestos|Populares e tradicionais|Pop, rock/.test(o))) bad.push('seletor de categoria de «Editar cântico» tem temas');
+      if (opts.some(o => /^(Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis|Gestos|Populares e tradicionais|Pop, rock.*)$/.test(o))) bad.push('seletor de categoria de «Editar cântico» tem temas');
     });
     return bad.length ? bad.join('; ') : true;
   });
