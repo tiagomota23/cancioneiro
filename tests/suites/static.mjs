@@ -166,6 +166,11 @@ export default async function (level) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
 
+  await t('SEG-13', 'conteudo addsong: todos os cânticos novos começam por aprovar, também os de um Maestro (v165)', () => {
+    const c = read('supabase/functions/conteudo/index.ts');
+    return /const ok = false[^\n]*\n[\s\S]{0,600}approved: ok/.test(c) || 'addsong pode aprovar logo';
+  }, { sev: 'média', where: 'supabase/functions/conteudo/index.ts (op addsong)' });
+
   dim('Usabilidade — padrão de design', 'baixa');
   await t('USA-01', 'theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)', () => {
     try { execFileSync(process.execPath, ['tools/theme/build.mjs', '--check'], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }); return true; }

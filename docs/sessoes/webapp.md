@@ -84,7 +84,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Folhas novas abrem logo a edição; o template só se escolhe ao criar.
 - Livro no cântico (Maestro): «Coleções» (Cancioneiro, Coro nos cânticos novos, Preferidos) e «Folhas», linhas cheias
   quando o cântico lá está; Cancioneiro original fica cheio e fixo, com a explicação.
-- Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`). Etiqueta amarela
+- Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`); ao aprovar,
+  o Maestro escolhe Cancioneiro (op `promote`) ou Coro (op `coro`). Etiqueta amarela
   «por aprovar» por cima do nome (listas e página do cântico).
 - Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só

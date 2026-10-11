@@ -34,9 +34,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
 | FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
-| FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164) | ui | alta | V | ✓ |
+| FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ☐ por correr |
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos | ui | alta | V | ✓ |
+| FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ☐ por correr |
+| FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ☐ por correr |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
 | FUN-16 | Partitura: pdf.js desenha, zoom +/−, Voltar | ui | alta | V | ✓ |
@@ -55,10 +57,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
-| FUN-32 | Maestro vê Aprovar num cântico por aprovar | ui | média | S | ✓ |
+| FUN-32 | Aprovar cântico novo: «Aprovar para…» Cancioneiro/Coro; Cancelar não aprova; Coro grava aprovado + coro_clu (v167) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
-| FUN-35 | Menu ☰ em secções «Os meus cânticos» / «Livros» / «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v154) | ui | média | V | ✓ |
+| FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165) | ui | média | V | ☐ por correr |
 | FUN-36 | Tutorial do Maestro chega ao passo «+ Nova folha» com o botão visível (v154) | ui | média | V | ✓ |
 | SHR-01 | Folha partilhada: lista traz a letra de todos os cânticos, sem acordes, guardada em `cancioneiro.partilhados` (v150) | ui | alta | V | ✓ |
 | SHR-02 | Folha partilhada: abrir cântico sem pedidos à rede e sem rede (v150) | ui | alta | V | ✓ |
@@ -68,10 +70,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
 | FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
-| FUN-38 | «Editar folha» abre #col-ed e põe published=false; «Fechar» mantém por publicar (também depois de recarregar); «Publicar» (#ce-pub) publica (v164) | ui | alta | V | ☐ por correr |
-| FUN-39 | Edição: tocar num item mostra .ce-acts (up/down/del); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v164) | ui | alta | V | ☐ por correr |
+| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165) | ui | alta | V | ☐ por correr |
+| FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ☐ por correr |
 | FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ☐ por correr |
-| FUN-42 | Edição grava logo: acrescentar, mover, mudar o nome, nova/apagar secção, remover, público, título e duração — recarregar mostra a mudança (v164) | ui | alta | V | ☐ por correr |
+| FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ☐ por correr |
 | MAN-10 | Entrada real com Google (telemóvel e computador/janela), pedido de acesso, email ao Gestor, autorizar pelo link | manual | crítica | M | ☐ |
 | MAN-11 | Pesquisa por voz real (iPhone e Android): microfone, transcrição Groq, identifica o cântico | manual | alta | M | ☐ |
 | MAN-12 | Gravar/enviar gravação e partitura real (Maestro), apagar ficheiro enviado | manual | alta | M | ☐ |
@@ -147,7 +149,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
-| USA-17 | Interruptores das Folhas: role=switch, aria-checked, Espaço/Enter, confirmação ao retirar, fixo desativado (v148) | ui | média | V | ✓ |
+| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165) | ui | média | V | ☐ por correr |
 | USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
@@ -175,6 +177,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-10 | novos.sql tem o filtro `approved` (compara com DB-RLS-05) | static | baixa | V | ✓ |
 | SEG-11 | conteudo `shared` com songs:true: só os campos previstos, letra com noChords (v150) | static | alta | V | ✓ |
 | SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ☐ por correr |
+| SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ☐ por correr |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas | live | crítica | V | ✓ |
