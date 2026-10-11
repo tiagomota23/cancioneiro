@@ -531,14 +531,16 @@ async function suites(full) {
     });
     return bad.length ? bad.slice(0, 10).join('; ') : { pass: seen.length + ' categorias: ' + [...new Set(seen.map(x => x.split('/')[0]))].join(', ') };
   });
-  await t('FUN-35', 'Menu ☰: Preferidos e Novos Cânticos no topo sem título; secções «Livros» e «Folhas»; secção vazia escondida; Livros do Cancioneiro só com o Cancioneiro (v165)', async () => {
+  await t('FUN-35', 'Menu ☰: Preferidos e Novos Cânticos no topo; «Livros» e «Folhas» (perfil Cancioneiro sem título «Livros»: Preferidos, Cancioneiro); secção vazia escondida (v165/v184)', async () => {
     const get = o => withApp(o, async ({ page }) => { await page.click('#btn-menu'); await sleep(400); return { pass: await page.evaluate(() => JSON.stringify({ h: [...document.querySelectorAll('#az li.cat-head')].map(x => x.textContent.trim()), first: [...document.querySelectorAll('#az > li')].slice(0, 3).map(x => (x.classList.contains('cat-head') ? '#' : '') + x.textContent.trim().replace(/\d+$/, '').trim()), all: document.querySelector('#az').textContent })) }; }).then(r => JSON.parse(r.pass || '{"h":[],"first":[],"all":""}'));
     const bad = [];
     const can = await get({ perfil: 'cancioneiro', cols: [] }), coro = await get({ perfil: 'coro', cols: [] }), mae = await get({ perfil: 'maestro', cols: [] }), coroCols = await get({ perfil: 'coro' });
     if ([can, coro, mae].some(x => x.h.includes('Os meus cânticos'))) bad.push('ainda há «Os meus cânticos»');
     if (!/^Preferidos/.test(can.first[0] || '')) bad.push('Cancioneiro: o topo não começa por Preferidos: ' + can.first.join(' | '));
     if (!/^Preferidos/.test(coro.first[0] || '') || !/^Novos Cânticos/.test(coro.first[1] || '')) bad.push('Coro: topo ' + coro.first.join(' | '));
-    if (!can.h.includes('Livros')) bad.push('Cancioneiro: sem «Livros»');
+    if (can.h.includes('Livros')) bad.push('Cancioneiro: tem o título «Livros» (v184: sem título)');
+    if (!/^Cancioneiro/.test(can.first[1] || '')) bad.push('Cancioneiro: a 2.ª linha não é «Cancioneiro»: ' + can.first.join(' | '));
+    if (!coro.h.includes('Livros')) bad.push('Coro: sem «Livros»');
     if (/Songbook|CANTI|Coro CLU|Novos Cânticos/.test(can.all)) bad.push('Cancioneiro: mostra livros do Coro');
     if (can.h.includes('Folhas') || coro.h.includes('Folhas')) bad.push('«Folhas» aparece sem folhas para perfil < Maestro');
     if (!mae.h.includes('Folhas')) bad.push('Maestro sem folhas: falta «Folhas» (com + Nova folha)');
