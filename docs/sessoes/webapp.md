@@ -91,10 +91,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Na caixa amarela, Aprovar e Recusar (vermelho cheio) à direita, com a mesma largura.
 - Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas». No perfil Cancioneiro
   não há título «Livros» (só o Cancioneiro, logo a seguir aos Preferidos).
-- Botões lado a lado numa linha de ações: o principal primeiro (Guardar | Cancelar | Apagar; OK | Cancelar; Publicar |
-  Editar folha; Aprovar | Recusar; em coluna, a mesma ordem de cima para baixo); a mesma largura, a ocupar a linha (rodapés das janelas, Aprovar/Recusar,
-  Editar folha/Publicar, Terminar sessão/Fechar); botões de 40 px sempre com letra normal (400). Confirmações que apagam ou deitam fora (Apagar, Remover, Retirar,
-  Recusar, Sair sem guardar): botão vermelho cheio.
+- Botões lado a lado numa linha de ações: o principal primeiro — em linha, primeiro = à direita (Apagar | Cancelar |
+  Guardar; Cancelar | OK; Editar folha | Publicar; Recusar | Aprovar; Terminar sessão | Fechar); em coluna, primeiro = em
+  cima (Guardar, Cancelar, Apagar; Publicar, Editar folha). A mesma largura, a ocupar a linha (rodapés das janelas,
+  Editar folha/Publicar, Terminar sessão/Fechar; Aprovar/Recusar à direita com a mesma largura); botões de 40 px sempre
+  com letra normal (400). Confirmações que apagam ou deitam fora (Apagar, Remover, Retirar, Recusar, Sair sem guardar):
+  botão vermelho cheio.
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
