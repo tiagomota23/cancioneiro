@@ -101,6 +101,15 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Editar folha/Publicar, Terminar sessão/Fechar; Aprovar/Recusar à direita com a mesma largura); botões de 40 px sempre
   com letra normal (400). Confirmações que apagam ou deitam fora (Apagar, Remover, Retirar, Recusar, Sair sem guardar):
   botão vermelho cheio.
+- Página inicial (Coro e acima): a secção «Cancioneiro» só conta e lista cânticos do Cancioneiro (`catSongs`). No fim, a
+  secção «Todos os cânticos» (`TEMAS` em app.js, não aparece no menu Coleções nem se escolhe em «Editar cântico») junta
+  todos os cânticos de todas as fontes em 6 categorias fixas, aprovadas pelo Tiago (um cântico pode estar em várias):
+  Liturgia e Missa · Espirituais e gospel · Cânticos do Movimento · Infantis e de gestos · Populares e tradicionais ·
+  Pop, rock e canções de autor. Vêm das etiquetas dos livros (regras em `TEMAS`) e, para os cânticos sem nenhuma dessas,
+  de uma etiqueta `song_tags` com `grp = 'Tema'` atribuída por esta sessão (507 classificados em 2026-10-11). **Tarefa
+  contínua**: quando entram cânticos novos ou de novas fontes, classificar os que ficam sem categoria (consulta abaixo) e
+  inserir a etiqueta «Tema» na base de dados. Os cânticos sem nenhuma categoria são os que não cumprem as regras de
+  `TEMAS` nem têm etiqueta «Tema» (consulta no fim deste ficheiro).
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
@@ -110,3 +119,17 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 Ler este ficheiro, `docs/MANUAL.md`, `docs/AMBIENTE.md` e o histórico recente (`git log -30`); confirmar com
 `node tools/theme/build.mjs --check`; mandar uma mensagem curta às três sessões acima (ou recriá-las a partir de
 `docs/sessoes/`) a dizer que és a nova sessão principal e o teu id; responder ao Tiago com o estado.
+
+## Consulta: cânticos sem categoria em «Todos os cânticos»
+```sql
+select s.slug, s.title, s.language from songs s
+where s.approved is not false and s.language <> 'la'
+  and not exists (select 1 from song_tags t where t.song_slug = s.slug and (
+    t.grp = 'Tema' or t.grp = 'Coro CLU — momento'
+    or (t.grp = 'Coro CLU' and t.tag in ('Para a Missa', 'Para Gestos'))
+    or (t.grp = 'CANTI 2024' and t.tag in ('Canti per la liturgia', 'Canti della nostra storia', 'Canti per bambini',
+        'Canti popolari regionali', 'Canti di montagna', 'Canzoni italiane'))
+    or (t.grp = 'Songbook' and t.tag in ('Hymns', 'Latin songs', 'Spirituals', 'Italian folk songs', 'Troubadour-songs',
+        'African songs', 'Brasilian songs', 'Rock – pop – folk'))))
+order by s.title;
+```

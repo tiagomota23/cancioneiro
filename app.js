@@ -76,6 +76,19 @@
   // secção da categoria (o título por cima dela na página inicial); as primeiras são do Cancioneiro
   const catHead = c => c.id === 'todos' ? 'Cancioneiro' : c.head;
   const catSection = id => { let h = 'Cancioneiro'; for (const c of allCategories()) { if (catHead(c)) h = catHead(c); if (c.id === id) return h; } return h; };
+  // Secção «Todos os cânticos» (do perfil Coro para cima, só na página inicial): todos os cânticos de todas as fontes numa
+  // classificação única, que não se edita. Vem das etiquetas dos livros (Coro, Songbook, CANTI) e, para os que não as têm,
+  // da etiqueta «Tema» (atribuída pela sessão webapp; ver docs/sessoes/webapp.md). Um cântico pode estar em várias.
+  const tg = (s, grp, ...tags) => (s.tags || []).some(t => t.grp === grp && (!tags.length || tags.includes(t.tag)));
+  const TEMAS = [
+    ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
+    ['espirituais', 'Espirituais e gospel', s => tg(s, 'Songbook', 'Spirituals')],
+    ['movimento', 'Cânticos do Movimento', s => tg(s, 'CANTI 2024', 'Canti della nostra storia')],
+    ['infantis', 'Infantis e de gestos', s => tg(s, 'CANTI 2024', 'Canti per bambini') || tg(s, 'Coro CLU', 'Para Gestos')],
+    ['populares', 'Populares e tradicionais', s => tg(s, 'CANTI 2024', 'Canti popolari regionali', 'Canti di montagna') || tg(s, 'Songbook', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs')],
+    ['autor', 'Pop, rock e canções de autor', s => tg(s, 'Songbook', 'Rock – pop – folk') || tg(s, 'CANTI 2024', 'Canzoni italiane')],
+  ].map(([id, label, rule], i) => ({ id: 'tema-' + id, head: i === 0 ? 'Todos os cânticos' : null, label, short: label, tema: true,
+    test: s => lvl() >= 2 && (rule(s) || tg(s, 'Tema', label)) }));
   // categorias da secção Cancioneiro (de «Todos os cânticos» a «Com copyright»): só os cânticos do Cancioneiro,
   // em todos os perfis (do Coro para cima, os outros estão nas outras secções)
   const inCancSec = c => { const i = CATEGORIES.indexOf(c); return i >= 0 && i <= CATEGORIES.findIndex(x => x.id === 'copyright'); };
@@ -84,9 +97,9 @@
   const allCategories = () => {
     const own = [...new Set(allSongs.flatMap(s => (s.tags || []).filter(t => t.grp === 'Categoria').map(t => t.tag)))].sort((a, b) => a.localeCompare(b, 'pt'));
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
-    return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
+    return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v189';
+  const APP_VERSION = '2026-10-11 v190';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
