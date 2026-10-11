@@ -773,6 +773,7 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
   background: var(--surface); color: var(--accent);
 }
 .edit-actions button.ghost.danger { border-color: var(--danger-border); color: var(--danger); }
+.edit-actions button.danger-fill { background: var(--danger); border-color: var(--danger); color: var(--on-accent); }
 .edit-btn, .ghost-btn, .admin button {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;
   height: var(--h-btn-sm); padding: 0 14px; border-radius: var(--pill); border: 1px solid var(--accent);
@@ -829,6 +830,13 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .perfil-opt.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .perfil-opt.on svg { --ic-bg: var(--accent); }
 .perfil-opt.on svg, .perfil-opt.on small { color: var(--on-accent); }
+.col-pick { width: 100%; justify-content: space-between; }
+.col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.col-pick.on small { color: var(--on-accent); }
+.col-pick[aria-disabled=true] { cursor: default; }
+.pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
+.pick-head:first-child { margin-top: 0; }
 .col-pick input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--light-accent); }
 
 /* "+ novo": tracejado nas janelas; nas listas verdes, o mesmo texto */
@@ -918,6 +926,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 #sa-list small, .sim-list small { text-transform: none; letter-spacing: 0; }
 .pend { display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-chip); margin-left: 8px; padding: 0 10px; border-radius: var(--pill); background: var(--pending-bg); color: var(--pending-ink);
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; vertical-align: middle; }
+.pend.pend-top { display: flex; width: fit-content; margin: 0 0 6px; font-family: var(--sans); line-height: 1; }
+.song .pend.pend-top { margin: 0 0 10px; }
 .rows .badge { font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); border: 1px solid color-mix(in srgb, var(--on-brand) 50%, transparent);
   border-radius: var(--pill); padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
 
@@ -946,15 +956,20 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows li[data-key] { position: relative; }
 .col-ed .ce-rows li.sel > a, .col-ed .ce-rows li.sel > .sec-line { background: var(--tint-soft); }
 .col-ed .ce-rows .sec-line { cursor: pointer; }
-.ce-acts { position: absolute; right: 0; bottom: 2px; display: flex; gap: 2px; padding-left: 16px;
+.ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
-.col-ed .ce-rows li.col-sec .ce-acts { bottom: 1px; }
-.ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--accent); }
-.ce-acts button { width: var(--hit); height: var(--hit); padding: 0; border-radius: var(--pill); }
-.ce-acts button:disabled { color: var(--text-faint); opacity: .4; }
-.ce-acts button.del { color: var(--danger); }
-.ce-acts svg, .ce-name svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.ce-name { gap: 8px; min-height: var(--hit); margin: -8px 0; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent); text-align: left; }
+.col-ed .ce-rows li.col-sec.sel .sec-line { padding-top: 60px; } /* secção escolhida: botões por cima do nome, à direita */
+.col-ed .ce-rows li.col-sec .ce-acts { top: 10px; transform: none; background: none; }
+.ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; background: none; color: var(--accent); }
+.ce-acts button { position: relative; width: 38px; height: 38px; padding: 0; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
+.ce-acts button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */
+.ce-acts button:disabled { color: var(--text-faint); border-color: var(--border); }
+.ce-acts button.del { color: var(--danger); border-color: var(--danger-border); }
+.ce-acts button.ok { background: var(--accent); color: var(--on-accent); }
+.ce-acts svg, .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+.ce-acts svg { width: 20px; height: 20px; }
+.ce-acts button.ok svg { stroke-width: 2.2; }
+.ce-name { gap: 8px; min-height: var(--hit); margin: -8px 0; padding: 0; border: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent); text-align: left; }
 .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); }
 /* Público (Coro / Cancioneiro): segmentado no topo das janelas da folha */
 .col-dlg .aud-switch, .col-ed .aud-switch { margin: 0 0 6px; }
@@ -962,13 +977,14 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-edit-bar { padding: 0 14px; }
 .rows li.col-edit-bar .edit-bar { margin: 16px 0 8px; }
 .rows li.col-edit-bar .edit-btn { color: var(--on-brand); border-color: var(--on-brand-outline); }
+.rows li.col-edit-bar .edit-btn.col-pub { background: var(--on-brand); border-color: var(--on-brand); color: var(--brand-deep); font-weight: 700; }
 /* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
 .rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
   font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="solo perfil-cancioneiro lvl-1 lvl-lt3 lvl-lt4">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v164</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v165</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1107,7 +1123,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-11 v164</p>
+    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-11 v165</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1135,7 +1151,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"></ul>
     <p class="small" id="ce-msg" role="status"></p>
-    <div class="edit-actions"><button type="button" id="ce-del" class="ghost danger">Apagar</button><span></span><button type="button" id="ce-close" class="ghost">Fechar</button><button type="button" id="ce-pub">Publicar</button></div>
+    <div class="edit-actions"><button type="button" id="ce-del" class="danger-fill">Apagar</button><span></span><button type="button" id="ce-cancel" class="ghost">Cancelar</button><button type="button" id="ce-save">Guardar</button></div>
   </dialog>
   <!-- Coleção: escolher onde pôr o cântico -->
   <dialog id="col-pick" class="col-dlg">

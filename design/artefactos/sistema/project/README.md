@@ -56,6 +56,7 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 ## Exceções documentadas
 
 - Etiqueta «VERSÃO TESTE»: 9,5 px 700 maiúsculas (11 px não cabe no espaço de 44 px).
+- Ações de item na janela Editar folha (`.ce-acts`): quadrados de 38 px com `radius-sm`, não pílula (área de toque de 44 px mantida).
 - Botão «Entrar com Google»: regras da Google (branco, pílula, 16 px, sombra, «G» de 20 px).
 - Letra dos cânticos: fora da escala, por desenho.
 - Símbolos de texto (A−/A+ 19 e 24 px, setas 18–20 px) só dentro de botões de símbolo.

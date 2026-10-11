@@ -5,6 +5,7 @@ Escolhas dentro das janelas: cartão com raio `--radius`, contorno `--border`, f
 - Título `--fs-ui` 700 em maiúsculas com `--ls-row`; subtítulo `--fs-small` em `--text-soft`.
 - Escolhida (`.perfil-opt.on`): cheia de `--accent`, texto `--on-accent`.
 - Classes: `.perfil-opt`, `.tpl-apply`, `.col-pick`, `.perfil-admin`, `.tpl-edit`.
+- «Coleções e folhas» (`#col-pick`): rótulos `.pick-head` e linhas `.col-pick` que ligam e desligam — com o cântico: cheias de `--accent` com ✓ (`.pick-ok`, `--icon`); Cancioneiro original: cheia e inativa.
 - «+ novo» (`.col-pick-new`): tracejado `--border-dash`, `--fs-small` 700 maiúsculas `--ls-chip` em `--accent` — o mesmo texto nas listas verdes («+ Nova folha», «+ Novo cântico»).
 
 A pré-visualização usa as classes e o CSS reais da app (secção COMPONENTES de styles.css).
