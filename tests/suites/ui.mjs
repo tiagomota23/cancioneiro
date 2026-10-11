@@ -222,6 +222,28 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
+  await t('FUN-48', 'Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro (frere_jacques: Francês | Português); Maestro, numa versão fora do original, tem #ver-promo «Acrescentar…» → confirmação → «Retirar…»; versões do original sem o botão (v196)', async () => {
+    const bad = [];
+    await withApp({ perfil: 'cancioneiro', hash: '#/cantico/frere_jacques' }, async ({ page }) => {
+      await page.waitForSelector('#song h1').catch(() => {});
+      const l = await page.evaluate(() => [...document.querySelectorAll('#song .lang-switch button')].map(b => b.textContent.trim()));
+      if (l.join(' | ') !== 'Francês | Português') bad.push('perfil Cancioneiro: seletor «' + l.join(' | ') + '» (esperado «Francês | Português»)');
+    });
+    await withApp({ perfil: 'maestro', hash: '#/cantico/frere_jacques' }, async ({ page }) => {
+      await page.waitForSelector('#song .lang-switch');
+      await page.click('#song .lang-switch button[data-mode="v:frei_martinho"]').catch(() => {}); await sleep(400);
+      if (await count(page, '#ver-promo')) bad.push('versão do original (frei_martinho) tem #ver-promo');
+      await page.click('#song .lang-switch button[data-mode="v:are_you_sleeping"]').catch(() => {}); await sleep(400);
+      const t0 = (await txt(page, '#ver-promo')).trim();
+      if (t0 !== 'Acrescentar esta versão ao Cancioneiro') { bad.push('#ver-promo: «' + t0 + '»'); return; }
+      await page.click('#ver-promo'); await sleep(400);
+      if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) { bad.push('#ver-promo sem confirmação'); return; }
+      await page.click('#app-dlg-ok'); await sleep(900);
+      const t1 = (await txt(page, '#ver-promo')).trim();
+      if (t1 !== 'Retirar esta versão do Cancioneiro') bad.push('depois de acrescentar: «' + t1 + '»');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-04', 'A−/A+ mudam o tamanho da letra e a escolha fica guardada', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     const fs0 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs'));
     await page.click('#font-inc'); await page.click('#font-inc'); await sleep(200);
