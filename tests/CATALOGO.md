@@ -36,7 +36,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
 | FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ☐ por correr |
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
-| FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos | ui | alta | V | ✓ |
+| FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177) | ui | alta | V | ✓ |
 | FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ☐ por correr |
 | FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ☐ por correr |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
@@ -59,7 +59,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
 | FUN-31b | Filtro de Novos Cânticos sem opções do Coro (Todos, Aprovados, Por aprovar, No Cancioneiro, Ainda não no Cancioneiro) (v172) | ui | baixa | S | ☐ por correr |
-| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172) | ui | média | S | ☐ por correr |
+| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
 | FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165) | ui | média | V | ☐ por correr |

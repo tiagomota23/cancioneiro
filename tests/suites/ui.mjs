@@ -293,7 +293,11 @@ async function suites(full) {
     await page.evaluate(() => { location.hash = '#/'; }); await sleep(300);
     await page.evaluate(() => { location.hash = '#/lista/livro-novos'; }); await sleep(800);
     const s = await txt(page, '#rows');
-    return /Cântico de teste automático/.test(s) ? (/por aprovar/.test(s) ? true : { warn: 'aparece mas sem «por aprovar»' }) : 'não aparece em Novos Cânticos: ' + s.slice(0, 100);
+    if (!/Cântico de teste automático/.test(s)) return 'não aparece em Novos Cânticos: ' + s.slice(0, 100);
+    // v177: a marca «por aprovar» fica dentro de .n (por cima do número), não em .t
+    const where = await page.evaluate(() => { const li = [...document.querySelectorAll('#rows li')].find(l => /Cântico de teste automático/.test(l.textContent)); return li ? { n: !!li.querySelector('.n .pend'), t: !!li.querySelector('.t .pend') } : null; });
+    if (!where || !where.n) return '«por aprovar» não está em .n';
+    return where.t ? '«por aprovar» ainda em .t' : true;
   }));
   await t('FUN-13b', 'Novo cântico de um Maestro também fica por aprovar (v165)', () => withApp({ perfil: 'maestro', hash: '#/lista/livro-novos' }, async ({ page }) => {
     await page.waitForSelector('#novo-cantico'); await page.click('#novo-cantico'); await sleep(600);
@@ -469,6 +473,8 @@ async function suites(full) {
     await t('FUN-32', 'Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar põe sempre no Coro e, para o Cancioneiro, também promove (v172)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_pendente', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_pendente', number: 9101, title: 'Cântico novo de teste (pendente)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: false, added_by: 'outra@example.invalid', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {
       const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.novos') || '[]').find(x => x.slug === 'novo_teste_pendente'));
       await page.waitForSelector('#song-approve');
+      // v177: «Recusar» é um botão vermelho cheio
+      if (!(await page.evaluate(() => document.querySelector('#song-reject')?.matches('.edit-btn.danger-btn')))) return '#song-reject não tem .edit-btn.danger-btn';
       await page.click('#song-approve'); await sleep(400);
       const opts = await page.evaluate(() => document.querySelector('#app-dlg').open ? [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()) : null);
       if (!opts) return 'Aprovar não abriu a escolha';
@@ -1091,7 +1097,7 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('USA-20', 'Botões lado a lado numa linha de ações com a mesma largura (±1 px): .edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns (v175)', async () => {
+  await t('USA-20', 'Botões lado a lado numa linha de ações com a mesma largura (±1 px; na .pend-bar à direita, sem ocupar a linha): .edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns (v175/v177)', async () => {
     const bad = [], seen = [];
     const measure = async (page, where) => {
       const r = await page.evaluate(() => [...document.querySelectorAll('.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns')].filter(c => c.getBoundingClientRect().width && !c.closest('[hidden], dialog:not([open])'))
