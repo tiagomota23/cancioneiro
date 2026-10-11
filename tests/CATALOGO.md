@@ -131,6 +131,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-07 | Sem rede a meio de marcar preferido: repõe e avisa | ui | média | V | ✓ |
 | RES-08 | Dados incompletos (sem autor/letra/ficheiros/número) | ui | média | V | ✓ |
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
+| RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ☐ por correr |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)

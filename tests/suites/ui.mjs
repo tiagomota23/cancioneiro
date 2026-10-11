@@ -994,6 +994,18 @@ async function suites(full) {
     }));
   }
 
+  await t('RES-10', 'Voltar à app depois de > 5 min em segundo plano recarrega cânticos, preferidos e folhas; antes dos 5 min não (modo real simulado) (v194)', () => withApp({ real: {}, wait: '#rows li a', timeout: 20000, settle: 1500 }, async ({ page, calls }) => {
+    const n = () => calls.filter(c => /\/rest\/v1\/(songs|favorites|collections)/.test(c)).length;
+    const show = () => page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }); document.dispatchEvent(new Event('visibilitychange')); });
+    const n0 = n(); await show(); await sleep(1000);
+    if (n() !== n0) return 'recarregou logo (antes dos 5 min)';
+    await page.evaluate(() => { const real = Date.now; Date.now = () => real() + 6 * 60e3; }); // 6 min depois
+    await show(); await sleep(2000);
+    const got = calls.slice(n0).filter(c => /\/rest\/v1\/(songs|favorites|collections)/.test(c)).map(c => c.match(/\/rest\/v1\/(\w+)/)[1]);
+    const miss = ['songs', 'favorites', 'collections'].filter(x => !got.includes(x));
+    return miss.length ? 'depois de 6 min não recarregou: ' + miss.join(', ') : { pass: 'recarregou ' + [...new Set(got)].join(', ') };
+  }), { sev: 'média' });
+
   // ===================== Escalabilidade / desempenho =====================
   dim('Escalabilidade e desempenho — interface', 'média');
   const big = bigFixture(2000);
