@@ -74,13 +74,19 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - O Tiago aprovou: design system como fonte única (tokens), verde da marca #10835c/#0b6b4b (contraste 4,5:1, texto opaco
   sobre a marca), chips separados por função (etiqueta / interruptor / segmentado), botões pequenos só em linhas densas,
   maiúsculas mantidas como estão, nomes curtos das categorias na página inicial («Todos os cânticos» por extenso).
-- Folhas: dois estados guardados (`collections.published`): por publicar (só Maestro/Gestor a vê) e publicada. A página
-  da folha é sempre só leitura (só secções com cânticos), com «Editar folha» no fim (como «Editar cântico»). A edição é
-  uma janela por cima (`#col-ed`, como «Editar cântico»): Coro/Cancioneiro em segmentado no topo, título e duração,
-  depois cânticos e secções — tocar num item mostra ↑ ↓ 🗑 por cima da linha, à direita (apagar pede confirmação); numa
-  secção escolhida o nome passa a botão para o mudar; «+ Adicionar cântico» por secção (mostra logo os cânticos do
-  momento da Missa com o mesmo nome) e «+ Adicionar secção». Cada mudança fica logo gravada; abrir a edição esconde a
-  folha até «Publicar». Folhas novas abrem logo a edição; o template só se escolhe ao criar.
+- Folhas: dois estados guardados (`collections.published`): por publicar (só Maestro/Gestor a vê; etiqueta amarela
+  «Por publicar» por cima do título e botão branco «Publicar» ao lado de «Editar folha»; uma folha sem cânticos não se
+  publica) e publicada. A página da folha é sempre só leitura (só secções com cânticos), com «Editar folha» no fim (como
+  «Editar cântico»). A edição é uma janela por cima (`#col-ed`) que trabalha numa cópia: Coro/Cancioneiro em segmentado,
+  título, duração, cânticos e secções (tocar num item mostra ↑ ↓ 🗑 ✓ com contorno, por cima da linha à direita; numa
+  secção, o nome com lápis à esquerda abre a mudança de nome; apagar pede confirmação). «Guardar» grava tudo de uma vez e
+  põe a folha por publicar; «Cancelar» pede confirmação se houver alterações; «Apagar» (vermelho) pede confirmação.
+  Folhas novas abrem logo a edição; o template só se escolhe ao criar.
+- Livro no cântico (Maestro): «Coleções» (Cancioneiro, Coro nos cânticos novos, Preferidos) e «Folhas», linhas cheias
+  quando o cântico lá está; Cancioneiro original fica cheio e fixo, com a explicação.
+- Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`). Etiqueta amarela
+  «por aprovar» por cima do nome (listas e página do cântico).
+- Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 

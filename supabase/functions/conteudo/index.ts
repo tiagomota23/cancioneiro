@@ -487,7 +487,7 @@ Deno.serve(async (req) => {
       let slug = base;
       for (let i = 2; (await rest(`songs?slug=eq.${slug}&select=slug`)).length; i++) slug = base + '_' + i;
       const [mx] = await rest('songs?select=number&order=number.desc&limit=1');
-      const ok = lvl >= 3, now = new Date().toISOString();
+      const ok = false, now = new Date().toISOString(); // todos os cânticos novos começam por aprovar (também os de um Maestro)
       // parecidos com cânticos que já existem: fica registado para quem aprova
       const similar = findSimilar(await songs(), title, lyrics.flatMap(st => st.lines), x => x.approved !== false);
       await rest('songs', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
