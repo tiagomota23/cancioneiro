@@ -82,7 +82,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   secção, o nome com lápis à esquerda abre a mudança de nome; apagar pede confirmação). «Guardar» grava tudo de uma vez e
   põe a folha por publicar; «Cancelar» pede confirmação se houver alterações; «Apagar» (vermelho) pede confirmação.
   Folhas novas abrem logo a edição; o template só se escolhe ao criar.
-- Livro no cântico (Maestro): «Coleções» (Cancioneiro, Coro nos cânticos novos, Preferidos) e «Folhas», linhas cheias
+- Livro no cântico (Maestro): «Coleções» (Cancioneiro, Preferidos; o Coro não se escolhe aqui) e «Folhas», linhas cheias
   quando o cântico lá está; Cancioneiro original fica cheio e fixo, com a explicação.
 - Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`); ao aprovar,
   vai sempre para o livro do Coro (op `coro`) e,

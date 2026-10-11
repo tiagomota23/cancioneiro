@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v173';
+  const APP_VERSION = '2026-10-11 v174';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3086,7 +3086,8 @@
     if (DEMO) demoSave(); else store.set(colsKey(), cols);
   }
   $('col-pick-close').onclick = () => $('col-pick').close();
-  // Maestro: livro no cântico → «Coleções» (Cancioneiro, Coro nos cânticos novos, Preferidos) e «Folhas» (as ativas);
+  // Maestro: livro no cântico → «Coleções» (Cancioneiro, Preferidos) e «Folhas» (as ativas); o Coro não se escolhe aqui
+  // (os cânticos novos aprovados vão todos para o livro do Coro);
   // cada uma é uma linha de opção, cheia quando o cântico lá está; tocar acrescenta ou retira
   function openSongCollections(slug) {
     const s = bySlug.get(slug); if (!s) return;
@@ -3094,10 +3095,8 @@
     const row = (k, label, sub, on, fixed) => `<button type="button" class="col-pick${on ? ' on' : ''}" data-k="${esc(k)}" aria-pressed="${on}"${fixed ? ' aria-disabled="true"' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>${on ? `<svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true">${ICON_CHECK}</svg>` : ''}</button>`;
     const render = () => {
       const sg = bySlug.get(slug), original = srcOf(sg).includes('original'), inC = inCancioneiro(sg);
-      const novo = srcOf(sg).includes('novos') && sg.approved !== false, inCoro = srcOf(sg).includes('coro_clu');
       $('col-pick-list').innerHTML = '<p class="pick-head">Coleções</p>' +
         row('cancioneiro', 'Cancioneiro', original ? 'Faz parte do Cancioneiro original — não pode ser retirado' : inC ? 'Tocar para retirar' : 'Tocar para acrescentar', inC, original) +
-        (novo ? row('coro', 'Coro', inCoro ? 'Tocar para retirar' : 'Tocar para acrescentar', inCoro) : '') +
         row('fav', 'Preferidos', 'Só para si', isFav(slug)) +
         '<p class="pick-head">Folhas</p>' +
         act.map(c => row('c:' + c.id, c.title, `${c.published === false ? 'Por publicar · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug))).join('') +
@@ -3112,13 +3111,7 @@
       try {
         if (k === 'fav') await toggleFav(slug);
         else if (k === 'cancioneiro') await promote(slug, !was); // retirar pede confirmação
-        else if (k === 'coro') {
-          if (was && !(await appConfirm('Retirar este cântico do livro do Coro?', 'Retirar'))) return;
-          await api('coro', { slug, on: !was });
-          const sg = bySlug.get(slug);
-          sg.sources = was ? (sg.sources || []).filter(x => x.source !== 'coro_clu') : [...(sg.sources || []), { source: 'coro_clu' }];
-          store.set(CACHE_KEY, allSongs); toast(was ? 'Retirado do Coro' : 'Acrescentado ao Coro');
-        } else {
+        else {
           const col = cols.find(c => c.id === k.slice(2));
           if (!was && colFull(col)) { appAlert(fullMsg(col)); return; }
           let sec; // com secções: escolher em que secção fica o cântico
