@@ -1024,6 +1024,58 @@ async function suites(full) {
     });
     return bad.length ? { fail: `${bad.length} problemas: ${bad.slice(0, 10).join('; ')}`, evidence: ev[0] } : { pass: 'marca ' + ev[0] };
   }, { sev: 'média' });
+  await t('USA-19', 'Campos obrigatórios: «*» (.req) e botão desativado até preencher — Novo cântico, Nova folha, Editar folha, Template, Gestão (email), caixa de texto da app (v171)', async () => {
+    const bad = [];
+    const dis = (page, sel) => page.evaluate(x => { const b = document.querySelector(x); return !!b && (b.disabled || b.getAttribute('aria-disabled') === 'true'); }, sel);
+    const check = async (page, name, btn, fields, fill) => {
+      if (!(await count(page, fields.map(f => `label:has(${f}) .req, ${f} ~ .req, ${f} + .req`).join(', ')))) bad.push(`${name}: sem «*» (.req)`);
+      for (const f of fields) await page.fill(f, '');
+      await sleep(150);
+      if (!(await dis(page, btn))) bad.push(`${name}: ${btn} ativo com campos vazios`);
+      await fill(); await sleep(250);
+      if (await dis(page, btn)) bad.push(`${name}: ${btn} continua desativado depois de preencher`);
+    };
+    // Novo cântico (Coro): título + letra
+    await withApp({ perfil: 'coro', hash: '#/lista/livro-novos' }, async ({ page }) => {
+      await page.waitForSelector('#novo-cantico'); await page.click('#novo-cantico'); await sleep(500);
+      await check(page, 'Novo cântico', '#sn-save', ['#sn-title', '#sn-text'], async () => { await page.fill('#sn-title', 'T'); await page.fill('#sn-text', 'linha'); });
+      await page.fill('#sn-text', ''); await sleep(200); if (!(await dis(page, '#sn-save'))) bad.push('Novo cântico: Guardar ativo sem letra nem PDF');
+    });
+    // Nova folha e Template (Maestro)
+    await withApp({ perfil: 'maestro' }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(400); await page.click('.col-new'); await sleep(500);
+      await check(page, 'Nova folha', '#col-save', ['#col-name'], () => page.fill('#col-name', 'Folha'));
+      await page.selectOption('#col-tpl-sel', 'gerir'); await sleep(600);
+      if (await count(page, '#tpl-new')) { await page.click('#tpl-new'); await sleep(500);
+        await check(page, 'Template', '#tpl-save', ['#tpl-name', '#tpl-secs'], async () => { await page.fill('#tpl-name', 'T'); await page.fill('#tpl-secs', 'Entrada'); });
+        await page.fill('#tpl-secs', ''); await sleep(200); if (!(await dis(page, '#tpl-save'))) bad.push('Template: Guardar ativo sem secções');
+      } else bad.push('Template: «+ Novo template» não encontrado');
+    });
+    // Editar folha: título e caixa de texto da app (Nova secção)
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await check(page, 'Editar folha', '#ce-save', ['#ce-name'], () => page.fill('#ce-name', 'Missa'));
+      await page.click('#col-add-sec'); await sleep(300);
+      await page.fill('#app-dlg-input', ''); await sleep(150);
+      if (!(await dis(page, '#app-dlg-ok'))) bad.push('caixa de texto: OK ativo vazio');
+      await page.press('#app-dlg-input', 'Enter'); await sleep(300);
+      if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) bad.push('caixa de texto: Enter com o campo vazio confirmou');
+      await page.fill('#app-dlg-input', 'Secção'); await sleep(150);
+      if (await dis(page, '#app-dlg-ok')) bad.push('caixa de texto: OK desativado depois de preencher');
+    });
+    // Gestão: acrescentar pessoa só com email válido
+    await withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
+      await page.waitForSelector('#add-email', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '#add-email'))) { bad.push('Gestão: sem #add-email'); return; }
+      const btn = '#adm-add button[type=submit]';
+      await page.fill('#add-email', 'nao-e-email'); await sleep(200);
+      if (!(await dis(page, btn))) bad.push('Gestão: Acrescentar ativo com email inválido');
+      await page.fill('#add-email', 'pessoa@example.invalid'); await sleep(200);
+      if (await dis(page, btn)) bad.push('Gestão: Acrescentar desativado com email válido');
+      if (!(await count(page, '#adm-add .req'))) bad.push('Gestão: email sem «*»');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   if (full) {
     await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const tok = JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8'));
