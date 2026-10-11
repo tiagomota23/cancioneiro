@@ -77,7 +77,8 @@ const C = {
 - Ativos na cor \`--accent\`; inativos (fechar, limpar) em \`--text-faint\`.
 - O «×» de fechar é sempre o símbolo desenhado (M6 6l12 12M18 6L6 18), nunca um carácter. Classes: \`.dlg-x\`, \`.search .clear\`.
 - O «i» de informação (\`.perfil-i\`) é Marcellus 24 px 700 itálico na cor de destaque — o mesmo na barra de topo e na janela Perfil.
-- Sobre a cor da marca o símbolo é \`--on-brand\` (\`.col-share\`, botões do leitor \`.mini-btn\`).`,
+- Sobre a cor da marca o símbolo é \`--on-brand\` (\`.col-share\`, botões do leitor \`.mini-btn\`).
+- Estrela na barra do cântico (todos os perfis): contorno, ou cheia de \`--star\` quando o cântico está nos Preferidos; tocar abre «Coleções e folhas».`,
     html: `<div class="ds row"><dialog open style="position:relative;width:220px;height:60px;padding:0"><button class="dlg-x" aria-label="Fechar">${x}</button><form onsubmit="return false" style="padding:8px"><button class="perfil-i" aria-label="Informação">i</button></form></dialog>
 <span class="pick-star" aria-label="Preferido">★</span>
 <div class="brand-bg row"><span class="mini-btn" aria-label="Pausa">❚❚</span></div></div>` },
@@ -130,7 +131,7 @@ const C = {
 - Título \`--fs-ui\` 700 em maiúsculas com \`--ls-row\`; subtítulo \`--fs-small\` em \`--text-soft\`.
 - Escolhida (\`.perfil-opt.on\`): cheia de \`--accent\`, texto \`--on-accent\`.
 - Classes: \`.perfil-opt\`, \`.tpl-apply\`, \`.col-pick\`, \`.perfil-admin\`, \`.tpl-edit\`.
-- «Coleções e folhas» (\`#col-pick\`): rótulos \`.pick-head\` e linhas \`.col-pick\` que ligam e desligam — com o cântico: cheias de \`--accent\` com ✓ (\`.pick-ok\`, \`--icon\`); Cancioneiro original: cheia e inativa.
+- «Coleções e folhas» (\`#col-pick\`): rótulos \`.pick-head\` e linhas \`.col-pick\` que ligam e desligam — com o cântico: cheias de \`--accent\` com ✓ (\`.pick-ok\`, \`--icon\`); Cancioneiro original: cheia e inativa. Cada linha tem à esquerda o símbolo do menu (\`.pick-ic\`, \`--icon\`, \`--accent\`; \`--on-accent\` quando cheia): estrela cheia (Preferidos), livro (Cancioneiro), folha (folha com lápis se por publicar).
 - «+ novo» (\`.col-pick-new\`): tracejado \`--border-dash\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\` em \`--accent\` — o mesmo texto nas listas verdes («+ Nova folha», «+ Novo cântico»).`,
     html: `<div class="ds"><dialog open><div class="col"><button class="tpl-apply"><b>Copiar letra</b><small>Título e letra, sem acordes</small></button><button class="perfil-opt"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/></svg><span><b>Coro</b><small>Todos os cânticos e livros, com acordes</small></span></button><button class="perfil-opt on"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg><span><b>Gestor</b><small>Gerir os utilizadores e os seus perfis</small></span></button><button class="col-pick-new">+ Nova folha</button></div></dialog></div>` },
   Titulos: { group: 'Letra', h: 200, title: 'Títulos',
@@ -218,7 +219,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
 10. **Campos obrigatórios** — «*» a seguir ao rótulo (\`span.req\`: \`danger\`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
 11. **Botões lado a lado** — numa linha de ações (rodapés das janelas \`.edit-actions\`, \`.info-actions\` com dois botões, \`.edit-bar\` com dois botões, \`.file-btns\`, \`.listen-actions\`, \`.sn-gen\`) os botões têm a mesma largura e ocupam a linha (\`flex: 1 1 0\`). Exceção: na caixa «por aprovar» (\`.pend-bar\`) Aprovar e Recusar ficam à direita, com a mesma largura (largura do texto). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
-12. **Rodapé das janelas** — o botão principal fica sempre à esquerda (numa linha) ou em cima (numa coluna). Uma linha, larguras iguais: Guardar | Cancelar | Apagar. Se não couberem numa linha, coluna encostada à direita, todos com a mesma largura, pela mesma ordem. Os botões estão sempre na mesma linha ou na mesma coluna.
+12. **Rodapé das janelas** — o botão principal fica à direita numa linha e em cima numa coluna. Linha, larguras iguais: Apagar | Cancelar | Guardar (confirmações: Cancelar | OK, também quando o OK é vermelho). Se não couberem numa linha, coluna encostada à direita, todos com a mesma largura, de cima para baixo: Guardar, Cancelar, Apagar. O mesmo nos outros pares: Recusar | Aprovar, Editar folha | Publicar (Publicar em cima se não couberem), Terminar sessão | Fechar. Os botões estão sempre na mesma linha ou na mesma coluna.
 
 ## Exceções documentadas
 

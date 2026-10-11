@@ -44,6 +44,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
 | FUN-16 | Partitura: pdf.js desenha, zoom +/−, Voltar | ui | alta | V | ✓ |
 | FUN-17 | Partilhar cântico gera `#/p/<código>` | ui | alta | V | ✓ |
+| FUN-17b | Partilhar letra: copia sempre; telemóvel «Partilhar letra» + navigator.share({title,text}); computador «Copiar letra» + aviso «Letra copiada» (v188) | ui | média | V | ☐ por correr |
 | FUN-18 | Endereço partilhado sem conta: letra sem acordes | ui | alta | V | ✓ |
 | FUN-19 | Endereço partilhado inválido/expirado: mensagem clara | ui | alta | V | ✓ |
 | FUN-20 | Folha partilhada sem conta: secções e abrir cânticos | ui | alta | V | ✓ |
