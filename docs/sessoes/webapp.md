@@ -89,6 +89,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   se o Maestro escolher Cancioneiro, também para o Cancioneiro (op `promote`). Etiqueta amarela
   «por aprovar» por cima do nome (listas e página do cântico).
 - Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
+- Botões lado a lado numa linha de ações: a mesma largura, a ocupar a linha (rodapés das janelas, Aprovar/Recusar,
+  Editar folha/Publicar, Terminar sessão/Fechar); botões de 40 px sempre com letra normal (400).
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
