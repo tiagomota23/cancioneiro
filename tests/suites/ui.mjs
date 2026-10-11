@@ -400,6 +400,12 @@ async function suites(full) {
     if (!(await vis(page, '#btn-google'))) return 'sem botão Google';
     return (await page.getAttribute('#view-login a[href="privacidade.html"]', 'href')) === 'privacidade.html' || 'sem ligação de privacidade';
   }));
+  await t('FUN-24b', 'Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173)', () => withApp({ perfil: 'coro', q: 'code=teste-regresso', wait: false, settle: 0 }, async ({ page }) => {
+    const t0 = Date.now();
+    await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 15000 });
+    const ms = Date.now() - t0;
+    return ms >= 1500 ? { pass: ms + ' ms' } : `a capa saiu em ${ms} ms (esperado ≈ 2 s)`;
+  }, ), { sev: 'baixa' });
   await t('FUN-25', 'Tutorial: aparece na 1.ª vez e «Saltar» fecha-o sem voltar a aparecer', () => withApp({ perfil: 'coro', tour: true, settle: 1500 }, async ({ page }) => {
     if (!(await vis(page, '.tour-box'))) return 'tutorial não apareceu';
     await page.click('.tour-skip'); await sleep(500);
@@ -984,6 +990,7 @@ async function suites(full) {
     const bad = rows.filter(x => x.tag !== 'BUTTON' || !['true', 'false'].includes(x.pressed) || (x.pressed === 'true') !== x.on).map(x => x.k);
     if (bad.length) return 'aria-pressed/.on incoerentes: ' + bad.join(',');
     if (!rows.some(x => x.k === 'cancioneiro') || !rows.some(x => x.k === 'fav')) return 'faltam cancioneiro/fav: ' + rows.map(x => x.k).join(',');
+    if (rows.some(x => x.k === 'coro')) return 'ainda há a opção Coro (saiu na v174)';
     const c0 = rows.find(x => x.k === 'cancioneiro').pressed;
     await page.focus('#col-pick .col-pick[data-k="cancioneiro"]'); await page.keyboard.press(c0 === 'true' ? 'Enter' : 'Space'); await sleep(700);
     if (c0 === 'true') { if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'retirar do Cancioneiro não pediu confirmação'; await page.click('#app-dlg-ok'); await sleep(700); }
