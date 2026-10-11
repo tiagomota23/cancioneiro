@@ -453,7 +453,14 @@ async function suites(full) {
       const b = await count(page, '#rows li a');
       return a > 0 && b > 0 || `latim ${a}, songbook ${b}`;
     }), { sev: 'média' });
-    await t('FUN-32', 'Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar para o Coro grava aprovado + Coro (v167)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_pendente', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_pendente', number: 9101, title: 'Cântico novo de teste (pendente)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: false, added_by: 'outra@example.invalid', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {
+    await t('FUN-31b', 'Novos Cânticos: filtro com Todos / Aprovados / Por aprovar / No Cancioneiro / Ainda não no Cancioneiro (sem opções do Coro) (v172)', () => withApp({ perfil: 'maestro', hash: '#/lista/livro-novos' }, async ({ page }) => {
+      await page.waitForSelector('#novos-filtro', { timeout: 8000 }).catch(() => {});
+      const o = await page.evaluate(() => [...document.querySelectorAll('#novos-filtro option')].map(x => x.textContent.trim()));
+      const want = ['Todos', 'Aprovados', 'Por aprovar', 'No Cancioneiro', 'Ainda não no Cancioneiro'];
+      if (o.some(x => /Coro/.test(x))) return 'ainda há opções do Coro: ' + o.join(' | ');
+      return want.every(w => o.includes(w)) || 'opções: ' + o.join(' | ');
+    }), { sev: 'baixa' });
+    await t('FUN-32', 'Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar põe sempre no Coro e, para o Cancioneiro, também promove (v172)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_pendente', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_pendente', number: 9101, title: 'Cântico novo de teste (pendente)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: false, added_by: 'outra@example.invalid', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {
       const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.novos') || '[]').find(x => x.slug === 'novo_teste_pendente'));
       await page.waitForSelector('#song-approve');
       await page.click('#song-approve'); await sleep(400);
@@ -463,10 +470,11 @@ async function suites(full) {
       await page.click('#app-dlg-cancel'); await sleep(500);
       if ((await stored()).approved !== false) return 'Cancelar aprovou';
       await page.click('#song-approve'); await sleep(400);
-      await page.locator('#app-dlg-list button').filter({ hasText: /^Coro/ }).first().click(); await sleep(1200);
+      await page.locator('#app-dlg-list button').filter({ hasText: /^Cancioneiro/ }).first().click(); await sleep(1200); // v172: aprovar põe sempre no Coro; Cancioneiro também promove
       const s = await stored();
       if (s.approved !== true) return 'não ficou aprovado';
-      if (!(s.sources || []).some(x => x.source === 'coro_clu')) return 'aprovado mas não ficou no Coro';
+      if (!(s.sources || []).some(x => x.source === 'coro_clu')) return 'aprovado para o Cancioneiro mas não ficou no Coro (v172: aprovar põe sempre no Coro)';
+      if (!/Cancioneiro/.test(await txt(page, '#song .srcs')) && !(await page.evaluate(() => document.querySelector('#song').textContent.includes('Cancioneiro')))) return 'aprovado para o Cancioneiro mas não aparece no Cancioneiro';
       return (await count(page, '#song-approve')) ? 'o botão Aprovar continua na página' : true;
     }), { sev: 'média' });
   }
