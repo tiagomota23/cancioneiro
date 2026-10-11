@@ -111,6 +111,7 @@ const C = {
 
 - Altura \`--h-btn-sm\`, anel interior de 1 px \`--accent\`, pontas em pílula, \`--fs-small\` 700 sem maiúsculas; toque ≥ 44 px.
 - Escolhido: cheio de \`--accent\` (texto \`--paper\` nas páginas dos cânticos, \`--on-accent\` no ecrã de ouvir).
+- No cântico, o seletor de língua pode ter um botão por versão do mesmo cântico noutra língua (ex.: Francês | Inglês | Português); se não couber, desliza na horizontal, sem barra.
 - Classes: \`.lang-switch\`, \`.listen-langs\`, \`.aud-switch\`.
 
 **Partitura** (\`.scores .pdf\`): não é etiqueta nem segmentado — é uma ligação com o símbolo de página (\`--icon-sm\`), \`--fs-ui\`, \`--accent\`, altura mínima \`--hit\`.`,
