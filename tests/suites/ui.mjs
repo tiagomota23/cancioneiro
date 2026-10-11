@@ -374,6 +374,35 @@ async function suites(full) {
     const dlg = await page.evaluate(() => (document.querySelector('#app-dlg-input')?.value || '') + ' ' + document.querySelector('#app-dlg-msg')?.textContent);
     return /#\/p\/demo_salve_regina/.test(clip + dlg) || `endereço não encontrado (clipboard «${clip.slice(0, 80)}», diálogo «${dlg.slice(0, 80)}»)`;
   }));
+  await t('FUN-17b', 'Partilhar letra (Coro): copia sempre; com menu de partilha chama-se «Partilhar letra» e abre navigator.share({title,text}); sem menu, «Copiar letra» e aviso «Letra copiada» (v188)', async () => {
+    const bad = [];
+    // telemóvel (ecrã tátil): menu de partilha
+    await withApp({ perfil: 'coro', hash: '#/cantico/salve_regina', permissions: ['clipboard-read', 'clipboard-write'] }, async ({ page }) => {
+      await page.waitForSelector('#song h1');
+      await page.evaluate(() => { navigator.share = d => { window.__share = d; return Promise.resolve(); }; });
+      await page.click('#btn-share'); await sleep(500);
+      const opt = page.locator('#app-dlg-list button').filter({ hasText: /letra/i }).first();
+      const label = (await opt.textContent().catch(() => '')).trim();
+      if (!/^Partilhar letra/.test(label)) bad.push('telemóvel: opção «' + label + '» (esperado «Partilhar letra»)');
+      await opt.click().catch(() => {}); await sleep(800);
+      const sh = await page.evaluate(() => window.__share || null), clip = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+      if (!sh || !sh.title || !/misericordiae/i.test(sh.text || '')) bad.push('telemóvel: navigator.share sem title/text da letra');
+      if (!/misericordiae/i.test(clip)) bad.push('telemóvel: a letra não foi copiada');
+    });
+    // computador (sem ecrã tátil, Chromium): copia e avisa
+    await withApp({ perfil: 'coro', hash: '#/cantico/salve_regina', isMobile: false, hasTouch: false, permissions: ['clipboard-read', 'clipboard-write'] }, async ({ page }) => {
+      await page.waitForSelector('#song h1');
+      await page.click('#btn-share'); await sleep(500);
+      const opt = page.locator('#app-dlg-list button').filter({ hasText: /letra/i }).first();
+      const label = (await opt.textContent().catch(() => '')).trim();
+      if (!/^Copiar letra/.test(label)) bad.push('computador: opção «' + label + '» (esperado «Copiar letra»)');
+      await opt.click().catch(() => {}); await sleep(800);
+      const dlg = await page.evaluate(() => document.querySelector('#app-dlg').open ? document.querySelector('#app-dlg').textContent : '');
+      if (!/Letra copiada/.test(dlg)) bad.push('computador: sem aviso «Letra copiada»');
+      if (!/misericordiae/i.test(await page.evaluate(() => navigator.clipboard.readText().catch(() => '')))) bad.push('computador: a letra não foi copiada');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-18', 'Endereço partilhado sem conta: só letra (sem acordes) e tradução, com botão de entrar', () => withApp({ q: 'semconta', hash: '#/p/demo_amazing_grace', wait: '#song h1' }, async ({ page }) => {
     const s = await page.evaluate(() => document.querySelector('#song').textContent);
     if (!/Amazing Grace/.test(s)) return 'cântico partilhado não abriu';
