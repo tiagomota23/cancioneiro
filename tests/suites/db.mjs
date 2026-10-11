@@ -234,10 +234,17 @@ export default async function (level) {
     const bad = r.filter(x => !ok.includes(x.tag));
     return bad.length ? 'etiquetas Tema desconhecidas: ' + bad.map(x => `${x.tag} (${x.n})`).join(', ') : { pass: r.map(x => `${x.tag} ${x.n}`).join(', ') };
   }, { sev: 'baixa' });
-  await t('INT-16', 'Cânticos fundidos: dos_cocodrilos já não existe e os_crocodilos tem as fontes original + songbook (v192)', async () => {
-    const [r] = await sql(`select (select count(*) from public.songs where slug='dos_cocodrilos')::int dos, (select string_agg(source, ',' order by source) from public.song_sources where song_slug='os_crocodilos') src, (select count(*) from public.song_files where song_slug='os_crocodilos' and path like 'livros/songbook%')::int page`);
+  await t('INT-16', 'os_crocodilos / dos_cocodrilos: dos_cocodrilos é versão (es, songbook, fora do Cancioneiro, com a página do Songbook) de os_crocodilos, que só tem a fonte original e não tem tradução (v196)', async () => {
+    const [r] = await sql(`select (select row_to_json(x) from (select language, cancioneiro, version_of from public.songs where slug='dos_cocodrilos') x) dos,
+      (select string_agg(source, ',' order by source) from public.song_sources where song_slug='dos_cocodrilos') dos_src,
+      (select count(*) from public.song_files where song_slug='dos_cocodrilos' and path like 'livros/songbook%')::int dos_page,
+      (select string_agg(source, ',' order by source) from public.song_sources where song_slug='os_crocodilos') os_src,
+      (select translation is null from public.songs where slug='os_crocodilos') os_sem_trad`);
     const bad = [];
-    if (r.dos) bad.push('dos_cocodrilos ainda existe'); if (!/original/.test(r.src || '') || !/songbook/.test(r.src || '')) bad.push('fontes de os_crocodilos: ' + r.src); if (!r.page) bad.push('os_crocodilos sem a página do Songbook');
+    if (!r.dos) bad.push('dos_cocodrilos não existe');
+    else { if (r.dos.version_of !== 'os_crocodilos') bad.push('dos_cocodrilos não é versão de os_crocodilos'); if (r.dos.language !== 'es') bad.push('língua ' + r.dos.language); if (r.dos.cancioneiro) bad.push('dos_cocodrilos no Cancioneiro'); }
+    if (!/songbook/.test(r.dos_src || '')) bad.push('dos_cocodrilos sem fonte songbook'); if (!r.dos_page) bad.push('dos_cocodrilos sem página do Songbook');
+    if (r.os_src !== 'original') bad.push('fontes de os_crocodilos: ' + r.os_src); if (!r.os_sem_trad) bad.push('os_crocodilos ainda tem tradução');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'baixa' });
   await t('INT-17', 'Versões (songs.version_of): apontam para um principal que existe e não é ele próprio versão; os cânticos juntados já não existem (v193)', async () => {

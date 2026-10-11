@@ -29,6 +29,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
 | FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ☐ por correr |
 | FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ☐ por correr |
+| FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -244,7 +245,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ☐ por correr |
 | INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ☐ por correr |
 | INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ☐ por correr |
-| INT-16 | Fusão os_crocodilos/dos_cocodrilos: dos_cocodrilos não existe; os_crocodilos com original+songbook e página do Songbook (v192) | db | baixa | V | ☐ por correr |
+| INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ☐ por correr |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
