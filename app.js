@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v177';
+  const APP_VERSION = '2026-10-11 v178';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -905,8 +905,8 @@
       title.textContent = bk.label;
       // livros pela ordem das páginas; os outros por título
       const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
-      const NF = { todos: () => true, aprovados: s => s.approved !== false, pendentes: s => s.approved === false,
-        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s) }; // sem filtro do Coro: os aprovados vão todos para o Coro
+      const NF = { todos: () => true, pendentes: s => s.approved === false,
+        canc: s => inCancioneiro(s), 'so-coro': s => s.approved !== false && !inCancioneiro(s) }; // sem filtro do Coro: os aprovados vão todos para o Coro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
       const list = pool.filter(bk.test).filter(bk.novos ? NF[nf] : () => true).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
@@ -915,7 +915,7 @@
         (bk.novos && lvl() >= 2 ? '<li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li>' : '');
       if (bk.novos) {
         const pend = pool.filter(bk.test).filter(s => s.approved === false).length;
-        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro']];
+        const opts = [['todos', 'Todos'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['so-coro', 'Só no Coro']]; // aprovados: no Coro e talvez no Cancioneiro
         title.innerHTML = `${esc(bk.label)}${pend ? `<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>` : ''}` +
           `<select class="novos-filtro" id="novos-filtro" aria-label="Mostrar">${opts.map(([v, l]) => `<option value="${v}"${v === nf ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
         $('novos-filtro').onchange = e => { prefs.novosFiltro = e.target.value; store.set('cancioneiro.prefs', prefs); showList('livro-novos'); };
