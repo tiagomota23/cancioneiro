@@ -611,10 +611,7 @@ html, body { touch-action: pan-x pan-y; }
 .song a.book-open { color: var(--accent); font-weight: 700; text-decoration: underline; }
 
 /* Templates */
-.list-title .col-edit + .col-edit { margin-left: 6px; }
 .tpl-row { display: flex; align-items: stretch; gap: 6px; }
-.list-title .col-btns { display: flex; gap: 6px; margin: 8px 0 2px; }
-.list-title .col-btns .col-edit { margin-left: 0; }
 
 /* Se a app não arrancar (ficheiro não chegou), ao fim de 10 s a capa explica o que fazer */
 .splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: var(--on-brand); font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
@@ -746,7 +743,7 @@ dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
 .pdf-title { text-transform: uppercase; letter-spacing: var(--ls-row); }
 
 /* Etiquetas em maiúsculas (cabeçalhos de secção, rótulos de campos) */
-.recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .sec-add .sa-sec {
+.recs h2, .col-field, .song-new .sn-f, .song-new .sn-flabel, .col-ed .ce-label, .sec-add .sa-sec {
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase;
 }
 /* Títulos de secção nas listas verdes (página inicial, folhas, menu): serif, maiores, com um traço branco por baixo */
@@ -760,7 +757,7 @@ dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
 .recs h2 { color: var(--accent); margin: 0 0 8px; }
 .col-field, .song-new .sn-f, .sec-add .sa-sec { display: grid; gap: 4px; margin: 10px 0; color: var(--text-soft); min-width: 0; }
 .sec-add .sa-sec[hidden] { display: none; }
-.song-new .sn-flabel { margin: 0 0 4px; color: var(--text-soft); }
+.song-new .sn-flabel, .col-ed .ce-label { margin: 0 0 4px; color: var(--text-soft); }
 dialog .small, .admin .small { font-size: var(--fs-small); color: var(--text-soft); }
 .admin .small { line-height: 1.5; margin-top: 18px; }
 
@@ -866,21 +863,16 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .switch-row.armed { padding: 0 14px; border-radius: var(--pill); }
 
 /* Segmentado: controlo de escolha (idioma do cântico, língua a ouvir) — 32 px, área de toque de 44 */
-.lang-switch, .listen-langs { display: inline-flex; height: var(--h-btn-sm); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); }
+.lang-switch, .listen-langs, .aud-switch { display: inline-flex; height: var(--h-btn-sm); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); }
 .listen-langs { display: flex; width: fit-content; max-width: 100%; margin: 0 auto 16px; }
-.lang-switch button, .listen-langs button { position: relative; height: 100%; padding: 0 14px; border: 0; border-radius: 0; background: none;
+.lang-switch button, .listen-langs button, .aud-switch button { position: relative; height: 100%; padding: 0 14px; border: 0; border-radius: 0; background: none;
   color: var(--accent); font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap; }
-.lang-switch button::after, .listen-langs button::after { content: ""; position: absolute; inset: -6px 0; }
-.lang-switch button:first-child, .listen-langs button:first-child { border-radius: var(--pill) 0 0 var(--pill); }
-.lang-switch button:last-child, .listen-langs button:last-child { border-radius: 0 var(--pill) var(--pill) 0; }
+.lang-switch button::after, .listen-langs button::after, .aud-switch button::after { content: ""; position: absolute; inset: -6px 0; }
+.lang-switch button:first-child, .listen-langs button:first-child, .aud-switch button:first-child { border-radius: var(--pill) 0 0 var(--pill); }
+.lang-switch button:last-child, .listen-langs button:last-child, .aud-switch button:last-child { border-radius: 0 var(--pill) var(--pill) 0; }
 .lang-switch button.on { background: var(--accent); color: var(--paper); }
-.listen-langs button.on { background: var(--accent); color: var(--on-accent); }
+.listen-langs button.on, .aud-switch button.on { background: var(--accent); color: var(--on-accent); }
 
-/* Botões pequenos na cor da marca (ações do título da folha): contorno branco, área de toque de 44 */
-.list-title .col-edit { position: relative; display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-btn-sm); padding: 0 14px;
-  border: 1px solid var(--on-brand-outline); border-radius: var(--pill); background: none; color: var(--on-brand);
-  font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; vertical-align: middle; margin-left: 10px; }
-.list-title .col-edit::after { content: ""; position: absolute; inset: -6px 0; }
 
 /* Campos: 44 px, cantos de 10, contorno fino; ao escrever, contorno de destaque */
 .col-field input, .col-field select, #app-dlg-input, .song-new input, .song-new select, .sec-add #sa-q, .sec-add .sa-sec select,
@@ -932,7 +924,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 /* Foco do teclado: anel na cor de destaque (em vez do do navegador); em fundo de marca, branco */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .topbar :focus-visible, .searchrow > :focus-visible, .rows :focus-visible, .drawer :focus-visible, .list-title :focus-visible { outline-color: var(--on-brand); }
-.list-title .col-meta, .list-title .col-btns { font-family: var(--sans); }
+.list-title .col-meta { font-family: var(--sans); }
 .search .clear svg, .dlg-x svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; }
 /* caixa de procura: anel de foco visível (o campo em si não tem contorno) */
 .search:focus-within { box-shadow: 0 0 0 2px var(--accent), 0 2px 10px color-mix(in srgb, var(--shadow) 12%, transparent); }
@@ -940,27 +932,43 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .adm-name[role=button] { position: relative; }
 .adm-name[role=button]::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--hit); transform: translateY(-50%); }
 
-/* Folha em edição (Maestro / Gestor): fundo branco; a barra de cima e a procura continuam verdes */
-body.col-editing::before { background: var(--surface); }
-body.col-editing .topbar { background: var(--brand); box-shadow: 0 0 0 100vmax var(--brand); clip-path: inset(0 -100vmax); }
-body.col-editing #rows, body.col-editing #status { color: var(--text); } /* só a lista: a barra de cima e a procura continuam verdes, com texto branco */
-body.col-editing .list-title, body.col-editing .list-title .col-meta { color: var(--brand-deep); }
-body.col-editing .list-title .col-share { color: var(--accent); }
-body.col-editing .list-title .col-edit { color: var(--accent); border-color: var(--accent); }
-body.col-editing .list-title .col-edit.col-publish { background: var(--accent); color: var(--on-accent); }
-body.col-editing .rows li a { color: var(--text); border-bottom-color: var(--line); }
-body.col-editing .rows li a:active { background: var(--tint-soft); }
-body.col-editing .rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); }
-body.col-editing .rows .chev { color: var(--text-faint); opacity: 1; }
-body.col-editing .status { color: var(--text-soft); }
+/* Editar folha (Maestro / Gestor): janela por cima da folha, como «Editar cântico»; a lista lá dentro em fundo claro */
+.col-ed .ce-rows { padding: 0; margin: 0 0 8px; color: var(--text); }
+.col-ed .ce-rows li a { color: var(--text); border-bottom-color: var(--line); padding-left: 0; padding-right: 0; }
+.col-ed .ce-rows li a:active { background: var(--tint-soft); }
+.col-ed .ce-rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); padding-left: 0; }
+.col-ed .ce-rows .chev { color: var(--text-faint); opacity: 1; }
+.col-ed .ce-rows :focus-visible { outline-color: var(--accent); }
+.col-ed .ce-rows li.col-add button { padding-left: 0; }
+.col-ed .ce-rows li.col-add-end button { width: 100%; margin-left: 0; padding-left: 14px; }
+.col-ed #ce-until { margin: -4px 0 12px; }
+/* tocar num cântico ou numa secção: setas e caixote por cima da linha, à direita; na secção, o nome passa a botão */
+.col-ed .ce-rows li[data-key] { position: relative; }
+.col-ed .ce-rows li.sel > a, .col-ed .ce-rows li.sel > .sec-line { background: var(--tint-soft); }
+.col-ed .ce-rows .sec-line { cursor: pointer; }
+.ce-acts { position: absolute; right: 0; bottom: 2px; display: flex; gap: 2px; padding-left: 16px;
+  background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
+.col-ed .ce-rows li.col-sec .ce-acts { bottom: 1px; }
+.ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--accent); }
+.ce-acts button { width: var(--hit); height: var(--hit); padding: 0; border-radius: var(--pill); }
+.ce-acts button:disabled { color: var(--text-faint); opacity: .4; }
+.ce-acts button.del { color: var(--danger); }
+.ce-acts svg, .ce-name svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+.ce-name { gap: 8px; min-height: var(--hit); margin: -8px 0; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent); text-align: left; }
+.ce-name svg { width: var(--icon-sm); height: var(--icon-sm); }
+/* Público (Coro / Cancioneiro): segmentado no topo das janelas da folha */
+.col-dlg .aud-switch, .col-ed .aud-switch { margin: 0 0 6px; }
+/* «Editar folha» no fim da folha, como «Editar cântico» no fim do cântico (aqui sobre a cor da marca) */
+.rows li.col-edit-bar { padding: 0 14px; }
+.rows li.col-edit-bar .edit-bar { margin: 16px 0 8px; }
+.rows li.col-edit-bar .edit-btn { color: var(--on-brand); border-color: var(--on-brand-outline); }
 /* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
 .rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
   font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
-body.col-editing #view-list .shared-foot { color: var(--text-soft); }
 </style></head>
-<body class="perfil-gestor col-editing">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v163</span></p></div></div>
+<body class="perfil-gestor">
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v164</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -999,8 +1007,8 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<span class="col-btns"><button class="col-edit col-publish" id="col-mode">Publicar</button><button class="col-edit" id="col-set">Definições</button></span><small class="col-meta">Em edição — só os Maestros veem esta folha · Coro · até 18/10/2026 00:42</small></h2>
-    <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s1">Entrada</a></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s2">Comunhão</a></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec"><a href="#" class="sec-line" data-key="sec:s3">Nossa Senhora</a></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
+    <h2 class="list-title" id="list-title">Missa de domingo<small class="col-meta">Por publicar — só os Maestros veem esta folha · Coro · até 18/10/2026 00:59</small></h2>
+    <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
     <p class="status" id="status"></p>
   </section>
 
@@ -1099,7 +1107,7 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-10 v163</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v164</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1107,15 +1115,27 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
     <form method="dialog" class="info-actions"><button type="button" id="btn-logout" class="ghost">Terminar sessão</button><button type="button" id="info-close">Fechar</button></form>
   </dialog>
 
-  <!-- Coleção: criar / editar (Maestro) -->
+  <!-- Folha: criar (Maestro) -->
   <dialog id="col-dlg" class="col-dlg top-dlg">
     <h2 id="col-dlg-title">Nova folha</h2>
+    <div class="aud-switch" id="col-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
     <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off" style=""></label>
-    <label class="col-field">Público<select id="col-aud"><option value="coro">Coro</option><option value="cancioneiro">Cancioneiro</option></select></label>
     <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
-    <label class="col-field" id="col-tpl-field" hidden="">Template<select id="col-tpl-sel"></select></label>
+    <label class="col-field" id="col-tpl-field">Template<select id="col-tpl-sel"></select></label>
     <p class="small" id="col-msg" role="status"></p>
-    <div class="edit-actions"><button type="button" id="col-del" class="ghost danger">Apagar</button><span></span><button type="button" id="col-cancel" class="ghost">Cancelar</button><button type="button" id="col-save">Guardar</button></div>
+    <div class="edit-actions"><span></span><span></span><button type="button" id="col-cancel" class="ghost">Cancelar</button><button type="button" id="col-save">Criar</button></div>
+  </dialog>
+  <!-- Folha: editar (Maestro), por cima da folha, como «Editar cântico»; cada mudança fica logo gravada -->
+  <dialog id="col-ed" class="editor col-ed top-dlg" open="">
+    <h2 tabindex="-1" autofocus="">Editar folha</h2>
+    <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro" class="on" aria-pressed="true">Coro</button><button type="button" data-v="cancioneiro" aria-pressed="false">Cancioneiro</button></div>
+    <label class="col-field">Título<input id="ce-name" maxlength="80" autocomplete="off" style=""></label>
+    <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
+    <p class="small" id="ce-until">Disponível até 18/10/2026 00:59. Mudar a duração conta a partir de agora; um mês depois de expirar, a folha é apagada.</p>
+    <p class="ce-label">Cânticos</p>
+    <ul class="rows ce-rows" id="ce-rows"><li class="col-sec" data-key="sec:s1"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Entrada</div></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s2"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Comunhão</div></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s3"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Nossa Senhora</div></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
+    <p class="small" id="ce-msg" role="status"></p>
+    <div class="edit-actions"><button type="button" id="ce-del" class="ghost danger">Apagar</button><span></span><button type="button" id="ce-close" class="ghost">Fechar</button><button type="button" id="ce-pub">Publicar</button></div>
   </dialog>
   <!-- Coleção: escolher onde pôr o cântico -->
   <dialog id="col-pick" class="col-dlg">
@@ -1217,4 +1237,4 @@ body.col-editing #view-list .shared-foot { color: var(--text-soft); }
   
 
 
-<div class="toast" role="status">Folha em edição — escondida até a publicar</div></body></html>
+</body></html>
