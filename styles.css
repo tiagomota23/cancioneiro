@@ -430,6 +430,11 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
 .adm-act { display: flex; align-items: center; gap: 8px; }
 .adm-add { display: flex; flex-wrap: wrap; gap: 8px; }
 .adm-add input { flex: 1 1 160px; min-width: 0; }
+.adm-add .adm-req { position: relative; display: flex; flex: 1 1 160px; min-width: 0; }
+.adm-add .adm-req input { padding-right: 26px; }
+.adm-add .adm-req .req { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+/* campo obrigatório: * vermelho a seguir ao nome */
+.req { color: var(--danger); margin-left: 3px; font-weight: 700; }
 .admin .note { color: var(--ink-soft); }
 
 /* Letra: não se pode selecionar nem copiar (todos os perfis) */

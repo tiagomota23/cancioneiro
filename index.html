@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css?v=170">
-  <link rel="stylesheet" href="styles.css?v=170">
+  <link rel="stylesheet" href="theme.css?v=171">
+  <link rel="stylesheet" href="styles.css?v=171">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver"></span></p></div></div>
@@ -171,7 +171,7 @@
   <dialog id="col-dlg" class="col-dlg top-dlg">
     <h2 id="col-dlg-title">Nova folha</h2>
     <div class="aud-switch" id="col-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
-    <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off"></label>
+    <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="col-name" maxlength="80" autocomplete="off" required></label>
     <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <label class="col-field" id="col-tpl-field">Template<select id="col-tpl-sel"></select></label>
     <p class="small" id="col-msg" role="status"></p>
@@ -181,7 +181,7 @@
   <dialog id="col-ed" class="editor col-ed top-dlg">
     <h2 tabindex="-1" autofocus>Editar folha</h2>
     <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
-    <label class="col-field">Título<input id="ce-name" maxlength="80" autocomplete="off"></label>
+    <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <p class="small" id="ce-until"></p>
     <p class="ce-label">Cânticos</p>
@@ -205,8 +205,8 @@
   </dialog>
   <dialog id="tpl-edit" class="col-dlg top-dlg">
     <h2 id="tpl-edit-title" tabindex="-1" autofocus>Novo template</h2>
-    <label class="col-field">Nome<input id="tpl-name" maxlength="60" autocomplete="off"></label>
-    <label class="col-field">Secções (uma por linha)<textarea id="tpl-secs" rows="7"></textarea></label>
+    <label class="col-field"><span>Nome<span class="req" aria-hidden="true">*</span></span><input id="tpl-name" maxlength="60" autocomplete="off" required></label>
+    <label class="col-field"><span>Secções (uma por linha)<span class="req" aria-hidden="true">*</span></span><textarea id="tpl-secs" rows="7" required></textarea></label>
     <p class="small" id="tpl-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="tpl-del" class="ghost danger">Apagar</button><span></span><button type="button" id="tpl-cancel" class="ghost">Cancelar</button><button type="button" id="tpl-save">Guardar</button></div>
   </dialog>
@@ -253,11 +253,11 @@
       <button type="button" id="sn-url-go" class="sn-gen-btn">Gerar de URL</button>
       <button type="button" id="sn-pdf" class="sn-gen-btn">Gerar de PDF</button>
     </div>
-    <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off"></label>
+    <label class="sn-f"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="sn-title" maxlength="120" autocomplete="off" required></label>
     <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off"></label>
     <label class="sn-f">Categoria<select id="sn-cat"></select></label>
     <label class="sn-f">Idioma<select id="sn-lang"></select></label>
-    <label class="sn-f">Letra<textarea id="sn-text" spellcheck="false" autocapitalize="off"></textarea></label>
+    <label class="sn-f"><span>Letra<span class="req" id="sn-text-req" aria-hidden="true">*</span></span><textarea id="sn-text" spellcheck="false" autocapitalize="off"></textarea></label>
     <div class="sn-files" id="sn-files" hidden>
       <p class="sn-flabel">Gravações e partituras</p>
       <ul id="sn-flist"></ul>
@@ -285,7 +285,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=170"></script>
-  <script src="app.js?v=170"></script>
+  <script src="config.js?v=171"></script>
+  <script src="app.js?v=171"></script>
 </body>
 </html>
