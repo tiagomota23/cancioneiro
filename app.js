@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v166';
+  const APP_VERSION = '2026-10-11 v167';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -322,6 +322,7 @@
     }
     if (op === 'addfile') return { kind: b.kind, label: b.label, path: 'enviados/demo/' + Date.now() + '-abcdef12.pdf', _blob: b._blob, mime: b.mime, sort: 99 };
     if (op === 'save') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics_edit; return { edited_by: 'demo', edited_at: new Date().toISOString(), is_edited: !!b.lyrics_edit }; }
+    if (op === 'promote') { const nv = store.get('cancioneiro.demo.novos', []); if (nv.some(x => x.slug === b.slug)) store.set('cancioneiro.demo.novos', nv.map(x => x.slug === b.slug ? { ...x, cancioneiro: b.on } : x)); }
     if (op === 'promote') return { cancioneiro: b.on, promoted_by: b.on ? 'demo@localhost' : null, promoted_at: b.on ? new Date().toISOString() : null };
     if (op === 'users') return { me: 'demo@localhost', requests: [{ id: '00000000-0000-0000-0000-000000000000', email: 'novo@exemplo.pt', name: 'Pessoa Nova', created_at: new Date().toISOString() }],
       users: [{ email: 'demo@localhost', name: 'Demo', role: 'gestor', last_sign_in_at: new Date().toISOString() }, { email: 'coro@exemplo.pt', name: 'Coralista', role: 'coro', last_sign_in_at: null }].filter(u => lvl() >= 4 || u.role !== 'gestor') };
@@ -1681,10 +1682,16 @@
   async function decideSong(s, ok, btn) {
     const sims = Array.isArray(s.parecidos) ? s.parecidos : [];
     if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
+    // aprovar: para o Cancioneiro (todos os perfis) ou para o livro do Coro
+    const dest = ok ? await appChoose('Aprovar para…', [
+      { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico' },
+      { value: 'coro', label: 'Coro', sub: 'Fica no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
+    if (ok && !dest) return;
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
-      toast(ok ? 'Cântico aprovado' : 'Cântico apagado');
+      if (dest) await api(dest === 'coro' ? 'coro' : 'promote', { slug: s.slug, on: true });
+      toast(!ok ? 'Cântico apagado' : dest === 'coro' ? 'Cântico aprovado — no livro do Coro' : 'Cântico aprovado — no Cancioneiro');
       await load();
       location.hash = ok ? '#/cantico/' + encodeURIComponent(s.slug) : '#/lista/livro-novos';
       if (ok) route();
