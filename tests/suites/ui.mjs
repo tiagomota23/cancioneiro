@@ -1150,7 +1150,7 @@ async function suites(full) {
     await page.click('#app-dlg-cancel'); await sleep(300);
     return bad.length ? bad.join('; ') : true;
   }), { sev: 'baixa' });
-  await t('USA-22', 'Editar folha: rodapé em linha a 390 e 320 px, em coluna (.stack) a ~260 px; ordem visual Guardar, Cancelar, Apagar (v182/v183)', async () => {
+  await t('USA-22', 'Editar folha: rodapé em linha a 390 e 320 px (Apagar | Cancelar | Guardar), em coluna (.stack) a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185)', async () => {
     const bad = [], ev = [];
     for (const w of [390, 320, 260]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', viewport: { width: w, height: 700 }, open: '#col-mode' }, async ({ page }) => {
       const r = await page.evaluate(() => { const a = document.querySelector('#col-ed .edit-actions'); if (!a) return null; const bs = [...a.querySelectorAll('button')].filter(b => b.getBoundingClientRect().width); const ys = new Set(bs.map(b => Math.round(b.getBoundingClientRect().top)));
@@ -1159,17 +1159,21 @@ async function suites(full) {
       ev.push(`${w}: ${r.stack ? 'coluna' : 'linha'} [${r.order.join(', ')}]`);
       if (w >= 320 && (r.stack || r.rows > 1)) bad.push(`${w} px: devia estar em linha`);
       if (w < 280 && !r.stack) bad.push(`${w} px: sem .stack`);
-      // v183: ordem visual (posição, não DOM) com o principal primeiro
-      if (r.order.join(',') !== 'Guardar,Cancelar,Apagar') bad.push(`${w} px: ordem visual ${r.order.join(', ')} (esperado Guardar, Cancelar, Apagar)`);
+      // v185: principal primeiro = à direita em linha, em cima em coluna (ordem por posição, não DOM)
+      const want = r.rows > 1 ? 'Guardar,Cancelar,Apagar' : 'Apagar,Cancelar,Guardar';
+      if (r.order.join(',') !== want) bad.push(`${w} px (${r.rows > 1 ? 'coluna' : 'linha'}): ordem ${r.order.join(', ')} (esperado ${want.replace(/,/g, ', ')})`);
     });
     return bad.length ? { fail: bad.join('; '), evidence: ev.join(' · ') } : { pass: ev.join(' · ') };
   }, { sev: 'baixa' });
-  await t('USA-23', 'Ordem visual com a ação principal primeiro: OK antes de Cancelar (também vermelho), Fechar antes de Terminar sessão, Procurar antes de Cancelar, Publicar antes de Editar folha (v183)', async () => {
+  await t('USA-23', 'Ação principal primeiro = à direita em linha, em cima em coluna: OK|Cancelar (também vermelho), Fechar|Terminar sessão, Procurar|Cancelar, Publicar|Editar folha (também a 220 px), Aprovar|Recusar (v185)', async () => {
     const bad = [];
-    const before = (page, a, b) => page.evaluate(([x, y]) => { const A = document.querySelector(x)?.getBoundingClientRect(), B = document.querySelector(y)?.getBoundingClientRect(); if (!A || !B || !A.width || !B.width) return null; return A.top < B.top - 2 || (Math.abs(A.top - B.top) <= 2 && A.left < B.left); }, [a, b]);
-    const want = async (page, a, b, what) => { const r = await before(page, a, b); if (r === null) bad.push(`${what}: botões não visíveis`); else if (!r) bad.push(`${what}: ${a} não vem antes de ${b}`); };
+    // v185: «principal primeiro» = à direita na mesma linha, em cima quando em coluna
+    const primary = (page, a, b) => page.evaluate(([x, y]) => { const A = document.querySelector(x)?.getBoundingClientRect(), B = document.querySelector(y)?.getBoundingClientRect(); if (!A || !B || !A.width || !B.width) return null; return Math.abs(A.top - B.top) <= 2 ? A.left > B.left : A.top < B.top; }, [a, b]);
+    const want = async (page, a, b, what) => { const r = await primary(page, a, b); if (r === null) bad.push(`${what}: botões não visíveis`); else if (!r) bad.push(`${what}: ${a} não está à direita (ou em cima) de ${b}`); };
     await withApp({ perfil: 'coro' }, async ({ page }) => { await page.evaluate(() => document.querySelector('#info').showModal()); await sleep(300); await want(page, '#info-close', '#btn-logout', 'Informação'); });
     await withApp({ perfil: 'coro', permissions: ['microphone'] }, async ({ page }) => { await page.click('#btn-mic'); await sleep(1000); await want(page, '#listen-stop', '#listen-cancel', 'Ouvir'); await page.click('#listen-cancel').catch(() => {}); });
+    await withApp({ perfil: 'maestro', hash: '#/cantico/novo_por_aprovar' }, async ({ page }) => { await page.waitForSelector('#song-approve'); await want(page, '#song-approve', '#song-reject', 'Cântico por aprovar'); });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE', viewport: { width: 220, height: 700 } }, async ({ page }) => { await page.waitForSelector('#col-mode'); await want(page, '#col-pub', '#col-mode', 'Folha por publicar a 220 px'); });
     await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
       await page.waitForSelector('#col-mode'); await want(page, '#col-pub', '#col-mode', 'Folha por publicar');
       await page.click('#col-mode'); await sleep(500);
