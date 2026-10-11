@@ -1107,6 +1107,29 @@ async function suites(full) {
     if (!seen.length) return 'nenhuma linha de ações com 2+ botões encontrada';
     return bad.length ? bad.join('; ') : { pass: seen.length + ' linhas: ' + seen.slice(0, 4).join('; ') };
   }, { sev: 'baixa' });
+  await t('USA-21', 'Confirmações destrutivas (Apagar, Remover, Retirar, Recusar, Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto e outras confirmações sem (v176)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    const ok = () => page.evaluate(() => ({ t: document.querySelector('#app-dlg-ok').textContent.trim(), d: document.querySelector('#app-dlg-ok').classList.contains('danger-fill'), open: document.querySelector('#app-dlg').open }));
+    const bad = [];
+    await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+    // caixa de texto (nova secção): sem danger-fill
+    await page.click('#col-add-sec'); await sleep(300); let o = await ok();
+    if (!o.open) bad.push('«Nova secção» não abriu'); else if (o.d) bad.push('caixa de texto com danger-fill');
+    await page.click('#app-dlg-cancel'); await sleep(300);
+    // remover cântico
+    await page.click('#ce-rows li[data-key="veni_creator_spiritus"] a'); await sleep(300);
+    await page.click('#ce-rows li[data-key="veni_creator_spiritus"] .ce-acts button[data-act="del"]'); await sleep(300);
+    o = await ok(); if (!/^Remover/.test(o.t) || !o.d) bad.push(`remover: «${o.t}» danger-fill=${o.d}`);
+    await page.click('#app-dlg-ok'); await sleep(400);
+    // sair sem guardar (há alterações)
+    await page.click('#ce-cancel'); await sleep(300);
+    o = await ok(); if (!/^Sair sem guardar/.test(o.t) || !o.d) bad.push(`sair sem guardar: «${o.t}» danger-fill=${o.d}`);
+    await page.click('#app-dlg-cancel'); await sleep(300);
+    // apagar folha
+    await page.click('#ce-del'); await sleep(300);
+    o = await ok(); if (!/^Apagar/.test(o.t) || !o.d) bad.push(`apagar folha: «${o.t}» danger-fill=${o.d}`);
+    await page.click('#app-dlg-cancel'); await sleep(300);
+    return bad.length ? bad.join('; ') : true;
+  }), { sev: 'baixa' });
   if (full) {
     await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const tok = JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8'));
