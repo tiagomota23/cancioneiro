@@ -453,10 +453,21 @@ async function suites(full) {
       const b = await count(page, '#rows li a');
       return a > 0 && b > 0 || `latim ${a}, songbook ${b}`;
     }), { sev: 'média' });
-    await t('FUN-32', 'Maestro: aprovar cântico novo por aprovar', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_por_aprovar' }, async ({ page }) => {
-      await page.waitForSelector('#song h1');
-      if (!(await vis(page, '#song-approve'))) return 'sem botão Aprovar';
-      return true;
+    await t('FUN-32', 'Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar para o Coro grava aprovado + Coro (v167)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_pendente', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_pendente', number: 9101, title: 'Cântico novo de teste (pendente)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: false, added_by: 'outra@example.invalid', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {
+      const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.novos') || '[]').find(x => x.slug === 'novo_teste_pendente'));
+      await page.waitForSelector('#song-approve');
+      await page.click('#song-approve'); await sleep(400);
+      const opts = await page.evaluate(() => document.querySelector('#app-dlg').open ? [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()) : null);
+      if (!opts) return 'Aprovar não abriu a escolha';
+      if (!opts.some(o => /^Cancioneiro/.test(o)) || !opts.some(o => /^Coro/.test(o))) return 'opções: ' + opts.join(' | ');
+      await page.click('#app-dlg-cancel'); await sleep(500);
+      if ((await stored()).approved !== false) return 'Cancelar aprovou';
+      await page.click('#song-approve'); await sleep(400);
+      await page.locator('#app-dlg-list button').filter({ hasText: /^Coro/ }).first().click(); await sleep(1200);
+      const s = await stored();
+      if (s.approved !== true) return 'não ficou aprovado';
+      if (!(s.sources || []).some(x => x.source === 'coro_clu')) return 'aprovado mas não ficou no Coro';
+      return (await count(page, '#song-approve')) ? 'o botão Aprovar continua na página' : true;
     }), { sev: 'média' });
   }
 
