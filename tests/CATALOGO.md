@@ -50,6 +50,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-22 | Perfil: só perfis até ao da pessoa; perfil inferior esconde funções | ui | alta | V | ✓ |
 | FUN-23 | Terminar sessão limpa a lista e volta à entrada | ui | alta | V | ✓ |
 | FUN-24 | Ecrã de entrada: botão Google e ligação Privacidade | ui | alta | V | ✓ |
+| FUN-24b | Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173) | ui | baixa | V | ☐ por correr |
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |

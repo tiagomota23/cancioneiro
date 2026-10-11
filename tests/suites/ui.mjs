@@ -400,6 +400,12 @@ async function suites(full) {
     if (!(await vis(page, '#btn-google'))) return 'sem botão Google';
     return (await page.getAttribute('#view-login a[href="privacidade.html"]', 'href')) === 'privacidade.html' || 'sem ligação de privacidade';
   }));
+  await t('FUN-24b', 'Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173)', () => withApp({ perfil: 'coro', q: 'code=teste-regresso', wait: false, settle: 0 }, async ({ page }) => {
+    const t0 = Date.now();
+    await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 15000 });
+    const ms = Date.now() - t0;
+    return ms >= 1500 ? { pass: ms + ' ms' } : `a capa saiu em ${ms} ms (esperado ≈ 2 s)`;
+  }, ), { sev: 'baixa' });
   await t('FUN-25', 'Tutorial: aparece na 1.ª vez e «Saltar» fecha-o sem voltar a aparecer', () => withApp({ perfil: 'coro', tour: true, settle: 1500 }, async ({ page }) => {
     if (!(await vis(page, '.tour-box'))) return 'tutorial não apareceu';
     await page.click('.tour-skip'); await sleep(500);
