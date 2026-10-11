@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v172';
+  const APP_VERSION = '2026-10-11 v173';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3222,9 +3222,9 @@
   addEventListener('resize', fitPlaceholder);
   addEventListener('orientationchange', fitPlaceholder);
   applyFont();
-  // Capa verde com "CANCIONEIRO" durante 2 s ao abrir (não quando se regressa do Google)
+  // Capa verde com "CANCIONEIRO" durante 2 s ao abrir (também ao regressar do Google, depois de entrar)
   const fromGoogle = /[?&](code|error)=/.test(location.search);
-  const splashDone = new Promise(r => setTimeout(r, fromGoogle ? 0 : 2000));
+  const splashDone = new Promise(r => setTimeout(r, 2000));
   $('btn-logout').onclick = () => logout();
   sb.auth.onAuthStateChange((event, s) => {
     if (DEMO) return;
