@@ -801,13 +801,18 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions.measure > span > button { width: auto; }
 .edit-actions.stack { display: grid; grid-template-columns: max-content; justify-content: end; gap: 10px; }
 .edit-actions.stack > button, .edit-actions.stack > span { width: 100%; min-width: 150px; }
-/* Ordem (em linha da esquerda para a direita; em coluna de cima para baixo): principal (Guardar, Criar, OK),
-   secundário (Cancelar), destrutivo (Apagar). Nas confirmações o OK fica sempre primeiro, mesmo vermelho. */
-.edit-actions > button, .edit-actions > span { order: 1; }
+/* O principal primeiro: em linha, primeiro = à direita (Apagar | Cancelar | Guardar; Cancelar | OK);
+   em coluna, primeiro = em cima (Guardar, Cancelar, Apagar). Nas confirmações o OK é o principal, mesmo vermelho. */
+.edit-actions > button, .edit-actions > span { order: 3; }
 .edit-actions > button.ghost:not(.danger) { order: 2; }
-.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 3; }
-.edit-actions > #app-dlg-ok { order: 1; }
-.info-actions > button.ghost, .listen-actions > button:not(.primary) { order: 2; }
+.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 1; }
+.edit-actions > #app-dlg-ok { order: 3; }
+.edit-actions.stack > button, .edit-actions.stack > span { order: 1; }
+.edit-actions.stack > button.ghost:not(.danger) { order: 2; }
+.edit-actions.stack > .danger-fill, .edit-actions.stack > .ghost.danger, .edit-actions.stack > span { order: 3; }
+.edit-actions.stack > #app-dlg-ok { order: 1; }
+.pend-bar p > #song-approve { order: 2; } /* Recusar | Aprovar */
+.rows li.col-edit-bar .edit-bar { flex-wrap: wrap-reverse; } /* Editar folha | Publicar; se não cabem, Publicar em cima */
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
 .pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
 .pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
@@ -862,6 +867,10 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .col-pick.on small { color: var(--on-accent); }
 .col-pick[aria-disabled=true] { cursor: default; }
+.col-pick > span { flex: 1; min-width: 0; }
+.pick-ic { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
+.pick-ic.fill { fill: currentColor; stroke: none; }
+.col-pick.on .pick-ic { color: var(--on-accent); }
 .pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
 .pick-head:first-child { margin-top: 0; }
@@ -1012,7 +1021,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v183</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v188</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1063,7 +1072,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>
       </button>
       <div class="spacer"></div>
-      <button class="icon-btn fav-toggle book on" id="btn-fav" aria-label="Coleções" aria-pressed="true" data-slug="amazing_grace" title="Coleções"><svg viewBox="0 0 24 24"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"></path><path d="M12 6.5V20"></path></svg></button>
+      <button class="icon-btn fav-toggle on" id="btn-fav" aria-label="Coleções e folhas" aria-pressed="true" data-slug="amazing_grace" title="Coleções e folhas"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg></button>
       <button class="icon-btn" id="btn-share" aria-label="Partilhar" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button>
       <button class="icon-btn" id="btn-theme" aria-label="Modo claro / escuro" title="Modo claro / escuro"><svg viewBox="0 0 24 24"><path class="moon" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path><g class="sun"><circle cx="12" cy="12" r="4" style="fill:none;stroke:currentColor"></circle><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"></path></g></svg></button>
       <button class="icon-btn on" id="btn-chords" aria-label="Mostrar acordes" title="Acordes"><svg viewBox="0 0 24 24"><path d="M9 18V5.5l10-2V16"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="16.5" cy="16" r="2.5"></circle></svg></button>
@@ -1164,7 +1173,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v183</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v188</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
