@@ -295,8 +295,9 @@ async function suites(full) {
     const s = await txt(page, '#rows');
     if (!/Cântico de teste automático/.test(s)) return 'não aparece em Novos Cânticos: ' + s.slice(0, 100);
     // v177: a marca «por aprovar» fica dentro de .n (por cima do número), não em .t
-    const where = await page.evaluate(() => { const li = [...document.querySelectorAll('#rows li')].find(l => /Cântico de teste automático/.test(l.textContent)); return li ? { n: !!li.querySelector('.n .pend'), t: !!li.querySelector('.t .pend') } : null; });
+    const where = await page.evaluate(() => { const li = [...document.querySelectorAll('#rows li')].find(l => /Cântico de teste automático/.test(l.textContent)); if (!li) return null; const n = li.querySelector('.n'); const pend = n && n.querySelector('.pend'); return { n: !!pend, t: !!li.querySelector('.t .pend'), num: n ? n.textContent.replace(pend ? pend.textContent : '', '').trim() : '' }; });
     if (!where || !where.n) return '«por aprovar» não está em .n';
+    if (where.num) return `cântico por aprovar mostra o número «${where.num}» (v179: só a etiqueta)`;
     return where.t ? '«por aprovar» ainda em .t' : true;
   }));
   await t('FUN-13b', 'Novo cântico de um Maestro também fica por aprovar (v165)', () => withApp({ perfil: 'maestro', hash: '#/lista/livro-novos' }, async ({ page }) => {

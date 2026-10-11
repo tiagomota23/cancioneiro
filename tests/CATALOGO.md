@@ -36,7 +36,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
 | FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ☐ por correr |
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
-| FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177) | ui | alta | V | ✓ |
+| FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177; sem número, v179) | ui | alta | V | ✓ |
 | FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ☐ por correr |
 | FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ☐ por correr |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
