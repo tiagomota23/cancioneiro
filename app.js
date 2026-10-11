@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v183';
+  const APP_VERSION = '2026-10-11 v188';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -215,13 +215,13 @@
   function refreshFavUI() {
     const fb = $('btn-fav'), slug = fb.dataset.slug;
     if (slug) {
-      const book = lvl() >= 3;
-      const on = isFav(slug) || (book && cols.some(c => !expired(c) && (c.songs || []).some(x => x.song_slug === slug)));
-      fb.querySelector('svg').innerHTML = book ? ICON_BOOK : ICON_STAR;
-      fb.classList.toggle('book', book);
+      // estrela para todos (cheia = nos Preferidos); no Maestro / Gestor abre «Coleções e folhas»
+      const book = lvl() >= 3, on = isFav(slug);
+      fb.querySelector('svg').innerHTML = ICON_STAR;
+      fb.classList.remove('book');
       fb.classList.toggle('on', on); fb.setAttribute('aria-pressed', on);
-      fb.setAttribute('aria-label', book ? 'Coleções' : isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
-      fb.title = book ? 'Coleções' : '';
+      fb.setAttribute('aria-label', book ? 'Coleções e folhas' : on ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+      fb.title = book ? 'Coleções e folhas' : '';
     }
     if (location.hash === '#/lista/favoritos' && !$('view-list').hidden) showList('favoritos');
   }
@@ -1069,7 +1069,19 @@
     const clean = l => stripChords(l).replace(/\|:|:\||[♪♫𝄆𝄇]/g, '').replace(new RegExp('\\(\\s*' + CH + '\\s*\\)', 'g'), '').replace(/\s+/g, ' ').trim();
     const text = [s.title, s.author || ''].filter(Boolean).join('\n') + '\n\n' +
       (stanzas || []).map(st => st.lines.map(clean).filter(l => l && !onlyChords.test(l)).join('\n')).filter(Boolean).join('\n\n') + '\n';
-    await copyText(text); toast('Letra copiada');
+    // fica na área de transferência e, onde houver, abre o menu de partilha do sistema; senão, aviso numa janela
+    try { await copyText(text); } catch (e) { /* sem área de transferência: fica só a partilha */ }
+    const share = () => navigator.share({ title: s.title, text });
+    if (canShare()) {
+      try { await share(); return; }
+      catch (e) {
+        if (e.name === 'AbortError') return; // fechou o menu
+        if (e.name === 'NotAllowedError' && await appDialog({ title: 'Letra pronta', msg: 'A letra está copiada e pronta a partilhar.', ok: 'Partilhar', cancel: 'Fechar' })) {
+          try { await share(); return; } catch (e2) { if (e2.name === 'AbortError') return; }
+        }
+      }
+    }
+    await appAlert('A letra foi copiada para a área de transferência. Cole-a onde a quiser enviar.', 'Letra copiada');
   }
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); }
@@ -1080,7 +1092,7 @@
   }
   async function shareSong(s, stanzas) {
     const list = [];
-    if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: 'Copiar letra', sub: 'Título e letra, sem acordes' });
+    if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: canShare() ? 'Partilhar letra' : 'Copiar letra', sub: 'Título e letra, sem acordes' + (canShare() ? ' (também fica copiada)' : '') });
     list.push({ value: 'url', label: urlLabel(), sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
     const v = await appChoose('Partilhar', list);
     if (v === 'letra') copyLyrics(s, stanzas);
@@ -2676,7 +2688,7 @@
     rows.innerHTML = items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
       : songRow(bySlug.get(it.key))).join('') +
-      (can ? `<li class="col-edit-bar"><p class="edit-bar">${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}<button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button></p></li>` : '');
+      (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
     if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
@@ -3117,14 +3129,16 @@
   function openSongCollections(slug) {
     const s = bySlug.get(slug); if (!s) return;
     const act = cols.filter(c => !expired(c) && colVisible(c));
-    const row = (k, label, sub, on, fixed) => `<button type="button" class="col-pick${on ? ' on' : ''}" data-k="${esc(k)}" aria-pressed="${on}"${fixed ? ' aria-disabled="true"' : ''}><span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>${on ? `<svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true">${ICON_CHECK}</svg>` : ''}</button>`;
+    // símbolo à esquerda do nome, como no menu: estrela (Preferidos), livro (Cancioneiro), folha (folhas; com lápis se por publicar)
+    const ic = (svg, fill) => `<svg class="pick-ic${fill ? ' fill' : ''}" viewBox="0 0 24 24" aria-hidden="true">${svg}</svg>`;
+    const row = (k, label, sub, on, fixed, icon) => `<button type="button" class="col-pick${on ? ' on' : ''}" data-k="${esc(k)}" aria-pressed="${on}"${fixed ? ' aria-disabled="true"' : ''}>${icon || ''}<span>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>${on ? `<svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true">${ICON_CHECK}</svg>` : ''}</button>`;
     const render = () => {
       const sg = bySlug.get(slug), original = srcOf(sg).includes('original'), inC = inCancioneiro(sg);
       $('col-pick-list').innerHTML = '<p class="pick-head">Coleções</p>' +
-        row('cancioneiro', 'Cancioneiro', original ? 'Faz parte do Cancioneiro original — não pode ser retirado' : inC ? 'Tocar para retirar' : 'Tocar para acrescentar', inC, original) +
-        row('fav', 'Preferidos', 'Só para si', isFav(slug)) +
+        row('cancioneiro', 'Cancioneiro', original ? 'Faz parte do Cancioneiro original — não pode ser retirado' : inC ? 'Tocar para retirar' : 'Tocar para acrescentar', inC, original, ic(ICON_BOOK)) +
+        row('fav', 'Preferidos', 'Só para si', isFav(slug), false, ic(ICON_STAR, true)) +
         '<p class="pick-head">Folhas</p>' +
-        act.map(c => row('c:' + c.id, c.title, `${c.published === false ? 'Por publicar · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug))).join('') +
+        act.map(c => row('c:' + c.id, c.title, `${c.published === false ? 'Por publicar · ' : ''}${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}`, (c.songs || []).some(x => x.song_slug === slug), false, ic(c.published === false ? ICON_PAGE_DRAFT : ICON_PAGE))).join('') +
         `<button class="col-pick-new" id="col-pick-new">+ Nova folha</button>`;
       $('col-pick-list').querySelectorAll('.col-pick').forEach(b => b.onclick = () => pick(b.dataset.k, b.classList.contains('on'), b));
       $('col-pick-new').onclick = () => { $('col-pick').close(); openCollectionDlg(); };
@@ -3181,7 +3195,7 @@
     const sec = (title, body) => body ? `<li class="cat-head">${title}</li>${body}` : '';
     const books = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2), top = b => b.id === 'favoritos' || b.novos;
     $('az').innerHTML = books.filter(top).map(row).join('') +
-      sec('Livros', books.filter(b => !top(b)).map(row).join('')) +
+      (lvl() >= 2 ? sec('Livros', books.filter(b => !top(b)).map(row).join('')) : books.filter(b => !top(b)).map(row).join('')) + // perfil Cancioneiro: só o Cancioneiro, sem título
       sec('Folhas', renderCollectionsMenu());
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }

@@ -685,13 +685,18 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions.measure > span > button { width: auto; }
 .edit-actions.stack { display: grid; grid-template-columns: max-content; justify-content: end; gap: 10px; }
 .edit-actions.stack > button, .edit-actions.stack > span { width: 100%; min-width: 150px; }
-/* Ordem (em linha da esquerda para a direita; em coluna de cima para baixo): principal (Guardar, Criar, OK),
-   secundário (Cancelar), destrutivo (Apagar). Nas confirmações o OK fica sempre primeiro, mesmo vermelho. */
-.edit-actions > button, .edit-actions > span { order: 1; }
+/* O principal primeiro: em linha, primeiro = à direita (Apagar | Cancelar | Guardar; Cancelar | OK);
+   em coluna, primeiro = em cima (Guardar, Cancelar, Apagar). Nas confirmações o OK é o principal, mesmo vermelho. */
+.edit-actions > button, .edit-actions > span { order: 3; }
 .edit-actions > button.ghost:not(.danger) { order: 2; }
-.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 3; }
-.edit-actions > #app-dlg-ok { order: 1; }
-.info-actions > button.ghost, .listen-actions > button:not(.primary) { order: 2; }
+.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 1; }
+.edit-actions > #app-dlg-ok { order: 3; }
+.edit-actions.stack > button, .edit-actions.stack > span { order: 1; }
+.edit-actions.stack > button.ghost:not(.danger) { order: 2; }
+.edit-actions.stack > .danger-fill, .edit-actions.stack > .ghost.danger, .edit-actions.stack > span { order: 3; }
+.edit-actions.stack > #app-dlg-ok { order: 1; }
+.pend-bar p > #song-approve { order: 2; } /* Recusar | Aprovar */
+.rows li.col-edit-bar .edit-bar { flex-wrap: wrap-reverse; } /* Editar folha | Publicar; se não cabem, Publicar em cima */
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
 .pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
 .pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
@@ -746,6 +751,10 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .col-pick.on small { color: var(--on-accent); }
 .col-pick[aria-disabled=true] { cursor: default; }
+.col-pick > span { flex: 1; min-width: 0; }
+.pick-ic { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
+.pick-ic.fill { fill: currentColor; stroke: none; }
+.col-pick.on .pick-ic { color: var(--on-accent); }
 .pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
 .pick-head:first-child { margin-top: 0; }

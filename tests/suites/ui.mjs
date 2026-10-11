@@ -226,6 +226,20 @@ async function suites(full) {
     await page.click('#btn-fav'); await sleep(300);
     return (await page.getAttribute('#btn-fav', 'aria-pressed')) === 'false' || 'não desmarca';
   }));
+  await t('FUN-07b', 'Estrela do cântico no Maestro: sempre estrela (sem .book), .on só nos Preferidos (não por estar numa folha), aria-label «Coleções e folhas» e abre #col-pick (v187)', () => withApp({ perfil: 'maestro', hash: '#/cantico/veni_creator_spiritus', favs: ['salve_regina'] }, async ({ page }) => {
+    await page.waitForSelector('#song h1');
+    const st = () => page.evaluate(() => { const b = document.querySelector('#btn-fav'); return { book: b.classList.contains('book'), on: b.classList.contains('on'), label: b.getAttribute('aria-label') }; });
+    let r = await st();
+    if (r.book) return '#btn-fav ainda tem .book';
+    if (r.on) return 'cântico numa folha mas não nos Preferidos aparece .on';
+    if (r.label !== 'Coleções e folhas') return 'aria-label: «' + r.label + '»';
+    await page.click('#btn-fav'); await sleep(400);
+    if (!(await page.evaluate(() => document.querySelector('#col-pick').open))) return 'não abriu #col-pick';
+    await page.click('#col-pick-close'); await sleep(300);
+    await page.evaluate(() => { location.hash = '#/cantico/salve_regina'; }); await sleep(600);
+    r = await st();
+    return r.on || 'cântico nos Preferidos sem .on';
+  }));
   await t('FUN-08', 'Menu ☰: abre a gaveta com livros e folhas; fecha no fundo', () => withApp({ perfil: 'maestro' }, async ({ page }) => {
     await page.click('#btn-menu'); await sleep(500);
     if (!(await page.evaluate(() => document.querySelector('#drawer').classList.contains('open')))) return 'gaveta não abriu';
@@ -360,6 +374,35 @@ async function suites(full) {
     const dlg = await page.evaluate(() => (document.querySelector('#app-dlg-input')?.value || '') + ' ' + document.querySelector('#app-dlg-msg')?.textContent);
     return /#\/p\/demo_salve_regina/.test(clip + dlg) || `endereço não encontrado (clipboard «${clip.slice(0, 80)}», diálogo «${dlg.slice(0, 80)}»)`;
   }));
+  await t('FUN-17b', 'Partilhar letra (Coro): copia sempre; com menu de partilha chama-se «Partilhar letra» e abre navigator.share({title,text}); sem menu, «Copiar letra» e aviso «Letra copiada» (v188)', async () => {
+    const bad = [];
+    // telemóvel (ecrã tátil): menu de partilha
+    await withApp({ perfil: 'coro', hash: '#/cantico/salve_regina', permissions: ['clipboard-read', 'clipboard-write'] }, async ({ page }) => {
+      await page.waitForSelector('#song h1');
+      await page.evaluate(() => { navigator.share = d => { window.__share = d; return Promise.resolve(); }; });
+      await page.click('#btn-share'); await sleep(500);
+      const opt = page.locator('#app-dlg-list button').filter({ hasText: /letra/i }).first();
+      const label = (await opt.textContent().catch(() => '')).trim();
+      if (!/^Partilhar letra/.test(label)) bad.push('telemóvel: opção «' + label + '» (esperado «Partilhar letra»)');
+      await opt.click().catch(() => {}); await sleep(800);
+      const sh = await page.evaluate(() => window.__share || null), clip = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+      if (!sh || !sh.title || !/misericordiae/i.test(sh.text || '')) bad.push('telemóvel: navigator.share sem title/text da letra');
+      if (!/misericordiae/i.test(clip)) bad.push('telemóvel: a letra não foi copiada');
+    });
+    // computador (sem ecrã tátil, Chromium): copia e avisa
+    await withApp({ perfil: 'coro', hash: '#/cantico/salve_regina', isMobile: false, hasTouch: false, permissions: ['clipboard-read', 'clipboard-write'] }, async ({ page }) => {
+      await page.waitForSelector('#song h1');
+      await page.click('#btn-share'); await sleep(500);
+      const opt = page.locator('#app-dlg-list button').filter({ hasText: /letra/i }).first();
+      const label = (await opt.textContent().catch(() => '')).trim();
+      if (!/^Copiar letra/.test(label)) bad.push('computador: opção «' + label + '» (esperado «Copiar letra»)');
+      await opt.click().catch(() => {}); await sleep(800);
+      const dlg = await page.evaluate(() => document.querySelector('#app-dlg').open ? document.querySelector('#app-dlg').textContent : '');
+      if (!/Letra copiada/.test(dlg)) bad.push('computador: sem aviso «Letra copiada»');
+      if (!/misericordiae/i.test(await page.evaluate(() => navigator.clipboard.readText().catch(() => '')))) bad.push('computador: a letra não foi copiada');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-18', 'Endereço partilhado sem conta: só letra (sem acordes) e tradução, com botão de entrar', () => withApp({ q: 'semconta', hash: '#/p/demo_amazing_grace', wait: '#song h1' }, async ({ page }) => {
     const s = await page.evaluate(() => document.querySelector('#song').textContent);
     if (!/Amazing Grace/.test(s)) return 'cântico partilhado não abriu';
@@ -531,14 +574,16 @@ async function suites(full) {
     });
     return bad.length ? bad.slice(0, 10).join('; ') : { pass: seen.length + ' categorias: ' + [...new Set(seen.map(x => x.split('/')[0]))].join(', ') };
   });
-  await t('FUN-35', 'Menu ☰: Preferidos e Novos Cânticos no topo sem título; secções «Livros» e «Folhas»; secção vazia escondida; Livros do Cancioneiro só com o Cancioneiro (v165)', async () => {
+  await t('FUN-35', 'Menu ☰: Preferidos e Novos Cânticos no topo; «Livros» e «Folhas» (perfil Cancioneiro sem título «Livros»: Preferidos, Cancioneiro); secção vazia escondida (v165/v184)', async () => {
     const get = o => withApp(o, async ({ page }) => { await page.click('#btn-menu'); await sleep(400); return { pass: await page.evaluate(() => JSON.stringify({ h: [...document.querySelectorAll('#az li.cat-head')].map(x => x.textContent.trim()), first: [...document.querySelectorAll('#az > li')].slice(0, 3).map(x => (x.classList.contains('cat-head') ? '#' : '') + x.textContent.trim().replace(/\d+$/, '').trim()), all: document.querySelector('#az').textContent })) }; }).then(r => JSON.parse(r.pass || '{"h":[],"first":[],"all":""}'));
     const bad = [];
     const can = await get({ perfil: 'cancioneiro', cols: [] }), coro = await get({ perfil: 'coro', cols: [] }), mae = await get({ perfil: 'maestro', cols: [] }), coroCols = await get({ perfil: 'coro' });
     if ([can, coro, mae].some(x => x.h.includes('Os meus cânticos'))) bad.push('ainda há «Os meus cânticos»');
     if (!/^Preferidos/.test(can.first[0] || '')) bad.push('Cancioneiro: o topo não começa por Preferidos: ' + can.first.join(' | '));
     if (!/^Preferidos/.test(coro.first[0] || '') || !/^Novos Cânticos/.test(coro.first[1] || '')) bad.push('Coro: topo ' + coro.first.join(' | '));
-    if (!can.h.includes('Livros')) bad.push('Cancioneiro: sem «Livros»');
+    if (can.h.includes('Livros')) bad.push('Cancioneiro: tem o título «Livros» (v184: sem título)');
+    if (!/^Cancioneiro/.test(can.first[1] || '')) bad.push('Cancioneiro: a 2.ª linha não é «Cancioneiro»: ' + can.first.join(' | '));
+    if (!coro.h.includes('Livros')) bad.push('Coro: sem «Livros»');
     if (/Songbook|CANTI|Coro CLU|Novos Cânticos/.test(can.all)) bad.push('Cancioneiro: mostra livros do Coro');
     if (can.h.includes('Folhas') || coro.h.includes('Folhas')) bad.push('«Folhas» aparece sem folhas para perfil < Maestro');
     if (!mae.h.includes('Folhas')) bad.push('Maestro sem folhas: falta «Folhas» (com + Nova folha)');
@@ -1009,6 +1054,9 @@ async function suites(full) {
     if (bad.length) return 'aria-pressed/.on incoerentes: ' + bad.join(',');
     if (!rows.some(x => x.k === 'cancioneiro') || !rows.some(x => x.k === 'fav')) return 'faltam cancioneiro/fav: ' + rows.map(x => x.k).join(',');
     if (rows.some(x => x.k === 'coro')) return 'ainda há a opção Coro (saiu na v174)';
+    // v186: cada opção tem um ícone svg.pick-ic antes do nome
+    const noIcon = await page.evaluate(() => [...document.querySelectorAll('#col-pick .col-pick[data-k]')].filter(b => { const i = b.querySelector('svg.pick-ic'); const span = b.querySelector('span'); return !i || (span && (i.compareDocumentPosition(span) & Node.DOCUMENT_POSITION_FOLLOWING) === 0); }).map(b => b.dataset.k));
+    if (noIcon.length) return 'opções sem svg.pick-ic antes do nome: ' + noIcon.join(',');
     const c0 = rows.find(x => x.k === 'cancioneiro').pressed;
     await page.focus('#col-pick .col-pick[data-k="cancioneiro"]'); await page.keyboard.press(c0 === 'true' ? 'Enter' : 'Space'); await sleep(700);
     if (c0 === 'true') { if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'retirar do Cancioneiro não pediu confirmação'; await page.click('#app-dlg-ok'); await sleep(700); }
@@ -1148,7 +1196,7 @@ async function suites(full) {
     await page.click('#app-dlg-cancel'); await sleep(300);
     return bad.length ? bad.join('; ') : true;
   }), { sev: 'baixa' });
-  await t('USA-22', 'Editar folha: botões do rodapé em linha a 390 e 320 px; em coluna (.stack, ordem Cancelar, Guardar, Apagar) quando não cabem (~260 px) (v182)', async () => {
+  await t('USA-22', 'Editar folha: rodapé em linha a 390 e 320 px (Apagar | Cancelar | Guardar), em coluna (.stack) a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185)', async () => {
     const bad = [], ev = [];
     for (const w of [390, 320, 260]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', viewport: { width: w, height: 700 }, open: '#col-mode' }, async ({ page }) => {
       const r = await page.evaluate(() => { const a = document.querySelector('#col-ed .edit-actions'); if (!a) return null; const bs = [...a.querySelectorAll('button')].filter(b => b.getBoundingClientRect().width); const ys = new Set(bs.map(b => Math.round(b.getBoundingClientRect().top)));
@@ -1156,9 +1204,29 @@ async function suites(full) {
       if (!r) { bad.push(w + ' px: sem .edit-actions'); return; }
       ev.push(`${w}: ${r.stack ? 'coluna' : 'linha'} [${r.order.join(', ')}]`);
       if (w >= 320 && (r.stack || r.rows > 1)) bad.push(`${w} px: devia estar em linha`);
-      if (w < 280) { if (!r.stack) bad.push(`${w} px: sem .stack`); else if (r.order.join(',') !== 'Cancelar,Guardar,Apagar') bad.push(`${w} px: ordem ${r.order.join(', ')}`); }
+      if (w < 280 && !r.stack) bad.push(`${w} px: sem .stack`);
+      // v185: principal primeiro = à direita em linha, em cima em coluna (ordem por posição, não DOM)
+      const want = r.rows > 1 ? 'Guardar,Cancelar,Apagar' : 'Apagar,Cancelar,Guardar';
+      if (r.order.join(',') !== want) bad.push(`${w} px (${r.rows > 1 ? 'coluna' : 'linha'}): ordem ${r.order.join(', ')} (esperado ${want.replace(/,/g, ', ')})`);
     });
     return bad.length ? { fail: bad.join('; '), evidence: ev.join(' · ') } : { pass: ev.join(' · ') };
+  }, { sev: 'baixa' });
+  await t('USA-23', 'Ação principal primeiro = à direita em linha, em cima em coluna: OK|Cancelar (também vermelho), Fechar|Terminar sessão, Procurar|Cancelar, Publicar|Editar folha (também a 220 px), Aprovar|Recusar (v185)', async () => {
+    const bad = [];
+    // v185: «principal primeiro» = à direita na mesma linha, em cima quando em coluna
+    const primary = (page, a, b) => page.evaluate(([x, y]) => { const A = document.querySelector(x)?.getBoundingClientRect(), B = document.querySelector(y)?.getBoundingClientRect(); if (!A || !B || !A.width || !B.width) return null; return Math.abs(A.top - B.top) <= 2 ? A.left > B.left : A.top < B.top; }, [a, b]);
+    const want = async (page, a, b, what) => { const r = await primary(page, a, b); if (r === null) bad.push(`${what}: botões não visíveis`); else if (!r) bad.push(`${what}: ${a} não está à direita (ou em cima) de ${b}`); };
+    await withApp({ perfil: 'coro' }, async ({ page }) => { await page.evaluate(() => document.querySelector('#info').showModal()); await sleep(300); await want(page, '#info-close', '#btn-logout', 'Informação'); });
+    await withApp({ perfil: 'coro', permissions: ['microphone'] }, async ({ page }) => { await page.click('#btn-mic'); await sleep(1000); await want(page, '#listen-stop', '#listen-cancel', 'Ouvir'); await page.click('#listen-cancel').catch(() => {}); });
+    await withApp({ perfil: 'maestro', hash: '#/cantico/novo_por_aprovar' }, async ({ page }) => { await page.waitForSelector('#song-approve'); await want(page, '#song-approve', '#song-reject', 'Cântico por aprovar'); });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE', viewport: { width: 220, height: 700 } }, async ({ page }) => { await page.waitForSelector('#col-mode'); await want(page, '#col-pub', '#col-mode', 'Folha por publicar a 220 px'); });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await want(page, '#col-pub', '#col-mode', 'Folha por publicar');
+      await page.click('#col-mode'); await sleep(500);
+      await page.click('#col-add-sec'); await sleep(300); await want(page, '#app-dlg-ok', '#app-dlg-cancel', 'Caixa de texto'); await page.click('#app-dlg-cancel'); await sleep(300);
+      await page.click('#ce-del'); await sleep(300); await want(page, '#app-dlg-ok', '#app-dlg-cancel', 'Confirmação vermelha (Apagar)'); await page.click('#app-dlg-cancel'); await sleep(300);
+    });
+    return bad.length ? bad.join('; ') : true;
   }, { sev: 'baixa' });
   if (full) {
     await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {

@@ -31,6 +31,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
 | FUN-07 | Preferidos: ☆ marca/desmarca, lista Preferidos atualiza | ui | alta | V | ✓ |
+| FUN-07b | Estrela no Maestro/Gestor: sem .book, .on só nos Preferidos, aria-label «Coleções e folhas», abre #col-pick (v187) | ui | média | V | ☐ por correr |
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
 | FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
@@ -43,6 +44,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
 | FUN-16 | Partitura: pdf.js desenha, zoom +/−, Voltar | ui | alta | V | ✓ |
 | FUN-17 | Partilhar cântico gera `#/p/<código>` | ui | alta | V | ✓ |
+| FUN-17b | Partilhar letra: copia sempre; telemóvel «Partilhar letra» + navigator.share({title,text}); computador «Copiar letra» + aviso «Letra copiada» (v188) | ui | média | V | ☐ por correr |
 | FUN-18 | Endereço partilhado sem conta: letra sem acordes | ui | alta | V | ✓ |
 | FUN-19 | Endereço partilhado inválido/expirado: mensagem clara | ui | alta | V | ✓ |
 | FUN-20 | Folha partilhada sem conta: secções e abrir cânticos | ui | alta | V | ✓ |
@@ -62,7 +64,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177); confirmação «Aprovar…» depois da escolha, Cancelar não aprova (v181) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
-| FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165) | ui | média | V | ☐ por correr |
+| FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165); perfil Cancioneiro sem título «Livros» (v184) | ui | média | V | ☐ por correr |
 | FUN-36 | Tutorial do Maestro chega ao passo «+ Nova folha» com o botão visível (v154) | ui | média | V | ✓ |
 | SHR-01 | Folha partilhada: lista traz a letra de todos os cânticos, sem acordes, guardada em `cancioneiro.partilhados` (v150) | ui | alta | V | ✓ |
 | SHR-02 | Folha partilhada: abrir cântico sem pedidos à rede e sem rede (v150) | ui | alta | V | ✓ |
@@ -151,12 +153,13 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
-| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174) | ui | média | V | ☐ por correr |
+| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ☐ por correr |
 | USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ☐ por correr |
 | USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ☐ por correr |
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ☐ por correr |
-| USA-22 | Editar folha: rodapé em linha a 390/320 px; .stack em coluna (Cancelar, Guardar, Apagar) quando não cabe (~260 px) (v182) | ui | baixa | V | ☐ por correr |
+| USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ☐ por correr |
+| USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ! |
