@@ -210,6 +210,12 @@ export default async function (level) {
     const bad = r.filter(x => !ok.includes(x.tag));
     return bad.length ? 'etiquetas Tema desconhecidas: ' + bad.map(x => `${x.tag} (${x.n})`).join(', ') : { pass: r.map(x => `${x.tag} ${x.n}`).join(', ') };
   }, { sev: 'baixa' });
+  await t('INT-16', 'Cânticos fundidos: dos_cocodrilos já não existe e os_crocodilos tem as fontes original + songbook (v192)', async () => {
+    const [r] = await sql(`select (select count(*) from public.songs where slug='dos_cocodrilos')::int dos, (select string_agg(source, ',' order by source) from public.song_sources where song_slug='os_crocodilos') src, (select count(*) from public.song_files where song_slug='os_crocodilos' and path like 'livros/songbook%')::int page`);
+    const bad = [];
+    if (r.dos) bad.push('dos_cocodrilos ainda existe'); if (!/original/.test(r.src || '') || !/songbook/.test(r.src || '')) bad.push('fontes de os_crocodilos: ' + r.src); if (!r.page) bad.push('os_crocodilos sem a página do Songbook');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'baixa' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

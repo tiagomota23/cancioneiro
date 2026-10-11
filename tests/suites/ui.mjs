@@ -179,6 +179,18 @@ async function suites(full) {
     await sw.nth(1).click(); await sleep(400);
     return /misericórdia/i.test(await txt(page, '#song')) || 'tradução não aparece';
   }));
+  await t('FUN-03b', 'Versão noutra língua (translation_language ≠ pt): botão só com a língua («Espanhol», sem «Tradução ·») e nota «Versão em espanhol»; tradução pt mantém «Tradução · Português» (v192)', () => withApp({ perfil: 'coro', hash: '#/cantico/versao_es', songs: [...fixture, { ...fixture.find(x => x.slug === 'de_colores'), slug: 'versao_es', number: 9200, title: 'Cântico com versão espanhola', language: 'en', translation: [{ type: 'verse', lines: ['Versión de ejemplo'] }], translation_language: 'es' }] }, async ({ page }) => {
+    await page.waitForSelector('#song .lang-switch button');
+    const b = page.locator('#song .lang-switch button[data-mode="trad"]');
+    const label = (await b.textContent()).trim();
+    if (/Tradução/.test(label) || !/^Espanhol$/i.test(label)) return 'botão: «' + label + '»';
+    await b.click(); await sleep(400);
+    const note = (await txt(page, '#song .note')).trim();
+    if (!/^Versão em espanhol$/i.test(note)) return 'nota: «' + note + '»';
+    await page.evaluate(() => { location.hash = '#/cantico/salve_regina'; }); await sleep(600);
+    const pt = (await page.locator('#song .lang-switch button[data-mode="trad"]').textContent()).trim();
+    return /^Tradução · Português$/.test(pt) || 'tradução pt: «' + pt + '»';
+  }), { sev: 'média' });
   await t('FUN-04', 'A−/A+ mudam o tamanho da letra e a escolha fica guardada', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     const fs0 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs'));
     await page.click('#font-inc'); await page.click('#font-inc'); await sleep(200);
