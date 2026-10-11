@@ -258,8 +258,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows .sec-line { cursor: pointer; }
 .ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
-.col-ed .ce-rows li.col-sec.sel .sec-line { padding-top: 60px; } /* secção escolhida: botões por cima do nome, à direita */
-.col-ed .ce-rows li.col-sec .ce-acts { top: 10px; transform: none; background: none; }
+.col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */
 .ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; background: none; color: var(--accent); }
 .ce-acts button { position: relative; width: 38px; height: 38px; padding: 0; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
 .ce-acts button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */

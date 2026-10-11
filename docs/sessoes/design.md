@@ -114,6 +114,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   igual na página inicial, nas folhas e no menu de coleções (títulos novos «Os meus cânticos», «Livros», «Folhas»).
   Implementado na v154. Antetítulo (.list-kicker) fica rótulo pequeno (fs-caps), por estar por cima de um título serif.
 - v159–v164: folha só de leitura com «✎ Editar folha» no fim; edição numa janela por cima (como «Editar cântico»); sem ações de deslizar.
+- 11 out 2026: regra 9 — botão cheio (cor diferente do fundo) tem contorno da própria cor, para todos os botões terem a mesma altura.
 - Quadros de opções ficam no mapa depois de decididos, com a escolhida marcada (`python3 tools/screens/opcoes-estado.py`;
   editar `ESTADO` quando a implementação sair).
 

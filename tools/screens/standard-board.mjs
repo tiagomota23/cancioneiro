@@ -116,6 +116,7 @@ const rules = [
   ['Serif só em títulos', 'Marcellus apenas em títulos e no nome da app — nunca em botões, campos ou listas. O «i» de informação (barra de topo e janela Perfil) é sempre Marcellus 24 px 700 itálico, na cor de destaque, num botão de 44 px.'],
   ['Nome da app', `na barra de topo usa ${tok('--fs-title')} (${v('--fs-title')}) — ${v('--fs-display')} não cabe entre os dois botões de 44 px. ${tok('--fs-display')} só na capa e na entrada.`],
   ['Ligações', `sempre na cor de destaque, também dentro das janelas. A ligação «Entrar no Cancioneiro» no rodapé da partilha é texto (${v('--fs-small')}, sublinhado, sem maiúsculas); o rodapé em si é etiqueta (${v('--fs-caps')} 700 maiúsculas).`],
+  ['Contorno dos botões cheios', `quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (${tok('--accent')}, ${tok('--danger')}, ${tok('--on-brand')}). Assim todos os botões, cheios e de contorno, têm a mesma altura (box-sizing: border-box).`],
   ['Texto sobre a cor da marca', `sempre ${tok('--on-brand')} sem transparência — autores, números e cabeçalhos incluídos. Branco a ≥ 4,5:1 sobre ${tok('--brand')} e ${tok('--brand-deep')}.`],
   ['Cores calculadas pelo JavaScript', `leem o tema ao abrir: o medidor do microfone usa ${tok('--brand')} e ${tok('--meter-idle')}; os PDF usam ${tok('--light-accent')}. Mudar theme.css chega também a eles. Fora de theme.css só mudam à mão: icons/*.png, manifest.json e ${esc('<meta name="theme-color">')}.`],
 ];
