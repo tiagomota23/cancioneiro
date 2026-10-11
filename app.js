@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v183';
+  const APP_VERSION = '2026-10-11 v184';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3181,7 +3181,7 @@
     const sec = (title, body) => body ? `<li class="cat-head">${title}</li>${body}` : '';
     const books = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2), top = b => b.id === 'favoritos' || b.novos;
     $('az').innerHTML = books.filter(top).map(row).join('') +
-      sec('Livros', books.filter(b => !top(b)).map(row).join('')) +
+      (lvl() >= 2 ? sec('Livros', books.filter(b => !top(b)).map(row).join('')) : books.filter(b => !top(b)).map(row).join('')) + // perfil Cancioneiro: só o Cancioneiro, sem título
       sec('Folhas', renderCollectionsMenu());
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }

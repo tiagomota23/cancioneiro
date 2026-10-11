@@ -89,7 +89,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   se o Maestro escolher Cancioneiro, também para o Cancioneiro (op `promote`). Etiqueta amarela
   «por aprovar» por cima do nome na página do cântico; nas listas, na linha do nome, à direita, por cima do número.
   Na caixa amarela, Aprovar e Recusar (vermelho cheio) à direita, com a mesma largura.
-- Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
+- Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas». No perfil Cancioneiro
+  não há título «Livros» (só o Cancioneiro, logo a seguir aos Preferidos).
 - Botões lado a lado numa linha de ações: o principal primeiro (Guardar | Cancelar | Apagar; OK | Cancelar; Publicar |
   Editar folha; Aprovar | Recusar; em coluna, a mesma ordem de cima para baixo); a mesma largura, a ocupar a linha (rodapés das janelas, Aprovar/Recusar,
   Editar folha/Publicar, Terminar sessão/Fechar); botões de 40 px sempre com letra normal (400). Confirmações que apagam ou deitam fora (Apagar, Remover, Retirar,
