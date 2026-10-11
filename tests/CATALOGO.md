@@ -156,7 +156,8 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ☐ por correr |
 | USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ☐ por correr |
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ☐ por correr |
-| USA-22 | Editar folha: rodapé em linha a 390/320 px; .stack em coluna (Cancelar, Guardar, Apagar) quando não cabe (~260 px) (v182) | ui | baixa | V | ☐ por correr |
+| USA-22 | Editar folha: rodapé em linha a 390/320 px e .stack a ~260 px; ordem visual Guardar, Cancelar, Apagar (v182/v183) | ui | baixa | V | ☐ por correr |
+| USA-23 | Ordem visual, principal primeiro: OK antes de Cancelar (também vermelho), Fechar antes de Terminar sessão, Procurar antes de Cancelar, #col-pub antes de #col-mode (v183) | ui | baixa | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ! |
