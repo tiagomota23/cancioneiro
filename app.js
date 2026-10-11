@@ -28,6 +28,8 @@
   // Com o filtro "Cancioneiro" (ou no perfil Cancioneiro) os cânticos aparecem como eram antes (sem gravações, etiquetas nem partituras extra)
   const extrasOn = () => lvl() >= 2 && prefs.src !== 'original';
   const inCancioneiro = s => s.cancioneiro ?? srcOf(s).includes('original');
+  // versão que fica dentro do principal (fora das listas): só se o principal se vê neste perfil; senão aparece sozinha
+  const folded = s => !!s._versionOf && (lvl() >= 2 || inCancioneiro(s._versionOf));
   // As letras não vêm com a lista: cada cântico é pedido ao servidor quando se abre (função "conteudo", com limites
   // por pessoa contra cópias em massa). Guardam-se só os cânticos já abertos, para os voltar a mostrar sem rede.
   const lyr = new Map(); // slug -> { lyrics, translation, edited }
@@ -102,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v195';
+  const APP_VERSION = '2026-10-11 v196';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -403,7 +405,7 @@
       const p = v.version_of && map.get(v.version_of);
       if (!p || p.version_of) continue;
       v._versionOf = p; p._versions.push(v);
-      p.sources = [...(p.sources || []), ...(v.sources || []).filter(x => !(p.sources || []).some(y => y.source === x.source))];
+      p.sources = [...(p.sources || []), ...(v.sources || []).filter(x => x.source !== 'original' && !(p.sources || []).some(y => y.source === x.source))];
       // sem repetir (a cópia guardada pode já trazer o que foi herdado)
       p.tags = [...(p.tags || []), ...(v.tags || []).filter(x => !(p.tags || []).some(y => y.grp === x.grp && y.tag === x.tag))];
       p.files = [...(p.files || []), ...(v.files || []).filter(x => !(p.files || []).some(y => y.path === x.path))];
@@ -416,7 +418,7 @@
     // "Cancioneiro" = cânticos do site original e os promovidos por um Maestro
     const has = (s, k) => k === 'original' ? inCancioneiro(s) : srcOf(s).includes(k);
     const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
-    const ok = allSongs.filter(s => s.approved !== false && !s._versionOf); // por aprovar: só em "Novos Cânticos"; versões: no principal
+    const ok = allSongs.filter(s => s.approved !== false && !folded(s)); // por aprovar: só em "Novos Cânticos"; versões: no principal
     songs = f === 'todas' ? ok : ok.filter(s => has(s, f));
     lyrIndex = null;
     const extra = lvl() < 2 ? colExtra() : new Set();
@@ -426,7 +428,7 @@
     if (sel) {
       sel.innerHTML = `<option value="todas">Tudo (${allSongs.length})</option>` +
         Object.entries(SOURCES).filter(([k]) => present.has(k))
-          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => !s._versionOf && has(s, k)).length})</option>`).join('');
+          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => !folded(s) && has(s, k)).length})</option>`).join('');
       sel.value = present.has(f) ? f : 'todas';
     }
     $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
@@ -951,7 +953,7 @@
       title.hidden = false;
       title.textContent = bk.label;
       // livros pela ordem das páginas; os outros por título
-      const pool = (lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro)).filter(s => !s._versionOf); // versões: no principal
+      const pool = (lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro)).filter(s => !folded(s)); // versões: no principal
       const NF = { todos: () => true, pendentes: s => s.approved === false,
         canc: s => inCancioneiro(s), 'so-coro': s => s.approved !== false && !inCancioneiro(s) }; // os aprovados vão todos para o Coro; «Só no Coro» = aprovados fora do Cancioneiro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
@@ -1076,6 +1078,9 @@
     const editBar = canEdit || canFiles
       ? `<p class="edit-bar">${canEdit && edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}${canEdit ? '<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar cântico</button>' : ''}${fileBtns ? `<span class="file-btns">${fileBtns}</span>` : ''}</p>`
       : '';
+    // Maestro / Gestor: pôr no Cancioneiro (ou tirar) a versão escolhida; as do site original ficam sempre
+    const verBtn = ver && lvl() >= 3 && extrasOn() && !(inCancioneiro(ver) && srcOf(ver).includes('original'))
+      ? `<p class="edit-bar"><button class="edit-btn" id="ver-promo">${inCancioneiro(ver) ? 'Retirar esta versão do Cancioneiro' : 'Acrescentar esta versão ao Cancioneiro'}</button></p>` : '';
     $('song').innerHTML = `
       ${s.approved === false ? '<small class="pend pend-top">Por aprovar</small>' : ''}<h1>${esc(s.title)}</h1>
       ${s.author ? `<p class="author">${esc(s.author)}</p>` : ''}
@@ -1086,6 +1091,7 @@
       ${bookNote(body, s, scores) || renderStanzas(body)}
       ${pendHtml}
       ${editBar}
+      ${verBtn}
       ${upHtml}
       ${recHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
@@ -1103,6 +1109,12 @@
     // Partilhar: copiar a letra (não no perfil Cancioneiro) ou o endereço do cântico; ninguém pode selecionar o texto
     $('btn-share').onclick = () => shareSong(s, data ? body : null);
     if ($('btn-revert')) $('btn-revert').onclick = () => revertLyrics(slug, $('btn-revert'));
+    if ($('ver-promo')) $('ver-promo').onclick = async () => {
+      const on = !inCancioneiro(ver);
+      if (on && !(await appConfirm(`Acrescentar «${ver.title}» ao Cancioneiro? Quem tem o perfil Cancioneiro passa a ver esta versão.`, 'Acrescentar'))) return;
+      await promote(ver.slug, on); // retirar pede confirmação
+      const y = window.scrollY; showSong(slug); window.scrollTo(0, y);
+    };
     const fb = $('btn-fav');
     fb.dataset.slug = slug;
     fb.onclick = () => lvl() >= 3 ? openSongCollections(slug) : toggleFav(slug);
@@ -3051,7 +3063,7 @@
     const secName = () => (secs.find(x => x.id === curSec()) || {}).title;
     $('sa-title').textContent = secId && secName() ? 'Acrescentar a «' + secName() + '»' : 'Acrescentar cântico';
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
-    const pool = allSongs.filter(s => s.approved !== false && !s._versionOf && (lvl() >= 2 || inCancioneiro(s)));
+    const pool = allSongs.filter(s => s.approved !== false && !folded(s) && (lvl() >= 2 || inCancioneiro(s)));
     // secção com o nome de um momento da Missa (ex.: template «Missa»): mostra logo os cânticos desse momento
     const momentOf = name => name ? MOMENTS.find(m => norm(m) === norm(name)) : null;
     const render = () => {
@@ -3249,7 +3261,7 @@
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };
   function renderBooks() {
     const row = b => {
-      const n = allSongs.filter(s => !s._versionOf && (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
+      const n = allSongs.filter(s => !folded(s) && (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
     };
     // no topo, sem título: Preferidos e Novos Cânticos; depois as secções Livros e Folhas (uma secção vazia não aparece)

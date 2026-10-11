@@ -115,7 +115,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   fontes, etiquetas e ficheiros das versões; o endereço de uma versão abre o principal com ela escolhida. Desfaz-se pondo
   `version_of` a null. Em 2026-10-11 ligadas 35 versões (traduções do Songbook com «(p. N)», traduções rítmicas de cânticos
   do Movimento, hinos e cânticos de Natal em várias línguas). Duplicados na mesma língua que eram só a página do CANTI
-  foram juntados e apagados (como «Dos cocodrilos», que ficou como tradução espanhola de «Os crocodilos»).
+  foram juntados e apagados. «Dos cocodrilos» é versão (Songbook) de «Os crocodilos».
+  No perfil Cancioneiro só aparecem as versões que estão no Cancioneiro (`cancioneiro = true`); uma versão cujo principal
+  não está no Cancioneiro aparece sozinha nas listas (`folded`). O Maestro / Gestor, com a versão escolhida, tem
+  «Acrescentar esta versão ao Cancioneiro» / «Retirar…» (op `promote` da função `conteudo`; as do site original ficam).
+  O principal herda fontes, etiquetas e ficheiros das versões, menos a fonte «original».
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
