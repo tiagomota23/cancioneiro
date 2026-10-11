@@ -193,6 +193,17 @@ export default async function (level) {
     const r = await sql(`select s.slug from public.songs s where s.approved and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='novos') and not exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='coro_clu')`);
     return r.length ? `${r.length} sem coro_clu: ${r.map(x => x.slug).slice(0, 5).join(', ')}` : true;
   }, { sev: 'média' });
+  await t('INT-14', '«Todos os cânticos»: nenhum cântico sem categoria (consulta de docs/sessoes/webapp.md; tarefa contínua da sessão principal) (v190)', async () => {
+    const r = await sql(`select s.slug from public.songs s
+      where s.approved is not false and s.language <> 'la'
+        and not exists (select 1 from public.song_tags t where t.song_slug = s.slug and (
+          t.grp = 'Tema' or t.grp = 'Coro CLU — momento'
+          or (t.grp = 'Coro CLU' and t.tag in ('Para a Missa', 'Para Gestos'))
+          or (t.grp = 'CANTI 2024' and t.tag in ('Canti per la liturgia', 'Canti della nostra storia', 'Canti per bambini', 'Canti popolari regionali', 'Canti di montagna', 'Canzoni italiane'))
+          or (t.grp = 'Songbook' and t.tag in ('Hymns', 'Latin songs', 'Spirituals', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs', 'Rock – pop – folk'))))
+      order by s.slug`);
+    return r.length ? { warn: `${r.length} cânticos sem categoria (a classificar pela sessão principal): ${r.slice(0, 8).map(x => x.slug).join(', ')}` } : true;
+  }, { sev: 'baixa' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;
