@@ -834,7 +834,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .col-pick.on small { color: var(--on-accent); }
 .col-pick[aria-disabled=true] { cursor: default; }
-.pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
 .pick-head:first-child { margin-top: 0; }
 .col-pick input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--light-accent); }
@@ -958,8 +958,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows .sec-line { cursor: pointer; }
 .ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
-.col-ed .ce-rows li.col-sec.sel .sec-line { padding-top: 60px; } /* secção escolhida: botões por cima do nome, à direita */
-.col-ed .ce-rows li.col-sec .ce-acts { top: 10px; transform: none; background: none; }
+.col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */
 .ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; background: none; color: var(--accent); }
 .ce-acts button { position: relative; width: 38px; height: 38px; padding: 0; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
 .ce-acts button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */
@@ -967,8 +966,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .ce-acts button.del { color: var(--danger); border-color: var(--danger-border); }
 .ce-acts button.ok { background: var(--accent); color: var(--on-accent); }
 .ce-acts svg, .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.ce-acts svg { width: 20px; height: 20px; }
-.ce-acts button.ok svg { stroke-width: 2.2; }
+.ce-acts svg { width: var(--icon); height: var(--icon); }
 .ce-name { gap: 8px; min-height: var(--hit); margin: -8px 0; padding: 0; border: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent); text-align: left; }
 .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); }
 /* Público (Coro / Cancioneiro): segmentado no topo das janelas da folha */
@@ -984,7 +982,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v165</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v169</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1141,7 +1139,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v165</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v169</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1248,7 +1246,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint"></span></p>
     <p class="small sn-pdf-name" id="sn-pdf-name"></p>
     <p class="small" id="sn-msg" role="status"></p>
-    <div class="edit-actions"><span></span><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
+    <div class="edit-actions"><button type="button" id="sn-del" class="danger-fill" hidden="">Apagar</button><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
   </dialog>
 
   <!-- Editar letra -->

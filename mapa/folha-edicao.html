@@ -834,7 +834,7 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 .col-pick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .col-pick.on small { color: var(--on-accent); }
 .col-pick[aria-disabled=true] { cursor: default; }
-.pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pick-ok { width: var(--icon); height: var(--icon); flex: none; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .pick-head { margin: 10px 0 0; font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-soft); }
 .pick-head:first-child { margin-top: 0; }
 .col-pick input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--light-accent); }
@@ -958,8 +958,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows .sec-line { cursor: pointer; }
 .ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
-.col-ed .ce-rows li.col-sec.sel .sec-line { padding-top: 60px; } /* secção escolhida: botões por cima do nome, à direita */
-.col-ed .ce-rows li.col-sec .ce-acts { top: 10px; transform: none; background: none; }
+.col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */
 .ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; background: none; color: var(--accent); }
 .ce-acts button { position: relative; width: 38px; height: 38px; padding: 0; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
 .ce-acts button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */
@@ -967,8 +966,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .ce-acts button.del { color: var(--danger); border-color: var(--danger-border); }
 .ce-acts button.ok { background: var(--accent); color: var(--on-accent); }
 .ce-acts svg, .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.ce-acts svg { width: 20px; height: 20px; }
-.ce-acts button.ok svg { stroke-width: 2.2; }
+.ce-acts svg { width: var(--icon); height: var(--icon); }
 .ce-name { gap: 8px; min-height: var(--hit); margin: -8px 0; padding: 0; border: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent); text-align: left; }
 .ce-name svg { width: var(--icon-sm); height: var(--icon-sm); }
 /* Público (Coro / Cancioneiro): segmentado no topo das janelas da folha */
@@ -984,7 +982,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v165</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v169</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1023,7 +1021,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 18/10/2026 01:29</small></h2>
+    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 18/10/2026 01:37</small></h2>
     <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
     <p class="status" id="status"></p>
   </section>
@@ -1123,7 +1121,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v165</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v169</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1147,7 +1145,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro" class="on" aria-pressed="true">Coro</button><button type="button" data-v="cancioneiro" aria-pressed="false">Cancioneiro</button></div>
     <label class="col-field">Título<input id="ce-name" maxlength="80" autocomplete="off" style=""></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
-    <p class="small" id="ce-until">Disponível até 18/10/2026 01:29. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
+    <p class="small" id="ce-until">Disponível até 18/10/2026 01:37. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"><li class="col-sec" data-key="sec:s1"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Entrada</div></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s2"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Comunhão</div></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s3"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Nossa Senhora</div></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
     <p class="small" id="ce-msg" role="status"></p>
@@ -1230,7 +1228,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <p class="small">Estrofes separadas por uma linha em branco. Um refrão começa por <b>R:</b>. Acordes entre parênteses retos, ex.: <b>[Sol]</b>. <span id="sn-hint"></span></p>
     <p class="small sn-pdf-name" id="sn-pdf-name"></p>
     <p class="small" id="sn-msg" role="status"></p>
-    <div class="edit-actions"><span></span><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
+    <div class="edit-actions"><button type="button" id="sn-del" class="danger-fill" hidden="">Apagar</button><span></span><button type="button" id="sn-cancel" class="ghost">Cancelar</button><button type="button" id="sn-save">Guardar</button></div>
   </dialog>
 
   <!-- Editar letra -->

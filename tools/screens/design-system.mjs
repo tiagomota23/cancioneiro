@@ -213,6 +213,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 6. **Ligações** sempre \`accent\`, também nas janelas.
 7. **Texto sobre a cor da marca** sempre \`on-brand\` sem transparência (autores, números, cabeçalhos incluídos): branco a ≥ 4,5:1 em \`brand\` e \`brand-deep\`.
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
+9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
 
 ## Exceções documentadas
 
