@@ -685,7 +685,13 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions.measure > span > button { width: auto; }
 .edit-actions.stack { display: grid; grid-template-columns: max-content; justify-content: end; gap: 10px; }
 .edit-actions.stack > button, .edit-actions.stack > span { width: 100%; min-width: 150px; }
-.edit-actions.stack > .danger-fill, .edit-actions.stack > .ghost.danger { order: 3; }
+/* Ordem (em linha da esquerda para a direita; em coluna de cima para baixo): principal (Guardar, Criar, OK),
+   secundário (Cancelar), destrutivo (Apagar). Nas confirmações o OK fica sempre primeiro, mesmo vermelho. */
+.edit-actions > button, .edit-actions > span { order: 1; }
+.edit-actions > button.ghost:not(.danger) { order: 2; }
+.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 3; }
+.edit-actions > #app-dlg-ok { order: 1; }
+.info-actions > button.ghost, .listen-actions > button:not(.primary) { order: 2; }
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
 .pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
 .pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }

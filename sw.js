@@ -1,5 +1,5 @@
 // Cache da aplicação para funcionar offline (os cânticos ficam em localStorage)
-const CACHE = 'cancioneiro-v182';
+const CACHE = 'cancioneiro-v183';
 const SHELL = ['./', 'index.html', 'theme.css', 'styles.css', 'app.js', 'config.js', 'manifest.json', 'worker.js', 'icons/icon-192.png', 'icons/icon-180.png'];
 const CDN = 'https://cdn.jsdelivr.net'; // biblioteca do Supabase (endereço com versão fixa)
 const WAIT = 3000; // rede lenta: ao fim de 3 s abre a cópia guardada (e a da rede fica guardada para a próxima vez)

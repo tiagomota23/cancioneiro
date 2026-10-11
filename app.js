@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v182';
+  const APP_VERSION = '2026-10-11 v183';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2676,7 +2676,7 @@
     rows.innerHTML = items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
       : songRow(bySlug.get(it.key))).join('') +
-      (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '');
+      (can ? `<li class="col-edit-bar"><p class="edit-bar">${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}<button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button></p></li>` : '');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
     if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
