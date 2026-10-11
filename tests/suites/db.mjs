@@ -195,7 +195,7 @@ export default async function (level) {
   }, { sev: 'média' });
   await t('INT-14', '«Todos os cânticos»: nenhum cântico sem categoria (consulta de docs/sessoes/webapp.md; tarefa contínua da sessão principal) (v190)', async () => {
     const r = await sql(`select s.slug from public.songs s
-      where s.approved is not false and s.language <> 'la'
+      where s.approved is not false and s.language <> 'la' and s.version_of is null
         and not exists (select 1 from public.song_tags t where t.song_slug = s.slug and (
           t.grp = 'Tema' or t.grp = 'Coro CLU — momento'
           or (t.grp = 'Coro CLU' and t.tag in ('Para a Missa', 'Para Gestos'))
@@ -216,6 +216,16 @@ export default async function (level) {
     if (r.dos) bad.push('dos_cocodrilos ainda existe'); if (!/original/.test(r.src || '') || !/songbook/.test(r.src || '')) bad.push('fontes de os_crocodilos: ' + r.src); if (!r.page) bad.push('os_crocodilos sem a página do Songbook');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'baixa' });
+  await t('INT-17', 'Versões (songs.version_of): apontam para um principal que existe e não é ele próprio versão; os cânticos juntados já não existem (v193)', async () => {
+    const [r] = await sql(`select (select count(*) from public.songs where version_of is not null)::int n,
+      (select count(*) from public.songs v where v.version_of is not null and not exists (select 1 from public.songs p where p.slug = v.version_of))::int orfas,
+      (select count(*) from public.songs v join public.songs p on p.slug = v.version_of where p.version_of is not null)::int cadeias,
+      (select count(*) from public.songs where version_of = slug)::int propria,
+      (select count(*) from public.songs where slug in ('com_e_grande','foggy_dew','parsifal_canzone_dell_ideale'))::int juntados`);
+    const bad = [];
+    if (r.orfas) bad.push(`${r.orfas} versões sem principal`); if (r.cadeias) bad.push(`${r.cadeias} versões de versões`); if (r.propria) bad.push(`${r.propria} versões de si próprias`); if (r.juntados) bad.push(`${r.juntados} cânticos juntados ainda existem`);
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: r.n + ' versões' };
+  }, { sev: 'média' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

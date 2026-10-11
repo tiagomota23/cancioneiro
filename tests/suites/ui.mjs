@@ -191,6 +191,37 @@ async function suites(full) {
     const pt = (await page.locator('#song .lang-switch button[data-mode="trad"]').textContent()).trim();
     return /^Tradução · Português$/.test(pt) || 'tradução pt: «' + pt + '»';
   }), { sev: 'média' });
+  await t('FUN-47', 'Versões do mesmo cântico: fora das listas e da pesquisa; botões data-mode="v:<slug>" no principal; nota «Versão em …: «título» — autor»; #/cantico/<versão> vai para o principal; perfil Cancioneiro só vê versões a que tem acesso (v193)', async () => {
+    const bad = [];
+    await withApp({ perfil: 'coro', hash: '#/lista/livro-songbook' }, async ({ page }) => {
+      await page.waitForSelector('#rows li a');
+      const sb = await txt(page, '#rows');
+      if (/Are you sleeping/.test(sb)) bad.push('a versão aparece no livro Songbook');
+      if (!/Frère Jacques/.test(sb)) bad.push('o principal não aparece no Songbook (devia herdar a fonte da versão)');
+      await page.evaluate(() => { location.hash = '#/'; }); await sleep(300);
+      await page.fill('#search', 'Frei Martinho'); await sleep(900);
+      const rs = await txt(page, '#rows');
+      if (/Frei Martinho/.test(rs) && !/Frère Jacques/.test(rs)) bad.push('a pesquisa mostra a versão em vez do principal');
+      await page.evaluate(() => { location.hash = '#/cantico/frere_jacques'; }); await sleep(800);
+      const vb = await page.evaluate(() => [...document.querySelectorAll('#song .lang-switch button[data-mode^="v:"]')].map(b => b.dataset.mode + '=' + b.textContent.trim()));
+      if (!vb.some(x => x.startsWith('v:are_you_sleeping=')) || !vb.some(x => x.startsWith('v:frei_martinho='))) bad.push('botões de versão: ' + vb.join(' | '));
+      const en = page.locator('#song .lang-switch button[data-mode="v:are_you_sleeping"]');
+      if (await en.count()) { await en.click(); await sleep(500);
+        const note = (await txt(page, '#song .note')).trim();
+        if (!/^Versão em inglês: «Are you sleeping» — Tradicional$/i.test(note)) bad.push('nota: «' + note + '»');
+        if (!/Brother John/.test(await txt(page, '#song'))) bad.push('a letra da versão não aparece'); }
+      await page.evaluate(() => { location.hash = '#/cantico/frei_martinho'; }); await sleep(900);
+      const h = await page.evaluate(() => location.hash), on = await page.evaluate(() => document.querySelector('#song .lang-switch button.on')?.dataset.mode);
+      if (h !== '#/cantico/frere_jacques') bad.push('#/cantico/frei_martinho não foi para o principal: ' + h);
+      if (on !== 'v:frei_martinho') bad.push('a versão pedida não ficou escolhida: ' + on);
+    });
+    await withApp({ perfil: 'cancioneiro', hash: '#/cantico/frere_jacques' }, async ({ page }) => {
+      await page.waitForSelector('#song h1').catch(() => {});
+      const vb = await page.evaluate(() => [...document.querySelectorAll('#song .lang-switch button[data-mode^="v:"]')].map(b => b.dataset.mode));
+      if (vb.includes('v:are_you_sleeping')) bad.push('perfil Cancioneiro vê a versão do Songbook (fora do Cancioneiro)');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta' });
   await t('FUN-04', 'A−/A+ mudam o tamanho da letra e a escolha fica guardada', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     const fs0 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs'));
     await page.click('#font-inc'); await page.click('#font-inc'); await sleep(200);
