@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v171';
+  const APP_VERSION = '2026-10-11 v172';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -906,7 +906,7 @@
       // livros pela ordem das páginas; os outros por título
       const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
       const NF = { todos: () => true, aprovados: s => s.approved !== false, pendentes: s => s.approved === false,
-        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s), coro: s => srcOf(s).includes('coro_clu'), 'nao-coro': s => !srcOf(s).includes('coro_clu') };
+        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s) }; // sem filtro do Coro: os aprovados vão todos para o Coro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
       const list = pool.filter(bk.test).filter(bk.novos ? NF[nf] : () => true).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
@@ -915,7 +915,7 @@
         (bk.novos && lvl() >= 2 ? '<li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li>' : '');
       if (bk.novos) {
         const pend = pool.filter(bk.test).filter(s => s.approved === false).length;
-        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro'], ['coro', 'No Coro'], ['nao-coro', 'Ainda não no Coro']];
+        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro']];
         title.innerHTML = `${esc(bk.label)}${pend ? `<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>` : ''}` +
           `<select class="novos-filtro" id="novos-filtro" aria-label="Mostrar">${opts.map(([v, l]) => `<option value="${v}"${v === nf ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
         $('novos-filtro').onchange = e => { prefs.novosFiltro = e.target.value; store.set('cancioneiro.prefs', prefs); showList('livro-novos'); };
@@ -1689,13 +1689,14 @@
     if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
     // aprovar: para o Cancioneiro (todos os perfis) ou para o livro do Coro
     const dest = ok ? await appChoose('Aprovar para…', [
-      { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico' },
-      { value: 'coro', label: 'Coro', sub: 'Fica no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
+      { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico (fica também no livro do Coro)' },
+      { value: 'coro', label: 'Coro', sub: 'Só no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
     if (ok && !dest) return;
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
-      if (dest) await api(dest === 'coro' ? 'coro' : 'promote', { slug: s.slug, on: true });
+      if (dest) await api('coro', { slug: s.slug, on: true }); // todos os aprovados vão para o livro do Coro
+      if (dest === 'cancioneiro') await api('promote', { slug: s.slug, on: true });
       toast(!ok ? 'Cântico apagado' : dest === 'coro' ? 'Cântico aprovado — no livro do Coro' : 'Cântico aprovado — no Cancioneiro');
       await load();
       location.hash = ok ? '#/cantico/' + encodeURIComponent(s.slug) : '#/lista/livro-novos';

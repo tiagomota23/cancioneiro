@@ -85,7 +85,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Livro no cântico (Maestro): «Coleções» (Cancioneiro, Coro nos cânticos novos, Preferidos) e «Folhas», linhas cheias
   quando o cântico lá está; Cancioneiro original fica cheio e fixo, com a explicação.
 - Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`); ao aprovar,
-  o Maestro escolhe Cancioneiro (op `promote`) ou Coro (op `coro`). Etiqueta amarela
+  vai sempre para o livro do Coro (op `coro`) e,
+  se o Maestro escolher Cancioneiro, também para o Cancioneiro (op `promote`). Etiqueta amarela
   «por aprovar» por cima do nome (listas e página do cântico).
 - Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
