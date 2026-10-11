@@ -244,6 +244,17 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-49', 'Ficheiros herdados de uma versão só aparecem com essa versão escolhida: frere_jacques «Francês» sem a.pdf; «Inglês» com «Partitura» que abre o visor (v197)', () => withApp({ perfil: 'coro', hash: '#/cantico/frere_jacques' }, async ({ page }) => {
+    await page.waitForSelector('#song .lang-switch');
+    if (await count(page, '#song a.pdf')) return 'em «Francês» aparece a partitura da versão inglesa';
+    await page.click('#song .lang-switch button[data-mode="v:are_you_sleeping"]'); await sleep(500);
+    const a = page.locator('#song a.pdf').first();
+    if (!(await a.count())) return 'em «Inglês» não aparece a partitura';
+    const href = await a.getAttribute('href');
+    if (!/^#\/cantico\/frere_jacques\/partitura(\/\d+)?$/.test(href || '')) return 'ligação da partitura: ' + href;
+    await a.click(); await page.waitForSelector('#pdfpages canvas', { timeout: 12000 }).catch(() => {});
+    return (await count(page, '#pdfpages canvas')) ? true : 'a partitura da versão não abriu: ' + (await txt(page, '#pdfpages'));
+  }), { sev: 'média' });
   await t('FUN-04', 'A−/A+ mudam o tamanho da letra e a escolha fica guardada', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     const fs0 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs'));
     await page.click('#font-inc'); await page.click('#font-inc'); await sleep(200);
