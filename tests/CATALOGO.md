@@ -151,7 +151,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
-| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174) | ui | média | V | ☐ por correr |
+| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ☐ por correr |
 | USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ☐ por correr |
 | USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ☐ por correr |
