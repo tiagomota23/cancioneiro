@@ -64,7 +64,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177); confirmação «Aprovar…» depois da escolha, Cancelar não aprova (v181) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-45 | Secção Cancioneiro (Coro+): categorias só com cânticos do Cancioneiro (v189) | ui | média | V | ☐ por correr |
-| FUN-46 | «Todos os cânticos» (Coro+) no fim da página inicial com tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190) | ui | média | V | ☐ por correr |
+| FUN-46 | «Todos os cânticos» (Coro+) no fim da página inicial com tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190; 7 categorias com Gestos, v191) | ui | média | V | ☐ por correr |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
 | FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165); perfil Cancioneiro sem título «Livros» (v184) | ui | média | V | ☐ por correr |
 | FUN-36 | Tutorial do Maestro chega ao passo «+ Nova folha» com o botão visível (v154) | ui | média | V | ✓ |
@@ -238,6 +238,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-04 | Número único, título, letra (ou partitura), fonte | db | alta | V | ✓ |
 | INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ☐ por correr |
 | INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ☐ por correr |
+| INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
