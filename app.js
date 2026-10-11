@@ -102,7 +102,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v192';
+  const APP_VERSION = '2026-10-11 v193';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -370,7 +370,7 @@
       demoFull = new Map(full.map(s => [s.slug, s]));
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
-    const cols = 'slug,number,book_page,title,author,language,translation_language,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,parecidos,' +
+    const cols = 'slug,number,book_page,title,author,language,translation_language,version_of,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,parecidos,' +
       'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
@@ -392,6 +392,22 @@
     for (const s of allSongs) {
       s._t = norm(s.title);
       s._a = norm(s.author);
+      // não enumeráveis: não vão para a cópia guardada (e não fazem ciclos no JSON)
+      Object.defineProperty(s, '_versions', { value: [], writable: true, configurable: true, enumerable: false });
+      Object.defineProperty(s, '_versionOf', { value: null, writable: true, configurable: true, enumerable: false });
+    }
+    // versões do mesmo cântico (version_of): saem das listas; o principal herda as fontes, as etiquetas e os ficheiros
+    // (para os livros e as categorias) e os títulos (para a pesquisa); mostram-se no seletor de língua do principal
+    const map = new Map(allSongs.map(s => [s.slug, s]));
+    for (const v of allSongs) {
+      const p = v.version_of && map.get(v.version_of);
+      if (!p || p.version_of) continue;
+      v._versionOf = p; p._versions.push(v);
+      p.sources = [...(p.sources || []), ...(v.sources || []).filter(x => !(p.sources || []).some(y => y.source === x.source))];
+      // sem repetir (a cópia guardada pode já trazer o que foi herdado)
+      p.tags = [...(p.tags || []), ...(v.tags || []).filter(x => !(p.tags || []).some(y => y.grp === x.grp && y.tag === x.tag))];
+      p.files = [...(p.files || []), ...(v.files || []).filter(x => !(p.files || []).some(y => y.path === x.path))];
+      p._t += ' ' + v._t;
     }
     applySource();
   }
@@ -400,7 +416,7 @@
     // "Cancioneiro" = cânticos do site original e os promovidos por um Maestro
     const has = (s, k) => k === 'original' ? inCancioneiro(s) : srcOf(s).includes(k);
     const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
-    const ok = allSongs.filter(s => s.approved !== false); // cânticos novos por aprovar: só em "Novos Cânticos"
+    const ok = allSongs.filter(s => s.approved !== false && !s._versionOf); // por aprovar: só em "Novos Cânticos"; versões: no principal
     songs = f === 'todas' ? ok : ok.filter(s => has(s, f));
     lyrIndex = null;
     const extra = lvl() < 2 ? colExtra() : new Set();
@@ -410,7 +426,7 @@
     if (sel) {
       sel.innerHTML = `<option value="todas">Tudo (${allSongs.length})</option>` +
         Object.entries(SOURCES).filter(([k]) => present.has(k))
-          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => has(s, k)).length})</option>`).join('');
+          .map(([k, v]) => `<option value="${k}">${esc(v)} (${allSongs.filter(s => !s._versionOf && has(s, k)).length})</option>`).join('');
       sel.value = present.has(f) ? f : 'todas';
     }
     $('info-count').textContent = `${songs.length} cânticos${f !== 'todas' ? ' (' + (SOURCES[f] || f) + ')' : ''} · versão ${APP_VERSION}`;
@@ -465,7 +481,7 @@
       if (s._t.startsWith(nq)) score += 60; else if (inTitle) score += 40;
       if (inAuthor) score += 25;
       // palavras da letra: resultados do servidor (lyricHits), com o trecho da linha encontrada
-      const h = lyricHits.q === nq && lyricHits.map.get(s.slug);
+      const h = lyricHits.q === nq && (lyricHits.map.get(s.slug) || s._versions.map(v => lyricHits.map.get(v.slug)).find(Boolean));
       if (h) { score += h.score; if (!inTitle) snip = h.snip; }
       if (score) out.push({ s, score, snip });
     }
@@ -924,7 +940,7 @@
       title.hidden = false;
       title.textContent = bk.label;
       // livros pela ordem das páginas; os outros por título
-      const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
+      const pool = (lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro)).filter(s => !s._versionOf); // versões: no principal
       const NF = { todos: () => true, pendentes: s => s.approved === false,
         canc: s => inCancioneiro(s), 'so-coro': s => s.approved !== false && !inCancioneiro(s) }; // os aprovados vão todos para o Coro; «Só no Coro» = aprovados fora do Cancioneiro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
@@ -976,6 +992,8 @@
   function showSong(slug) {
     const s = bySlug.get(slug);
     if (!s) { if (songs.length) location.hash = '#/'; return; }
+    // endereço de uma versão: abre o principal com essa versão escolhida
+    if (s._versionOf && bySlug.has(s._versionOf.slug)) { songView[s._versionOf.slug] = 'v:' + slug; location.replace('#/cantico/' + encodeURIComponent(s._versionOf.slug)); return; }
     show('view-song');
     const data = hasLyrics(slug) ? lyr.get(slug) : null;
     let wait = '';
@@ -984,15 +1002,26 @@
       getLyrics(slug).then(() => { if (lastSongSlug === slug && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } })
         .catch(e => { const w = $('song').querySelector('.lyr-wait'); if (w) w.textContent = e instanceof Limit ? e.message : 'Não foi possível carregar a letra. Verifique a ligação à internet.'; });
     }
-    const mode = s.has_translation ? (songView[slug] || 'orig') : 'orig';
+    // versões (outras línguas ou outros livros) que este perfil pode ver
+    const vers = (s._versions || []).filter(v => bySlug.has(v.slug));
+    let mode = songView[slug] || 'orig';
+    if (mode === 'trad' && !s.has_translation || mode.startsWith('v:') && !vers.some(v => 'v:' + v.slug === mode)) mode = 'orig';
+    const ver = mode.startsWith('v:') ? bySlug.get(mode.slice(2)) : null;
     const langName = LANGS[s.language] || s.language;
     const trName = LANGS[s.translation_language] || 'Português';
-    const sw = s.has_translation
+    // nome de cada versão: a língua; se repetir outra opção, o título
+    const used = [s.language, ...(s.has_translation ? [s.translation_language || 'pt'] : [])];
+    const verLabel = v => used.includes(v.language) || vers.filter(o => o.language === v.language).length > 1 ? v.title : (LANGS[v.language] || v.language);
+    const sw = s.has_translation || vers.length
       ? `<div class="lang-switch" role="group" aria-label="Idioma">
            <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(langName)}</button>
-           <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">${trVersion(s.translation_language) ? esc(trName) : 'Tradução · ' + esc(trName)}</button>
+           ${s.has_translation ? `<button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">${trVersion(s.translation_language) ? esc(trName) : 'Tradução · ' + esc(trName)}</button>` : ''}
+           ${vers.map(v => `<button data-mode="v:${esc(v.slug)}" class="${mode === 'v:' + v.slug ? 'on' : ''}">${esc(verLabel(v))}</button>`).join('')}
          </div>`
       : `<span class="lang-chip">${esc(langName)}</span>`;
+    // letra da versão escolhida (carregada à parte, como a de qualquer cântico)
+    const vdata = ver && hasLyrics(ver.slug) ? lyr.get(ver.slug) : null;
+    if (ver && !vdata) getLyrics(ver.slug).then(() => { if (lastSongSlug === slug && !$('view-song').hidden && songView[slug] === mode) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } }).catch(() => {});
     const scores = scoresOf(s);
     // letra digitalizada em mais do que um livro (Songbook e CANTI): um só botão, que mostra as duas juntas
     const scans = scores.filter(isBookScan);
@@ -1011,8 +1040,9 @@
     // o perfil Cancioneiro não vê acordes
     const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
     const lyrics = plain(data ? data.lyrics : []);
-    const body = plain((mode === 'trad' ? data && data.translation : lyrics) || []);
-    const note = mode === 'trad' ? `<p class="note">${trVersion(s.translation_language) ? 'Versão em ' + esc(trName.toLowerCase()) : 'Tradução'}</p>` : '';
+    const body = plain((ver ? vdata && vdata.lyrics : mode === 'trad' ? data && data.translation : lyrics) || []);
+    const note = ver ? `<p class="note">Versão${ver.language !== s.language ? ' em ' + esc((LANGS[ver.language] || ver.language).toLowerCase()) : ''}: «${esc(ver.title)}»${ver.author ? ' — ' + esc(ver.author) : ''}${vdata ? '' : ' · a carregar…'}</p>`
+      : mode === 'trad' ? `<p class="note">${trVersion(s.translation_language) ? 'Versão em ' + esc(trName.toLowerCase()) : 'Tradução'}</p>` : '';
     const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
@@ -3010,7 +3040,7 @@
     const secName = () => (secs.find(x => x.id === curSec()) || {}).title;
     $('sa-title').textContent = secId && secName() ? 'Acrescentar a «' + secName() + '»' : 'Acrescentar cântico';
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
-    const pool = allSongs.filter(s => s.approved !== false && (lvl() >= 2 || inCancioneiro(s)));
+    const pool = allSongs.filter(s => s.approved !== false && !s._versionOf && (lvl() >= 2 || inCancioneiro(s)));
     // secção com o nome de um momento da Missa (ex.: template «Missa»): mostra logo os cânticos desse momento
     const momentOf = name => name ? MOMENTS.find(m => norm(m) === norm(name)) : null;
     const render = () => {
@@ -3208,7 +3238,7 @@
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };
   function renderBooks() {
     const row = b => {
-      const n = allSongs.filter(s => (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
+      const n = allSongs.filter(s => !s._versionOf && (lvl() >= 2 || inCancioneiro(s)) && b.test(s)).length;
       return `<li><a href="#/lista/${b.id}">${b.icon ? `<svg class="book-ic" viewBox="0 0 24 24">${b.icon}</svg>` : `<svg class="book-ic outline" viewBox="0 0 24 24">${ICON_BOOK}</svg>`}<span class="t">${esc(b.label)}</span><span class="n">${n}</span>${chev}</a></li>`;
     };
     // no topo, sem título: Preferidos e Novos Cânticos; depois as secções Livros e Folhas (uma secção vazia não aparece)

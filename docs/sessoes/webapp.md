@@ -110,6 +110,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   contínua**: quando entram cânticos novos ou de novas fontes, classificar os que ficam sem categoria (consulta abaixo) e
   inserir a etiqueta «Tema» na base de dados. Os cânticos sem nenhuma categoria são os que não cumprem as regras de
   `TEMAS` nem têm etiqueta «Tema» (consulta no fim deste ficheiro).
+- Versões do mesmo cântico (`songs.version_of` → slug do principal; `supabase/versoes.sql`): a versão sai das listas e
+  aparece no seletor de língua do principal (língua; ou o título, se a língua já estiver ocupada); o principal herda as
+  fontes, etiquetas e ficheiros das versões; o endereço de uma versão abre o principal com ela escolhida. Desfaz-se pondo
+  `version_of` a null. Em 2026-10-11 ligadas 35 versões (traduções do Songbook com «(p. N)», traduções rítmicas de cânticos
+  do Movimento, hinos e cânticos de Natal em várias línguas). Duplicados na mesma língua que eram só a página do CANTI
+  foram juntados e apagados (como «Dos cocodrilos», que ficou como tradução espanhola de «Os crocodilos»).
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
@@ -123,7 +129,7 @@ Ler este ficheiro, `docs/MANUAL.md`, `docs/AMBIENTE.md` e o histórico recente (
 ## Consulta: cânticos sem categoria em «Todos os cânticos»
 ```sql
 select s.slug, s.title, s.language from songs s
-where s.approved is not false and s.language <> 'la'
+where s.approved is not false and s.language <> 'la' and s.version_of is null
   and not exists (select 1 from song_tags t where t.song_slug = s.slug and (
     t.grp = 'Tema' or t.grp = 'Coro CLU — momento'
     or (t.grp = 'Coro CLU' and t.tag in ('Para a Missa', 'Para Gestos'))
