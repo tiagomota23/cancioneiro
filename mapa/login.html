@@ -795,6 +795,19 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions > span:not(:has(> button:not([hidden]))) { display: none; } /* espaçadores vazios */
 .edit-actions > button, .edit-actions > span { flex: 1 1 0; min-width: 0; }
 .edit-actions > span > button { width: 100%; }
+/* recurso: se os botões não cabem numa linha (texto cortado), coluna à direita, todos da mesma largura;
+   ordem Cancelar, Guardar, Apagar (a classe .stack é posta por fitActions em app.js) */
+.edit-actions.measure > button, .edit-actions.measure > span { flex: none; }
+.edit-actions.measure > span > button { width: auto; }
+.edit-actions.stack { display: grid; grid-template-columns: max-content; justify-content: end; gap: 10px; }
+.edit-actions.stack > button, .edit-actions.stack > span { width: 100%; min-width: 150px; }
+/* Ordem (em linha da esquerda para a direita; em coluna de cima para baixo): principal (Guardar, Criar, OK),
+   secundário (Cancelar), destrutivo (Apagar). Nas confirmações o OK fica sempre primeiro, mesmo vermelho. */
+.edit-actions > button, .edit-actions > span { order: 1; }
+.edit-actions > button.ghost:not(.danger) { order: 2; }
+.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 3; }
+.edit-actions > #app-dlg-ok { order: 1; }
+.info-actions > button.ghost, .listen-actions > button:not(.primary) { order: 2; }
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
 .pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
 .pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
@@ -999,7 +1012,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body>
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v181</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v183</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login">

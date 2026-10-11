@@ -795,6 +795,19 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions > span:not(:has(> button:not([hidden]))) { display: none; } /* espaçadores vazios */
 .edit-actions > button, .edit-actions > span { flex: 1 1 0; min-width: 0; }
 .edit-actions > span > button { width: 100%; }
+/* recurso: se os botões não cabem numa linha (texto cortado), coluna à direita, todos da mesma largura;
+   ordem Cancelar, Guardar, Apagar (a classe .stack é posta por fitActions em app.js) */
+.edit-actions.measure > button, .edit-actions.measure > span { flex: none; }
+.edit-actions.measure > span > button { width: auto; }
+.edit-actions.stack { display: grid; grid-template-columns: max-content; justify-content: end; gap: 10px; }
+.edit-actions.stack > button, .edit-actions.stack > span { width: 100%; min-width: 150px; }
+/* Ordem (em linha da esquerda para a direita; em coluna de cima para baixo): principal (Guardar, Criar, OK),
+   secundário (Cancelar), destrutivo (Apagar). Nas confirmações o OK fica sempre primeiro, mesmo vermelho. */
+.edit-actions > button, .edit-actions > span { order: 1; }
+.edit-actions > button.ghost:not(.danger) { order: 2; }
+.edit-actions > .danger-fill, .edit-actions > .ghost.danger, .edit-actions > span { order: 3; }
+.edit-actions > #app-dlg-ok { order: 1; }
+.info-actions > button.ghost, .listen-actions > button:not(.primary) { order: 2; }
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
 .pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
 .pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
@@ -999,7 +1012,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v181</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v183</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1038,7 +1051,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 18/10/2026 02:22</small></h2>
+    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 18/10/2026 02:45</small></h2>
     <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
     <p class="status" id="status"></p>
   </section>
@@ -1138,7 +1151,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v181</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v183</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1162,7 +1175,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro" class="on" aria-pressed="true">Coro</button><button type="button" data-v="cancioneiro" aria-pressed="false">Cancioneiro</button></div>
     <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required="" style=""></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
-    <p class="small" id="ce-until">Disponível até 18/10/2026 02:22. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
+    <p class="small" id="ce-until">Disponível até 18/10/2026 02:45. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"><li class="col-sec" data-key="sec:s1"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Entrada</div></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s2"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Comunhão</div></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s3"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Nossa Senhora</div></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
     <p class="small" id="ce-msg" role="status"></p>

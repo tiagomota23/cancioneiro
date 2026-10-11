@@ -13,9 +13,9 @@ ESTADO = {
      ('sim', '✓ Escolhida · implementada na v149'), ('nao', 'Não escolhida')]),
   'OpcoesRodape.dc.html': (
     'Decidido a 11 out 2026: <b>Atual</b> — uma linha, larguras iguais; se não couberem, <b>A — coluna à direita</b>. '
-    'Botão principal sempre à esquerda ou em cima: Guardar | Cancelar | Apagar (a implementar).',
-    [('sim', '✓ Escolhida · ordem a mudar: Guardar à esquerda'), ('nao', 'Não escolhida'),
-     ('parcial', 'Escolhida como recurso · a implementar'), ('nao', 'Não escolhida')]),
+    'Botão principal sempre à esquerda ou em cima: Guardar | Cancelar | Apagar. <b>Implementado na v183.</b>',
+    [('sim', '✓ Escolhida · implementada na v183'), ('nao', 'Não escolhida'),
+     ('parcial', '✓ Recurso quando não cabe · implementado na v183'), ('nao', 'Não escolhida')]),
   'OpcoesSeccoes.dc.html': (
     'Decidido a 10 out 2026: <b>B — título em Marcellus</b>, igual na página inicial, nas folhas e no menu. '
     '<b>Implementado na v154.</b>',
