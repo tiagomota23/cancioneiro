@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v180';
+  const APP_VERSION = '2026-10-11 v181';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1686,12 +1686,16 @@
   };
   async function decideSong(s, ok, btn) {
     const sims = Array.isArray(s.parecidos) ? s.parecidos : [];
-    if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
-    // aprovar: para o Cancioneiro (todos os perfis) ou para o livro do Coro
+    // aprovar: para o Cancioneiro (todos os perfis) ou para o livro do Coro; depois confirmar (com os parecidos, se houver)
     const dest = ok ? await appChoose('Aprovar para…', [
       { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico (fica também no livro do Coro)' },
       { value: 'coro', label: 'Coro', sub: 'Só no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
     if (ok && !dest) return;
+    if (ok) {
+      const where = dest === 'coro' ? 'para o livro do Coro' : 'para o Cancioneiro (todos os perfis o veem)';
+      const sim = sims.length ? `Atenção: parece-se com\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\n` : '';
+      if (!(await appConfirm(`${sim}Aprovar «${s.title}» ${where}?`, sims.length ? 'Aprovar mesmo assim' : 'Aprovar', 'Aprovar cântico'))) return;
+    }
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
@@ -2662,7 +2666,10 @@
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
     if (can) $('col-mode').onclick = () => openColEditor(c);
     // uma folha sem cânticos não se publica
-    if ($('col-pub')) $('col-pub').onclick = () => colSongs(c).some(x => bySlug.has(x.song_slug)) ? colSetPublished(c, true) : appAlert('Uma folha sem cânticos não pode ser publicada. Acrescente pelo menos um cântico em «Editar folha».');
+    if ($('col-pub')) $('col-pub').onclick = async () => {
+      if (!colSongs(c).some(x => bySlug.has(x.song_slug))) return appAlert('Uma folha sem cânticos não pode ser publicada. Acrescente pelo menos um cântico em «Editar folha».');
+      if (await appConfirm(`Publicar a folha «${c.title}»? ${c.audience === 'coro' ? 'O Coro' : 'Todos os perfis'} passa${c.audience === 'coro' ? '' : 'm'} a vê-la até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}.`, 'Publicar')) colSetPublished(c, true);
+    };
     if (edCol && $('col-ed').open) renderColEditor(edCol);
   }
   // ---------- Editar folha (janela por cima da folha) ----------
