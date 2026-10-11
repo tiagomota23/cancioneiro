@@ -11,6 +11,11 @@ ESTADO = {
     '<b>Implementado na v149.</b>',
     [('parcial', 'Maiúsculas mantidas · cor substituída por 3A'), ('nao', 'Não escolhida'),
      ('sim', '✓ Escolhida · implementada na v149'), ('nao', 'Não escolhida')]),
+  'OpcoesRodape.dc.html': (
+    'Decidido a 11 out 2026: <b>Atual</b> — uma linha, larguras iguais; se não couberem, <b>A — coluna à direita</b>. '
+    'Botão principal sempre à esquerda ou em cima: Guardar | Cancelar | Apagar (a implementar).',
+    [('sim', '✓ Escolhida · ordem a mudar: Guardar à esquerda'), ('nao', 'Não escolhida'),
+     ('parcial', 'Escolhida como recurso · a implementar'), ('nao', 'Não escolhida')]),
   'OpcoesSeccoes.dc.html': (
     'Decidido a 10 out 2026: <b>B — título em Marcellus</b>, igual na página inicial, nas folhas e no menu. '
     '<b>Implementado na v154.</b>',
@@ -61,12 +66,12 @@ for nome, (faixa, cols) in ESTADO.items():
   for j, m in enumerate(imgs):
     e = cols[col(j)][0]
     tag = m.group(0)
-    extra = (f'; outline: 4px solid {VERDE}; outline-offset: 8px' if e == 'sim' else '; opacity: 0.5')
+    extra = (f'; outline: 4px solid {VERDE}; outline-offset: 8px' if e == 'sim' else f'; outline: 2px dashed {VERDE}; outline-offset: 8px' if e == 'parcial' else '; opacity: 0.5')
     tag = tag.replace('rgba(0,0,0,0.12)"', 'rgba(0,0,0,0.12)' + extra + '"')
     out.append(h[last:m.start()]); out.append(tag); last = m.end()
   out.append(h[last:]); h = ''.join(out)
   # altura do quadro
-  base = {'Opcoes.dc.html': 2180, 'OpcoesSeccoes.dc.html': 3112}[nome]
+  base = {'Opcoes.dc.html': 2180, 'OpcoesSeccoes.dc.html': 3112, 'OpcoesRodape.dc.html': 1155}[nome]
   # imagens empilhadas na mesma coluna: espaço para o contorno não se tocar
   h = h.replace('gap: 14px; width: 390px', 'gap: 24px; width: 390px')
   h = re.sub(r'(width: 1832px; height: )\d+px', rf'\g<1>{base + EXTRA}px', h)
