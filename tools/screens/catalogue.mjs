@@ -18,6 +18,7 @@ const EXTRA = [
   { id: 'x-partilhar', title: 'Partilhar cântico', hash: '#/cantico/salve_regina', act: async p => { await click(p, '#btn-share'); await sleep(500); } },
   { id: 'x-aviso', title: 'Aviso «Letra copiada»', hash: '#/cantico/salve_regina', act: async p => { await click(p, '#btn-share'); await sleep(400); await click(p, '#app-dlg-list button'); await sleep(250); } },
   { id: 'x-partilhar-folha', title: 'Partilhar folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-share'); await sleep(500); } },
+  { id: 'x-folha-por-publicar', title: 'Folha por publicar', hash: '#/lista/colecao-demo3', act: async p => { await sleep(300); } },
   { id: 'x-folha-edicao', title: 'Editar folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); } },
   { id: 'x-nova-seccao', title: 'Nova secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#col-add-sec'); await sleep(500); } },
   { id: 'x-acrescentar', title: 'Adicionar cântico à secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows li.col-add button[data-sec]'); await sleep(400); await p.fill('#sa-q', 'a'); await sleep(500); } },

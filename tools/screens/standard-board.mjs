@@ -126,6 +126,7 @@ const exc = [
   ['Etiqueta «VERSÃO TESTE»', '9,5 px 700 maiúsculas — a única exceção à escala de sete tamanhos (11 px não cabe no espaço de 44 px).'],
   ['Botão «Entrar com Google»', 'segue as regras da Google: branco, pílula, 16 px, sombra, «G» de 20 px.'],
   ['Letra dos cânticos', 'estrofes, acordes, tamanho A−/A+ (--fs), peso 300 das estrofes e nota de direitos ficam fora da escala, por desenho.'],
+  ['Ações de item da folha', 'Na janela Editar folha, ↑ ↓ 🗑 ✓ são quadrados de 38 px com raio pequeno (não pílula), com área de toque de 44 px.'],
   ['Símbolos de texto em botões', 'A−/A+ (19 e 24 px) e as setas (18–20 px) só são permitidos dentro de botões de símbolo.'],
 ];
 const sExc = section('Exceções documentadas', 'Desvios deliberados, mantidos de propósito. Tudo o resto segue as regras acima; um desvio novo no catálogo é um erro, não uma exceção.',

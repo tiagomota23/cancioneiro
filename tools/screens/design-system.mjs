@@ -66,6 +66,7 @@ const C = {
 - **Normal** — altura \`--h-btn\`, \`--fs-ui\` 400, espaço 0 18 px. Classes: \`dialog form button\`, \`.edit-actions button\`, \`.info-actions button\`, \`.tour-next\`, \`.sn-gen-btn\`.
 - **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e o botão «✎ Editar folha» / «Editar cântico» (\`.edit-bar .edit-btn\`; sobre a cor da marca, contorno \`--on-brand\`). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
 - **Cores** — destaque (cheio, \`--accent\` / \`--on-accent\`); secundário (\`.ghost\`: \`--surface\` com contorno e texto \`--accent\`); perigo (\`.ghost.danger\`, \`.ghost-btn\`, \`.adm-no\`, \`.adm-del\`: contorno \`--danger-border\`, texto \`--danger\`). Confirmar apagar: fundo \`--danger\`.
+- **Variantes de contexto** — «Apagar» na janela Editar folha é cheio de perigo (\`.edit-actions button.danger-fill\`: \`--danger\` / \`--on-accent\`), a pedido do Tiago; «Publicar» numa folha por publicar é cheio branco sobre a marca (\`.edit-btn.col-pub\`: \`--on-brand\`, texto \`--brand-deep\`, 700).
 - Nunca em maiúsculas; nunca outro raio que não \`--pill\`. Exceção: o botão «Entrar com Google» segue as regras da Google.`,
     html: `<div class="ds col"><dialog open><form class="row" onsubmit="return false"><button>Guardar</button><button class="ghost">Cancelar</button></form><div class="edit-actions row" style="margin-top:12px"><button class="ghost danger">Apagar</button></div></dialog>
 <div class="pend-bar row"><button class="edit-btn">Aprovar</button><button class="ghost-btn">Recusar</button></div><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn">Editar folha</button></p></li></ul></div></div>` },
@@ -92,7 +93,7 @@ const C = {
 
 - Pílula de \`--h-chip\`, \`--fs-caps\` 700 em maiúsculas com \`--ls-chip\`, fundo da própria cor a 12% (color-mix com currentColor).
 - Neutra (\`.src-chip\`, \`.moments\`): \`--ink-soft\`. Destaque (\`.src-coro_clu\`, \`.lang-chip\` — idioma atual): \`--accent\`, também com fundo suave, nunca cheio.
-- Estado (\`.pend\` «por aprovar»): cheio, \`--pending-bg\` / \`--pending-ink\`.
+- Estado (\`.pend\` «por aprovar», «Por publicar»): cheio, \`--pending-bg\` / \`--pending-ink\`; por cima do título (\`.pend-top\`), nas linhas, na página do cântico e na folha.
 - Tudo o que se toca é Botão, Ligação, Interruptor ou Segmentado — nunca uma etiqueta.`,
     html: `<div class="ds row"><span class="src-chip">Cancioneiro</span><span class="src-chip">Songbook</span><span class="src-chip src-coro_clu">Coro</span><span class="lang-chip">Inglês</span><span class="moments">Nossa Senhora</span><span class="pend">por aprovar</span></div>` },
   Interruptor: { group: 'Formulários', h: 130, title: 'Interruptor',
@@ -127,6 +128,7 @@ const C = {
 - Título \`--fs-ui\` 700 em maiúsculas com \`--ls-row\`; subtítulo \`--fs-small\` em \`--text-soft\`.
 - Escolhida (\`.perfil-opt.on\`): cheia de \`--accent\`, texto \`--on-accent\`.
 - Classes: \`.perfil-opt\`, \`.tpl-apply\`, \`.col-pick\`, \`.perfil-admin\`, \`.tpl-edit\`.
+- «Coleções e folhas» (\`#col-pick\`): rótulos \`.pick-head\` e linhas \`.col-pick\` que ligam e desligam — com o cântico: cheias de \`--accent\` com ✓ (\`.pick-ok\`, \`--icon\`); Cancioneiro original: cheia e inativa.
 - «+ novo» (\`.col-pick-new\`): tracejado \`--border-dash\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\` em \`--accent\` — o mesmo texto nas listas verdes («+ Nova folha», «+ Novo cântico»).`,
     html: `<div class="ds"><dialog open><div class="col"><button class="tpl-apply"><b>Copiar letra</b><small>Título e letra, sem acordes</small></button><button class="perfil-opt"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/></svg><span><b>Coro</b><small>Todos os cânticos e livros, com acordes</small></span></button><button class="perfil-opt on"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:var(--stroke)"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg><span><b>Gestor</b><small>Gerir os utilizadores e os seus perfis</small></span></button><button class="col-pick-new">+ Nova folha</button></div></dialog></div>` },
   Titulos: { group: 'Letra', h: 200, title: 'Títulos',
@@ -144,7 +146,7 @@ const C = {
 
 - Listas verdes (início, menu, folhas): título \`--fs-small\` 400 maiúsculas \`--ls-chip\`; autor (itálico), número, página do livro e notas \`--fs-small\` sem espaçamento; separador \`--on-brand-line\`.
 - Título de secção (\`.rows .cat-head\`, \`.col-sec .sec-line\`, \`.az .cat-head\` no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, espaço 28 px acima e 8 px abaixo, traço de 1 px \`--on-brand\` por baixo. As linhas por baixo ficam em Lato: a diferença de letra separa a secção dos itens. Igual na página inicial, nas folhas e no menu (secções «Os meus cânticos», «Livros», «Folhas»; secções vazias não aparecem).
-- Editar folha (\`#col-ed\`, janela por cima como «Editar cântico»): lista \`#ce-rows\` em fundo claro — títulos de secção \`--brand-deep\` com traço \`--brand-deep\`, linhas \`--text\`, separador \`--line\`. «+ Adicionar cântico» (\`li.col-add\`) no fim de cada secção: \`--accent\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\`, 44 px. «+ Adicionar secção» no fim: tracejado \`--border-dash\`, \`--radius\`. Tocar num item: realce \`--tint-soft\` e botões ↑ ↓ 🗑 de 44 px (\`.ce-acts\`, \`--accent\`; caixote \`--danger\`); numa secção, o nome passa a botão com lápis (\`.ce-name\`). A página da folha é só de leitura.
+- Editar folha (\`#col-ed\`, janela por cima como «Editar cântico»): lista \`#ce-rows\` em fundo claro — títulos de secção \`--brand-deep\` com traço \`--brand-deep\`, linhas \`--text\`, separador \`--line\`. «+ Adicionar cântico» (\`li.col-add\`) no fim de cada secção: \`--accent\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\`, 44 px. «+ Adicionar secção» no fim: tracejado \`--border-dash\`, \`--radius\`. Tocar num item: realce \`--tint-soft\` e botões ↑ ↓ 🗑 ✓ (\`.ce-acts\`): quadrados de 38 px com \`--radius-sm\`, contorno \`--accent\` (caixote \`--danger-border\`; ✓ cheio, fecha), área de toque de 44 px; numa secção ficam por cima do nome e o lápis (\`.ce-name\`) à esquerda. Ações: Apagar / Cancelar / Guardar; a janela trabalha numa cópia. A página da folha é só de leitura.
 - Listas claras (\`.adm-list\`, \`#sn-flist\`, \`#sa-list\`): separador só em baixo, \`--line\`, espaço 12 px.
 - Gravações (\`.recs li\`): espaço 6 px (o botão de 40 px já dá ≥ 52 px) e separador \`--divider\`, que serve em claro e escuro.`,
     html: `<div class="ds col"><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="cat-head">Coro</li>${[['Amazing Grace', 'John Newton (1779)', '2'], ['Salve Regina', 'Antífona mariana', '1']].map(([t, a, n]) => `<li style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--on-brand-line)"><span><span style="display:block;font-size:var(--fs-small);text-transform:uppercase;letter-spacing:var(--ls-chip)">${t}</span><span style="display:block;font-size:var(--fs-small);font-style:italic">${a}</span></span><span style="font-size:var(--fs-small)">${n}</span></li>`).join('')}</ul></div>
@@ -215,6 +217,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 ## Exceções documentadas
 
 - Etiqueta «VERSÃO TESTE»: 9,5 px 700 maiúsculas (11 px não cabe no espaço de 44 px).
+- Ações de item na janela Editar folha (\`.ce-acts\`): quadrados de 38 px com \`radius-sm\`, não pílula (área de toque de 44 px mantida).
 - Botão «Entrar com Google»: regras da Google (branco, pílula, 16 px, sombra, «G» de 20 px).
 - Letra dos cânticos: fora da escala, por desenho.
 - Símbolos de texto (A−/A+ 19 e 24 px, setas 18–20 px) só dentro de botões de símbolo.
