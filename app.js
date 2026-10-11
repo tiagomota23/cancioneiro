@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v175';
+  const APP_VERSION = '2026-10-11 v177';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -854,8 +854,8 @@
     const title = q ? highlight(s.title, q) : esc(s.title);
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
     const sn = snip ? `<span class="snip">${highlight(snip, q)}</span>` : '';
-    const pend = s.approved === false ? '<small class="pend pend-top">por aprovar</small>' : ''; // por cima do nome
-    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${pend}${title}${author}${sn}</span><span class="n">${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
+    const pend = s.approved === false ? '<small class="pend">por aprovar</small>' : ''; // à direita, por cima do número
+    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${pend}${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
 
   function showList(catId) {
@@ -1004,7 +1004,7 @@
     const simHtml = sims.length ? `<div class="sim-list"><b>Atenção: parecido com cânticos que já existem</b>${sims.map(x => `<a href="#/cantico/${encodeURIComponent(x.slug)}">${esc(x.title)}${x.author ? ' — ' + esc(x.author) : ''}<small>${esc(x.why)}</small></a>`).join('')}</div>` : '';
     // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
     const pendHtml = s.approved === false
-      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
+      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="edit-btn danger-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
       : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
     const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn(); // Maestro / Gestor: em "Editar cântico"
@@ -1841,6 +1841,8 @@
       d.classList.toggle('top-dlg', input !== null); // com caixa de texto: fica no topo (o teclado não a faz saltar)
       const lst = $('app-dlg-list'); lst.hidden = !list;
       lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
+      // confirmações que apagam ou deitam fora (Apagar, Remover, Retirar, Recusar, Sair sem guardar): botão vermelho
+      $('app-dlg-ok').classList.toggle('danger-fill', input === null && !list && /^(Apagar|Remover|Retirar|Recusar|Sair sem guardar)/.test(ok || ''));
       if (okHtml) $('app-dlg-ok').innerHTML = okHtml; else $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
       $('app-dlg-cancel').textContent = cancel || ''; $('app-dlg-cancel').hidden = !cancel;
       $('app-dlg-extra').textContent = extra; $('app-dlg-extra').hidden = !extra; // botão à esquerda: devolve { extra, value }

@@ -87,10 +87,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Cânticos novos começam sempre por aprovar, também os de um Maestro (função `conteudo`, op `addsong`); ao aprovar,
   vai sempre para o livro do Coro (op `coro`) e,
   se o Maestro escolher Cancioneiro, também para o Cancioneiro (op `promote`). Etiqueta amarela
-  «por aprovar» por cima do nome (listas e página do cântico).
+  «por aprovar» por cima do nome na página do cântico; nas listas, na linha do nome, à direita, por cima do número.
+  Na caixa amarela, Aprovar e Recusar (vermelho cheio) à direita, com a mesma largura.
 - Menu Coleções: Preferidos e Novos Cânticos no topo, sem título; depois «Livros» e «Folhas».
 - Botões lado a lado numa linha de ações: a mesma largura, a ocupar a linha (rodapés das janelas, Aprovar/Recusar,
-  Editar folha/Publicar, Terminar sessão/Fechar); botões de 40 px sempre com letra normal (400).
+  Editar folha/Publicar, Terminar sessão/Fechar); botões de 40 px sempre com letra normal (400). Confirmações que apagam ou deitam fora (Apagar, Remover, Retirar,
+  Recusar, Sair sem guardar): botão vermelho cheio.
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
