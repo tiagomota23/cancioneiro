@@ -522,7 +522,6 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 #pdf-download svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
 .up-files li { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 2px 0; }
-.up-del.armed { background: var(--danger); color: var(--on-accent); }
 .edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }
 .perfis-right { display: inline-flex; align-items: center; gap: 6px; }
 .install-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; color: var(--accent); background: none; border: 0; box-shadow: none; }
@@ -678,9 +677,9 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .search .mic { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -12px -2px 0; display: grid; place-items: center; color: var(--accent); flex: none; }
 .search .clear { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -8px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
 .dlg-x { position: absolute; top: 6px; right: 6px; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: var(--pill); color: var(--text-faint); background: color-mix(in srgb, var(--surface) 90%, transparent); z-index: 1; }
-.up-del { display: inline-grid; place-items: center; min-width: var(--hit); height: var(--hit); padding: 0 4px; border-radius: var(--pill); color: var(--ink-soft); }
+.up-del { display: inline-grid; place-items: center; box-sizing: border-box; min-width: var(--hit); height: var(--hit); padding: 0 4px; border: 1px solid transparent; border-radius: var(--pill); color: var(--ink-soft); }
 .up-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.up-del.armed { background: var(--danger); color: var(--on-accent); }
+.up-del.armed { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* contorno da cor do botão (regra 9) */
 .mini-btn { flex: none; width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
 .list-title .col-share { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -10px -6px -10px 2px; vertical-align: middle; color: var(--on-brand); }
 .list-title .col-share svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
