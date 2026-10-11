@@ -33,9 +33,9 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-07 | Preferidos: ☆ marca/desmarca, lista Preferidos atualiza | ui | alta | V | ✓ |
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
-| FUN-10 | Folha publicada (Maestro): só leitura, só «Editar» e partilhar, sem «+ Adicionar» nem deslizar (v159) | ui | alta | V | ☐ por correr |
-| FUN-11 | Criar folha nova | ui | alta | V | ✓ |
-| FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel), escondido em «Definições» (v159) | ui | média | V | ☐ por correr |
+| FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
+| FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164) | ui | alta | V | ✓ |
+| FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos | ui | alta | V | ✓ |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
@@ -68,10 +68,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
 | FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
-| FUN-38 | Editar ↔ Publicar: fundo branco, botões Publicar/Definições, estado guardado depois de recarregar (v159) | ui | alta | V | ☐ por correr |
-| FUN-39 | Folha em edição: menus do cântico (Abrir/Subir/Descer/Remover, confirmação) e da secção (Mudar o nome/Apagar) (v159) | ui | alta | V | ☐ por correr |
-| FUN-40 | «+ Adicionar cântico» por secção com pré-preenchimento do momento da Missa (Comunhão sim, Saída não); «+ Adicionar secção» no fim (v159) | ui | média | V | ☐ por correr |
-| FUN-42 | Folha em edição: cada ação grava logo (acrescentar, remover, mover, mudar o nome, nova/apagar secção, Definições) — recarregar mostra a mudança (v160) | ui | alta | V | ☐ por correr |
+| FUN-38 | «Editar folha» abre #col-ed e põe published=false; «Fechar» mantém por publicar (também depois de recarregar); «Publicar» (#ce-pub) publica (v164) | ui | alta | V | ☐ por correr |
+| FUN-39 | Edição: tocar num item mostra .ce-acts (up/down/del); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v164) | ui | alta | V | ☐ por correr |
+| FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ☐ por correr |
+| FUN-42 | Edição grava logo: acrescentar, mover, mudar o nome, nova/apagar secção, remover, público, título e duração — recarregar mostra a mudança (v164) | ui | alta | V | ☐ por correr |
 | MAN-10 | Entrada real com Google (telemóvel e computador/janela), pedido de acesso, email ao Gestor, autorizar pelo link | manual | crítica | M | ☐ |
 | MAN-11 | Pesquisa por voz real (iPhone e Android): microfone, transcrição Groq, identifica o cântico | manual | alta | M | ☐ |
 | MAN-12 | Gravar/enviar gravação e partitura real (Maestro), apagar ficheiro enviado | manual | alta | M | ☐ |
