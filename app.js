@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v175';
+  const APP_VERSION = '2026-10-11 v176';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1841,6 +1841,8 @@
       d.classList.toggle('top-dlg', input !== null); // com caixa de texto: fica no topo (o teclado não a faz saltar)
       const lst = $('app-dlg-list'); lst.hidden = !list;
       lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
+      // confirmações que apagam ou deitam fora (Apagar, Remover, Retirar, Recusar, Sair sem guardar): botão vermelho
+      $('app-dlg-ok').classList.toggle('danger-fill', input === null && !list && /^(Apagar|Remover|Retirar|Recusar|Sair sem guardar)/.test(ok || ''));
       if (okHtml) $('app-dlg-ok').innerHTML = okHtml; else $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
       $('app-dlg-cancel').textContent = cancel || ''; $('app-dlg-cancel').hidden = !cancel;
       $('app-dlg-extra').textContent = extra; $('app-dlg-extra').hidden = !extra; // botão à esquerda: devolve { extra, value }
