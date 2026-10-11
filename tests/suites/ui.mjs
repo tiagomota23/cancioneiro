@@ -1006,6 +1006,12 @@ async function suites(full) {
     return miss.length ? 'depois de 6 min não recarregou: ' + miss.join(', ') : { pass: 'recarregou ' + [...new Set(got)].join(', ') };
   }), { sev: 'média' });
 
+  await t('RES-11', 'Lista de cânticos recusada pelo servidor (42501) com cópia guardada: a app mostra o aviso «Não foi possível atualizar a lista…» em vez de ficar calada (v195)', () => withApp({ real: { rest: tb => tb === 'songs' ? { status: 401, body: { code: '42501', message: 'permission denied for table songs' } } : null }, storage: { 'cancioneiro.songs.v2': fixture.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: false })) }, wait: false, settle: 0, allowErrors: true }, async ({ page }) => {
+    await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 16000 }).catch(() => {});
+    const seen = await page.waitForFunction(() => /Não foi possível atualizar a lista/.test(document.querySelector('.toast')?.textContent || ''), null, { timeout: 12000 }).then(() => true).catch(() => false);
+    return seen || 'sem aviso quando a lista não atualiza';
+  }), { sev: 'alta' });
+
   // ===================== Escalabilidade / desempenho =====================
   dim('Escalabilidade e desempenho — interface', 'média');
   const big = bigFixture(2000);

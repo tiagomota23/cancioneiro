@@ -132,6 +132,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-08 | Dados incompletos (sem autor/letra/ficheiros/número) | ui | média | V | ✓ |
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
 | RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ☐ por correr |
+| RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ☐ por correr |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)
@@ -211,6 +212,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
+| DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ☐ por correr |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |

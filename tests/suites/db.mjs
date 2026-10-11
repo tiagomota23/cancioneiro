@@ -1,6 +1,8 @@
 // Base de dados (Management API): RLS, permissões, funções, integridade, cópias e agendamentos, planos de consulta.
 // Só leituras; as provas de escrita correm dentro de begin … rollback (nada fica gravado; pg_net só envia depois de commit).
-import { t, dim, sql, asRole, hasSql, get, reachable } from '../lib.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { t, dim, sql, asRole, hasSql, get, reachable, ROOT } from '../lib.mjs';
 
 const ROLES = ['anon', 'stranger', 'cancioneiro', 'coro', 'maestro', 'gestor'];
 const TMP = 'zz_teste_rls_' + Date.now(); // slug fictício, só existe dentro da transação
@@ -44,6 +46,28 @@ export default async function (level) {
     const bad = r.filter(x => x.privilege_type !== 'SELECT' || ['lyrics', 'lyrics_edit', 'translation', 'source_hash'].includes(x.column_name));
     return bad.length ? 'permissões a mais: ' + bad.map(x => x.column_name + ' ' + x.privilege_type).join(', ') : true;
   });
+  await t('DB-RLS-12', 'Todas as colunas que a app pede pela API (fetchSongs e cada .from(…).select(…) em app.js) têm permissão SELECT para authenticated (v195: version_of sem grant partia a lista)', async () => {
+    const js = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+    const pairs = []; // [tabela, coluna]
+    const parse = (table, sel) => {
+      let depth = 0, cur = '', parts = [];
+      for (const ch of sel) { if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
+      parts.push(cur);
+      for (let p of parts.map(x => x.trim()).filter(Boolean)) {
+        const m = p.match(/^(?:\w+:)?(\w+)\((.*)\)$/);
+        if (m) parse(m[1], m[2]); else pairs.push([table, p.replace(/^\w+:/, '')]);
+      }
+    };
+    const cols = js.match(/const cols = '([^']*)'\s*\+\s*'([^']*)'/);
+    if (!cols) return 'não encontrei const cols em fetchSongs (app.js)';
+    parse('songs', cols[1] + cols[2]);
+    for (const m of js.matchAll(/from\('(\w+)'\)\.select\('([^']*)'/g)) parse(m[1], m[2]);
+    const uniq = [...new Set(pairs.map(x => x.join('.')))].map(x => x.split('.'));
+    const q = `select t, c, has_column_privilege('authenticated', 'public.' || t, c, 'SELECT') ok from (values ${uniq.map(([t, c]) => `('${t}','${c}')`).join(',')}) v(t, c)`;
+    const r = await sql(q);
+    const bad = r.filter(x => !x.ok).map(x => `${x.t}.${x.c}`);
+    return bad.length ? `sem permissão SELECT para authenticated: ${bad.join(', ')} (a app falha com 42501)` : { pass: `${r.length} colunas em ${new Set(uniq.map(x => x[0])).size} tabelas` };
+  }, { sev: 'crítica', where: 'grants por coluna em public.* vs selects de app.js' });
   await t('DB-RLS-05', 'Política «leitura familia» esconde cânticos novos por aprovar a quem não os acrescentou (perfil Coro)', async () => {
     const stmt = `insert into public.songs (slug, number, title, language, lyrics, approved, added_by, cancioneiro) values ('${TMP}', 999999, 'Teste RLS (fictício)', 'pt', '[]', false, 'outra-pessoa@example.invalid', false);`;
     const r = await sql(`begin; ${stmt} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='coro' order by email limit 1),'role','authenticated')::text, true); set local role authenticated; select count(*)::int n from public.songs where slug='${TMP}'; rollback;`);
