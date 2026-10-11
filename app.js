@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v181';
+  const APP_VERSION = '2026-10-11 v182';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1863,6 +1863,22 @@
       d.showModal();
       if (input !== null) setTimeout(() => { inp.focus(); inp.select(); }, 50);
     });
+  }
+  // Rodapés das janelas: numa linha com larguras iguais; se algum texto não cabe, passa a coluna (.stack).
+  // Mede sempre em linha (sem a classe), para não oscilar. Volta a medir quando o tamanho ou o texto mudam.
+  function fitActions(el) {
+    el.classList.remove('stack'); el.classList.add('measure'); // .measure: cada botão com a largura do seu texto
+    const bs = [...el.querySelectorAll(':scope > button, :scope > span > button')].filter(b => b.offsetParent);
+    const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+    // larguras iguais: cabe se o texto mais largo (com 8 px de cada lado), vezes o número de botões, cabe na linha
+    const txt = b => { const cs = getComputedStyle(b); return b.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) + 16; };
+    const need = bs.length ? Math.max(...bs.map(txt)) * bs.length + gap * (bs.length - 1) : 0;
+    el.classList.remove('measure');
+    if (need > el.clientWidth + 1) el.classList.add('stack');
+  }
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(es => es.forEach(e => fitActions(e.target))), mo = new MutationObserver(ms => new Set(ms.map(m => m.target.closest('.edit-actions'))).forEach(el => el && fitActions(el)));
+    document.querySelectorAll('.edit-actions').forEach(el => { ro.observe(el); mo.observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden'] }); });
   }
   const appAlert = (msg, title = '') => appDialog({ title, msg, cancel: null });
   const appConfirm = (msg, ok = 'Sim', title = '') => appDialog({ title, msg, ok });
