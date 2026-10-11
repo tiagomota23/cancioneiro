@@ -189,6 +189,10 @@ export default async function (level) {
     const bad = Object.entries(r).filter(([k, v]) => k !== 'n' && v);
     return bad.length ? { fail: bad.map(([k, v]) => `${k}: ${v}`).join(', '), evidence: JSON.stringify(r) } : { pass: r.n + ' cânticos' };
   });
+  await t('INT-13', 'Cânticos novos aprovados estão todos no Coro (song_sources coro_clu) (v174)', async () => {
+    const r = await sql(`select s.slug from public.songs s where s.approved and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='novos') and not exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='coro_clu')`);
+    return r.length ? `${r.length} sem coro_clu: ${r.map(x => x.slug).slice(0, 5).join(', ')}` : true;
+  }, { sev: 'média' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

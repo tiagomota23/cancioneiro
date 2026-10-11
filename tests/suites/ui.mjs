@@ -990,6 +990,7 @@ async function suites(full) {
     const bad = rows.filter(x => x.tag !== 'BUTTON' || !['true', 'false'].includes(x.pressed) || (x.pressed === 'true') !== x.on).map(x => x.k);
     if (bad.length) return 'aria-pressed/.on incoerentes: ' + bad.join(',');
     if (!rows.some(x => x.k === 'cancioneiro') || !rows.some(x => x.k === 'fav')) return 'faltam cancioneiro/fav: ' + rows.map(x => x.k).join(',');
+    if (rows.some(x => x.k === 'coro')) return 'ainda há a opção Coro (saiu na v174)';
     const c0 = rows.find(x => x.k === 'cancioneiro').pressed;
     await page.focus('#col-pick .col-pick[data-k="cancioneiro"]'); await page.keyboard.press(c0 === 'true' ? 'Enter' : 'Space'); await sleep(700);
     if (c0 === 'true') { if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'retirar do Cancioneiro não pediu confirmação'; await page.click('#app-dlg-ok'); await sleep(700); }

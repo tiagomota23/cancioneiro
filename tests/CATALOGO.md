@@ -151,7 +151,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
-| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165) | ui | média | V | ☐ por correr |
+| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174) | ui | média | V | ☐ por correr |
 | USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
@@ -228,6 +228,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-02 | pdf_url internas → objeto no armazenamento | db | alta | V | ✓ |
 | INT-03 | Objetos órfãos no armazenamento | db | baixa | V | ✓ |
 | INT-04 | Número único, título, letra (ou partitura), fonte | db | alta | V | ✓ |
+| INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
