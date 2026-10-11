@@ -464,10 +464,10 @@ async function suites(full) {
       const b = await count(page, '#rows li a');
       return a > 0 && b > 0 || `latim ${a}, songbook ${b}`;
     }), { sev: 'média' });
-    await t('FUN-31b', 'Novos Cânticos: filtro Todos / Por aprovar / No Cancioneiro / Só no Coro (todos, pendentes, canc, so-coro) (v178)', () => withApp({ perfil: 'maestro', hash: '#/lista/livro-novos' }, async ({ page }) => {
+    await t('FUN-31b', 'Novos Cânticos: filtro Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180)', () => withApp({ perfil: 'maestro', hash: '#/lista/livro-novos' }, async ({ page }) => {
       await page.waitForSelector('#novos-filtro', { timeout: 8000 }).catch(() => {});
       const o = await page.evaluate(() => [...document.querySelectorAll('#novos-filtro option')].map(x => x.value + '=' + x.textContent.trim()));
-      const want = ['todos=Todos', 'pendentes=Por aprovar', 'canc=No Cancioneiro', 'so-coro=Só no Coro'];
+      const want = ['todos=Todos', 'pendentes=Por aprovar', 'so-coro=Só no Coro', 'canc=No Cancioneiro']; // ordem da v180
       return JSON.stringify(o) === JSON.stringify(want) || 'opções: ' + o.join(' | ');
     }), { sev: 'baixa' });
     await t('FUN-32', 'Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar põe sempre no Coro e, para o Cancioneiro, também promove (v172)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_pendente', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_pendente', number: 9101, title: 'Cântico novo de teste (pendente)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: false, added_by: 'outra@example.invalid', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {

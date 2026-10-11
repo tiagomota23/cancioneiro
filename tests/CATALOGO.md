@@ -58,7 +58,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
-| FUN-31b | Filtro de Novos Cânticos: Todos / Por aprovar / No Cancioneiro / Só no Coro (todos, pendentes, canc, so-coro) (v178) | ui | baixa | S | ☐ por correr |
+| FUN-31b | Filtro de Novos Cânticos: Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180) | ui | baixa | S | ☐ por correr |
 | FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
