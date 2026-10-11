@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v169';
+  const APP_VERSION = '2026-10-11 v172';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -906,7 +906,7 @@
       // livros pela ordem das páginas; os outros por título
       const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
       const NF = { todos: () => true, aprovados: s => s.approved !== false, pendentes: s => s.approved === false,
-        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s), coro: s => srcOf(s).includes('coro_clu'), 'nao-coro': s => !srcOf(s).includes('coro_clu') };
+        canc: s => inCancioneiro(s), 'nao-canc': s => !inCancioneiro(s) }; // sem filtro do Coro: os aprovados vão todos para o Coro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
       const list = pool.filter(bk.test).filter(bk.novos ? NF[nf] : () => true).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
@@ -915,7 +915,7 @@
         (bk.novos && lvl() >= 2 ? '<li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li>' : '');
       if (bk.novos) {
         const pend = pool.filter(bk.test).filter(s => s.approved === false).length;
-        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro'], ['coro', 'No Coro'], ['nao-coro', 'Ainda não no Coro']];
+        const opts = [['todos', 'Todos'], ['aprovados', 'Aprovados'], ['pendentes', 'Por aprovar'], ['canc', 'No Cancioneiro'], ['nao-canc', 'Ainda não no Cancioneiro']];
         title.innerHTML = `${esc(bk.label)}${pend ? `<small class="col-meta">${pend} por aprovar${lvl() >= 3 ? ' — abra o cântico para aprovar ou recusar' : ''}</small>` : ''}` +
           `<select class="novos-filtro" id="novos-filtro" aria-label="Mostrar">${opts.map(([v, l]) => `<option value="${v}"${v === nf ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
         $('novos-filtro').onchange = e => { prefs.novosFiltro = e.target.value; store.set('cancioneiro.prefs', prefs); showList('livro-novos'); };
@@ -1505,6 +1505,8 @@
   // ---------- Novos Cânticos (perfil Coro para cima): escrever, ler de um endereço ou de um PDF ----------
   let newPdf = null;
   let editSong = null; // cântico a editar (null = cântico novo)
+  // obrigatórios: título; num cântico novo, também a letra (ou um PDF)
+  const snGate = reqGate($('sn-save'), () => !!$('sn-title').value.trim() && (!!editSong || !!$('sn-text').value.trim() || !!newPdf), $('song-new'));
   function openNewSong() {
     if (lvl() < 2) return;
     newPdf = null; editSong = null;
@@ -1513,7 +1515,8 @@
     fillCats('');
     $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
     $('sn-lang').value = 'pt'; $('sn-pdf-name').textContent = ''; $('sn-msg').textContent = '';
-    $('sn-hint').textContent = lvl() >= 3 ? 'Fica logo disponível para todos.' : 'Fica em "Novos Cânticos" até um Maestro o aprovar.';
+    $('sn-hint').textContent = 'Fica em "Novos Cânticos" até um Maestro o aprovar.';
+    $('sn-text-req').hidden = false; snGate();
     $('song-new').showModal();
   }
   // ---------- Editar cântico (Maestro / Gestor): título, autor, categoria, idioma, letra, gravações e partituras ----------
@@ -1548,6 +1551,7 @@
     $('sn-pdf-name').textContent = ''; $('sn-msg').textContent = '';
     $('sn-hint').textContent = s.is_edited ? 'A letra já foi editada; a original pode ser reposta na página do cântico.' : '';
     renderEditFiles();
+    $('sn-text-req').hidden = true; snGate(); // a editar, a letra pode ficar vazia (cânticos só com partitura)
     $('song-new').showModal();
   }
   $('sn-del').onclick = async () => {
@@ -1619,6 +1623,7 @@
       $('sn-lang').value = guessLang(d.title + '\n' + d.text);
       if ($('sn-cat').value.startsWith('lang:')) fillCats('lang:' + $('sn-lang').value);
     }
+    snGate();
   };
   $('sn-url-go').onclick = async () => {
     const u = (await appPrompt('Gerar de URL', '', 'Endereço (URL) de uma página com a letra do cântico'))?.trim(); if (!u) return;
@@ -1630,7 +1635,7 @@
   $('sn-pdf').onclick = async () => {
     const [f] = await pickFiles('application/pdf', false); if (!f) return;
     if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) { $('sn-msg').textContent = 'Escolha um ficheiro PDF.'; return; }
-    newPdf = f; $('sn-pdf-name').textContent = 'PDF: ' + f.name + ' (fica junto ao cântico)'; $('sn-msg').textContent = 'A ler o texto do PDF…';
+    newPdf = f; snGate(); $('sn-pdf-name').textContent = 'PDF: ' + f.name + ' (fica junto ao cântico)'; $('sn-msg').textContent = 'A ler o texto do PDF…';
     try {
       const lib = await loadPdfJs(), doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
       const out = [];
@@ -1684,13 +1689,14 @@
     if (ok && sims.length && !(await appConfirm(`Este cântico parece-se com:\n\n${sims.map(x => `• ${x.title}${x.author ? ' — ' + x.author : ''} (${x.why})`).join('\n')}\n\nAprovar mesmo assim?`, 'Aprovar mesmo assim', 'Cânticos parecidos'))) return;
     // aprovar: para o Cancioneiro (todos os perfis) ou para o livro do Coro
     const dest = ok ? await appChoose('Aprovar para…', [
-      { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico' },
-      { value: 'coro', label: 'Coro', sub: 'Fica no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
+      { value: 'cancioneiro', label: 'Cancioneiro', sub: 'Todos os perfis veem o cântico (fica também no livro do Coro)' },
+      { value: 'coro', label: 'Coro', sub: 'Só no livro do Coro (perfis Coro, Maestro e Gestor)' }]) : null;
     if (ok && !dest) return;
     btn.disabled = true;
     try {
       await api(ok ? 'approvesong' : 'delsong', { slug: s.slug });
-      if (dest) await api(dest === 'coro' ? 'coro' : 'promote', { slug: s.slug, on: true });
+      if (dest) await api('coro', { slug: s.slug, on: true }); // todos os aprovados vão para o livro do Coro
+      if (dest === 'cancioneiro') await api('promote', { slug: s.slug, on: true });
       toast(!ok ? 'Cântico apagado' : dest === 'coro' ? 'Cântico aprovado — no livro do Coro' : 'Cântico aprovado — no Cancioneiro');
       await load();
       location.hash = ok ? '#/cantico/' + encodeURIComponent(s.slug) : '#/lista/livro-novos';
@@ -1825,7 +1831,7 @@
   $('edit-reset').onclick = () => revertLyrics(editSlug, $('edit-reset'));
 
   // ---------- Janelas da app (em vez de alert/confirm/prompt do sistema, para manter o aspeto) ----------
-  function appDialog({ title = '', msg = '', html = '', input = null, list = null, ok = 'OK', okHtml = '', cancel = 'Cancelar', extra = '' }) {
+  function appDialog({ title = '', msg = '', html = '', input = null, list = null, ok = 'OK', okHtml = '', cancel = 'Cancelar', extra = '', optional = false }) {
     return new Promise(resolve => {
       const d = $('app-dlg');
       $('app-dlg-title').textContent = title; $('app-dlg-title').hidden = !title;
@@ -1839,11 +1845,14 @@
       $('app-dlg-cancel').textContent = cancel || ''; $('app-dlg-cancel').hidden = !cancel;
       $('app-dlg-extra').textContent = extra; $('app-dlg-extra').hidden = !extra; // botão à esquerda: devolve { extra, value }
       const done = v => { d.close(); resolve(v); };
+      // caixa de texto obrigatória: OK desativado enquanto estiver vazia
+      const need = input !== null && !optional, gate = () => { $('app-dlg-ok').disabled = need && !inp.value.trim(); };
+      inp.oninput = gate; gate();
       $('app-dlg-ok').onclick = () => done(input !== null ? inp.value : true);
       $('app-dlg-cancel').onclick = () => done(input !== null || list ? null : false);
       lst.querySelectorAll('button').forEach(b => b.onclick = () => done(list[+b.dataset.i].value));
       $('app-dlg-extra').onclick = () => done({ extra: true, value: inp.value });
-      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); done(inp.value); } };
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); if (!$('app-dlg-ok').disabled) done(inp.value); } };
       d.oncancel = e => { e.preventDefault(); done(input !== null || list ? null : false); };
       d.showModal();
       if (input !== null) setTimeout(() => { inp.focus(); inp.select(); }, 50);
@@ -1851,7 +1860,10 @@
   }
   const appAlert = (msg, title = '') => appDialog({ title, msg, cancel: null });
   const appConfirm = (msg, ok = 'Sim', title = '') => appDialog({ title, msg, ok });
-  const appPrompt = (title, value = '', msg = '') => appDialog({ title, msg, input: value });
+  const appPrompt = (title, value = '', msg = '', optional = false) => appDialog({ title, msg, input: value, optional });
+  // Campos obrigatórios (* vermelho a seguir ao nome): o botão de guardar fica desativado até estarem preenchidos.
+  // Devolve a função que volta a verificar (chamar depois de preencher os campos por código).
+  function reqGate(btn, ok, root) { const f = () => { btn.disabled = !ok(); }; root.addEventListener('input', f); root.addEventListener('change', f); return f; }
   const appChoose = (title, list, msg = '') => appDialog({ title, msg, list });
 
   // Confirmação em dois toques dentro das janelas (no iPhone, o confirm() do sistema não aparece com uma janela aberta):
@@ -2129,7 +2141,7 @@
       ${gestor ? `<h2>Acrescentar utilizador</h2>
       <form class="adm-add" id="adm-add">
         <input id="add-name" placeholder="Nome (o Google substitui ao entrar)" autocomplete="off" maxlength="80">
-        <input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required>
+        <label class="adm-req"><input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required aria-required="true"><span class="req" aria-hidden="true">*</span></label>
         ${roleSelect('cancioneiro', 'id="add-role" aria-label="Perfil"')}
         <button type="submit">Acrescentar</button>
       </form>` : ''}
@@ -2153,9 +2165,10 @@
       li.querySelector('.adm-del').onclick = e => { if (tapConfirm(e.currentTarget, 'Confirmar')) call('user', { email, remove: true }, 'Acesso retirado'); };
       const nm = li.querySelector('.adm-name[role=button]');
       if (!nm) return; // o nome vem do Google
-      const rename = async () => { const v = await appPrompt('Nome', nm.textContent === '(sem nome)' ? '' : nm.textContent); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
+      const rename = async () => { const v = await appPrompt('Nome', nm.textContent === '(sem nome)' ? '' : nm.textContent, '', true); if (v !== null) call('user', { email, role: was, name: v }, 'Nome alterado'); };
       nm.onclick = rename; nm.onkeydown = e => { if (e.key === 'Enter') rename(); };
     });
+    if (gestor) reqGate($('adm-add').querySelector('button[type=submit]'), () => /^\S+@\S+\.\S+$/.test($('add-email').value.trim()), $('adm-add'))(); // email obrigatório
     if (gestor) $('adm-add').onsubmit = e => {
       e.preventDefault();
       const email = $('add-email').value.trim().toLowerCase();
@@ -2655,6 +2668,7 @@
   // Guardar alterações volta a pôr a folha por publicar (só os Maestros a veem até «Publicar»).
   const colStore = () => { if (DEMO) demoSave(); else store.set(colsKey(), cols); };
   const live = c => !DEMO && !c._draft; // a cópia de trabalho da janela de edição só se grava em «Guardar»
+  const ceGate = (() => { const f = () => { $('ce-save').disabled = !$('ce-name').value.trim(); }; $('ce-name').addEventListener('input', f); return f; })(); // título obrigatório
   let edCol = null, edOrig = null, ceSel = null; // cópia de trabalho; a folha original; item escolhido (mostra as ações)
   const ICON_UP = '<path d="M12 19V5M6 11l6-6 6 6"/>', ICON_DOWN = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   function openColEditor(c) {
@@ -2662,7 +2676,7 @@
     edCol = { ...c, _draft: true, songs: (c.songs || []).map(x => ({ ...x })), sections: (c.sections || []).map(x => ({ ...x })) };
     $('ce-msg').textContent = '';
     $('ce-name').value = c.title;
-    renderColEditor(edCol);
+    renderColEditor(edCol); ceGate();
     $('col-ed').showModal();
   }
   function renderColEditor(c) {
@@ -2762,7 +2776,7 @@
   $('ce-dur').onchange = () => { if (edCol) { edCol.duration = $('ce-dur').value; renderColEditor(edCol); } };
   const ceDone = () => { $('col-ed').close(); edCol = edOrig = null; };
   $('ce-save').onclick = async () => {
-    if (!edCol || $('ce-save').disabled) return;
+    if (!edCol || $('ce-save').disabled || !$('ce-name').value.trim()) return;
     if (!$('ce-name').value.trim()) { $('ce-msg').textContent = 'Escreva um título.'; return; }
     $('ce-save').disabled = true;
     try {
@@ -2770,7 +2784,7 @@
       ceDone(); showCollection(o.id);
       toast(changed ? 'Folha guardada — por publicar' : 'Sem alterações');
     } catch (e) { $('ce-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); await loadCollections(); }
-    finally { $('ce-save').disabled = false; }
+    finally { ceGate(); }
   };
   // cancelar: pede confirmação se houver alterações
   async function ceCancel() {
@@ -2887,13 +2901,14 @@
     showCollection(c.id);
   }
   let tplEditing = null, tplCol = null;
+  const tplGate = reqGate($('tpl-save'), () => !!$('tpl-name').value.trim() && $('tpl-secs').value.split('\n').some(x => x.trim()), $('tpl-edit'));
   function openTemplateEditor(c, t) {
     tplEditing = t; tplCol = c;
     $('tpl-edit-title').textContent = t ? 'Editar template' : 'Novo template';
     $('tpl-name').value = t ? t.title : '';
     $('tpl-secs').value = t ? t.sections.join('\n') : '';
     $('tpl-del').hidden = !t;
-    $('tpl-msg').textContent = '';
+    $('tpl-msg').textContent = ''; tplGate();
     $('tpl-dlg').close(); $('tpl-edit').showModal();
   }
   async function saveTemplate() {
@@ -3002,11 +3017,13 @@
   }
   // nova folha: público, título, duração e template (o template só se escolhe aqui); depois abre a edição
   let newAud = 'coro';
+  const colGate = reqGate($('col-save'), () => !!$('col-name').value.trim(), $('col-dlg'));
   const setNewAud = v => { newAud = v; $('col-aud').querySelectorAll('button').forEach(b => { const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); };
   $('col-aud').onclick = e => { const b = e.target.closest('button[data-v]'); if (b) setNewAud(b.dataset.v); };
   function openCollectionDlg() {
     $('col-name').value = ''; setNewAud('coro'); $('col-dur').value = '1w';
     $('col-msg').textContent = 'Um mês depois de expirar, a folha é apagada.';
+    colGate();
     fillTplSelect();
     $('col-dlg').showModal();
   }
