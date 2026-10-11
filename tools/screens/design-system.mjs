@@ -216,6 +216,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
 10. **Campos obrigatórios** — «*» a seguir ao rótulo (\`span.req\`: \`danger\`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
+11. **Botões lado a lado** — numa linha de ações (rodapés das janelas \`.edit-actions\`, \`.info-actions\` com dois botões, \`.pend-bar\`, \`.edit-bar\` com dois botões, \`.file-btns\`, \`.listen-actions\`, \`.sn-gen\`) os botões têm a mesma largura e ocupam a linha (\`flex: 1 1 0\`). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
 
 ## Exceções documentadas
 

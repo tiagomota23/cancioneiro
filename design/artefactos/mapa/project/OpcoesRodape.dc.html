@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Opções do rodapé das janelas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&amp;family=Lato:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0f7a57}a:hover{color:#0a5a40}
+</style>
+</helmet>
+<div style="width: 1832px; height: 1155px; box-sizing: border-box; padding: 64px; background: #f3f5f4; color: #1d2b25; font-family: Lato, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 8px; max-width: 1500px">
+<h1 style="margin: 0; font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: 36px; letter-spacing: 3px; color: #0f7a57">Opções: botões do rodapé das janelas</h1>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #4a5a53">A app real (v175), só com o CSS alterado. A escolha aplica-se a todos os rodapés: Editar folha, Editar cântico, Nova folha, Template e janelas de confirmação. Regras comuns: ordem sempre Cancelar (branco), Guardar (verde), Apagar (vermelho); os botões ficam na mesma linha e, se os textos não couberem, numa coluna encostada à direita, com a mesma largura. Verificado na v175 a 390 e a 320 px: todos os rodapés cabem numa linha.</p>
+</div>
+<div style="display: flex; gap: 48px"><div style="width: 390px; display: flex; flex-direction: column; gap: 6px; min-height: 150px"><p style="margin: 0; font-size: 18px; font-weight: 700">Atual (v175) — referência</p><p style="margin: 0; font-size: 14px; line-height: 21px; color: #4a5a53">Uma linha, larguras iguais, mas com «Apagar» à esquerda: não segue a ordem pedida (branco, verde, vermelho).</p></div><div style="width: 390px; display: flex; flex-direction: column; gap: 6px; min-height: 150px"><p style="margin: 0; font-size: 18px; font-weight: 700">L — Uma linha</p><p style="margin: 0; font-size: 14px; line-height: 21px; color: #4a5a53">Cancelar, Guardar, Apagar na mesma linha, com a mesma largura. Simples; «Apagar» cheio de vermelho pesa tanto como «Guardar».</p></div><div style="width: 390px; display: flex; flex-direction: column; gap: 6px; min-height: 150px"><p style="margin: 0; font-size: 18px; font-weight: 700">A — Coluna à direita</p><p style="margin: 0; font-size: 14px; line-height: 21px; color: #4a5a53">Um botão por linha, todos com a mesma largura, encostados à direita: Cancelar, Guardar, Apagar. Cabe qualquer texto; ocupa mais altura. É também a forma de recurso das outras opções quando os textos não cabem numa linha.</p></div><div style="width: 390px; display: flex; flex-direction: column; gap: 6px; min-height: 150px"><p style="margin: 0; font-size: 18px; font-weight: 700">C — Caixote no fim da linha</p><p style="margin: 0; font-size: 14px; line-height: 21px; color: #4a5a53">Cancelar e Guardar com a mesma largura; «Apagar» passa a botão de símbolo (caixote, contorno vermelho, 40 px) no fim da linha. Tudo numa linha; apagar pesa menos e continua a pedir confirmação.</p></div></div>
+<p style="margin: 8px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #7d8f87">Editar folha — com Apagar</p><div style="display: flex; gap: 48px; align-items: flex-start"><img src="/_blob/cf2baf8f3868ee7f8a167e22d4857693" alt="" style="width: 390px; height: 216px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/8a2ef98fa36134d81fa08e3538b3a7ae" alt="" style="width: 390px; height: 216px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/d1c11c2b685687aa0eb28e1538e8fbba" alt="" style="width: 390px; height: 316px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/3a466c8a60e345a81f9d6d8cd1f83b76" alt="" style="width: 390px; height: 216px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"></div>
+<p style="margin: 8px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #7d8f87">Editar cântico — sem Apagar</p><div style="display: flex; gap: 48px; align-items: flex-start"><img src="/_blob/ac9ebae68133a06804a0a3fdced54e8a" alt="" style="width: 390px; height: 203px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/a2beced05120eddd0528124a1247c2cb" alt="" style="width: 390px; height: 203px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/219b400c88fd5098d5b7cc7439531cf9" alt="" style="width: 390px; height: 253px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"><img src="/_blob/694ab572e8b85e6cd23b55f3bf058439" alt="" style="width: 390px; height: 203px; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.12)"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1832,"height":1155}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
