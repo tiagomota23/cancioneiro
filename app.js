@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v187';
+  const APP_VERSION = '2026-10-11 v188';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1069,7 +1069,19 @@
     const clean = l => stripChords(l).replace(/\|:|:\||[♪♫𝄆𝄇]/g, '').replace(new RegExp('\\(\\s*' + CH + '\\s*\\)', 'g'), '').replace(/\s+/g, ' ').trim();
     const text = [s.title, s.author || ''].filter(Boolean).join('\n') + '\n\n' +
       (stanzas || []).map(st => st.lines.map(clean).filter(l => l && !onlyChords.test(l)).join('\n')).filter(Boolean).join('\n\n') + '\n';
-    await copyText(text); toast('Letra copiada');
+    // fica na área de transferência e, onde houver, abre o menu de partilha do sistema; senão, aviso numa janela
+    try { await copyText(text); } catch (e) { /* sem área de transferência: fica só a partilha */ }
+    const share = () => navigator.share({ title: s.title, text });
+    if (canShare()) {
+      try { await share(); return; }
+      catch (e) {
+        if (e.name === 'AbortError') return; // fechou o menu
+        if (e.name === 'NotAllowedError' && await appDialog({ title: 'Letra pronta', msg: 'A letra está copiada e pronta a partilhar.', ok: 'Partilhar', cancel: 'Fechar' })) {
+          try { await share(); return; } catch (e2) { if (e2.name === 'AbortError') return; }
+        }
+      }
+    }
+    await appAlert('A letra foi copiada para a área de transferência. Cole-a onde a quiser enviar.', 'Letra copiada');
   }
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); }
@@ -1080,7 +1092,7 @@
   }
   async function shareSong(s, stanzas) {
     const list = [];
-    if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: 'Copiar letra', sub: 'Título e letra, sem acordes' });
+    if (lvl() >= 2 && stanzas) list.push({ value: 'letra', label: canShare() ? 'Partilhar letra' : 'Copiar letra', sub: 'Título e letra, sem acordes' + (canShare() ? ' (também fica copiada)' : '') });
     list.push({ value: 'url', label: urlLabel(), sub: 'Qualquer pessoa pode abrir durante 24 horas (sem conta: só a letra e a tradução)' });
     const v = await appChoose('Partilhar', list);
     if (v === 'letra') copyLyrics(s, stanzas);
