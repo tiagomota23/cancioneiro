@@ -226,6 +226,20 @@ async function suites(full) {
     await page.click('#btn-fav'); await sleep(300);
     return (await page.getAttribute('#btn-fav', 'aria-pressed')) === 'false' || 'não desmarca';
   }));
+  await t('FUN-07b', 'Estrela do cântico no Maestro: sempre estrela (sem .book), .on só nos Preferidos (não por estar numa folha), aria-label «Coleções e folhas» e abre #col-pick (v187)', () => withApp({ perfil: 'maestro', hash: '#/cantico/veni_creator_spiritus', favs: ['salve_regina'] }, async ({ page }) => {
+    await page.waitForSelector('#song h1');
+    const st = () => page.evaluate(() => { const b = document.querySelector('#btn-fav'); return { book: b.classList.contains('book'), on: b.classList.contains('on'), label: b.getAttribute('aria-label') }; });
+    let r = await st();
+    if (r.book) return '#btn-fav ainda tem .book';
+    if (r.on) return 'cântico numa folha mas não nos Preferidos aparece .on';
+    if (r.label !== 'Coleções e folhas') return 'aria-label: «' + r.label + '»';
+    await page.click('#btn-fav'); await sleep(400);
+    if (!(await page.evaluate(() => document.querySelector('#col-pick').open))) return 'não abriu #col-pick';
+    await page.click('#col-pick-close'); await sleep(300);
+    await page.evaluate(() => { location.hash = '#/cantico/salve_regina'; }); await sleep(600);
+    r = await st();
+    return r.on || 'cântico nos Preferidos sem .on';
+  }));
   await t('FUN-08', 'Menu ☰: abre a gaveta com livros e folhas; fecha no fundo', () => withApp({ perfil: 'maestro' }, async ({ page }) => {
     await page.click('#btn-menu'); await sleep(500);
     if (!(await page.evaluate(() => document.querySelector('#drawer').classList.contains('open')))) return 'gaveta não abriu';
