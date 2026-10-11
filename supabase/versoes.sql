@@ -5,3 +5,5 @@ alter table songs add column if not exists version_of text references songs (slu
 alter table songs drop constraint if exists songs_version_not_self;
 alter table songs add constraint songs_version_not_self check (version_of is null or version_of <> slug);
 create index if not exists songs_version_of_idx on songs (version_of);
+-- a tabela songs tem permissões por coluna para authenticated: sem isto a lista de cânticos da app falha (42501)
+grant select (version_of) on public.songs to authenticated;
