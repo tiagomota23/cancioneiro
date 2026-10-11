@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v196';
+  const APP_VERSION = '2026-10-11 v197';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -408,7 +408,8 @@
       p.sources = [...(p.sources || []), ...(v.sources || []).filter(x => x.source !== 'original' && !(p.sources || []).some(y => y.source === x.source))];
       // sem repetir (a cópia guardada pode já trazer o que foi herdado)
       p.tags = [...(p.tags || []), ...(v.tags || []).filter(x => !(p.tags || []).some(y => y.grp === x.grp && y.tag === x.tag))];
-      p.files = [...(p.files || []), ...(v.files || []).filter(x => !(p.files || []).some(y => y.path === x.path))];
+      // ficheiros herdados ficam marcados com a versão (_v): na página do cântico só aparecem com essa versão escolhida
+      p.files = [...(p.files || []), ...(v.files || []).filter(x => !(p.files || []).some(y => y.path === x.path)).map(x => ({ ...x, _v: v.slug }))];
       p._t += ' ' + v._t;
     }
     applySource();
@@ -1036,9 +1037,12 @@
     const vdata = ver && hasLyrics(ver.slug) ? lyr.get(ver.slug) : null;
     if (ver && !vdata) getLyrics(ver.slug).then(() => { if (lastSongSlug === slug && !$('view-song').hidden && songView[slug] === mode) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } }).catch(() => {});
     const scores = scoresOf(s);
+    // partituras e gravações da língua escolhida: as do principal, ou as da versão (mantém os índices para os endereços)
+    const shown = f => ver ? f._v === ver.slug : !f._v;
     // letra digitalizada em mais do que um livro (Songbook e CANTI): um só botão, que mostra as duas juntas
-    const scans = scores.filter(isBookScan);
+    const scans = scores.filter(sc => shown(sc) && isBookScan(sc));
     const pdf = scores.map((sc, i) => {
+      if (!shown(sc)) return '';
       if (scans.length > 1 && isBookScan(sc)) return sc === scans[0] ? `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${PDF_IC}${esc(scans.map(x => x.label.split(',')[0]).join(' + '))}</a>` : '';
       const lbl = scores.length > 1 || pageOf(sc) ? `${sc.label}${scores.filter(x => x.label === sc.label).length > 1 ? ' ' + (i + 1) : ''}` : 'Partitura';
       return sc.url && /^https?:/.test(sc.url)
@@ -1047,7 +1051,7 @@
     }).join('');
     const srcs = (extrasOn() ? srcOf(s) : []).map(k => `<span class="src-chip src-${esc(k)}">${esc(SOURCES[k] || k)}</span>`).join('');
     const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
-    const recs = filesOf(s, 'recording');
+    const recs = filesOf(s, 'recording').filter(f => shown(f));
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
       `<li><button class="rec" data-i="${i}" data-path="${esc(f.path || '')}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
     // o perfil Cancioneiro não vê acordes

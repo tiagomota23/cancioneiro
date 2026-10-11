@@ -71,7 +71,7 @@ const fill = [['Hino da manhã', 'pt'], ['Cântico de entrada', 'pt'], ['Cântic
   ['Kyrie eleison', 'la'], ['Gloria in excelsis', 'la'], ['Agnus Dei', 'la'], ['Canzone popolare', 'it'], ['Canto di montagna', 'it'], ['Folk song', 'en'], ['Spiritual', 'en'], ['Canción popular', 'es']];
 for (const [title, language] of fill) songs.push(song({ slug: 'exemplo_' + n, title, language, lyrics: [v('(letra de exemplo)')] }));
 // versões de um cântico noutras línguas (version_of): aparecem no seletor de língua de «Frère Jacques», não nas listas
-songs.push(song({ slug: 'are_you_sleeping', title: 'Are you sleeping', author: 'Tradicional', language: 'en', cancioneiro: false, version_of: 'frere_jacques',
+songs.push(song({ slug: 'are_you_sleeping', title: 'Are you sleeping', author: 'Tradicional', language: 'en', cancioneiro: false, version_of: 'frere_jacques', files: [score('are_you_sleeping')],
   sources: [{ source: 'songbook' }], lyrics: [v('Are you sleeping, are you sleeping,', 'Brother John, Brother John?', 'Morning bells are ringing, morning bells are ringing,', 'ding, dang, dong! ding, dang, dong!')] }));
 songs.push(song({ slug: 'frei_martinho', title: 'Frei Martinho', author: 'Tradicional', language: 'pt', version_of: 'frere_jacques',
   lyrics: [v('Frei Martinho, frei Martinho,', 'dormes tu? dormes tu?', 'Toca o sino, toca o sino,', 'dim, dim, dão! dim, dim, dão!')] }));
