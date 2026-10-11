@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v178';
+  const APP_VERSION = '2026-10-11 v179';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -855,7 +855,7 @@
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
     const sn = snip ? `<span class="snip">${highlight(snip, q)}</span>` : '';
     const pend = s.approved === false ? '<small class="pend">por aprovar</small>' : ''; // à direita, por cima do número
-    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${pend}${s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
+    return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${pend}${s.approved === false ? '' : s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
 
   function showList(catId) {
@@ -906,7 +906,7 @@
       // livros pela ordem das páginas; os outros por título
       const pool = lvl() >= 2 ? allSongs : allSongs.filter(inCancioneiro);
       const NF = { todos: () => true, pendentes: s => s.approved === false,
-        canc: s => inCancioneiro(s), 'so-coro': s => s.approved !== false && !inCancioneiro(s) }; // sem filtro do Coro: os aprovados vão todos para o Coro
+        canc: s => inCancioneiro(s), 'so-coro': s => s.approved !== false && !inCancioneiro(s) }; // os aprovados vão todos para o Coro; «Só no Coro» = aprovados fora do Cancioneiro
       const nf = bk.novos && NF[prefs.novosFiltro] ? prefs.novosFiltro : 'todos';
       const list = pool.filter(bk.test).filter(bk.novos ? NF[nf] : () => true).sort(bk.book
         ? (a, b) => pageIn(a, bk.book) - pageIn(b, bk.book) || a.title.localeCompare(b.title, 'pt')
