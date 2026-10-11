@@ -87,7 +87,7 @@ export const SCREENS = [
   { id: 'info', group: 'Navegação', title: 'ⓘ Informação', perfil: 'cancioneiro', act: async p => { await click(p, '#btn-perfil'); await sleep(500); } },
   { id: 'tutorial', group: 'Navegação', title: 'Tutorial (1.º passo)', tour: true, act: async () => { await sleep(1200); } },
   { id: 'folha', group: 'Folhas', title: 'Folha com secções', hash: '#/lista/colecao-demo1', full: true },
-  { id: 'folha-edicao', group: 'Folhas', title: 'Folha em edição', hash: '#/lista/colecao-demo1', act: async p => { await p.locator('#col-mode').first().click(); await sleep(2300); } },
+  { id: 'folha-edicao', group: 'Folhas', title: 'Folha em edição', hash: '#/lista/colecao-demo1', act: async p => { await p.locator('#col-mode').first().click(); await sleep(700); } },
   { id: 'folha-nova', group: 'Folhas', title: 'Nova folha', act: async p => { await click(p, '#btn-menu'); await sleep(500); await click(p, '.col-new'); await sleep(500); } },
   { id: 'folha-adicionar', group: 'Folhas', title: 'Adicionar a uma folha', hash: '#/cantico/amazing_grace', act: async p => { await click(p, '#btn-fav'); await sleep(600); } },
   { id: 'cantico-acordes', group: 'Cântico', title: 'Cântico com acordes', hash: '#/cantico/amazing_grace', full: true },

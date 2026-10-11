@@ -18,11 +18,12 @@ const EXTRA = [
   { id: 'x-partilhar', title: 'Partilhar cântico', hash: '#/cantico/salve_regina', act: async p => { await click(p, '#btn-share'); await sleep(500); } },
   { id: 'x-aviso', title: 'Aviso «Letra copiada»', hash: '#/cantico/salve_regina', act: async p => { await click(p, '#btn-share'); await sleep(400); await click(p, '#app-dlg-list button'); await sleep(250); } },
   { id: 'x-partilhar-folha', title: 'Partilhar folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-share'); await sleep(500); } },
-  { id: 'x-folha-edicao', title: 'Folha em edição', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(2100); } },
-  { id: 'x-nova-seccao', title: 'Nova secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(2100); await click(p, '#col-add-sec'); await sleep(500); } },
-  { id: 'x-acrescentar', title: 'Adicionar cântico à secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(2100); await click(p, 'li.col-add button[data-sec]'); await sleep(400); await p.fill('#sa-q', 'a'); await sleep(500); } },
-  { id: 'x-item-folha', title: 'Ações de um cântico da folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(2100); await click(p, '#rows li[data-key] > a'); await sleep(500); } },
-  { id: 'x-definicoes', title: 'Definições da folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(2100); await click(p, '#col-set'); await sleep(500); } },
+  { id: 'x-folha-edicao', title: 'Editar folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); } },
+  { id: 'x-nova-seccao', title: 'Nova secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#col-add-sec'); await sleep(500); } },
+  { id: 'x-acrescentar', title: 'Adicionar cântico à secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows li.col-add button[data-sec]'); await sleep(400); await p.fill('#sa-q', 'a'); await sleep(500); } },
+  { id: 'x-item-folha', title: 'Cântico escolhido na edição da folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows li[data-key] > a'); await sleep(400); } },
+  { id: 'x-seccao-folha', title: 'Secção escolhida na edição da folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows .sec-line'); await sleep(400); } },
+  { id: 'x-seccao-nome', title: 'Mudar o nome da secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows .sec-line'); await sleep(400); await click(p, '.ce-name'); await sleep(500); } },
 ];
 
 // corre dentro da página: devolve as peças visíveis ainda não vistas, com categoria e assinatura de estilo

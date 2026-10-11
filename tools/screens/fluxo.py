@@ -38,7 +38,7 @@ cards=[
 (5,0,'cantico-escuro','Cântico · modo escuro','botão ☾ ou o telemóvel','var'),
 (5,1,'cantico-cancioneiro','Cântico · Cancioneiro','sem acordes, gravações nem partituras','var'),
 (5,8,'cantico-novo','Cântico novo por aprovar','aberto de Novos Cânticos','var'),
-(5,9,'folha-edicao','Folha em edição','Folha › Editar (Maestro e Gestor)','var'),
+(5,9,'folha-edicao','Editar folha','Folha › ✎ Editar folha (Maestro e Gestor)','var'),
 ]
 bands=[('Outras vistas do índice',1,8,9),('Outras vistas do cântico',5,0,1),('Outros estados',5,8,9)]
 out=[]; mk=[0]
