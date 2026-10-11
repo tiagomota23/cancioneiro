@@ -796,7 +796,10 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions > button, .edit-actions > span { flex: 1 1 0; min-width: 0; }
 .edit-actions > span > button { width: 100%; }
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
-.pend-bar p:has(> button) > button { flex: 1 1 0; }
+.pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
+.pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
+.pend-bar .edit-btn:not(.danger-btn) { background: var(--light-accent); border-color: var(--light-accent); color: var(--on-accent); } /* a caixa é clara também no modo escuro */
+.pend-bar .danger-btn { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* Recusar: vermelho cheio */
 .edit-bar:has(> .edit-btn + .edit-btn) > .edit-btn { flex: 1 1 0; }
 .edit-bar .file-btns > button { flex: 1 1 0; }
 .song-new .sn-gen-btn { flex: 1; }
@@ -939,6 +942,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .pend { display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-chip); margin-left: 8px; padding: 0 10px; border-radius: var(--pill); background: var(--pending-bg); color: var(--pending-ink);
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; vertical-align: middle; }
 .pend.pend-top { display: flex; width: fit-content; margin: 0 0 6px; font-family: var(--sans); line-height: 1; }
+.rows .n .pend { display: flex; width: fit-content; margin: 0 0 6px auto; } /* nas listas: à direita, por cima do número */
+.rows .n:has(.pend) { display: flex; flex-direction: column; align-items: flex-end; }
 .song .pend.pend-top { margin: 0 0 10px; }
 .rows .badge { font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); border: 1px solid color-mix(in srgb, var(--on-brand) 50%, transparent);
   border-radius: var(--pill); padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
@@ -994,7 +999,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="shared-view no-session">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v175</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v181</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1057,7 +1062,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 12/10, 01:52</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 12/10, 02:23</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->

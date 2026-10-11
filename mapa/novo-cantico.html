@@ -796,7 +796,10 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions > button, .edit-actions > span { flex: 1 1 0; min-width: 0; }
 .edit-actions > span > button { width: 100%; }
 .info-actions:not(.perfis-actions):has(> button + button) > button { flex: 1 1 0; }
-.pend-bar p:has(> button) > button { flex: 1 1 0; }
+.pend-bar p:has(> button) { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: fit-content; } /* à direita, a mesma largura */
+.pend-bar p:has(> button):last-child { margin: 0 0 0 auto; }
+.pend-bar .edit-btn:not(.danger-btn) { background: var(--light-accent); border-color: var(--light-accent); color: var(--on-accent); } /* a caixa é clara também no modo escuro */
+.pend-bar .danger-btn { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* Recusar: vermelho cheio */
 .edit-bar:has(> .edit-btn + .edit-btn) > .edit-btn { flex: 1 1 0; }
 .edit-bar .file-btns > button { flex: 1 1 0; }
 .song-new .sn-gen-btn { flex: 1; }
@@ -939,6 +942,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .pend { display: inline-flex; align-items: center; box-sizing: border-box; height: var(--h-chip); margin-left: 8px; padding: 0 10px; border-radius: var(--pill); background: var(--pending-bg); color: var(--pending-ink);
   font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); text-transform: uppercase; vertical-align: middle; }
 .pend.pend-top { display: flex; width: fit-content; margin: 0 0 6px; font-family: var(--sans); line-height: 1; }
+.rows .n .pend { display: flex; width: fit-content; margin: 0 0 6px auto; } /* nas listas: à direita, por cima do número */
+.rows .n:has(.pend) { display: flex; flex-direction: column; align-items: flex-end; }
 .song .pend.pend-top { margin: 0 0 10px; }
 .rows .badge { font-size: var(--fs-caps); font-weight: 700; letter-spacing: var(--ls-chip); border: 1px solid color-mix(in srgb, var(--on-brand) 50%, transparent);
   border-radius: var(--pill); padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
@@ -994,7 +999,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v175</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v181</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1033,8 +1038,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Novos Cânticos<small class="col-meta">1 por aprovar — abra o cântico para aprovar ou recusar</small><select class="novos-filtro" id="novos-filtro" aria-label="Mostrar"><option value="todos" selected="">Todos</option><option value="aprovados">Aprovados</option><option value="pendentes">Por aprovar</option><option value="canc">No Cancioneiro</option><option value="nao-canc">Ainda não no Cancioneiro</option></select></h2>
-    <ul class="rows" id="rows"><li><a href="#/cantico/novo_por_aprovar"><span class="t"><small class="pend pend-top">por aprovar</small>Cântico acrescentado (por aprovar)<span class="a">Exemplo</span></span><span class="n">14</span></a></li><li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li></ul>
+    <h2 class="list-title" id="list-title">Novos Cânticos<small class="col-meta">1 por aprovar — abra o cântico para aprovar ou recusar</small><select class="novos-filtro" id="novos-filtro" aria-label="Mostrar"><option value="todos" selected="">Todos</option><option value="pendentes">Por aprovar</option><option value="so-coro">Só no Coro</option><option value="canc">No Cancioneiro</option></select></h2>
+    <ul class="rows" id="rows"><li><a href="#/cantico/novo_por_aprovar"><span class="t">Cântico acrescentado (por aprovar)<span class="a">Exemplo</span></span><span class="n"><small class="pend">por aprovar</small></span></a></li><li class="col-add-sec"><button id="novo-cantico">+ Novo cântico</button></li></ul>
     <p class="status" id="status"></p>
   </section>
 
@@ -1133,7 +1138,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v175</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v181</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
