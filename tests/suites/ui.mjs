@@ -1011,6 +1011,9 @@ async function suites(full) {
     if (bad.length) return 'aria-pressed/.on incoerentes: ' + bad.join(',');
     if (!rows.some(x => x.k === 'cancioneiro') || !rows.some(x => x.k === 'fav')) return 'faltam cancioneiro/fav: ' + rows.map(x => x.k).join(',');
     if (rows.some(x => x.k === 'coro')) return 'ainda há a opção Coro (saiu na v174)';
+    // v186: cada opção tem um ícone svg.pick-ic antes do nome
+    const noIcon = await page.evaluate(() => [...document.querySelectorAll('#col-pick .col-pick[data-k]')].filter(b => { const i = b.querySelector('svg.pick-ic'); const span = b.querySelector('span'); return !i || (span && (i.compareDocumentPosition(span) & Node.DOCUMENT_POSITION_FOLLOWING) === 0); }).map(b => b.dataset.k));
+    if (noIcon.length) return 'opções sem svg.pick-ic antes do nome: ' + noIcon.join(',');
     const c0 = rows.find(x => x.k === 'cancioneiro').pressed;
     await page.focus('#col-pick .col-pick[data-k="cancioneiro"]'); await page.keyboard.press(c0 === 'true' ? 'Enter' : 'Space'); await sleep(700);
     if (c0 === 'true') { if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'retirar do Cancioneiro não pediu confirmação'; await page.click('#app-dlg-ok'); await sleep(700); }
