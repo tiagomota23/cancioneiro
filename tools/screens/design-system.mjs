@@ -67,6 +67,7 @@ const C = {
 - **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e o botão «✎ Editar folha» / «Editar cântico» (\`.edit-bar .edit-btn\`; sobre a cor da marca, contorno \`--on-brand\`). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
 - **Cores** — destaque (cheio, \`--accent\` / \`--on-accent\`); secundário (\`.ghost\`: \`--surface\` com contorno e texto \`--accent\`); perigo (\`.ghost.danger\`, \`.ghost-btn\`, \`.adm-no\`, \`.adm-del\`: contorno \`--danger-border\`, texto \`--danger\`). Confirmar apagar: fundo \`--danger\`.
 - **Variantes de contexto** — «Apagar» na janela Editar folha é cheio de perigo (\`.edit-actions button.danger-fill\`: \`--danger\` / \`--on-accent\`), a pedido do Tiago; «Publicar» numa folha por publicar é cheio branco sobre a marca (\`.edit-btn.col-pub\`: \`--on-brand\`, texto \`--brand-deep\`, 700).
+- **Confirmações que apagam ou deitam fora** (Apagar, Remover, Retirar, Recusar, Sair sem guardar): o botão de confirmar é cheio de perigo (\`.danger-fill\`, borda \`--danger\`). As outras confirmações usam o botão de destaque. Na caixa «por aprovar», Recusar é cheio de perigo (\`.edit-btn.danger-btn\`) e Aprovar usa \`--light-accent\` (a caixa é clara também no modo escuro).
 - Nunca em maiúsculas; nunca outro raio que não \`--pill\`. Exceção: o botão «Entrar com Google» segue as regras da Google.`,
     html: `<div class="ds col"><dialog open><form class="row" onsubmit="return false"><button>Guardar</button><button class="ghost">Cancelar</button></form><div class="edit-actions row" style="margin-top:12px"><button class="ghost danger">Apagar</button></div></dialog>
 <div class="pend-bar row"><button class="edit-btn">Aprovar</button><button class="ghost-btn">Recusar</button></div><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn">Editar folha</button></p></li></ul></div></div>` },
@@ -93,7 +94,7 @@ const C = {
 
 - Pílula de \`--h-chip\`, \`--fs-caps\` 700 em maiúsculas com \`--ls-chip\`, fundo da própria cor a 12% (color-mix com currentColor).
 - Neutra (\`.src-chip\`, \`.moments\`): \`--ink-soft\`. Destaque (\`.src-coro_clu\`, \`.lang-chip\` — idioma atual): \`--accent\`, também com fundo suave, nunca cheio.
-- Estado (\`.pend\` «por aprovar», «Por publicar»): cheio, \`--pending-bg\` / \`--pending-ink\`; por cima do título (\`.pend-top\`), nas linhas, na página do cântico e na folha.
+- Estado (\`.pend\` «por aprovar», «Por publicar»): cheio, \`--pending-bg\` / \`--pending-ink\`. Nas listas fica na coluna do número, à direita, por cima do número (\`.rows .n .pend\`); na página do cântico e na folha, por cima do título (\`.pend-top\`).
 - Tudo o que se toca é Botão, Ligação, Interruptor ou Segmentado — nunca uma etiqueta.`,
     html: `<div class="ds row"><span class="src-chip">Cancioneiro</span><span class="src-chip">Songbook</span><span class="src-chip src-coro_clu">Coro</span><span class="lang-chip">Inglês</span><span class="moments">Nossa Senhora</span><span class="pend">por aprovar</span></div>` },
   Interruptor: { group: 'Formulários', h: 130, title: 'Interruptor',
@@ -216,7 +217,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
 10. **Campos obrigatórios** — «*» a seguir ao rótulo (\`span.req\`: \`danger\`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
-11. **Botões lado a lado** — numa linha de ações (rodapés das janelas \`.edit-actions\`, \`.info-actions\` com dois botões, \`.pend-bar\`, \`.edit-bar\` com dois botões, \`.file-btns\`, \`.listen-actions\`, \`.sn-gen\`) os botões têm a mesma largura e ocupam a linha (\`flex: 1 1 0\`). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
+11. **Botões lado a lado** — numa linha de ações (rodapés das janelas \`.edit-actions\`, \`.info-actions\` com dois botões, \`.edit-bar\` com dois botões, \`.file-btns\`, \`.listen-actions\`, \`.sn-gen\`) os botões têm a mesma largura e ocupam a linha (\`flex: 1 1 0\`). Exceção: na caixa «por aprovar» (\`.pend-bar\`) Aprovar e Recusar ficam à direita, com a mesma largura (largura do texto). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
 
 ## Exceções documentadas
 
