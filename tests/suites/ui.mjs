@@ -478,11 +478,19 @@ async function suites(full) {
       await page.click('#song-approve'); await sleep(400);
       const opts = await page.evaluate(() => document.querySelector('#app-dlg').open ? [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()) : null);
       if (!opts) return 'Aprovar não abriu a escolha';
-      if (!opts.some(o => /^Cancioneiro/.test(o)) || !opts.some(o => /^Coro/.test(o))) return 'opções: ' + opts.join(' | ');
+      if (opts.length < 2 || !/^Cancioneiro/.test(opts[0]) || !/^Coro/.test(opts[1])) return 'opções (1.ª Cancioneiro, 2.ª Coro): ' + opts.join(' | ');
       await page.click('#app-dlg-cancel'); await sleep(500);
       if ((await stored()).approved !== false) return 'Cancelar aprovou';
       await page.click('#song-approve'); await sleep(400);
-      await page.locator('#app-dlg-list button').filter({ hasText: /^Cancioneiro/ }).first().click(); await sleep(1200); // v172: aprovar põe sempre no Coro; Cancioneiro também promove
+      // v181: depois da escolha há uma confirmação («Aprovar» ou «Aprovar mesmo assim»); Cancelar não aprova
+      await page.locator('#app-dlg-list button').nth(0).click(); await sleep(500);
+      const conf = await page.evaluate(() => document.querySelector('#app-dlg').open ? document.querySelector('#app-dlg-ok').textContent.trim() : '');
+      if (!/^Aprovar/.test(conf)) return 'sem confirmação «Aprovar» depois de escolher (v181): «' + conf + '»';
+      await page.click('#app-dlg-cancel'); await sleep(500);
+      if ((await stored()).approved !== false) return 'Cancelar na confirmação aprovou';
+      await page.click('#song-approve'); await sleep(400);
+      await page.locator('#app-dlg-list button').nth(0).click(); await sleep(500); // 1.ª linha = Cancioneiro (o subtítulo menciona o Coro)
+      await page.click('#app-dlg-ok'); await sleep(1200); // v172: aprovar põe sempre no Coro; Cancioneiro também promove
       const s = await stored();
       if (s.approved !== true) return 'não ficou aprovado';
       if (!(s.sources || []).some(x => x.source === 'coro_clu')) return 'aprovado para o Cancioneiro mas não ficou no Coro (v172: aprovar põe sempre no Coro)';
@@ -583,7 +591,11 @@ async function suites(full) {
     c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== false) return 'Guardar: ' + JSON.stringify({ t: c.title, p: c.published });
     await page.reload(); await page.waitForSelector('#col-pub', { timeout: 10000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'folha por publicar sem «Publicar» na página';
-    await page.click('#col-pub'); await sleep(600);
+    await page.click('#col-pub'); await sleep(400);
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg').open && /^Publicar/.test(document.querySelector('#app-dlg-ok').textContent.trim())))) return '«Publicar» não pediu confirmação (v181)';
+    await page.click('#app-dlg-cancel'); await sleep(400);
+    if ((await col('demo1')).published !== false) return 'Cancelar a confirmação publicou';
+    await page.click('#col-pub'); await sleep(400); await page.click('#app-dlg-ok'); await sleep(600);
     if ((await col('demo1')).published !== true) return '«Publicar» não publicou';
     // folha por publicar e sem cânticos: alerta, não publica
     await page.evaluate(() => { const cs = JSON.parse(localStorage.getItem('cancioneiro.demo.cols')); cs.push({ id: 'vazia', title: 'Folha vazia', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 864e5).toISOString(), published: false, sections: [], songs: [] }); localStorage.setItem('cancioneiro.demo.cols', JSON.stringify(cs)); location.hash = '#/lista/colecao-vazia'; });

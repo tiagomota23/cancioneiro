@@ -59,7 +59,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
 | FUN-31b | Filtro de Novos Cânticos: Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180) | ui | baixa | S | ☐ por correr |
-| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177) | ui | média | S | ☐ por correr |
+| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177); confirmação «Aprovar…» depois da escolha, Cancelar não aprova (v181) | ui | média | S | ☐ por correr |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
 | FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165) | ui | média | V | ☐ por correr |
@@ -72,7 +72,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
 | FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
-| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165) | ui | alta | V | ☐ por correr |
+| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) | ui | alta | V | ☐ por correr |
 | FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ☐ por correr |
 | FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ☐ por correr |
 | FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ☐ por correr |
