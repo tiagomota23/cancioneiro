@@ -84,7 +84,8 @@
     ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
     ['espirituais', 'Espirituais e gospel', s => tg(s, 'Songbook', 'Spirituals')],
     ['movimento', 'Cânticos do Movimento', s => tg(s, 'CANTI 2024', 'Canti della nostra storia')],
-    ['infantis', 'Infantis e de gestos', s => tg(s, 'CANTI 2024', 'Canti per bambini') || tg(s, 'Coro CLU', 'Para Gestos')],
+    ['infantis', 'Infantis', s => tg(s, 'CANTI 2024', 'Canti per bambini')],
+    ['gestos', 'Gestos', s => tg(s, 'Coro CLU', 'Para Gestos')],
     ['populares', 'Populares e tradicionais', s => tg(s, 'CANTI 2024', 'Canti popolari regionali', 'Canti di montagna') || tg(s, 'Songbook', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs')],
     ['autor', 'Pop, rock e canções de autor', s => tg(s, 'Songbook', 'Rock – pop – folk') || tg(s, 'CANTI 2024', 'Canzoni italiane')],
   ].map(([id, label, rule], i) => ({ id: 'tema-' + id, head: i === 0 ? 'Todos os cânticos' : null, label, short: label, tema: true,
@@ -99,7 +100,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v190';
+  const APP_VERSION = '2026-10-11 v191';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);

@@ -103,8 +103,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   botão vermelho cheio.
 - Página inicial (Coro e acima): a secção «Cancioneiro» só conta e lista cânticos do Cancioneiro (`catSongs`). No fim, a
   secção «Todos os cânticos» (`TEMAS` em app.js, não aparece no menu Coleções nem se escolhe em «Editar cântico») junta
-  todos os cânticos de todas as fontes em 6 categorias fixas, aprovadas pelo Tiago (um cântico pode estar em várias):
-  Liturgia e Missa · Espirituais e gospel · Cânticos do Movimento · Infantis e de gestos · Populares e tradicionais ·
+  todos os cânticos de todas as fontes em 7 categorias fixas, aprovadas pelo Tiago (um cântico pode estar em várias):
+  Liturgia e Missa · Espirituais e gospel · Cânticos do Movimento · Infantis · Gestos · Populares e tradicionais ·
   Pop, rock e canções de autor. Vêm das etiquetas dos livros (regras em `TEMAS`) e, para os cânticos sem nenhuma dessas,
   de uma etiqueta `song_tags` com `grp = 'Tema'` atribuída por esta sessão (507 classificados em 2026-10-11). **Tarefa
   contínua**: quando entram cânticos novos ou de novas fontes, classificar os que ficam sem categoria (consulta abaixo) e
