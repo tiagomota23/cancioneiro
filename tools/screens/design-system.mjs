@@ -117,11 +117,12 @@ const C = {
     readme: `Campos de texto e de escolha: altura \`--h-field\`, raio \`--radius\`, contorno \`--border\`, \`--fs-field\` 400 (16 px evita o zoom do iPhone).
 
 - Rótulo (\`.col-field\`, \`.sn-f\`, \`.sa-sec\`): \`--fs-caps\` 700 maiúsculas \`--ls-caps\` em \`--text-soft\` — sempre cinzento.
+- Obrigatórios: «*» vermelho a seguir ao rótulo (\`.req\`, \`--danger\`, 700); guardar desativado até estarem preenchidos.
 - Marcador (placeholder) em \`--text-faint\`, maiúsculas.
 - Em foco: contorno de 2 px \`--accent\` (desvio −1) e borda \`--accent\`.
 - Nas janelas os campos são sempre brancos (\`--surface\`); na página de gestão usam \`--paper\` / \`--ink\` para seguir o modo escuro.
 - Sobre a cor da marca (\`.novos-filtro\`): contorno \`--on-brand-outline\`, altura \`--h-btn\`.`,
-    html: `<div class="ds"><dialog open><label class="col-field">Título<input value="Missa de domingo"></label><label class="col-field">Público<select><option>Coro</option></select></label><label class="col-field">Autor<input placeholder="Por exemplo: John Newton"></label></dialog></div>` },
+    html: `<div class="ds"><dialog open><label class="col-field">Título<span class="req" style="color:var(--danger);margin-left:3px;font-weight:700">*</span><input value="Missa de domingo"></label><label class="col-field">Público<select><option>Coro</option></select></label><label class="col-field">Autor<input placeholder="Por exemplo: John Newton"></label></dialog></div>` },
   LinhasOpcao: { group: 'Formulários', h: 330, title: 'Linhas de opção',
     readme: `Escolhas dentro das janelas: cartão com raio \`--radius\`, contorno \`--border\`, fundo \`--surface\`, espaço 12 × 14 px.
 
@@ -214,6 +215,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 7. **Texto sobre a cor da marca** sempre \`on-brand\` sem transparência (autores, números, cabeçalhos incluídos): branco a ≥ 4,5:1 em \`brand\` e \`brand-deep\`.
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
+10. **Campos obrigatórios** — «*» a seguir ao rótulo (\`span.req\`: \`danger\`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
 
 ## Exceções documentadas
 

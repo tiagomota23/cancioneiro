@@ -546,6 +546,11 @@ li[data-req] .adm-who b, li[data-req] .adm-who span, li[data-req] .adm-who small
 .adm-act { display: flex; align-items: center; gap: 8px; }
 .adm-add { display: flex; flex-wrap: wrap; gap: 8px; }
 .adm-add input { flex: 1 1 160px; min-width: 0; }
+.adm-add .adm-req { position: relative; display: flex; flex: 1 1 160px; min-width: 0; }
+.adm-add .adm-req input { padding-right: 26px; }
+.adm-add .adm-req .req { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+/* campo obrigatório: * vermelho a seguir ao nome */
+.req { color: var(--danger); margin-left: 3px; font-weight: 700; }
 .admin .note { color: var(--ink-soft); }
 
 /* Letra: não se pode selecionar nem copiar (todos os perfis) */
@@ -638,7 +643,6 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 #pdf-download svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
 .up-files li { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 2px 0; }
-.up-del.armed { background: var(--danger); color: var(--on-accent); }
 .edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }
 .perfis-right { display: inline-flex; align-items: center; gap: 6px; }
 .install-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; color: var(--accent); background: none; border: 0; box-shadow: none; }
@@ -794,9 +798,9 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .search .mic { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -12px -2px 0; display: grid; place-items: center; color: var(--accent); flex: none; }
 .search .clear { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -8px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
 .dlg-x { position: absolute; top: 6px; right: 6px; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: var(--pill); color: var(--text-faint); background: color-mix(in srgb, var(--surface) 90%, transparent); z-index: 1; }
-.up-del { display: inline-grid; place-items: center; min-width: var(--hit); height: var(--hit); padding: 0 4px; border-radius: var(--pill); color: var(--ink-soft); }
+.up-del { display: inline-grid; place-items: center; box-sizing: border-box; min-width: var(--hit); height: var(--hit); padding: 0 4px; border: 1px solid transparent; border-radius: var(--pill); color: var(--ink-soft); }
 .up-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.up-del.armed { background: var(--danger); color: var(--on-accent); }
+.up-del.armed { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* contorno da cor do botão (regra 9) */
 .mini-btn { flex: none; width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
 .list-title .col-share { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -10px -6px -10px 2px; vertical-align: middle; color: var(--on-brand); }
 .list-title .col-share svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
@@ -982,7 +986,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v169</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v172</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1066,9 +1070,9 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <h2>Acrescentar utilizador</h2>
       <form class="adm-add" id="adm-add">
         <input id="add-name" placeholder="Nome (o Google substitui ao entrar)" autocomplete="off" maxlength="80" style="">
-        <input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required="" style="">
+        <label class="adm-req"><input id="add-email" type="email" placeholder="Email (conta Google)" autocomplete="off" required="" aria-required="true" style=""><span class="req" aria-hidden="true">*</span></label>
         <select id="add-role" aria-label="Perfil"><option value="cancioneiro" selected="">Cancioneiro</option><option value="coro">Coro</option><option value="maestro">Maestro</option><option value="gestor">Gestor</option></select>
-        <button type="submit">Acrescentar</button>
+        <button type="submit" disabled="">Acrescentar</button>
       </form>
       <p class="small">Os perfis são hierárquicos: <b>Cancioneiro</b> (só os cânticos do Cancioneiro, sem acordes, partituras nem gravações) &lt; <b>Coro</b> (tudo, sem editar) &lt; <b>Maestro</b> (edita letras, promove cânticos ao Cancioneiro e muda perfis entre Cancioneiro e Maestro) &lt; <b>Gestor</b> (gere todos os utilizadores; recebe os pedidos de acesso por email).</p></div>
   </section>
@@ -1139,7 +1143,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v169</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v172</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1151,7 +1155,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <dialog id="col-dlg" class="col-dlg top-dlg">
     <h2 id="col-dlg-title">Nova folha</h2>
     <div class="aud-switch" id="col-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
-    <label class="col-field">Título<input id="col-name" maxlength="80" autocomplete="off" style=""></label>
+    <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="col-name" maxlength="80" autocomplete="off" required="" style=""></label>
     <label class="col-field">Duração<select id="col-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <label class="col-field" id="col-tpl-field">Template<select id="col-tpl-sel"></select></label>
     <p class="small" id="col-msg" role="status"></p>
@@ -1161,7 +1165,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <dialog id="col-ed" class="editor col-ed top-dlg">
     <h2 tabindex="-1" autofocus="">Editar folha</h2>
     <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
-    <label class="col-field">Título<input id="ce-name" maxlength="80" autocomplete="off" style=""></label>
+    <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required="" style=""></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <p class="small" id="ce-until"></p>
     <p class="ce-label">Cânticos</p>
@@ -1185,8 +1189,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   </dialog>
   <dialog id="tpl-edit" class="col-dlg top-dlg">
     <h2 id="tpl-edit-title" tabindex="-1" autofocus="">Novo template</h2>
-    <label class="col-field">Nome<input id="tpl-name" maxlength="60" autocomplete="off" style=""></label>
-    <label class="col-field">Secções (uma por linha)<textarea id="tpl-secs" rows="7" style=""></textarea></label>
+    <label class="col-field"><span>Nome<span class="req" aria-hidden="true">*</span></span><input id="tpl-name" maxlength="60" autocomplete="off" required="" style=""></label>
+    <label class="col-field"><span>Secções (uma por linha)<span class="req" aria-hidden="true">*</span></span><textarea id="tpl-secs" rows="7" required="" style=""></textarea></label>
     <p class="small" id="tpl-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="tpl-del" class="ghost danger">Apagar</button><span></span><button type="button" id="tpl-cancel" class="ghost">Cancelar</button><button type="button" id="tpl-save">Guardar</button></div>
   </dialog>
@@ -1233,11 +1237,11 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <button type="button" id="sn-url-go" class="sn-gen-btn">Gerar de URL</button>
       <button type="button" id="sn-pdf" class="sn-gen-btn">Gerar de PDF</button>
     </div>
-    <label class="sn-f">Título<input id="sn-title" maxlength="120" autocomplete="off" style=""></label>
+    <label class="sn-f"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="sn-title" maxlength="120" autocomplete="off" required="" style=""></label>
     <label class="sn-f">Autor<input id="sn-author" maxlength="120" autocomplete="off" style=""></label>
     <label class="sn-f">Categoria<select id="sn-cat"></select></label>
     <label class="sn-f">Idioma<select id="sn-lang"></select></label>
-    <label class="sn-f">Letra<textarea id="sn-text" spellcheck="false" autocapitalize="off" style=""></textarea></label>
+    <label class="sn-f"><span>Letra<span class="req" id="sn-text-req" aria-hidden="true">*</span></span><textarea id="sn-text" spellcheck="false" autocapitalize="off" style=""></textarea></label>
     <div class="sn-files" id="sn-files" hidden="">
       <p class="sn-flabel">Gravações e partituras</p>
       <ul id="sn-flist"></ul>
