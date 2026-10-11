@@ -1091,6 +1091,22 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('USA-20', 'Botões lado a lado numa linha de ações com a mesma largura (±1 px): .edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns (v175)', async () => {
+    const bad = [], seen = [];
+    const measure = async (page, where) => {
+      const r = await page.evaluate(() => [...document.querySelectorAll('.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns')].filter(c => c.getBoundingClientRect().width && !c.closest('[hidden], dialog:not([open])'))
+        .map(c => ({ c: (c.closest('[id]')?.id || '') + ' .' + c.className.split(' ')[0], w: [...c.querySelectorAll('button')].filter(b => { const r = b.getBoundingClientRect(); return r.width && !b.hidden && getComputedStyle(b).display !== 'none' && b.closest('.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns') === c; }).map(b => Math.round(b.getBoundingClientRect().width * 10) / 10) }))
+        .filter(x => x.w.length >= 2));
+      for (const x of r) { seen.push(`${where}: ${x.c} [${x.w.join(', ')}]`); if (Math.max(...x.w) - Math.min(...x.w) > 1) bad.push(`${where}: ${x.c} larguras ${x.w.join(' / ')}`); }
+    };
+    await withApp({ perfil: 'coro' }, async ({ page }) => { await page.click('#btn-perfil'); await sleep(300); await page.click('#perfil-info').catch(() => {}); await sleep(400); await measure(page, 'Informação'); });
+    await withApp({ perfil: 'coro', hash: '#/lista/livro-novos' }, async ({ page }) => { await page.waitForSelector('#novo-cantico'); await page.click('#novo-cantico'); await sleep(500); await measure(page, 'Novo cântico'); });
+    await withApp({ perfil: 'maestro', hash: '#/cantico/novo_por_aprovar' }, async ({ page }) => { await page.waitForSelector('#song h1'); await measure(page, 'Cântico por aprovar'); });
+    await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => { await page.waitForSelector('#btn-edit'); await measure(page, 'Cântico'); await page.click('#btn-edit'); await sleep(500); await measure(page, 'Editar cântico'); });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => { await page.waitForSelector('#col-mode'); await measure(page, 'Folha por publicar'); await page.click('#col-mode'); await sleep(500); await measure(page, 'Editar folha'); });
+    if (!seen.length) return 'nenhuma linha de ações com 2+ botões encontrada';
+    return bad.length ? bad.join('; ') : { pass: seen.length + ' linhas: ' + seen.slice(0, 4).join('; ') };
+  }, { sev: 'baixa' });
   if (full) {
     await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const tok = JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8'));
