@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v186';
+  const APP_VERSION = '2026-10-11 v187';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -215,13 +215,13 @@
   function refreshFavUI() {
     const fb = $('btn-fav'), slug = fb.dataset.slug;
     if (slug) {
-      const book = lvl() >= 3;
-      const on = isFav(slug) || (book && cols.some(c => !expired(c) && (c.songs || []).some(x => x.song_slug === slug)));
-      fb.querySelector('svg').innerHTML = book ? ICON_BOOK : ICON_STAR;
-      fb.classList.toggle('book', book);
+      // estrela para todos (cheia = nos Preferidos); no Maestro / Gestor abre «Coleções e folhas»
+      const book = lvl() >= 3, on = isFav(slug);
+      fb.querySelector('svg').innerHTML = ICON_STAR;
+      fb.classList.remove('book');
       fb.classList.toggle('on', on); fb.setAttribute('aria-pressed', on);
-      fb.setAttribute('aria-label', book ? 'Coleções' : isFav(slug) ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
-      fb.title = book ? 'Coleções' : '';
+      fb.setAttribute('aria-label', book ? 'Coleções e folhas' : on ? 'Remover dos preferidos' : 'Adicionar aos preferidos');
+      fb.title = book ? 'Coleções e folhas' : '';
     }
     if (location.hash === '#/lista/favoritos' && !$('view-list').hidden) showList('favoritos');
   }
