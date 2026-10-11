@@ -31,6 +31,8 @@
   // As letras não vêm com a lista: cada cântico é pedido ao servidor quando se abre (função "conteudo", com limites
   // por pessoa contra cópias em massa). Guardam-se só os cânticos já abertos, para os voltar a mostrar sem rede.
   const lyr = new Map(); // slug -> { lyrics, translation, edited }
+  // «tradução» noutra língua que não o português = outra versão cantada do mesmo cântico (ex.: Os crocodilos / Dos cocodrilos)
+  const trVersion = l => !!l && l !== 'pt';
   const lyricsOf = s => (lyr.get(s.slug) || {}).lyrics || [];
   const hasTag = (s, grp, tag) => extrasOn() && (s.tags || []).some(t => t.grp === grp && t.tag === tag);
   const filesOf = (s, kind) => (extrasOn() ? s.files || [] : []).filter(f => f.kind === kind).sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, 'pt', { numeric: true }));
@@ -100,7 +102,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-11 v191';
+  const APP_VERSION = '2026-10-11 v192';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -988,7 +990,7 @@
     const sw = s.has_translation
       ? `<div class="lang-switch" role="group" aria-label="Idioma">
            <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(langName)}</button>
-           <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(trName)}</button>
+           <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">${trVersion(s.translation_language) ? esc(trName) : 'Tradução · ' + esc(trName)}</button>
          </div>`
       : `<span class="lang-chip">${esc(langName)}</span>`;
     const scores = scoresOf(s);
@@ -1010,7 +1012,7 @@
     const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
     const lyrics = plain(data ? data.lyrics : []);
     const body = plain((mode === 'trad' ? data && data.translation : lyrics) || []);
-    const note = mode === 'trad' ? '<p class="note">Tradução</p>' : '';
+    const note = mode === 'trad' ? `<p class="note">${trVersion(s.translation_language) ? 'Versão em ' + esc(trName.toLowerCase()) : 'Tradução'}</p>` : '';
     const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
@@ -1212,7 +1214,7 @@
     const tr = !!(d.translation && d.translation.length), mode = tr ? sharedMode : 'orig';
     const sw = tr ? `<div class="lang-switch" role="group" aria-label="Idioma">
         <button data-mode="orig" class="${mode === 'orig' ? 'on' : ''}">${esc(LANGS[d.language] || d.language || 'Original')}</button>
-        <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">Tradução · ${esc(LANGS[d.translation_language] || 'Português')}</button></div>`
+        <button data-mode="trad" class="${mode === 'trad' ? 'on' : ''}">${trVersion(d.translation_language) ? '' : 'Tradução · '}${esc(LANGS[d.translation_language] || 'Português')}</button></div>`
       : (d.language ? `<span class="lang-chip">${esc(LANGS[d.language] || d.language)}</span>` : '');
     const body = (mode === 'trad' ? d.translation : d.lyrics) || [];
     $('song').innerHTML = `<h1>${esc(d.title)}</h1>${d.author ? `<p class="author">${esc(d.author)}</p>` : ''}
