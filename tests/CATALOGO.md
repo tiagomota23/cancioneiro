@@ -38,6 +38,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos | ui | alta | V | ✓ |
 | FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ☐ por correr |
+| FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ☐ por correr |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
 | FUN-16 | Partitura: pdf.js desenha, zoom +/−, Voltar | ui | alta | V | ✓ |

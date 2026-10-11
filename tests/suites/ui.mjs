@@ -303,6 +303,19 @@ async function suites(full) {
     const n = await page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.novos') || '[]').find(x => x.title === 'Cântico de teste do Maestro'));
     return !n ? 'não foi acrescentado' : n.approved === false || 'ficou aprovado logo';
   }));
+  await t('FUN-13c', 'Apagar cântico novo aprovado: só em «Editar cântico» (#sn-del, com confirmação) e volta a Novos Cânticos; sem #song-reject na página; #sn-del escondido em cânticos que não são novos (v166)', () => withApp({ perfil: 'maestro', hash: '#/cantico/novo_teste_aprovado', storage: { 'cancioneiro.demo.novos': [{ slug: 'novo_teste_aprovado', number: 9100, title: 'Cântico novo de teste (aprovado)', author: null, language: 'pt', lyrics: [{ type: 'verse', lines: ['Linha de teste'] }], translation: null, cancioneiro: false, approved: true, added_by: 'demo@localhost', sources: [{ source: 'novos' }], tags: [], files: [] }] } }, async ({ page }) => {
+    await page.waitForSelector('#song h1');
+    if (await count(page, '#song-reject')) return 'a página do cântico aprovado ainda tem #song-reject';
+    await page.click('#btn-edit'); await sleep(600);
+    if (!(await vis(page, '#sn-del'))) return '«Editar cântico» sem #sn-del num cântico novo';
+    await page.click('#sn-del'); await sleep(400);
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) return 'apagar não pediu confirmação';
+    await page.click('#app-dlg-ok'); await sleep(1200);
+    if (!/#\/lista\/livro-novos$/.test(await page.evaluate(() => location.hash))) return 'depois de apagar não foi para Novos Cânticos: ' + await page.evaluate(() => location.hash);
+    if (await page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.novos') || '[]').some(x => x.slug === 'novo_teste_aprovado'))) return 'o cântico não foi apagado';
+    const other = await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page: p2 }) => { await p2.waitForSelector('#btn-edit'); await p2.click('#btn-edit'); await sleep(500); return { pass: String(await vis(p2, '#sn-del')) }; });
+    return other.pass === 'false' || '#sn-del visível num cântico que não é novo';
+  }), { sev: 'média' });
   await t('FUN-14', 'Editar letra (Maestro): editor abre, guarda e mostra «Letra editada» com Repor original', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
     await page.waitForSelector('#btn-edit'); await page.click('#btn-edit'); await sleep(600);
     if (!(await page.evaluate(() => document.querySelector('#editor').open || document.querySelector('#song-new').open))) return 'editor não abriu';
