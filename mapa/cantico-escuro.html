@@ -910,6 +910,9 @@ dialog form button.perfil-i:focus:not(:focus-visible) { outline: none; }
 /* Segmentado: controlo de escolha (idioma do cântico, língua a ouvir) — 32 px, área de toque de 44 */
 .lang-switch, .listen-langs, .aud-switch { display: inline-flex; height: var(--h-btn-sm); box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--pill); }
 .listen-langs { display: flex; width: fit-content; max-width: 100%; margin: 0 auto 16px; }
+.lang-switch { max-width: 100%; overflow-x: auto; scrollbar-width: none; } /* várias versões: desliza para o lado em vez de sair do ecrã */
+.lang-switch::-webkit-scrollbar { display: none; }
+.lang-switch button { flex: none; }
 .lang-switch button, .listen-langs button, .aud-switch button { position: relative; height: 100%; padding: 0 14px; border: 0; border-radius: 0; background: none;
   color: var(--accent); font: 700 var(--fs-small)/1 var(--sans); letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .lang-switch button::after, .listen-langs button::after, .aud-switch button::after { content: ""; position: absolute; inset: -6px 0; }
@@ -1021,7 +1024,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v191</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v193</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1086,6 +1089,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <div class="meta"><div class="lang-switch" role="group" aria-label="Idioma">
            <button data-mode="orig" class="on">Latim</button>
            <button data-mode="trad" class="">Tradução · Português</button>
+           
          </div></div><div class="scores"><a class="pdf" href="#/cantico/salve_regina/partitura"><svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"></path><path d="M14 3v5h5"></path></svg>Partitura</a></div>
       
       
@@ -1173,10 +1177,10 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <p class="maestro-only">Como <b>Maestro</b>: no fim de cada cântico pode <b>Editar letra</b> (a letra original fica guardada e pode ser reposta) e <b>Promover ao Cancioneiro</b> um cântico do Coro ou dos livros (ou retirá-lo, se foi promovido). Em <b>Gestão de utilizadores</b> (no menu do perfil) pode mudar perfis entre Cancioneiro, Coro e Maestro.</p>
     <p class="gestor-only">Como <b>Gestor</b>: em <b>Gestão de utilizadores</b> acrescenta ou retira pessoas, muda perfis e decide os pedidos de acesso, que também chegam por email.</p>
     <label class="src-row coro-only">Mostrar cânticos de:
-      <select id="src-filter"><option value="todas">Tudo (28)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (1)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
+      <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v191</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-11 v193</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
