@@ -82,7 +82,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i)];
   };
-  const APP_VERSION = '2026-10-11 v165';
+  const APP_VERSION = '2026-10-11 v166';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1004,7 +1004,7 @@
     // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
     const pendHtml = s.approved === false
       ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="ghost-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
-      : srcOf(s).includes('novos') && lvl() >= 3 && extrasOn() ? '<p class="edit-bar"><button class="ghost-btn" id="song-reject">Apagar cântico novo</button></p>' : '';
+      : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
     const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn(); // Maestro / Gestor: em "Editar cântico"
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
@@ -1507,7 +1507,7 @@
   function openNewSong() {
     if (lvl() < 2) return;
     newPdf = null; editSong = null;
-    $('sn-h2').textContent = 'Novo cântico'; $('sn-gen').hidden = false; $('sn-files').hidden = true;
+    $('sn-h2').textContent = 'Novo cântico'; $('sn-gen').hidden = false; $('sn-files').hidden = true; $('sn-del').hidden = true;
     for (const id of ['sn-title', 'sn-author', 'sn-text']) $(id).value = '';
     fillCats('');
     $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
@@ -1538,6 +1538,7 @@
     const s = bySlug.get(slug); if (!s || lvl() < 3) return;
     editSong = s; newPdf = null;
     $('sn-h2').textContent = 'Editar cântico'; $('sn-gen').hidden = true; $('sn-files').hidden = false;
+    $('sn-del').disabled = false; $('sn-del').hidden = !srcOf(s).includes('novos'); // só os cânticos acrescentados na app se podem apagar
     $('sn-title').value = s.title || ''; $('sn-author').value = s.author || '';
     $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
     $('sn-lang').value = s.language || 'pt';
@@ -1548,6 +1549,10 @@
     renderEditFiles();
     $('song-new').showModal();
   }
+  $('sn-del').onclick = async () => {
+    const s = editSong; if (!s || !(await appConfirm(`Apagar o cântico «${s.title}»? Não se pode desfazer.`, 'Apagar'))) return;
+    $('song-new').close(); decideSong(s, false, $('sn-del'));
+  };
   $('sn-add-rec').onclick = async () => { await addFiles(editSong, 'recording', $('sn-add-rec')); renderEditFiles(); };
   $('sn-add-score').onclick = async () => { await addFiles(editSong, 'score', $('sn-add-score')); renderEditFiles(); };
   async function saveSongEdit() {
