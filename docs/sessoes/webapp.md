@@ -34,6 +34,10 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
 5. Antes de cada `push` que mexa no tema: `node tools/theme/build.mjs --check`. Mudanças visuais: comparar capturas
    antes/depois (ver «Ferramentas»).
 6. Mudanças visíveis pedidas por outra sessão: confirmar com o Tiago nesta sessão antes de publicar.
+8. **Perfis hierárquicos**: um perfil acima pode sempre fazer o que um perfil abaixo faz (Gestor ⊇ Maestro ⊇ Coro ⊇
+   Cancioneiro). Uma mudança pedida para um perfil aplica-se também aos de cima (`lvl() >= N`, nunca `lvl() === N`),
+   salvo quando o Tiago disser o contrário. Exceção: ajustes de apresentação que só fazem sentido num perfil por ele ter
+   menos conteúdo (ex.: sem o título «Livros» no Cancioneiro, onde só há um livro).
 7. Comentários e mensagens de commit em português; commits terminam com as linhas de atribuição pedidas pelo ambiente.
 
 ## Coordenação com as outras sessões (send_message do Claude Code Remote)
