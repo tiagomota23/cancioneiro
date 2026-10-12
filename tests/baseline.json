@@ -14,6 +14,8 @@
   "usr-role": "linha densa",
   "search": "caixa de pesquisa 40 px (decisão v156)",
   "btn-edit": "«Editar cântico» 40 px, altura padrão (v148/v156)",
-  "adm-add>button": "«Acrescentar» em Gestão, linha densa (especificação v148)"
+  "adm-add>button": "«Acrescentar» em Gestão, linha densa (especificação v148)",
+  "col-mode": "«Editar folha» 40 px, altura padrão de botão como edit-btn (decisão webapp 2026-10-12; desde v198 com ::after a 44 px)",
+  "col-pub": "«Publicar» 40 px, altura padrão de botão como edit-btn (decisão webapp 2026-10-12; desde v198 com ::after a 44 px)"
  }
 }

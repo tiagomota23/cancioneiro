@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v197, 2026-10-12** — 188 ok · 0 falhas · 2 avisos (USA-04, decisão; USA-10, col-mode/col-pub com 40 px de altura) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-12-v197-full.md` (DB-RLS-06, FUN-32, FUN-42 e FUN-46 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
+Última execução completa: **v197, 2026-10-12** — 188 ok · 0 falhas · 2 avisos (USA-04, decisão; USA-10, col-mode/col-pub com 40 px — depois juntos a tapExceptions por decisão da webapp) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-12-v197-full.md` (DB-RLS-06, FUN-32, FUN-42 e FUN-46 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
 
 ---
 
@@ -168,7 +168,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ✓ |
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ! |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ (exceções col-mode/col-pub decididas 2026-10-12) |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
