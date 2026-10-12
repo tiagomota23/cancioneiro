@@ -16,7 +16,7 @@ Para reconstruir a app e os dados, ver RECONSTRUIR.md; este ficheiro trata só d
 ## 2. Sessões
 | Sessão | Papel | Instruções |
 |---|---|---|
-| webapp (cloud) | A app: código, base de dados, funções, segurança, versões. Coordena as outras. | docs/sessoes/webapp.md |
+| main (cloud) — papel «webapp» | A app: código, base de dados, funções, segurança, versões. Coordena as outras. | docs/sessoes/webapp.md |
 | design (cloud) | Sistema de design e mapa da app (artefactos no claude.ai) e tokens do tema. | docs/sessoes/design.md |
 | testes (cloud) | Baterias de testes (UI e servidor), catálogo de testes, corrida semanal. | docs/sessoes/testes.md |
 | backup (cloud) | Cópia de segurança semanal para o Drive e guias de reconstrução. | docs/sessoes/backup.md |
