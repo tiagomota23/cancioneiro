@@ -69,15 +69,19 @@ async function findChild(parent, name, folder) {
 async function mkFolder(name, parent) { return (await g('POST', 'files?fields=id', { json: { name, mimeType: FOLDER, parents: [parent] } })).id; }
 async function upload(name, parent, mime, buf, id) { // id: substitui o conteúdo (o Drive guarda as versões anteriores)
   const meta = id ? { name } : { name, parents: [parent] };
-  const start = await g(id ? 'PATCH' : 'POST', `https://www.googleapis.com/upload/drive/v3/files${id ? '/' + id : ''}?uploadType=resumable&fields=id`,
-    { json: meta, headers: { 'X-Upload-Content-Type': mime, 'X-Upload-Content-Length': String(buf.length) }, raw: true });
-  const loc = start.headers.get('location');
-  for (let i = 0; ; i++) {
-    const r = await fetch(loc, { method: 'PUT', headers: { 'Content-Type': mime }, body: buf });
-    if (r.ok) return (await r.json()).id;
-    const t = await r.text();
-    if (i < 8 && limited(r.status, t)) { await sleep(Math.min(64e3, 2 ** i * 2000) + Math.random() * 1000); continue; }
-    throw new Error(`upload ${r.status} ${t.slice(0, 200)}`);
+  // sessão de envio retomável; se o Drive a dá por perdida (404/410, p.ex. depois de erros 500) abre-se uma nova
+  for (let s = 0; ; s++) {
+    const start = await g(id ? 'PATCH' : 'POST', `https://www.googleapis.com/upload/drive/v3/files${id ? '/' + id : ''}?uploadType=resumable&fields=id`,
+      { json: meta, headers: { 'X-Upload-Content-Type': mime, 'X-Upload-Content-Length': String(buf.length) }, raw: true });
+    const loc = start.headers.get('location');
+    for (let i = 0; ; i++) {
+      const r = await fetch(loc, { method: 'PUT', headers: { 'Content-Type': mime }, body: buf });
+      if (r.ok) return (await r.json()).id;
+      const t = await r.text();
+      if ((r.status === 404 || r.status === 410) && s < 4) { await sleep(2 ** s * 2000 + Math.random() * 1000); break; }
+      if (i < 8 && limited(r.status, t)) { await sleep(Math.min(64e3, 2 ** i * 2000) + Math.random() * 1000); continue; }
+      throw new Error(`upload ${r.status} ${t.slice(0, 200)}`);
+    }
   }
 }
 const move = (id, from, to, name) => from === to ? g('PATCH', `files/${id}?fields=id`, { json: { name } })
