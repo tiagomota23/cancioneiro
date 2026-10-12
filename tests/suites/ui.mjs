@@ -436,6 +436,49 @@ async function suites(full) {
     await page.click('#pdf-back'); await sleep(600);
     return (await page.evaluate(() => document.querySelector('#pdfview').hidden && /#\/cantico\/adoro_te_devote$/.test(location.hash))) || 'Voltar não regressa ao cântico';
   }));
+  await t('FUN-50', 'Descarregar partitura (#pdf-download) em todas as partituras: PDF tal como está (título.pdf), página de livro junta num PDF (pdf-lib), ao mudar de partitura o ficheiro é o da nova, erro de rede → #app-dlg (v199)', async () => {
+    const bad = [];
+    const grab = async page => {
+      const dl = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+      await page.click('#pdf-download');
+      const d = await dl; if (!d) return null;
+      return { name: d.suggestedFilename(), head: fs.readFileSync(await d.path()).subarray(0, 5).toString() };
+    };
+    const openScore = async (page, slug) => {
+      await page.evaluate(s => { location.hash = '#/cantico/' + s + '/partitura'; }, slug);
+      await page.waitForSelector('#pdfpages canvas', { timeout: 15000 }).catch(() => {});
+      return (await count(page, '#pdfpages canvas')) > 0;
+    };
+    // computador (sem toque): descarrega; PDF simples, depois página de livro, depois de novo o primeiro
+    await withApp({ perfil: 'coro', hash: '#/cantico/adoro_te_devote', isMobile: false, hasTouch: false }, async ({ page }) => {
+      if (!(await openScore(page, 'adoro_te_devote'))) { bad.push('adoro_te_devote: partitura não abriu'); return; }
+      if (!(await vis(page, '#pdf-download'))) { bad.push('partitura normal sem #pdf-download'); return; }
+      const a = await grab(page);
+      if (!a) bad.push('adoro_te_devote: sem descarga'); else { if (a.head !== '%PDF-') bad.push('adoro_te_devote: não é PDF'); if (!/^Adoro-te-devote\.pdf$/i.test(a.name)) bad.push('nome «' + a.name + '» (esperado Adoro-te-devote.pdf)'); }
+      if (!(await openScore(page, 'amazing_grace'))) { bad.push('amazing_grace (página do Songbook): partitura não abriu'); return; }
+      if (!(await vis(page, '#pdf-download'))) { bad.push('página de livro sem #pdf-download'); return; }
+      const b = await grab(page);
+      if (!b) bad.push('amazing_grace: sem descarga'); else { if (b.head !== '%PDF-') bad.push('página de livro: não é PDF'); if (!/^Amazing-Grace\.pdf$/i.test(b.name)) bad.push('ao mudar de partitura o ficheiro é «' + b.name + '» (esperado Amazing-Grace.pdf)'); }
+    });
+    // erro de rede ao descarregar → janela da app (sem erro JS)
+    await withApp({ perfil: 'coro', hash: '#/cantico/adoro_te_devote', isMobile: false, hasTouch: false }, async ({ page }) => {
+      if (!(await openScore(page, 'adoro_te_devote'))) { bad.push('erro de rede: partitura não abriu'); return; }
+      await page.route(u => /\.pdf(\?|#|$)/.test(u.pathname || String(u)), r => r.abort());
+      await page.click('#pdf-download'); await sleep(1500);
+      const dlg = await page.evaluate(() => document.querySelector('#app-dlg')?.open ? document.querySelector('#app-dlg').textContent.replace(/\s+/g, ' ').trim() : '');
+      if (!/descarregar/i.test(dlg)) bad.push('sem rede: sem aviso em #app-dlg (' + (dlg || 'nada') + ')');
+    });
+    // telemóvel: folha de partilha com o ficheiro
+    await withApp({ perfil: 'coro', hash: '#/cantico/adoro_te_devote' }, async ({ page }) => {
+      if (!(await openScore(page, 'adoro_te_devote'))) { bad.push('telemóvel: partitura não abriu'); return; }
+      if (!(await page.evaluate(() => matchMedia('(pointer: coarse)').matches))) { bad.push('telemóvel: contexto sem pointer coarse (teste)'); return; }
+      await page.evaluate(() => { navigator.canShare = () => true; navigator.share = d => { window.__sh = (d.files || []).map(f => f.name + ':' + f.type + ':' + f.size).join(','); return Promise.resolve(); }; });
+      await page.click('#pdf-download'); await sleep(1500);
+      const sh = await page.evaluate(() => window.__sh || '');
+      if (!/^Adoro-te-devote\.pdf:application\/pdf:\d+/i.test(sh)) bad.push('telemóvel: partilha «' + (sh || 'nada') + '»');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-17', 'Partilhar cântico: gera endereço #/p/<código> (copiado ou mostrado)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina', permissions: ['clipboard-read', 'clipboard-write'] }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     await page.evaluate(() => { navigator.share = d => { window.__shared = d && d.url; return Promise.resolve(); }; });
