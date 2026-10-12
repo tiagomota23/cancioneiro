@@ -49,27 +49,35 @@ for (const s of ['static', 'live', 'db', 'ui']) {
 
 // filtro fino por dimensão (quando se pede uma dimensão, mostra só os testes dessa dimensão)
 const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const shown = dimArg.length && !dimArg.some(d => ['static', 'live', 'db', 'ui'].includes(d)) ? results.filter(r => dimArg.some(d => norm(r.dim).includes(d.slice(0, 6)))) : results;
+let shown = dimArg.length && !dimArg.some(d => ['static', 'live', 'db', 'ui'].includes(d)) ? results.filter(r => dimArg.some(d => norm(r.dim).includes(d.slice(0, 6)))) : results;
 
 // ---------- relatório ----------
+const dir = path.join(TESTS, 'reports');
+fs.mkdirSync(dir, { recursive: true });
+const date = new Date().toISOString().slice(0, 10);
+const base = path.join(dir, `${date}-v${v.app}-${level}${dimArg.length ? '-' + dimArg.join('_') : ''}`);
+// --only: os resultados juntam-se ao relatório do dia (substituem os mesmos IDs) em vez de o apagar
+let reruns = [], prevSecs = 0;
+if (only && fs.existsSync(base + '.json')) {
+  const prev = JSON.parse(fs.readFileSync(base + '.json', 'utf8'));
+  const ids = new Set(shown.map(r => r.id)); prevSecs = prev.secs || 0;
+  reruns = [...(prev.reruns || []), { at: new Date().toISOString().slice(0, 16), only, ids: [...ids] }];
+  shown = [...prev.results.map(r => ids.has(r.id) ? { ...shown.find(x => x.id === r.id), rerun: true } : r), ...shown.filter(r => !prev.results.some(x => x.id === r.id))];
+}
 const SEV = ['crítica', 'alta', 'média', 'baixa'];
 const by = st => shown.filter(r => r.status === st);
 const dims = [...new Set(shown.map(r => r.dim))];
-const date = new Date().toISOString().slice(0, 10);
-const secs = Math.round((Date.now() - t0) / 1000);
+const secs = Math.round((Date.now() - t0) / 1000) + prevSecs;
 const line = r => `- **${r.id}** ${r.title} — ${r.detail.replace(/\n/g, ' ').slice(0, 400)}${r.where ? ` _(onde: ${r.where})_` : ''}${r.evidence ? `\n  - evidência: \`${String(r.evidence).replace(/`/g, "'").slice(0, 400)}\`` : ''}`;
-let md = `# Relatório de testes — Cancioneiro v${v.app} (${level})\n\n${new Date().toISOString().replace('T', ' ').slice(0, 16)} UTC · ${secs} s · ${by('pass').length} ok, ${by('fail').length} falhas, ${by('warn').length} avisos, ${by('skip').length} não corridos\n\n`;
+let md = `# Relatório de testes — Cancioneiro v${v.app} (${level})\n\n${new Date().toISOString().replace('T', ' ').slice(0, 16)} UTC · ${secs} s · ${by('pass').length} ok, ${by('fail').length} falhas, ${by('warn').length} avisos, ${by('skip').length} não corridos${reruns.length ? `\n\nTestes corridos de novo depois de corrigir o teste (marcados com ↻): ${reruns.map(x => x.ids.join(', ') + ' às ' + x.at.slice(11) + ' UTC').join('; ')}` : ''}\n\n`;
 md += '| Dimensão | ok | falhas | avisos | não corridos |\n|---|---|---|---|---|\n';
 for (const d of dims) { const x = shown.filter(r => r.dim === d); md += `| ${d} | ${x.filter(r => r.status === 'pass').length} | ${x.filter(r => r.status === 'fail').length} | ${x.filter(r => r.status === 'warn').length} | ${x.filter(r => r.status === 'skip').length} |\n`; }
 const rank = r => SEV.indexOf(r.sev) < 0 ? 9 : SEV.indexOf(r.sev);
 if (by('fail').length) md += '\n## Falhas (por gravidade)\n\n' + by('fail').sort((a, b) => rank(a) - rank(b)).map(r => `${line(r)} · gravidade ${r.sev}`).join('\n') + '\n';
 if (by('warn').length) md += '\n## Avisos\n\n' + by('warn').sort((a, b) => rank(a) - rank(b)).map(r => `${line(r)} · gravidade ${r.sev}`).join('\n') + '\n';
 if (by('skip').length) md += '\n## Não corridos\n\n' + by('skip').map(line).join('\n') + '\n';
-md += '\n## Todos os testes\n\n| ID | Teste | Resultado | Detalhe |\n|---|---|---|---|\n' + shown.map(r => `| ${r.id} | ${r.title.replace(/\|/g, '/')} | ${{ pass: 'ok', fail: '**falha**', warn: 'aviso', skip: '—' }[r.status]} | ${(r.detail || '').replace(/\|/g, '/').replace(/\n/g, ' ').slice(0, 160)} |`).join('\n') + '\n';
-const dir = path.join(TESTS, 'reports');
-fs.mkdirSync(dir, { recursive: true });
-const base = path.join(dir, `${date}-v${v.app}-${level}${dimArg.length ? '-' + dimArg.join('_') : ''}`);
+md += '\n## Todos os testes\n\n| ID | Teste | Resultado | Detalhe |\n|---|---|---|---|\n' + shown.map(r => `| ${r.id}${r.rerun ? ' ↻' : ''} | ${r.title.replace(/\|/g, '/')} | ${{ pass: 'ok', fail: '**falha**', warn: 'aviso', skip: '—' }[r.status]} | ${(r.detail || '').replace(/\|/g, '/').replace(/\n/g, ' ').slice(0, 160)} |`).join('\n') + '\n';
 fs.writeFileSync(base + '.md', md);
-fs.writeFileSync(base + '.json', JSON.stringify({ version: v.app, level, date, secs, results: shown }, null, 1));
+fs.writeFileSync(base + '.json', JSON.stringify({ version: v.app, level, date, secs, ...(reruns.length ? { reruns } : {}), results: shown }, null, 1));
 console.log(`\n${by('pass').length} ok · ${by('fail').length} falhas · ${by('warn').length} avisos · ${by('skip').length} não corridos — ${secs} s\nRelatório: ${path.relative(process.cwd(), base)}.md`);
 process.exit(by('fail').length ? 1 : 0);
