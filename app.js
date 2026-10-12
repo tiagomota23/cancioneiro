@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-12 v198';
+  const APP_VERSION = '2026-10-12 v199';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2414,6 +2414,8 @@
     $('pdfview').hidden = false;
     document.body.classList.add('pdf-open');
     $('pdf-title').textContent = title;
+    if (!(pdfGen && src.blob === pdfGen.blob)) pdfGen = null; // outra partitura: o ficheiro a descarregar é o desta
+    pdfDl = { src, mime, title }; $('pdf-download').hidden = false; // descarregar: o ficheiro como está (páginas de livro juntas num PDF)
     if (pdfUrl === key && (pdfDoc || pdfBook)) { if (pdfPage !== page || !sameCrops) { pdfPage = page; pdfZoom = 1; renderPdf(); } return; }
     pdfUrl = key; pdfDoc = null; pdfBook = null; pdfZoom = 1; pdfPage = page;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir a partitura…</p>';
@@ -2437,6 +2439,7 @@
   // várias digitalizações de livros do mesmo cântico na mesma página, cada uma com a sua origem
   async function openBooks(list, title, slug) {
     pdfSlug = slug; pdfCrops = null; pdfWhole = false; pdfDoc = null; pdfBook = null; pdfZoom = 1; pdfUrl = 'multi:' + slug;
+    pdfGen = null; pdfDl = { list, title }; $('pdf-download').hidden = false;
     $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = title;
     $('pdfpages').innerHTML = '<p class="pdf-msg">A abrir…</p>';
     try {
@@ -2556,12 +2559,35 @@
   }
   function closePdf() {
     if ($('pdfview').hidden) return;
-    $('pdf-download').hidden = true; pdfGen = null;
+    $('pdf-download').hidden = true; pdfGen = null; pdfDl = null;
     $('pdfview').hidden = true;
     document.body.classList.remove('pdf-open');
     pdfRender++;
   }
+  // partitura aberta: o que se descarrega (o PDF ou a imagem; páginas de livros juntas num só PDF, páginas inteiras)
+  let pdfDl = null;
+  async function downloadBlob(d) {
+    const pages = d.list ? d.list.flatMap(b => b.src.pages) : d.src && d.src.pages;
+    const bytesOf = async x => x.blob ? await x.blob.arrayBuffer() : await (await fetch(x.url)).arrayBuffer();
+    if (pages) {
+      const L = await loadPdfLib(), out = await L.PDFDocument.create();
+      out.setTitle(pdfSafe(d.title)); out.setCreator('Cancioneiro');
+      for (const p of pages) { const doc = await L.PDFDocument.load(await bytesOf(p)); (await out.copyPages(doc, doc.getPageIndices())).forEach(x => out.addPage(x)); }
+      return new Blob([await out.save()], { type: 'application/pdf' });
+    }
+    return d.src.blob || await (await fetch(d.src.url)).blob();
+  }
   $('pdf-download').onclick = async () => {
+    if (!pdfGen && pdfDl) {
+      const b = $('pdf-download'); if (b.disabled) return; b.disabled = true;
+      try {
+        const blob = await downloadBlob(pdfDl);
+        const ext = /^image\/(\w+)/.exec(blob.type || pdfDl.mime || '')?.[1]?.replace('jpeg', 'jpg') || 'pdf';
+        const base = pdfDl.title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'partitura';
+        pdfGen = { blob, title: pdfDl.title, name: `${base}.${ext}` };
+      } catch (e) { b.disabled = false; appAlert('Não foi possível descarregar a partitura. Verifique a ligação à internet.'); return; }
+      b.disabled = false;
+    }
     if (!pdfGen) return;
     const f = new File([pdfGen.blob], pdfGen.name, { type: 'application/pdf' });
     // no telemóvel: folha de partilha (Guardar em Ficheiros, enviar…); no computador: descarregar
