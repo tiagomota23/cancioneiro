@@ -82,11 +82,12 @@ export default async function (level) {
         out[who] = r;
       } catch (e) { out[who] = /permission denied/.test(e.message) ? 'negado' : e.message.slice(0, 80); }
     }
-    const [all] = await sql(`select count(*)::int songs from public.songs`);
+    // Coro só vê cânticos novos por aprovar que ele próprio acrescentou (DB-RLS-05); Maestro+ vê tudo
+    const [all] = await sql(`select count(*)::int songs, count(*) filter (where approved or lower(added_by) = lower((select email from public.allowed_emails where role='coro' order by email limit 1)))::int coro from public.songs`);
     if (out.anon !== 'negado') bad.push('anon: ' + JSON.stringify(out.anon));
     const s = out.stranger; if (typeof s === 'object' && (s.songs || s.files || s.tags || s.sync)) bad.push('sem acesso vê dados: ' + JSON.stringify(s));
     const c = out.cancioneiro; if (typeof c === 'object' && (c.files || c.tags)) bad.push('Cancioneiro vê ficheiros/etiquetas: ' + JSON.stringify(c));
-    for (const w of ['coro', 'maestro', 'gestor']) if (typeof out[w] === 'object' && out[w].songs !== all.songs) bad.push(`${w} vê ${out[w].songs}/${all.songs}`);
+    for (const w of ['coro', 'maestro', 'gestor']) { const exp = w === 'coro' ? all.coro : all.songs; if (typeof out[w] === 'object' && out[w].songs !== exp) bad.push(`${w} vê ${out[w].songs}/${exp} (total ${all.songs})`); }
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   });
   await t('DB-RLS-07', 'Escrita por perfil (em rollback): coleções só Maestro+; letra/emails/registos nunca pelo browser', async () => {

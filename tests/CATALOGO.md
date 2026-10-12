@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v158, 2026-10-10** — 156 ok · 0 falhas · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-10-v158-full.md` (SEG-34 corrigido no teste depois dessa execução).
+Última execução completa: **v197, 2026-10-12** — 188 ok · 0 falhas · 2 avisos (USA-04, decisão; USA-10, col-mode/col-pub com 40 px de altura) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-12-v197-full.md` (DB-RLS-06, FUN-32, FUN-42 e FUN-46 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
 
 ---
 
@@ -27,28 +27,28 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-01.{gestor,maestro,coro,cancioneiro} | Arranque em cada perfil: índice com cânticos, sem erros JS | ui | alta | V | ✓ |
 | FUN-02 | Pesquisa por título, autor e palavra da letra; botão limpar | ui | alta | V | ✓ |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
-| FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ☐ por correr |
-| FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ☐ por correr |
-| FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ☐ por correr |
-| FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ☐ por correr |
+| FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ✓ |
+| FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ✓ |
+| FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ✓ |
+| FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
 | FUN-07 | Preferidos: ☆ marca/desmarca, lista Preferidos atualiza | ui | alta | V | ✓ |
-| FUN-07b | Estrela no Maestro/Gestor: sem .book, .on só nos Preferidos, aria-label «Coleções e folhas», abre #col-pick (v187) | ui | média | V | ☐ por correr |
+| FUN-07b | Estrela no Maestro/Gestor: sem .book, .on só nos Preferidos, aria-label «Coleções e folhas», abre #col-pick (v187) | ui | média | V | ✓ |
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
-| FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ☐ por correr |
-| FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ☐ por correr |
-| FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ☐ por correr |
+| FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ✓ |
+| FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ✓ |
+| FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ✓ |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177; sem número, v179) | ui | alta | V | ✓ |
-| FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ☐ por correr |
-| FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ☐ por correr |
+| FUN-13b | Novo cântico de um Maestro também fica por aprovar (v165) | ui | média | V | ✓ |
+| FUN-13c | Apagar cântico novo aprovado só em «Editar cântico» (#sn-del, confirmação, volta a Novos Cânticos); #sn-del escondido nos outros (v166) | ui | média | V | ✓ |
 | FUN-14 | Editar letra (Maestro) e ver a edição | ui | alta | V | ✓ |
 | FUN-15 | Gravações: mini-leitor abre e para | ui | alta | V | ✓ |
 | FUN-16 | Partitura: pdf.js desenha, zoom +/−, Voltar | ui | alta | V | ✓ |
 | FUN-17 | Partilhar cântico gera `#/p/<código>` | ui | alta | V | ✓ |
-| FUN-17b | Partilhar letra: copia sempre; telemóvel «Partilhar letra» + navigator.share({title,text}); computador «Copiar letra» + aviso «Letra copiada» (v188) | ui | média | V | ☐ por correr |
+| FUN-17b | Partilhar letra: copia sempre; telemóvel «Partilhar letra» + navigator.share({title,text}); computador «Copiar letra» + aviso «Letra copiada» (v188) | ui | média | V | ✓ |
 | FUN-18 | Endereço partilhado sem conta: letra sem acordes | ui | alta | V | ✓ |
 | FUN-19 | Endereço partilhado inválido/expirado: mensagem clara | ui | alta | V | ✓ |
 | FUN-20 | Folha partilhada sem conta: secções e abrir cânticos | ui | alta | V | ✓ |
@@ -56,7 +56,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-22 | Perfil: só perfis até ao da pessoa; perfil inferior esconde funções | ui | alta | V | ✓ |
 | FUN-23 | Terminar sessão limpa a lista e volta à entrada | ui | alta | V | ✓ |
 | FUN-24 | Ecrã de entrada: botão Google e ligação Privacidade | ui | alta | V | ✓ |
-| FUN-24b | Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173) | ui | baixa | V | ☐ por correr |
+| FUN-24b | Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173) | ui | baixa | V | ✓ |
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
@@ -64,13 +64,13 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
-| FUN-31b | Filtro de Novos Cânticos: Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180) | ui | baixa | S | ☐ por correr |
-| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177); confirmação «Aprovar…» depois da escolha, Cancelar não aprova (v181) | ui | média | S | ☐ por correr |
+| FUN-31b | Filtro de Novos Cânticos: Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180) | ui | baixa | S | ✓ |
+| FUN-32 | Aprovar cântico novo: «Aprovar para…»; Cancelar não aprova; aprovar põe sempre no Coro e, se Cancioneiro, também promove (v172); «Recusar» .danger-btn (v177); confirmação «Aprovar…» depois da escolha, Cancelar não aprova (v181) | ui | média | S | ✓ |
 | FUN-33 | Página inicial: títulos de secção só acima de categorias com cânticos; Cancioneiro sem título acima de «Todos os cânticos»; «Momentos da Missa»; nomes curtos nunca vazios (v151–v155) | ui | média | V | ✓ |
-| FUN-45 | Secção Cancioneiro (Coro+): categorias só com cânticos do Cancioneiro (v189) | ui | média | V | ☐ por correr |
-| FUN-46 | «Todos os cânticos» (Coro+) no fim da página inicial com tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190; 7 categorias com Gestos, v191) | ui | média | V | ☐ por correr |
+| FUN-45 | Secção Cancioneiro (Coro+): categorias só com cânticos do Cancioneiro (v189) | ui | média | V | ✓ |
+| FUN-46 | «Todos os cânticos» (Coro+) no fim da página inicial com tema-*; ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190; 7 categorias com Gestos, v191) | ui | média | V | ✓ |
 | FUN-34 | Páginas de categoria: antetítulo `.list-kicker` = secção (Coro+), ausente no perfil Cancioneiro (v151/v153) | ui | média | V | ✓ |
-| FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165); perfil Cancioneiro sem título «Livros» (v184) | ui | média | V | ☐ por correr |
+| FUN-35 | Menu ☰: Preferidos e Novos Cânticos no topo sem título; «Livros» e «Folhas»; vazias escondidas; Livros do Cancioneiro só com o Cancioneiro (v165); perfil Cancioneiro sem título «Livros» (v184) | ui | média | V | ✓ |
 | FUN-36 | Tutorial do Maestro chega ao passo «+ Nova folha» com o botão visível (v154) | ui | média | V | ✓ |
 | SHR-01 | Folha partilhada: lista traz a letra de todos os cânticos, sem acordes, guardada em `cancioneiro.partilhados` (v150) | ui | alta | V | ✓ |
 | SHR-02 | Folha partilhada: abrir cântico sem pedidos à rede e sem rede (v150) | ui | alta | V | ✓ |
@@ -79,11 +79,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-05 | Cântico partilhado sozinho guardado e aberto sem rede (v150) | ui | média | V | ✓ |
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
-| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ☐ por correr |
-| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) | ui | alta | V | ☐ por correr |
-| FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ☐ por correr |
-| FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ☐ por correr |
-| FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ☐ por correr |
+| FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ✓ |
+| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) | ui | alta | V | ✓ |
+| FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ✓ |
+| FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ✓ |
+| FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ✓ |
 | MAN-10 | Entrada real com Google (telemóvel e computador/janela), pedido de acesso, email ao Gestor, autorizar pelo link | manual | crítica | M | ☐ |
 | MAN-11 | Pesquisa por voz real (iPhone e Android): microfone, transcrição Groq, identifica o cântico | manual | alta | M | ☐ |
 | MAN-12 | Gravar/enviar gravação e partitura real (Maestro), apagar ficheiro enviado | manual | alta | M | ☐ |
@@ -133,8 +133,8 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-07 | Sem rede a meio de marcar preferido: repõe e avisa | ui | média | V | ✓ |
 | RES-08 | Dados incompletos (sem autor/letra/ficheiros/número) | ui | média | V | ✓ |
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
-| RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ☐ por correr |
-| RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ☐ por correr |
+| RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ✓ |
+| RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ✓ |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)
@@ -161,16 +161,16 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
 | USA-05 | Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (v149) | static | média | V | ✓ |
-| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ☐ por correr |
-| USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ☐ por correr |
-| USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ☐ por correr |
-| USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ☐ por correr |
-| USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ☐ por correr |
-| USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ☐ por correr |
-| USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ☐ por correr |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
+| USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ✓ |
+| USA-18 | Sobre a cor da marca: texto ≥ 4.5:1 e opaco, ícones ≥ 3:1 (índice, gaveta, folha publicada e em edição — topo branco em edição, v161) | ui | média | V | ✓ |
+| USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ✓ |
+| USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ✓ |
+| USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ✓ |
+| USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
+| USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ! |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
-| USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ! |
+| USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
 | USA-14 | Nomes acessíveis em botões/ligações; `lang="pt"` | ui | média | V | ✓ |
 | USA-15 | Diálogos com título e botão de fechar | ui | baixa | V | ✓ |
@@ -193,8 +193,8 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-09 | Workflows: permissões mínimas, ações com versão | static | alta | V | ✓ |
 | SEG-10 | novos.sql tem o filtro `approved` (compara com DB-RLS-05) | static | baixa | V | ✓ |
 | SEG-11 | conteudo `shared` com songs:true: só os campos previstos, letra com noChords (v150) | static | alta | V | ✓ |
-| SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ☐ por correr |
-| SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ☐ por correr |
+| SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ✓ |
+| SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas | live | crítica | V | ✓ |
@@ -214,13 +214,13 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
-| DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ☐ por correr |
+| DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
 | DB-RLS-08 | Preferidos de outros invisíveis | db | crítica | V | ✓ |
 | DB-RLS-09 | Coleções: expiradas, público, cântico visível ao Cancioneiro por coleção | db | alta | V | ✓ |
-| DB-RLS-11 | Folhas por publicar invisíveis a Coro/Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro+; novas começam por publicar (v159) | db | crítica | V | ☐ por correr |
+| DB-RLS-11 | Folhas por publicar invisíveis a Coro/Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro+; novas começam por publicar (v159) | db | crítica | V | ✓ |
 | DB-RLS-10 | Máximo 10 cânticos por folha | db | baixa | V | ✓ |
 | DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✓ |
 | DB-FN-02 | my_rank()/my_role() por perfil | db | alta | V | ✓ |
@@ -243,11 +243,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-02 | pdf_url internas → objeto no armazenamento | db | alta | V | ✓ |
 | INT-03 | Objetos órfãos no armazenamento | db | baixa | V | ✓ |
 | INT-04 | Número único, título, letra (ou partitura), fonte | db | alta | V | ✓ |
-| INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ☐ por correr |
-| INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ☐ por correr |
-| INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ☐ por correr |
-| INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ☐ por correr |
-| INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ☐ por correr |
+| INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ✓ |
+| INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ✓ |
+| INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ✓ |
+| INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
+| INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |

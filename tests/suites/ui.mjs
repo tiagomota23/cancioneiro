@@ -613,7 +613,8 @@ async function suites(full) {
       const s = await stored();
       if (s.approved !== true) return 'não ficou aprovado';
       if (!(s.sources || []).some(x => x.source === 'coro_clu')) return 'aprovado para o Cancioneiro mas não ficou no Coro (v172: aprovar põe sempre no Coro)';
-      if (!/Cancioneiro/.test(await txt(page, '#song .srcs')) && !(await page.evaluate(() => document.querySelector('#song').textContent.includes('Cancioneiro')))) return 'aprovado para o Cancioneiro mas não aparece no Cancioneiro';
+      // desde v165 o livro já não aparece como texto na página do cântico (está em #col-pick): verifica-se o estado guardado
+      if (s.cancioneiro !== true) return 'aprovado para o Cancioneiro mas não ficou no Cancioneiro (cancioneiro=' + s.cancioneiro + ')';
       return (await count(page, '#song-approve')) ? 'o botão Aprovar continua na página' : true;
     }), { sev: 'média' });
   }
@@ -658,8 +659,10 @@ async function suites(full) {
     });
     await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       await page.waitForSelector('#btn-edit'); await page.click('#btn-edit'); await sleep(500);
-      const opts = await page.evaluate(() => [...document.querySelectorAll('#sn-cat option, #sn-cat optgroup')].map(o => (o.label || o.textContent || '').trim()));
-      if (opts.some(o => /^(Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis|Gestos|Populares e tradicionais|Pop, rock.*)$/.test(o))) bad.push('seletor de categoria de «Editar cântico» tem temas');
+      // «Gestos» também é o nome curto de «Coro — para Gestos» (tag:Coro CLU||Para Gestos), que é legítimo: compara-se pelo valor
+      const opts = await page.evaluate(() => [...document.querySelectorAll('#sn-cat option, #sn-cat optgroup')].map(o => ({ v: o.value || '', l: (o.label || o.textContent || '').trim() })));
+      const temas = opts.filter(o => /^tag:Tema\|\|/.test(o.v) || o.l === 'Todos os cânticos' || (/^(Liturgia e Missa|Espirituais e gospel|Cânticos do Movimento|Infantis|Gestos|Populares e tradicionais|Pop, rock.*)$/.test(o.l) && !/^tag:(Coro CLU|CANTI 2024|Songbook)\|\|/.test(o.v)));
+      if (temas.length) bad.push('seletor de categoria de «Editar cântico» tem temas: ' + temas.map(o => o.l + ' (' + o.v + ')').join(', '));
     });
     return bad.length ? bad.join('; ') : true;
   });
@@ -795,17 +798,21 @@ async function suites(full) {
     const keys = () => page.evaluate(() => [...document.querySelectorAll('#ce-rows li[data-key]')].map(l => l.dataset.key + '=' + l.textContent.trim().slice(0, 30)));
     const sel = async (key, act) => { await page.click(`#ce-rows li[data-key="${key}"] ${key.startsWith('sec:') ? '.sec-line' : 'a'}`); await sleep(300); if (act) { await page.click(`#ce-rows li[data-key="${key}"] .ce-acts button[data-act="${act}"]`); await sleep(400); } };
     const before = JSON.stringify(await col());
+    let step = 'abrir edição'; const at = n => { step = n; };
+    try {
     await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
-    await page.click('#ce-rows li.col-add button[data-sec="e3"]'); await sleep(400);
+    at('acrescentar'); await page.click('#ce-rows li.col-add button[data-sec="e3"]'); await sleep(400);
     await page.fill('#sa-q', 'salve'); await sleep(500);
-    await page.locator('#sa-list button:not([disabled])').first().click(); await sleep(500); await page.click('#sa-close'); await sleep(300);
-    await sel('salve_regina', 'up');
-    await sel('sec:e3'); await page.click('#ce-rows li[data-key="sec:e3"] .ce-name'); await sleep(300); await page.fill('#app-dlg-input', 'Final'); await page.click('#app-dlg-ok'); await sleep(400);
-    await page.click('#col-add-sec'); await sleep(300); await page.fill('#app-dlg-input', 'Ofertório'); await page.click('#app-dlg-ok'); await sleep(400);
-    await sel('adoro_te_devote', 'del'); await page.click('#app-dlg-ok'); await sleep(400);
-    await page.click('#ce-aud button[data-v="cancioneiro"]'); await sleep(200);
-    await page.fill('#ce-name', 'Folha renomeada pelo teste'); await sleep(200);
-    await page.selectOption('#ce-dur', '1m'); await sleep(300);
+    await page.locator('#sa-list button:not([disabled])').first().click(); await sleep(500);
+    if (await page.evaluate(() => document.querySelector('#sec-add')?.open)) { await page.click('#sa-close'); await sleep(300); } // escolher um cântico já fecha a janela
+    at('mover'); await sel('salve_regina', 'up');
+    at('nome da secção'); await sel('sec:e3'); await page.click('#ce-rows li[data-key="sec:e3"] .ce-name'); await sleep(300); await page.fill('#app-dlg-input', 'Final'); await page.click('#app-dlg-ok'); await sleep(400);
+    at('nova secção'); await page.click('#col-add-sec'); await sleep(300); await page.fill('#app-dlg-input', 'Ofertório'); await page.click('#app-dlg-ok'); await sleep(400);
+    at('remover'); await sel('adoro_te_devote', 'del'); await page.click('#app-dlg-ok'); await sleep(400);
+    at('público'); await page.click('#ce-aud button[data-v="cancioneiro"]'); await sleep(200);
+    at('título'); await page.fill('#ce-name', 'Folha renomeada pelo teste'); await sleep(200);
+    at('duração'); await page.selectOption('#ce-dur', '1m'); await sleep(300);
+    } catch (e) { throw new Error(`passo «${step}»: ${e.message.split('\n')[0]}`); }
     if (JSON.stringify(await col()) !== before) return 'mudanças gravadas antes de «Guardar»';
     const k = await keys();
     await page.click('#ce-save'); await sleep(800);
