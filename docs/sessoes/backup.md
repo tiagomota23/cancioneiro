@@ -45,6 +45,6 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - GitHub: ferramentas mcp__github__ (actions_list, actions_run_trigger, get_job_logs). O conector Google Drive lê a pasta da cópia.
 
 ## Rotina
-- Todas as segundas, depois da cópia das 07:30 UTC: confirmar que a execução passou (verificação incluída); se falhou,
+- Todas as segundas às 19:15 UTC (a cópia agendada para as 07:30 costuma arrancar 6–9 h depois): confirmar que a execução passou (verificação incluída); se falhou,
   ler os registos, corrigir, voltar a correr e avisar o Tiago. Confirmar também que docs/AMBIENTE.md continua certo
   (sessões, rotinas, artefactos) e atualizá-lo se algo mudou.
