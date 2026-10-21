@@ -39,7 +39,7 @@ const fakeJwt = exp => ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', Buffer.from(JSON
 const session = () => { const exp = Math.floor(Date.now() / 1000) + 3600; return { access_token: fakeJwt(exp), token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'refresh-falso',
   user: { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', role: 'authenticated', email: 'teste@example.invalid', app_metadata: { provider: 'google' }, user_metadata: {} } }; };
 
-// Supabase simulado para o modo real (sem ?demo): mode = { down, slowMs, role, conteudo(op, body) → {status, body}|null, rest(path) → …, refreshFail }
+// Supabase simulado para o modo real (sem ?demo): mode = { down, slowMs, role, canListen, conteudo(op, body) → {status, body}|null, rest(path) → …, refreshFail }
 function mockSupabase(mode, songs, calls) {
   return async route => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname;
@@ -52,6 +52,7 @@ function mockSupabase(mode, songs, calls) {
     if (p === '/auth/v1/token') return mode.refreshFail ? json({ error: 'invalid_grant', error_description: 'Refresh Token Not Found' }, 400) : json(session());
     if (p === '/auth/v1/logout') return json('', 204);
     if (p === '/rest/v1/rpc/my_role') return json(JSON.stringify(mode.role || 'coro'));
+    if (p === '/rest/v1/rpc/can_listen') return json(JSON.stringify(mode.canListen === true)); // v201: por omissão sem reconhecimento, como a maioria das contas
     if (p.startsWith('/rest/v1/')) {
       const tb = p.slice(9);
       const custom = mode.rest && mode.rest(tb, req);
@@ -580,6 +581,37 @@ async function suites(full) {
     await page.reload(); await page.waitForSelector('#splash.gone', { state: 'attached' }); await sleep(1500);
     return !(await vis(page, '.tour-box')) || 'tutorial voltou a aparecer';
   }), { sev: 'média' });
+  await t('FUN-51', 'Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e o tutorial salta o passo do microfone; com permissão aparecem (modo real simulado); no ?demo sempre ativo', async () => {
+    const bad = [];
+    const tourMsgs = async page => {
+      const seen = [];
+      for (let i = 0; i < 25; i++) {
+        const m = await page.evaluate(() => document.querySelector('.tour-msg')?.textContent || '');
+        if (!m || seen.includes(m)) break; seen.push(m);
+        const next = page.locator('.tour-nav button').last(); if (!(await next.count())) break;
+        await next.click().catch(() => {}); await sleep(600);
+      }
+      return seen;
+    };
+    const shown = page => page.evaluate(() => ({ cls: document.body.classList.contains('can-listen'), mic: (e => !!e && e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== 'none')(document.querySelector('#btn-mic')), help: [...document.querySelectorAll('.listen-only')].map(e => getComputedStyle(e).display !== 'none') }));
+    for (const on of [false, true]) await withApp({ real: { canListen: on }, wait: '#rows li a', timeout: 20000 }, async ({ page, calls }) => {
+      await sleep(800);
+      const s = await shown(page), k = on ? 'com' : 'sem';
+      if (!calls.some(c => /rpc\/can_listen/.test(c))) bad.push(k + ': a app não pediu rpc/can_listen');
+      if (s.cls !== on) bad.push(`${k}: body.can-listen=${s.cls}`);
+      if (s.mic !== on) bad.push(`${k}: #btn-mic ${s.mic ? 'visível' : 'escondido'}`);
+      if (s.help.some(x => x !== on)) bad.push(`${k}: .listen-only ${on ? 'escondido' : 'visível'} (estilo calculado)`);
+      const st = await page.evaluate(() => Object.keys(localStorage).filter(x => x.startsWith('cancioneiro.listen.')).map(x => x + '=' + localStorage.getItem(x)));
+      if (!st.some(x => x.endsWith('=' + on))) bad.push(`${k}: valor não guardado (cancioneiro.listen.*: ${st.join(',') || 'nada'})`);
+    });
+    for (const on of [false, true]) await withApp({ real: { canListen: on }, tour: true, wait: '#rows li a', timeout: 20000, settle: 1500 }, async ({ page }) => {
+      const msgs = await tourMsgs(page), mic = msgs.some(m => /microfone/i.test(m));
+      if (!msgs.length) bad.push('tutorial não apareceu no modo real');
+      else if (mic !== on) bad.push(`tutorial ${on ? 'com' : 'sem'} permissão: passo do microfone ${mic ? 'presente' : 'ausente'}`);
+    });
+    await withApp({ perfil: 'coro' }, async ({ page }) => { const s = await shown(page); if (!s.cls || !s.mic) bad.push('?demo: microfone escondido'); });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-26', 'Instalar a app: linha «Adicionar ao ecrã principal» no Perfil e na Informação', () => withApp({ perfil: 'coro', storage: { 'cancioneiro.instalada': 0 } }, async ({ page }) => {
     await page.click('#btn-perfil'); await sleep(400);
     const a = await vis(page, '#perfis-install');
