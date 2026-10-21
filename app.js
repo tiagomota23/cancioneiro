@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-12 v200';
+  const APP_VERSION = '2026-10-21 v201';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2032,6 +2032,14 @@
     if (changed) route();
     if (save && session && !DEMO) sb.auth.updateUser({ data: { cancioneiro_perfil: id } }).catch(() => {});
   }
+  // reconhecimento de cânticos (microfone): só para quem o tem ativo no servidor (allowed_emails.can_listen)
+  const listenKey = () => 'cancioneiro.listen.' + (session ? session.user.id : 'anon');
+  const applyListen = on => document.body.classList.toggle('can-listen', !!on);
+  async function loadListen() {
+    applyListen(DEMO || store.get(listenKey(), false));
+    if (DEMO) return;
+    try { const { data, error } = await sb.rpc('can_listen'); if (error) return; applyListen(data === true); store.set(listenKey(), data === true); } catch (e) {}
+  }
   // perfil da pessoa: guardado no telemóvel para abrir logo, e confirmado no servidor
   async function loadPerfil() {
     const c = store.get(perfilKey(), null);
@@ -2043,6 +2051,7 @@
     }
     if (!rankOf(role)) return; // sem acesso: a lista vem vazia e load() termina a sessão
     maxRole = role;
+    loadListen();
     const meta = !DEMO && session && session.user.user_metadata || {};
     setPerfil((c && c.active) || meta.cancioneiro_perfil || maxRole);
   }
@@ -2129,7 +2138,7 @@
     }
     if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe um template ao criá-la (ex.: Missa) e começa em edição (só os Maestros a veem), com «+ Adicionar cântico» em cada secção; «Publicar» mostra-a ao Coro, e depois pode partilhá-la e gerar o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
     st.push({ go: goHome, msg: 'Pronto! Pode rever este tutorial quando quiser no «i» → «Ver o tutorial».' });
-    return st;
+    return st.filter(x => x.el !== '#btn-mic' || document.body.classList.contains('can-listen'));
   }
   function startTour(force) {
     if (!force && store.get(TOUR_KEY, 0)) { installCoach(); return; }

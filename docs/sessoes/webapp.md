@@ -120,6 +120,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   não está no Cancioneiro aparece sozinha nas listas (`folded`). O Maestro / Gestor, com a versão escolhida, tem
   «Acrescentar esta versão ao Cancioneiro» / «Retirar…» (op `promote` da função `conteudo`; as do site original ficam).
   O principal herda fontes, etiquetas e ficheiros das versões, menos a fonte «original».
+- Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
+  catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
+  o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
+- Supabase, desde 30/out/2026: tabelas novas em `public` não recebem acesso automático — dar os `grant` no mesmo script
+  que as cria (como já se faz por coluna em `songs`).
 - Campos obrigatórios em toda a app: `*` vermelho (`.req`) a seguir ao nome do campo e o botão de guardar desativado até
   estarem preenchidos (`reqGate` em app.js; `appPrompt` com caixa de texto obrigatória salvo `optional`).
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só

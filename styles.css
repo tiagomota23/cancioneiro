@@ -710,6 +710,7 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 .edit-actions button:disabled, .song-new .sn-gen-btn:disabled, .edit-btn:disabled, .ghost-btn:disabled, .admin button:disabled { opacity: .5; }
 
 /* Botões de símbolo: área de toque de 44 × 44 (o desenho pode ser mais pequeno) */
+body:not(.can-listen) #btn-mic, body:not(.can-listen) .listen-only { display: none; }
 .search .mic { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -12px -2px 0; display: grid; place-items: center; color: var(--accent); flex: none; }
 .search .clear { width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -2px -8px; display: grid; place-items: center; color: var(--text-faint); flex: none; }
 .dlg-x { position: absolute; top: 6px; right: 6px; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: var(--pill); color: var(--text-faint); background: color-mix(in srgb, var(--surface) 90%, transparent); z-index: 1; }

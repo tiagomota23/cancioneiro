@@ -11,9 +11,9 @@ const json = (o: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
-  // só contas autorizadas (lista allowed_emails na base de dados)
+  // só contas com reconhecimento ativo (allowed_emails.can_listen)
   const auth = req.headers.get('Authorization') || '';
-  const allowed = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/is_allowed`, {
+  const allowed = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/can_listen`, {
     method: 'POST',
     headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY') || '', Authorization: auth, 'Content-Type': 'application/json' },
     body: '{}',
