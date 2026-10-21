@@ -120,6 +120,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   não está no Cancioneiro aparece sozinha nas listas (`folded`). O Maestro / Gestor, com a versão escolhida, tem
   «Acrescentar esta versão ao Cancioneiro» / «Retirar…» (op `promote` da função `conteudo`; as do site original ficam).
   O principal herda fontes, etiquetas e ficheiros das versões, menos a fonte «original».
+- Cores por perfil (v203): família `perfis` em `design/tokens.json` → `:root.perfil-<id>` em theme.css (a app põe a
+  classe no `<html>`, para --accent e afins a apanharem). Cancioneiro = família color. A capa usa `--app-brand…` (sempre
+  verde). Títulos das janelas em --accent. Apagar (--danger) em âmbar escuro em todos os perfis.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.

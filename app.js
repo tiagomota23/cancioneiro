@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-21 v202';
+  const APP_VERSION = '2026-10-21 v203';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2014,6 +2014,7 @@
     $('btn-perfil').title = 'Perfil: ' + p.label;
     if (solo) { $('btn-perfil').setAttribute('aria-label', 'Informação'); $('btn-perfil').title = 'Informação'; }
     for (const x of PERFIS) document.body.classList.toggle('perfil-' + x.id, x === p);
+    for (const x of PERFIS) document.documentElement.classList.toggle('perfil-' + x.id, x === p); // cores do perfil (theme.css): no <html> para --accent e afins as apanharem
     document.body.classList.toggle('lvl-1', lvl() < 2);
     document.body.classList.toggle('lvl-lt3', lvl() < 3);
     document.body.classList.toggle('lvl-lt4', lvl() < 4);

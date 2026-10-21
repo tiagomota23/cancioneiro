@@ -44,6 +44,19 @@ for (const t of list('alpha')) {
   if (!/^\d+(\.\d+)?%$/.test(String(t.value).trim())) { errors.push(`opacidade «${t.name}»: valor tem de ser uma percentagem`); continue; }
   add('Opacidades derivadas', t.name, `color-mix(in srgb, var(--${base}) ${String(t.value).trim()}, transparent)`, t.usage);
 }
+// cor fixa da app (capa): igual à marca do perfil Cancioneiro, não muda com o perfil
+const colorTok = Object.fromEntries(list('color').map(t => [t.name, t.value]));
+for (const n of ['brand', 'brand-deep', 'on-brand']) add('Cor fixa da app (capa; não muda com o perfil)', `app-${n}`, colorTok[n], null);
+// cores por perfil: :root.perfil-<id> substitui as da família color
+const perfis = (doc.perfis?.tokens || []).map(pf => {
+  const decls = [];
+  for (const [n, v] of Object.entries(pf.values || {})) {
+    if (!(n in colorTok)) { errors.push(`perfil «${pf.id}»: cor «${n}» não existe`); continue; }
+    if (v && typeof v === 'object') for (const [th, x] of Object.entries(v)) decls.push([`${th}-${n}`, x]);
+    else decls.push([n, v]);
+  }
+  return { id: pf.id, decls };
+});
 const seen = new Set();
 for (const v of vars) { if (seen.has(v.name)) errors.push(`nome repetido: --${v.name}`); seen.add(v.name); }
 
@@ -77,6 +90,12 @@ for (const v of vars) {
   lines.push(v.usage ? `${decl.padEnd(31)} /* ${v.usage} */` : decl);
 }
 lines.push('}', '');
+for (const pf of perfis) {
+  lines.push(`:root.perfil-${pf.id} {`);
+  for (const [n, v] of pf.decls) { if (!seen.has(n)) errors.push(`perfil «${pf.id}»: --${n} não existe`); lines.push(`  --${n}: ${v};`); }
+  lines.push('}', '');
+}
+if (errors.length) { console.error('Erros em design/tokens.json:\n  ' + errors.join('\n  ')); process.exit(1); }
 const css = lines.join('\n');
 
 if (process.argv.includes('--check')) {
