@@ -446,6 +446,9 @@ async function suites(full) {
       return { name: d.suggestedFilename(), head: fs.readFileSync(await d.path()).subarray(0, 5).toString() };
     };
     const openScore = async (page, slug) => {
+      // como a pessoa faz: volta ao cântico e abre a partitura (de uma partitura não se salta diretamente para outra)
+      if (await page.evaluate(() => !document.querySelector('#pdfview').hidden)) { await page.click('#pdf-back'); await sleep(600); }
+      await page.evaluate(s => { location.hash = '#/cantico/' + s; }, slug); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {});
       await page.evaluate(s => { location.hash = '#/cantico/' + s + '/partitura'; }, slug);
       await page.waitForSelector('#pdfpages canvas', { timeout: 15000 }).catch(() => {});
       return (await count(page, '#pdfpages canvas')) > 0;
@@ -456,7 +459,7 @@ async function suites(full) {
       if (!(await vis(page, '#pdf-download'))) { bad.push('partitura normal sem #pdf-download'); return; }
       const a = await grab(page);
       if (!a) bad.push('adoro_te_devote: sem descarga'); else { if (a.head !== '%PDF-') bad.push('adoro_te_devote: não é PDF'); if (!/^Adoro-te-devote\.pdf$/i.test(a.name)) bad.push('nome «' + a.name + '» (esperado Adoro-te-devote.pdf)'); }
-      if (!(await openScore(page, 'amazing_grace'))) { bad.push('amazing_grace (página do Songbook): partitura não abriu'); return; }
+      if (!(await openScore(page, 'amazing_grace'))) { bad.push('amazing_grace (página do Songbook): partitura não abriu — ' + (await txt(page, '#pdfpages')).slice(0, 80) + ' / visor ' + (await page.evaluate(() => document.querySelector('#pdfview').hidden ? 'fechado' : 'aberto'))); return; }
       if (!(await vis(page, '#pdf-download'))) { bad.push('página de livro sem #pdf-download'); return; }
       const b = await grab(page);
       if (!b) bad.push('amazing_grace: sem descarga'); else { if (b.head !== '%PDF-') bad.push('página de livro: não é PDF'); if (!/^Amazing-Grace\.pdf$/i.test(b.name)) bad.push('ao mudar de partitura o ficheiro é «' + b.name + '» (esperado Amazing-Grace.pdf)'); }
@@ -604,10 +607,13 @@ async function suites(full) {
       const st = await page.evaluate(() => Object.keys(localStorage).filter(x => x.startsWith('cancioneiro.listen.')).map(x => x + '=' + localStorage.getItem(x)));
       if (!st.some(x => x.endsWith('=' + on))) bad.push(`${k}: valor não guardado (cancioneiro.listen.*: ${st.join(',') || 'nada'})`);
     });
-    for (const on of [false, true]) await withApp({ real: { canListen: on }, tour: true, wait: '#rows li a', timeout: 20000, settle: 1500 }, async ({ page }) => {
+    // tutorial: 1.ª abertura (sem valor guardado) e abertura com o valor já guardado no telemóvel
+    const LK = 'cancioneiro.listen.11111111-1111-4111-8111-111111111111';
+    for (const [on, cached] of [[false, false], [true, false], [true, true]]) await withApp({ real: { canListen: on }, tour: true, storage: cached ? { [LK]: on } : {}, wait: '#rows li a', timeout: 20000, settle: 1500 }, async ({ page }) => {
       const msgs = await tourMsgs(page), mic = msgs.some(m => /microfone/i.test(m));
-      if (!msgs.length) bad.push('tutorial não apareceu no modo real');
-      else if (mic !== on) bad.push(`tutorial ${on ? 'com' : 'sem'} permissão: passo do microfone ${mic ? 'presente' : 'ausente'}`);
+      const k = `tutorial ${on ? 'com' : 'sem'} permissão${cached ? ' (já guardada)' : ' (1.ª abertura)'}`;
+      if (!msgs.length) bad.push(k + ': não apareceu no modo real');
+      else if (mic !== on) bad.push(`${k}: passo do microfone ${mic ? 'presente' : 'ausente'}`);
     });
     await withApp({ perfil: 'coro' }, async ({ page }) => { const s = await shown(page); if (!s.cls || !s.mic) bad.push('?demo: microfone escondido'); });
     return bad.length ? bad.join('; ') : true;

@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v197, 2026-10-12** — 188 ok · 0 falhas · 2 avisos (USA-04, decisão; USA-10, col-mode/col-pub com 40 px — depois juntos a tapExceptions por decisão da webapp) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-12-v197-full.md` (DB-RLS-06, FUN-32, FUN-42 e FUN-46 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
+Última execução completa: **v201, 2026-10-21** — 192 ok · 1 falha (FUN-51, baixa: tutorial na 1.ª abertura sem o passo do microfone para quem tem can_listen) · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-21-v201-full.md` (DB-FN-04, FUN-50 e FUN-51 corrigidos no teste e corridos de novo na mesma execução). A semanal da v200 (19/out) não correu: o ambiente bloqueou o comando.
 
 ---
 
@@ -31,8 +31,8 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ✓ |
 | FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ✓ |
 | FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
-| FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ☐ por correr |
-| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ☐ por correr |
+| FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
+| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✗ (1.ª abertura: corrida can_listen × tutorial) |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -170,7 +170,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ✓ |
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ (exceções col-mode/col-pub decididas 2026-10-12) |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste AA (4.5:1) claro e escuro | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
@@ -197,10 +197,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-11 | conteudo `shared` com songs:true: só os campos previstos, letra com noChords (v150) | static | alta | V | ✓ |
 | SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ✓ |
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
-| SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ☐ por correr |
+| SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
-| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) | live | crítica | V | ✓ (sem can_listen; por correr com ela) |
+| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
 | SEG-25 | Auth só Google | live | alta | V | ✓ |
@@ -228,7 +228,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✓ |
 | DB-FN-02 | my_rank()/my_role() por perfil | db | alta | V | ✓ |
 | DB-FN-03 | Funções de backup e gatilhos fora do alcance de authenticated | db | alta | V | ✓ |
-| DB-FN-04 | can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → allowed_emails.can_listen; SECURITY DEFINER com search_path (v201) | db | média | S | ☐ por correr |
+| DB-FN-04 | can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → allowed_emails.can_listen; SECURITY DEFINER com search_path (v201) | db | média | S | ✓ |
 | DB-ST-01 | Bucket privado, tipos e tamanho limitados, sem políticas em storage | db | crítica | V | ✓ |
 | DB-ST-02 | Tokens de partilha ≥ 16 caracteres e ≤ 24 h | db | alta | V | ✓ |
 | SEG-40 | XSS por títulos, autores, letras, rótulos, etiquetas (lista, pesquisa, cântico, folha) | ui | crítica | V | ✓ |

@@ -172,8 +172,10 @@ export default async function (level) {
     if (!f.d) bad.push('não é SECURITY DEFINER'); if (!(f.c || []).some(x => /^search_path=/.test(x))) bad.push('sem search_path fixo');
     if (f.anon) bad.push('anon pode executar'); if (!f.auth) bad.push('authenticated não pode executar');
     for (const who of ['stranger', 'cancioneiro', 'coro', 'maestro', 'gestor']) {
-      const [r] = await sql(asRole(who, `select public.can_listen() got, coalesce((select can_listen from public.allowed_emails where email = lower(coalesce(auth.jwt() ->> 'email', ''))), false) want;`));
-      out[who] = r.got; if (r.got !== r.want) bad.push(`${who}: ${r.got} (esperado ${r.want})`);
+      const [r] = await sql(asRole(who, `select public.can_listen() got;`));
+      // o valor esperado lê-se fora do papel (authenticated não lê allowed_emails, e ainda bem)
+      const [w] = who === 'stranger' ? [{ want: false }] : await sql(`select coalesce(can_listen, false) want from public.allowed_emails where role='${who}' order by email limit 1`);
+      out[who] = r.got; if (r.got !== (w ? w.want : false)) bad.push(`${who}: ${r.got} (esperado ${w && w.want})`);
     }
     if (out.stranger !== false) bad.push('sem acesso: ' + out.stranger);
     const [n] = await sql(`select count(*) filter (where can_listen)::int on_, count(*)::int total from public.allowed_emails`);
