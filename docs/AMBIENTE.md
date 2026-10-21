@@ -31,7 +31,7 @@ As sessões falam entre si com send_message (ferramentas claude-code-remote), se
 |---|---|---|---|
 | Cancioneiro — testes semanais | segunda 09:47 Europe/Lisbon | webapp | Pede à sessão testes a corrida completa na versão atual; corrige o que for confirmado e devolve para novo teste. |
 | Verificação diária do sistema de design | todos os dias 06:52 Europe/Lisbon | design | Compara tokens do sistema de design com design/tokens.json, comentários por responder, versão da app vs. mapa. |
-| Verificação da cópia de segurança | segunda, depois das 07:30 UTC | backup | Confirma que a Action «Cópia de segurança» passou; se falhou, corrige e volta a correr. |
+| Verificação da cópia de segurança | segunda 19:15 UTC (o GitHub corre a cópia das 07:30 com 6–9 h de atraso) | backup | Confirma que a Action «Cópia de segurança» passou; se falhou, corrige e volta a correr. |
 
 A Action «Cópia de segurança» (GitHub, segunda 07:30 UTC) e as outras Actions do repositório não dependem de nenhuma sessão.
 
