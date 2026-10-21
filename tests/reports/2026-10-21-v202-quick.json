@@ -1,0 +1,17 @@
+{
+ "version": "202",
+ "level": "quick",
+ "date": "2026-10-21",
+ "secs": 44,
+ "results": [
+  {
+   "id": "FUN-51",
+   "title": "Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e o tutorial salta o passo do microfone; com permissão aparecem (modo real simulado); no ?demo sempre ativo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 43376
+  }
+ ]
+}
