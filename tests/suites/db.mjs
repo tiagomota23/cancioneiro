@@ -165,6 +165,20 @@ export default async function (level) {
     const bad = Object.keys(want).filter(k => out[k] !== want[k]);
     return bad.length ? 'obtido ' + JSON.stringify(out) : true;
   });
+  await t('DB-FN-04', 'can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → o valor de allowed_emails.can_listen; SECURITY DEFINER com search_path (v201)', async () => {
+    const bad = [], out = {};
+    const [f] = await sql(`select p.prosecdef d, p.proconfig c, has_function_privilege('anon', p.oid, 'execute') anon, has_function_privilege('authenticated', p.oid, 'execute') auth from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='can_listen'`);
+    if (!f) return 'função public.can_listen() não existe';
+    if (!f.d) bad.push('não é SECURITY DEFINER'); if (!(f.c || []).some(x => /^search_path=/.test(x))) bad.push('sem search_path fixo');
+    if (f.anon) bad.push('anon pode executar'); if (!f.auth) bad.push('authenticated não pode executar');
+    for (const who of ['stranger', 'cancioneiro', 'coro', 'maestro', 'gestor']) {
+      const [r] = await sql(asRole(who, `select public.can_listen() got, coalesce((select can_listen from public.allowed_emails where email = lower(coalesce(auth.jwt() ->> 'email', ''))), false) want;`));
+      out[who] = r.got; if (r.got !== r.want) bad.push(`${who}: ${r.got} (esperado ${r.want})`);
+    }
+    if (out.stranger !== false) bad.push('sem acesso: ' + out.stranger);
+    const [n] = await sql(`select count(*) filter (where can_listen)::int on_, count(*)::int total from public.allowed_emails`);
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: `${n.on_}/${n.total} contas com reconhecimento; ` + JSON.stringify(out) };
+  }, { sev: 'média', where: 'supabase/reconhecimento.sql' });
   await t('DB-FN-03', 'Funções de backup e gatilhos não executáveis por authenticated', async () => {
     const r = await sql(`select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('backup_schema','backup_objects','call_notify','set_source_hashes','on_access_request','on_auth_user_signin','on_song_from_original','on_sync_log','song_edit_stamp') and has_function_privilege('authenticated', p.oid, 'execute')`);
     return r.length ? 'authenticated executa: ' + r.map(x => x.proname).join(', ') : true;
