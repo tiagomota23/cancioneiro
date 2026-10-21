@@ -1198,9 +1198,11 @@ async function suites(full) {
     }
     return bad.length ? bad.join('; ') : true;
   });
-  await t('USA-12', 'Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro', async () => {
+  await t('USA-12', 'Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro, nos 4 perfis (cores por perfil desde v203); folha e edição', async () => {
     const bad = [];
-    for (const scheme of ['light', 'dark']) for (const [name, o] of [...screens.slice(0, 3), screens[4]]) await withApp({ ...o, scheme }, async ({ page }) => {
+    const PERFIS4 = ['cancioneiro', 'coro', 'maestro', 'gestor'];
+    const cs = [...PERFIS4.flatMap(p => [[screens[0][0] + '/' + p, { ...screens[0][1], perfil: p }], [screens[1][0] + '/' + p, { ...screens[1][1], perfil: p }]]), screens[2], screens[4]];
+    for (const scheme of ['light', 'dark']) for (const [name, o] of cs) await withApp({ ...o, scheme }, async ({ page }) => {
       const r = await page.evaluate(() => {
         const parse = c => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p[3] ?? 1 }; };
         const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
@@ -1284,9 +1286,48 @@ async function suites(full) {
     const fixed = await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page: p2 }) => { await p2.waitForSelector('#song h1'); await p2.click('#btn-fav'); await sleep(400); return { pass: String(await p2.getAttribute('#col-pick .col-pick[data-k="cancioneiro"]', 'aria-disabled')) }; });
     return fixed.pass === 'true' || 'cântico do original: opção Cancioneiro sem aria-disabled=true';
   }));
-  await t('USA-18', 'Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice, gaveta, folha, e com a janela de edição aberta)', async () => {
+  await t('USA-24', 'Cores por perfil (v203): <html> e <body> com .perfil-X do perfil ativo (e só esse), mudar de perfil troca a classe e --brand; capa (.splash) sempre com --app-brand #10835c; títulos das janelas (dialog h2) em --accent com contraste ≥ 4.5:1', async () => {
     const bad = [], ev = [];
-    for (const o of [{ perfil: 'coro' }, { perfil: 'maestro', act: 'menu' }, { perfil: 'maestro', hash: '#/lista/colecao-demo1' }, { perfil: 'maestro', hash: '#/lista/colecao-demoE', open: '#col-mode' }]) await withApp(o, async ({ page }) => {
+    const rgb = 'rgb(16, 131, 92)';
+    for (const perfil of ['cancioneiro', 'coro', 'maestro', 'gestor']) for (const scheme of ['light', 'dark']) await withApp({ perfil, scheme }, async ({ page }) => {
+      const r = await page.evaluate(() => {
+        const cls = el => [...el.classList].filter(c => c.startsWith('perfil-'));
+        const probe = (v, el = document.body) => { const d = document.createElement('div'); d.style.color = `var(${v})`; el.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; };
+        const sp = document.querySelector('#splash, .splash');
+        const spBrand = sp ? probe('--brand', sp) : null, spBg = sp ? getComputedStyle(sp).backgroundImage : '';
+        const dlg = document.querySelector('#info'); dlg.showModal();
+        const h2 = dlg.querySelector('h2'), hc = getComputedStyle(h2).color, acc = probe('--accent', dlg);
+        let bg = 'rgba(0, 0, 0, 0)'; for (let e = h2; e && (bg === 'rgba(0, 0, 0, 0)' || /, 0\)$/.test(bg)); e = e.parentElement) bg = getComputedStyle(e).backgroundColor;
+        dlg.close();
+        const p = c => (c.match(/[\d.]+/g) || []).map(Number);
+        const lum = q => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(q[0]) + 0.7152 * f(q[1]) + 0.0722 * f(q[2]); };
+        const x = lum(p(hc)), y = lum(p(bg));
+        return { html: cls(document.documentElement), body: cls(document.body), brand: probe('--brand'), spBrand, spBg, hc, acc, bg, cr: (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) };
+      });
+      const k = `${perfil}/${scheme}`;
+      if (JSON.stringify(r.html) !== JSON.stringify(['perfil-' + perfil])) bad.push(`${k}: <html> ${r.html.join(' ') || 'sem perfil-'}`);
+      if (JSON.stringify(r.body) !== JSON.stringify(['perfil-' + perfil])) bad.push(`${k}: <body> ${r.body.join(' ') || 'sem perfil-'}`);
+      if (r.spBrand !== rgb) bad.push(`${k}: capa com --brand ${r.spBrand} (esperado ${rgb})`);
+      if (r.hc !== r.acc) bad.push(`${k}: dialog h2 ${r.hc} ≠ --accent ${r.acc}`);
+      if (r.cr < 4.5) bad.push(`${k}: dialog h2 ${r.hc} sobre ${r.bg} ${r.cr.toFixed(2)}:1`);
+      ev.push(`${k} brand ${r.brand} h2 ${r.cr.toFixed(1)}:1`);
+    });
+    // mudar de perfil (Gestor → Coro) troca a classe e a cor da marca
+    await withApp({ perfil: 'gestor' }, async ({ page }) => {
+      const before = await page.evaluate(() => (() => { const d = document.createElement('div'); d.style.color = 'var(--brand)'; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; })());
+      await page.click('#btn-perfil'); await sleep(400);
+      const b = page.locator('#perfis-list .perfil-opt[data-p="coro"]').first();
+      if (!(await b.count())) { bad.push('mudar de perfil: opção «Coro» não encontrada no Perfil'); return; }
+      await b.click(); await sleep(700);
+      const r = await page.evaluate(() => ({ html: [...document.documentElement.classList].filter(c => c.startsWith('perfil-')), bg: (() => { const d = document.createElement('div'); d.style.color = 'var(--brand)'; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; })() }));
+      if (JSON.stringify(r.html) !== '["perfil-coro"]') bad.push('depois de mudar para Coro: <html> ' + r.html.join(' '));
+      if (r.bg === before) bad.push('depois de mudar para Coro --brand manteve-se ' + before);
+    });
+    return bad.length ? { fail: bad.join('; '), evidence: ev.join(' | ') } : { pass: ev.join(' | ') };
+  }, { sev: 'média', where: 'app.js setPerfil (~2016), theme.css :root.perfil-*, styles.css .splash / dialog h2' });
+  await t('USA-18', 'Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice e gaveta nos 4 perfis, folha, e com a janela de edição aberta) (v203: cores por perfil)', async () => {
+    const bad = [], ev = [];
+    for (const o of [{ perfil: 'cancioneiro' }, { perfil: 'cancioneiro', act: 'menu' }, { perfil: 'coro' }, { perfil: 'coro', act: 'menu' }, { perfil: 'gestor' }, { perfil: 'gestor', act: 'menu' }, { perfil: 'maestro' }, { perfil: 'maestro', act: 'menu' }, { perfil: 'maestro', hash: '#/lista/colecao-demo1' }, { perfil: 'maestro', hash: '#/lista/colecao-demoE', open: '#col-mode' }]) await withApp(o, async ({ page }) => {
       if (o.act === 'menu') { await page.click('#btn-menu'); await sleep(500); }
       const r = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
