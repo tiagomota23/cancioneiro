@@ -120,7 +120,7 @@ const C = {
     readme: `Campos de texto e de escolha: altura \`--h-field\`, raio \`--radius\`, contorno \`--border\`, \`--fs-field\` 400 (16 px evita o zoom do iPhone).
 
 - Rótulo (\`.col-field\`, \`.sn-f\`, \`.sa-sec\`): \`--fs-caps\` 700 maiúsculas \`--ls-caps\` em \`--text-soft\` — sempre cinzento.
-- Obrigatórios: «*» vermelho a seguir ao rótulo (\`.req\`, \`--danger\`, 700); guardar desativado até estarem preenchidos.
+- Obrigatórios: «*» na cor de perigo a seguir ao rótulo (\`.req\`, \`--danger\`, 700); guardar desativado até estarem preenchidos.
 - Marcador (placeholder) em \`--text-faint\`, maiúsculas.
 - Em foco: contorno de 2 px \`--accent\` (desvio −1) e borda \`--accent\`.
 - Nas janelas os campos são sempre brancos (\`--surface\`); na página de gestão usam \`--paper\` / \`--ink\` para seguir o modo escuro.
@@ -138,7 +138,7 @@ const C = {
   Titulos: { group: 'Letra', h: 200, title: 'Títulos',
     readme: `Títulos de janelas e de páginas: \`--serif\` (Marcellus) 400, \`--fs-title\`, maiúsculas, espaçamento .06em.
 
-- Nas janelas e na gestão: \`--brand-deep\`. Sobre a cor da marca (lista, menu): \`--on-brand\`.
+- Nas janelas e na gestão: \`--accent\` (a cor dos botões do perfil). Sobre a cor da marca (lista, menu): \`--on-brand\`.
 - O nome da app usa \`--fs-display\` só na capa e na entrada; na barra de topo usa \`--fs-title\`.
 - Marcellus só em títulos e no nome da app — nunca em botões, campos ou linhas das listas.
 - Títulos de secção nas listas verdes (CORO, ENTRADA, «Livros» no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, traço \`--on-brand\` por baixo (ver Linhas das listas).
@@ -150,7 +150,7 @@ const C = {
 
 - Listas verdes (início, menu, folhas): título \`--fs-small\` 400 maiúsculas \`--ls-chip\`; autor (itálico), número, página do livro e notas \`--fs-small\` sem espaçamento; separador \`--on-brand-line\`.
 - Título de secção (\`.rows .cat-head\`, \`.col-sec .sec-line\`, \`.az .cat-head\` no menu): \`--serif\` 400 \`--fs-section\` maiúsculas \`--ls-chip\`, espaço 28 px acima e 8 px abaixo, traço de 1 px \`--on-brand\` por baixo. As linhas por baixo ficam em Lato: a diferença de letra separa a secção dos itens. Igual na página inicial, nas folhas e no menu (secções «Os meus cânticos», «Livros», «Folhas»; secções vazias não aparecem).
-- Editar folha (\`#col-ed\`, janela por cima como «Editar cântico»): lista \`#ce-rows\` em fundo claro — títulos de secção \`--brand-deep\` com traço \`--brand-deep\`, linhas \`--text\`, separador \`--line\`. «+ Adicionar cântico» (\`li.col-add\`) no fim de cada secção: \`--accent\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\`, 44 px. «+ Adicionar secção» no fim: tracejado \`--border-dash\`, \`--radius\`. Tocar num item: realce \`--tint-soft\` e botões ↑ ↓ 🗑 ✓ (\`.ce-acts\`): quadrados de 38 px com \`--radius-sm\`, contorno \`--accent\` (caixote \`--danger-border\`; ✓ cheio, fecha), área de toque de 44 px; numa secção ficam por cima do nome e o lápis (\`.ce-name\`) à esquerda. Ações: Apagar / Cancelar / Guardar; a janela trabalha numa cópia. A página da folha é só de leitura.
+- Editar folha (\`#col-ed\`, janela por cima como «Editar cântico»): lista \`#ce-rows\` em fundo claro — títulos de secção \`--accent\` com traço \`--accent\`, linhas \`--text\`, separador \`--line\`. «+ Adicionar cântico» (\`li.col-add\`) no fim de cada secção: \`--accent\`, \`--fs-small\` 700 maiúsculas \`--ls-chip\`, 44 px. «+ Adicionar secção» no fim: tracejado \`--border-dash\`, \`--radius\`. Tocar num item: realce \`--tint-soft\` e botões ↑ ↓ 🗑 ✓ (\`.ce-acts\`): quadrados de 38 px com \`--radius-sm\`, contorno \`--accent\` (caixote \`--danger-border\`; ✓ cheio, fecha), área de toque de 44 px; numa secção ficam por cima do nome e o lápis (\`.ce-name\`) à esquerda. Ações: Apagar / Cancelar / Guardar; a janela trabalha numa cópia. A página da folha é só de leitura.
 - Listas claras (\`.adm-list\`, \`#sn-flist\`, \`#sa-list\`): separador só em baixo, \`--line\`, espaço 12 px.
 - Gravações (\`.recs li\`): espaço 6 px (o botão de 40 px já dá ≥ 52 px) e separador \`--divider\`, que serve em claro e escuro.`,
     html: `<div class="ds col"><div class="brand-bg" style="padding:0"><ul class="rows" style="list-style:none;margin:0;padding:0"><li class="cat-head">Coro</li>${[['Amazing Grace', 'John Newton (1779)', '2'], ['Salve Regina', 'Antífona mariana', '1']].map(([t, a, n]) => `<li style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--on-brand-line)"><span><span style="display:block;font-size:var(--fs-small);text-transform:uppercase;letter-spacing:var(--ls-chip)">${t}</span><span style="display:block;font-size:var(--fs-small);font-style:italic">${a}</span></span><span style="font-size:var(--fs-small)">${n}</span></li>`).join('')}</ul></div>
@@ -179,7 +179,7 @@ Nomes: cada token tem o nome da variável CSS sem «--». Um par claro/escuro ge
 ## Princípios
 
 - **Um estilo por tipo de elemento.** Botões, chips, campos, linhas de opção e listas têm uma só forma cada; uma variante nova no catálogo do mapa é um erro, não uma exceção.
-- **A marca é superfície, o destaque é ação.** \`brand\` / \`brand-deep\` só em grandes fundos verdes (página inicial, menu, capa); tudo o que se toca usa \`accent\`.
+- **A marca é superfície, o destaque é ação.** \`brand\` / \`brand-deep\` só em grandes fundos da marca (página inicial, menu, capa), na cor do perfil; tudo o que se toca usa \`accent\`.
 - **Legível ao ensaiar.** Texto secundário nunca abaixo de \`fs-small\` (13 px); cinzentos com contraste ≥ 4,5:1 em branco (\`text-faint\` #767676).
 - **A letra dos cânticos é sagrada.** Estrofes, acordes e o tamanho A−/A+ ficam fora da escala.
 
@@ -197,7 +197,8 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 - Texto em superfícies claras: \`text\` (principal), \`text-soft\` (secundário), \`text-faint\` (dicas, marcadores, símbolos inativos).
 - Contornos: \`border\` (campos, cartões, linhas de opção), \`border-dash\` («+ novo»), \`line\` (separadores em superfícies sempre claras), \`divider\` (separadores nas páginas dos cânticos, servem em claro e escuro).
 - Páginas dos cânticos (pares claro/escuro): \`paper\`, \`ink\`, \`ink-soft\`, \`chord\`, \`title\`, \`pdf-bg\`, \`pdf-title\`.
-- Estados: \`star\`, \`danger\` (+ \`danger-deep\`, \`danger-border\`), \`pending-*\`, \`warn-*\`.
+- Estados: \`star\`, \`danger\` âmbar ${light('danger')} (+ \`danger-deep\`, \`danger-border\`; não vermelho, para não se confundir com o Maestro), \`pending-*\`, \`warn-*\`.
+- Por perfil (família \`perfis\`; classe \`perfil-<id>\` no \`<html>\`): o Cancioneiro usa as cores acima; ${(tokens.perfis?.tokens || []).map(p => `**${p.id}** — brand ${p.values.brand}, on-brand ${p.values['on-brand']}, accent ${p.values.accent.light}`).join('; ')}. Mudam também chord, pdf-title, tint, tint-soft, border, border-dash, line e meter-idle. Capa, ícone, theme-color e manifest ficam com as cores da app (\`app-brand\`, \`app-brand-deep\`, \`app-on-brand\`).
 - Opacidades derivadas: ${(tokens.alpha?.tokens || []).map(a => `\`${a.name}\` = \`${a.base}\` a ${a.value}`).join(', ')}.
 
 ## Forma e tamanho
@@ -215,12 +216,13 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 4. **Serif só em títulos.** O «i» de informação é sempre Marcellus 24 px 700 itálico, cor de destaque, num botão de 44 px.
 5. **Nome da app** na barra de topo em \`fs-title\` (o \`fs-display\` não cabe entre os dois botões de 44 px).
 6. **Ligações** sempre \`accent\`, também nas janelas.
-7. **Texto sobre a cor da marca** sempre \`on-brand\` sem transparência (autores, números, cabeçalhos incluídos): branco a ≥ 4,5:1 em \`brand\` e \`brand-deep\`.
+7. **Texto sobre a cor da marca** sempre \`on-brand\` sem transparência (autores, números, cabeçalhos incluídos): branco no Cancioneiro e no Maestro, escuro no Coro e no Gestor (fundos claros); sempre ≥ 4,5:1 em \`brand\` e \`brand-deep\`.
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: \`brand\`, \`meter-idle\`; PDF: \`accent\` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (\`accent\`, \`danger\`, \`on-brand\`), para que todos os botões, cheios e de contorno, tenham a mesma altura (\`box-sizing: border-box\`).
 10. **Campos obrigatórios** — «*» a seguir ao rótulo (\`span.req\`: \`danger\`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
 11. **Botões lado a lado** — numa linha de ações (rodapés das janelas \`.edit-actions\`, \`.info-actions\` com dois botões, \`.edit-bar\` com dois botões, \`.file-btns\`, \`.listen-actions\`, \`.sn-gen\`) os botões têm a mesma largura e ocupam a linha (\`flex: 1 1 0\`). Exceção: na caixa «por aprovar» (\`.pend-bar\`) Aprovar e Recusar ficam à direita, com a mesma largura (largura do texto). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
 12. **Rodapé das janelas** — o botão principal fica à direita numa linha e em cima numa coluna. Linha, larguras iguais: Apagar | Cancelar | Guardar (confirmações: Cancelar | OK, também quando o OK é vermelho). Se não couberem numa linha, coluna encostada à direita, todos com a mesma largura, de cima para baixo: Guardar, Cancelar, Apagar. O mesmo nos outros pares: Recusar | Aprovar, Editar folha | Publicar (Publicar em cima se não couberem), Terminar sessão | Fechar. Os botões estão sempre na mesma linha ou na mesma coluna.
+13. **Cores por perfil** — o livro toma a cor do perfil escolhido: Cancioneiro verde, Coro azul claro, Maestro tijolo, Gestor cinzento claro. Só mudam os tokens da família \`perfis\`; perigo, estrela, avisos e «por aprovar» são iguais em todos. Títulos das janelas e de secção em Editar folha usam \`accent\`, nunca \`brand-deep\` (ilegível nos fundos claros).
 
 ## Exceções documentadas
 

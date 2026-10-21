@@ -109,6 +109,8 @@ const comp = [
 const sComp = section('Componentes', 'Um só estilo por tipo de elemento (styles.css, secção COMPONENTES). As amostras abaixo são desenhadas com os valores de theme.css; os recortes reais estão nos quadros do catálogo.', grid(2, comp));
 
 // ---------- 5. Regras ----------
+const PERFIS = ['Cancioneiro verde (as cores acima)', ...(JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8')).perfis?.tokens || [])
+  .map(p => `${p.id[0].toUpperCase() + p.id.slice(1)} — fundo ${p.values.brand}, texto ${p.values['on-brand']}, destaque ${p.values.accent.light}`)].join('; ');
 const rules = [
   ['Toque mínimo', `todo o botão de símbolo tem pelo menos ${v('--hit')} × ${v('--hit')} de área de toque, mesmo que o desenho seja menor.`],
   ['Foco', `${':focus-visible'} em todo o lado: contorno de 2 px na cor de destaque, afastado 2 px. Sobre superfícies da marca (barra de topo, pesquisa, listas verdes, menu, título da lista) o contorno é branco (${tok('--on-brand')}).`],
@@ -120,7 +122,8 @@ const rules = [
   ['Campos obrigatórios', `«*» a seguir ao rótulo, em ${tok('--danger')} 700; o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo, o «*» fica dentro do campo, à direita.`],
   ['Botões lado a lado', 'numa linha de ações (rodapés das janelas, «Editar folha» + «Publicar», + Gravação / + Partitura) os botões têm a mesma largura e ocupam a linha; na caixa «por aprovar» ficam à direita, com a mesma largura. Confirmações que apagam ou deitam fora: botão de confirmar cheio de vermelho. Botões sozinhos e os da Gestão ao lado de um seletor ficam com a largura do texto. Botões de 40 px sempre em letra 400.'],
   ['Rodapé das janelas', 'botão principal à direita numa linha e em cima numa coluna. Linha, larguras iguais: Apagar | Cancelar | Guardar (confirmações: Cancelar | OK). Se não couberem, coluna encostada à direita, mesma largura: Guardar, Cancelar, Apagar. Nunca desalinhados.'],
-  ['Texto sobre a cor da marca', `sempre ${tok('--on-brand')} sem transparência — autores, números e cabeçalhos incluídos. Branco a ≥ 4,5:1 sobre ${tok('--brand')} e ${tok('--brand-deep')}.`],
+  ['Texto sobre a cor da marca', `sempre ${tok('--on-brand')} sem transparência — autores, números e cabeçalhos incluídos. Branco no Cancioneiro e no Maestro, escuro no Coro e no Gestor (fundos claros); sempre ≥ 4,5:1 sobre ${tok('--brand')} e ${tok('--brand-deep')}.`],
+  ['Cores por perfil', `o livro toma a cor do perfil (classe perfil-&lt;id&gt; no &lt;html&gt;, família «perfis» de tokens.json): ${PERFIS}. Mudam brand, brand-deep, on-brand, accent, chord, pdf-title, tint, tint-soft, border, border-dash, line e meter-idle. Perigo (${tok('--danger')} âmbar ${v('--danger')}), estrela, avisos e «por aprovar» são iguais em todos. Títulos das janelas em ${tok('--accent')}. Capa, ícone e theme-color ficam verdes (--app-brand).`],
   ['Cores calculadas pelo JavaScript', `leem o tema ao abrir: o medidor do microfone usa ${tok('--brand')} e ${tok('--meter-idle')}; os PDF usam ${tok('--light-accent')}. Mudar theme.css chega também a eles. Fora de theme.css só mudam à mão: icons/*.png, manifest.json e ${esc('<meta name="theme-color">')}.`],
 ];
 const sRegras = section('Regras', null, card(rules.map(([t, x], i) => rule(i + 1, t, x)).join('\n')));

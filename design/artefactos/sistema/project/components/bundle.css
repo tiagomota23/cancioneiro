@@ -33,12 +33,12 @@
 dialog h2, .list-title, .admin-title, .admin h2, .drawer-title, .listen-status {
   font-family: var(--serif); font-weight: 400; font-size: var(--fs-title); letter-spacing: .06em; text-transform: uppercase;
 }
-dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
+dialog h2 { color: var(--accent); margin: 0 0 8px; }
 .list-title { margin: 14px 18px 6px; }
-.admin-title { margin: 0 0 0 4px; color: var(--brand-deep); }
-.admin h2 { color: var(--brand-deep); margin: 22px 0 8px; }
+.admin-title { margin: 0 0 0 4px; color: var(--accent); }
+.admin h2 { color: var(--accent); margin: 22px 0 8px; }
 .drawer-title { margin: 6px 0 4px 60px; color: var(--on-brand); }
-.listen-status { margin: 4px 0; color: var(--brand-deep); }
+.listen-status { margin: 4px 0; color: var(--accent); }
 .song h1 { text-transform: uppercase; letter-spacing: .06em; }
 .pdf-title { text-transform: uppercase; letter-spacing: var(--ls-row); }
 
@@ -287,7 +287,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows { padding: 0; margin: 0 0 8px; color: var(--text); }
 .col-ed .ce-rows li a { color: var(--text); border-bottom-color: var(--line); padding-left: 0; padding-right: 0; }
 .col-ed .ce-rows li a:active { background: var(--tint-soft); }
-.col-ed .ce-rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); padding-left: 0; }
+.col-ed .ce-rows li.col-sec .sec-line { color: var(--accent); border-bottom-color: var(--accent); padding-left: 0; }
 .col-ed .ce-rows .chev { color: var(--text-faint); opacity: 1; }
 .col-ed .ce-rows :focus-visible { outline-color: var(--accent); }
 .col-ed .ce-rows li.col-add button { padding-left: 0; }

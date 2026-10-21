@@ -14,7 +14,7 @@ Nomes: cada token tem o nome da variável CSS sem «--». Um par claro/escuro ge
 ## Princípios
 
 - **Um estilo por tipo de elemento.** Botões, chips, campos, linhas de opção e listas têm uma só forma cada; uma variante nova no catálogo do mapa é um erro, não uma exceção.
-- **A marca é superfície, o destaque é ação.** `brand` / `brand-deep` só em grandes fundos verdes (página inicial, menu, capa); tudo o que se toca usa `accent`.
+- **A marca é superfície, o destaque é ação.** `brand` / `brand-deep` só em grandes fundos da marca (página inicial, menu, capa), na cor do perfil; tudo o que se toca usa `accent`.
 - **Legível ao ensaiar.** Texto secundário nunca abaixo de `fs-small` (13 px); cinzentos com contraste ≥ 4,5:1 em branco (`text-faint` #767676).
 - **A letra dos cânticos é sagrada.** Estrofes, acordes e o tamanho A−/A+ ficam fora da escala.
 
@@ -32,7 +32,8 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 - Texto em superfícies claras: `text` (principal), `text-soft` (secundário), `text-faint` (dicas, marcadores, símbolos inativos).
 - Contornos: `border` (campos, cartões, linhas de opção), `border-dash` («+ novo»), `line` (separadores em superfícies sempre claras), `divider` (separadores nas páginas dos cânticos, servem em claro e escuro).
 - Páginas dos cânticos (pares claro/escuro): `paper`, `ink`, `ink-soft`, `chord`, `title`, `pdf-bg`, `pdf-title`.
-- Estados: `star`, `danger` (+ `danger-deep`, `danger-border`), `pending-*`, `warn-*`.
+- Estados: `star`, `danger` âmbar #9a5b00 (+ `danger-deep`, `danger-border`; não vermelho, para não se confundir com o Maestro), `pending-*`, `warn-*`.
+- Por perfil (família `perfis`; classe `perfil-<id>` no `<html>`): o Cancioneiro usa as cores acima; **coro** — brand #a9d3ef, on-brand #12324a, accent #1f6aa8; **maestro** — brand #b35650, on-brand #fff, accent #a8453f; **gestor** — brand #d6dadd, on-brand #262b2f, accent #454f56. Mudam também chord, pdf-title, tint, tint-soft, border, border-dash, line e meter-idle. Capa, ícone, theme-color e manifest ficam com as cores da app (`app-brand`, `app-brand-deep`, `app-on-brand`).
 - Opacidades derivadas: `on-brand-line` = `on-brand` a 22%, `on-brand-outline` = `on-brand` a 70%, `scrim` = `shadow` a 45%.
 
 ## Forma e tamanho
@@ -50,12 +51,13 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 4. **Serif só em títulos.** O «i» de informação é sempre Marcellus 24 px 700 itálico, cor de destaque, num botão de 44 px.
 5. **Nome da app** na barra de topo em `fs-title` (o `fs-display` não cabe entre os dois botões de 44 px).
 6. **Ligações** sempre `accent`, também nas janelas.
-7. **Texto sobre a cor da marca** sempre `on-brand` sem transparência (autores, números, cabeçalhos incluídos): branco a ≥ 4,5:1 em `brand` e `brand-deep`.
+7. **Texto sobre a cor da marca** sempre `on-brand` sem transparência (autores, números, cabeçalhos incluídos): branco no Cancioneiro e no Maestro, escuro no Coro e no Gestor (fundos claros); sempre ≥ 4,5:1 em `brand` e `brand-deep`.
 8. **Cores calculadas pelo JavaScript** (medidor do microfone: `brand`, `meter-idle`; PDF: `accent` claro) leem o tema ao abrir. Fora dos tokens só mudam à mão: icons/*.png, manifest.json e a meta theme-color.
 9. **Contorno dos botões cheios** — quando a cor do botão é diferente do fundo da página ou da janela, o contorno de 1 px é da própria cor do botão (`accent`, `danger`, `on-brand`), para que todos os botões, cheios e de contorno, tenham a mesma altura (`box-sizing: border-box`).
 10. **Campos obrigatórios** — «*» a seguir ao rótulo (`span.req`: `danger`, 700, 3 px de margem); o botão de guardar fica desativado (opacidade .5) até estarem preenchidos. Sem rótulo (Acrescentar utilizador), o «*» fica dentro do campo, à direita. Nas janelas de texto, OK desativado com a caixa vazia (exceto quando o valor pode ficar vazio).
 11. **Botões lado a lado** — numa linha de ações (rodapés das janelas `.edit-actions`, `.info-actions` com dois botões, `.edit-bar` com dois botões, `.file-btns`, `.listen-actions`, `.sn-gen`) os botões têm a mesma largura e ocupam a linha (`flex: 1 1 0`). Exceção: na caixa «por aprovar» (`.pend-bar`) Aprovar e Recusar ficam à direita, com a mesma largura (largura do texto). Ficam de fora os botões sozinhos e os da Gestão ao lado de um seletor. Todos os botões de 40 px em letra 400.
 12. **Rodapé das janelas** — o botão principal fica à direita numa linha e em cima numa coluna. Linha, larguras iguais: Apagar | Cancelar | Guardar (confirmações: Cancelar | OK, também quando o OK é vermelho). Se não couberem numa linha, coluna encostada à direita, todos com a mesma largura, de cima para baixo: Guardar, Cancelar, Apagar. O mesmo nos outros pares: Recusar | Aprovar, Editar folha | Publicar (Publicar em cima se não couberem), Terminar sessão | Fechar. Os botões estão sempre na mesma linha ou na mesma coluna.
+13. **Cores por perfil** — o livro toma a cor do perfil escolhido: Cancioneiro verde, Coro azul claro, Maestro tijolo, Gestor cinzento claro. Só mudam os tokens da família `perfis`; perigo, estrela, avisos e «por aprovar» são iguais em todos. Títulos das janelas e de secção em Editar folha usam `accent`, nunca `brand-deep` (ilegível nos fundos claros).
 
 ## Exceções documentadas
 

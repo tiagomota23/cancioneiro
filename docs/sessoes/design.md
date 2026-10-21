@@ -116,6 +116,10 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 - v159–v164: folha só de leitura com «✎ Editar folha» no fim; edição numa janela por cima (como «Editar cântico»); sem ações de deslizar.
 - 11 out 2026: regra 9 — botão cheio (cor diferente do fundo) tem contorno da própria cor, para todos os botões terem a mesma altura.
 - 11 out 2026: rodapé das janelas — uma linha, larguras iguais; recurso: coluna à direita; botão principal à direita na linha (Apagar | Cancelar | Guardar) e em cima na coluna (Guardar, Cancelar, Apagar) — v185.
+- 21 out 2026: cores por perfil (regra 13) — Cancioneiro verde, Coro azul claro (texto escuro), Maestro tijolo, Gestor cinzento claro
+  (texto escuro, botões cinzento-escuro); Apagar em âmbar (#9a5b00) em todos; títulos das janelas em `accent`. Família `perfis` em
+  tokens.json, classe `perfil-<id>` no `<html>`; capa, ícone e theme-color ficam verdes (`app-brand`). Implementado na v203.
+  Quadro «Opções — cores por perfil»: `opcoes-perfis.mjs` (maquetas) + `opcoes-perfis-board.py`. Os ecrãs do mapa são do Gestor (cinzento).
 - Quadros de opções ficam no mapa depois de decididos, com a escolhida marcada (`python3 tools/screens/opcoes-estado.py`;
   editar `ESTADO` quando a implementação sair).
 

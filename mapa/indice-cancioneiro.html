@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt" style="--fs: 18px;"><head><meta name="robots" content="noindex">
+<html lang="pt" class="perfil-cancioneiro" style="--fs: 18px;"><head><meta name="robots" content="noindex">
   <meta charset="utf-8">
   
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -63,7 +63,7 @@
 
   /* Cores (um par claro/escuro gera --light-… e --dark-…) */
   --brand: #10835c;             /* Cor da marca: fundo da página inicial, menu e capa (degradê de brand para brand-deep). Texto branco a 4,75:1. */
-  --brand-deep: #0b6b4b;        /* Fim do degradê da marca; títulos das janelas. Texto branco a 6,5:1. */
+  --brand-deep: #0b6b4b;        /* Fim do degradê da marca. Texto branco a 6,5:1. (Os títulos das janelas usam accent.) */
   --on-brand: #fff;             /* texto e símbolos sobre a cor da marca */
   --light-accent: #0e7f58;      /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
   --dark-accent: #5fcf90;       /* Destaque: botões, ligações, ícones e estados escolhidos sobre fundo claro (claro) e nas páginas dos cânticos em modo escuro. */
@@ -97,9 +97,9 @@
   --shadow: #000;               /* sombras e véus escuros (usado com transparência) */
   --toast-bg: rgba(20,20,20,.88); /* toast-bg */
   --star: #e3a008;              /* preferido */
-  --danger: #c0392b;            /* apagar, erro */
-  --danger-deep: #8e1f14;       /* Apagar: botão de confirmação. */
-  --danger-border: #e3b3ad;     /* Contorno dos botões de perigo. */
+  --danger: #9a5b00;            /* apagar, erro */
+  --danger-deep: #7a4800;       /* Apagar: botão de confirmação. */
+  --danger-border: #e6c89a;     /* Contorno dos botões de perigo. */
   --pending-bg: #f3c969;        /* etiqueta "por aprovar" */
   --pending-ink: #4a3800;       /* Texto da etiqueta «por aprovar». */
   --warn-bg: #fff8e3;           /* caixa de aviso */
@@ -112,6 +112,62 @@
   --on-brand-line: color-mix(in srgb, var(--on-brand) 22%, transparent); /* Separadores das linhas sobre a cor da marca: on-brand a esta opacidade (hoje --row-line em styles.css). */
   --on-brand-outline: color-mix(in srgb, var(--on-brand) 70%, transparent); /* Contorno de chips e seletores sobre a cor da marca: on-brand a esta opacidade. */
   --scrim: color-mix(in srgb, var(--shadow) 45%, transparent); /* Véu por trás das janelas e do ecrã de ouvir: shadow a esta opacidade. */
+
+  /* Cor fixa da app (capa; não muda com o perfil) */
+  --app-brand: #10835c;
+  --app-brand-deep: #0b6b4b;
+  --app-on-brand: #fff;
+}
+
+:root.perfil-coro {
+  --brand: #a9d3ef;
+  --brand-deep: #8fc2e6;
+  --on-brand: #12324a;
+  --light-accent: #1f6aa8;
+  --dark-accent: #7fb8e6;
+  --light-chord: #1f6aa8;
+  --dark-chord: #7fb8e6;
+  --light-pdf-title: #1f6aa8;
+  --tint: #e4f0fa;
+  --tint-soft: #f4f9fd;
+  --border: #c9d8e4;
+  --border-dash: #b5cadb;
+  --line: #e4eaef;
+  --meter-idle: #cdd7df;
+}
+
+:root.perfil-maestro {
+  --brand: #b35650;
+  --brand-deep: #93433e;
+  --on-brand: #fff;
+  --light-accent: #a8453f;
+  --dark-accent: #e8908a;
+  --light-chord: #a8453f;
+  --dark-chord: #e8908a;
+  --light-pdf-title: #a8453f;
+  --tint: #fbe7e5;
+  --tint-soft: #fdf4f3;
+  --border: #e2cfcd;
+  --border-dash: #d9bcb9;
+  --line: #eee6e5;
+  --meter-idle: #dccfce;
+}
+
+:root.perfil-gestor {
+  --brand: #d6dadd;
+  --brand-deep: #c3c9cd;
+  --on-brand: #262b2f;
+  --light-accent: #454f56;
+  --dark-accent: #a9b4bb;
+  --light-chord: #454f56;
+  --dark-chord: #a9b4bb;
+  --light-pdf-title: #454f56;
+  --tint: #eceef0;
+  --tint-soft: #f6f7f8;
+  --border: #d0d5d9;
+  --border-dash: #bfc6cb;
+  --line: #e7e9eb;
+  --meter-idle: #d0d4d7;
 }
 
 /* Cores e letras: theme.css. Aqui só a mecânica dos modos claro/escuro (as páginas dos cânticos mudam; o resto não). */
@@ -163,6 +219,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .splash {
   position: fixed; inset: 0; z-index: 50;
   display: grid; place-items: center;
+  --brand: var(--app-brand); --brand-deep: var(--app-brand-deep); --on-brand: var(--app-on-brand); /* a capa fica sempre verde */
   background: linear-gradient(180deg, var(--brand), var(--brand-deep));
   transition: opacity .45s ease;
 }
@@ -737,12 +794,12 @@ dialog.top-dlg[open] { margin: calc(var(--safe-top, 0px) + 14px) auto auto; max-
 dialog h2, .list-title, .admin-title, .admin h2, .drawer-title, .listen-status {
   font-family: var(--serif); font-weight: 400; font-size: var(--fs-title); letter-spacing: .06em; text-transform: uppercase;
 }
-dialog h2 { color: var(--brand-deep); margin: 0 0 8px; }
+dialog h2 { color: var(--accent); margin: 0 0 8px; }
 .list-title { margin: 14px 18px 6px; }
-.admin-title { margin: 0 0 0 4px; color: var(--brand-deep); }
-.admin h2 { color: var(--brand-deep); margin: 22px 0 8px; }
+.admin-title { margin: 0 0 0 4px; color: var(--accent); }
+.admin h2 { color: var(--accent); margin: 22px 0 8px; }
 .drawer-title { margin: 6px 0 4px 60px; color: var(--on-brand); }
-.listen-status { margin: 4px 0; color: var(--brand-deep); }
+.listen-status { margin: 4px 0; color: var(--accent); }
 .song h1 { text-transform: uppercase; letter-spacing: .06em; }
 .pdf-title { text-transform: uppercase; letter-spacing: var(--ls-row); }
 
@@ -991,7 +1048,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows { padding: 0; margin: 0 0 8px; color: var(--text); }
 .col-ed .ce-rows li a { color: var(--text); border-bottom-color: var(--line); padding-left: 0; padding-right: 0; }
 .col-ed .ce-rows li a:active { background: var(--tint-soft); }
-.col-ed .ce-rows li.col-sec .sec-line { color: var(--brand-deep); border-bottom-color: var(--brand-deep); padding-left: 0; }
+.col-ed .ce-rows li.col-sec .sec-line { color: var(--accent); border-bottom-color: var(--accent); padding-left: 0; }
 .col-ed .ce-rows .chev { color: var(--text-faint); opacity: 1; }
 .col-ed .ce-rows :focus-visible { outline-color: var(--accent); }
 .col-ed .ce-rows li.col-add button { padding-left: 0; }
@@ -1027,7 +1084,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="can-listen solo perfil-cancioneiro lvl-1 lvl-lt3 lvl-lt4">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v202</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v203</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1166,7 +1223,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-21 v202</p>
+    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-21 v203</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

@@ -2,7 +2,7 @@
 
 Títulos de janelas e de páginas: `--serif` (Marcellus) 400, `--fs-title`, maiúsculas, espaçamento .06em.
 
-- Nas janelas e na gestão: `--brand-deep`. Sobre a cor da marca (lista, menu): `--on-brand`.
+- Nas janelas e na gestão: `--accent` (a cor dos botões do perfil). Sobre a cor da marca (lista, menu): `--on-brand`.
 - O nome da app usa `--fs-display` só na capa e na entrada; na barra de topo usa `--fs-title`.
 - Marcellus só em títulos e no nome da app — nunca em botões, campos ou linhas das listas.
 - Títulos de secção nas listas verdes (CORO, ENTRADA, «Livros» no menu): `--serif` 400 `--fs-section` maiúsculas `--ls-chip`, traço `--on-brand` por baixo (ver Linhas das listas).
