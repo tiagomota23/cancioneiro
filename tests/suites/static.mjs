@@ -187,17 +187,28 @@ export default async function (level) {
     try { execFileSync(process.execPath, ['tools/theme/build.mjs', '--check'], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }); return true; }
     catch (e) { return (e.stdout || '') + (e.stderr || '') || e.message; }
   });
-  await t('USA-05', 'Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1 (design/tokens.json)', () => {
-    const tok = JSON.parse(read('design/tokens.json')).color.tokens;
-    const val = n => { const v = tok.find(x => x.name === n)?.value; return typeof v === 'object' ? v.light : v; };
+  await t('USA-05', 'Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1; accent e chord sobre paper (claro e escuro) e danger sobre surface ≥ 4.5:1 — base e os 4 perfis (design/tokens.json, v203)', () => {
+    const T = JSON.parse(read('design/tokens.json'));
+    const tok = T.color.tokens;
+    const base = n => tok.find(x => x.name === n)?.value;
     const hex = h => { h = String(h).replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
     const lum = p => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(p[0]) + 0.7152 * f(p[1]) + 0.0722 * f(p[2]); };
     const cr = (a, b) => { const x = lum(hex(a)), y = lum(hex(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-    const on = val('on-brand'), out = ['brand', 'brand-deep'].map(n => [n, cr(on, val(n))]);
-    const bad = out.filter(([, r]) => r < 4.5);
-    const ev = out.map(([n, r]) => `${n} ${val(n)} ${r.toFixed(2)}:1`).join(', ');
-    return bad.length ? `abaixo de 4.5: ${ev}` : { pass: ev };
-  }, { sev: 'média' });
+    const mode = (v, m) => typeof v === 'object' && v ? (v[m] ?? v.light) : v;
+    const paper = base('paper'), surface = base('surface');
+    const profiles = [['cancioneiro', {}], ...((T.perfis && T.perfis.tokens) || []).map(x => [x.id, x.values])];
+    if (profiles.length < 4) return `design/tokens.json: ${profiles.length - 1} perfis em «perfis» (esperados coro, maestro, gestor)`;
+    const bad = [], ev = [];
+    for (const [id, v] of profiles) {
+      const g = n => v[n] ?? base(n);
+      const checks = [['on-brand/brand', g('on-brand'), g('brand')], ['on-brand/brand-deep', g('on-brand'), g('brand-deep')]];
+      for (const m of ['light', 'dark']) for (const n of ['accent', 'chord']) checks.push([`${n} ${m}/paper`, mode(g(n), m), mode(paper, m)]);
+      checks.push(['danger/surface', g('danger'), mode(surface, 'light')], ['on-brand-danger/danger', '#ffffff', g('danger')]);
+      for (const [k, a, b] of checks) { if (!a || !b) continue; const r = cr(a, b); if (r < 4.5) bad.push(`${id} ${k} ${a} sobre ${b} ${r.toFixed(2)}:1`); }
+      ev.push(`${id}: on-brand/brand ${cr(g('on-brand'), g('brand')).toFixed(2)}`);
+    }
+    return bad.length ? { fail: 'abaixo de 4.5: ' + bad.join('; '), evidence: ev.join(', ') } : { pass: ev.join(', ') };
+  }, { sev: 'média', where: 'design/tokens.json (color e perfis) → theme.css' });
   await t('USA-02', 'styles.css não usa cores fixas fora de theme.css (exceto na secção COMPONENTES documentada)', () => {
     const css = read('styles.css');
     const hex = [...css.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].length;
