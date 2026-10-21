@@ -32,7 +32,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ✓ |
 | FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
 | FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
-| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✗ (1.ª abertura: corrida can_listen × tutorial) |
+| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ (v202; falhou na v201: 1.ª abertura sem o passo do microfone) |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
