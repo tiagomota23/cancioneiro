@@ -170,6 +170,17 @@ export default async function (level) {
     const c = read('supabase/functions/conteudo/index.ts');
     return /const ok = false[^\n]*\n[\s\S]{0,600}approved: ok/.test(c) || 'addsong pode aprovar logo';
   }, { sev: 'média', where: 'supabase/functions/conteudo/index.ts (op addsong)' });
+  await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
+    const c = read('supabase/functions/transcribe/index.ts');
+    const bad = [];
+    if (!/rpc\/can_listen/.test(c)) bad.push('não chama rpc/can_listen');
+    if (/rpc\/is_allowed/.test(c)) bad.push('ainda chama rpc/is_allowed');
+    if (!/allowed !== true\)\s*return json\(\{[^}]*\}, 403\)/.test(c)) bad.push('sem 403 quando can_listen não é true');
+    if (!/Authorization: auth/.test(c)) bad.push('a verificação não usa o token da pessoa');
+    const q = read('supabase/reconhecimento.sql');
+    if (!/revoke execute on function public\.can_listen\(\) from public, anon/.test(q)) bad.push('reconhecimento.sql: can_listen sem revoke para anon');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média', where: 'supabase/functions/transcribe/index.ts, supabase/reconhecimento.sql' });
 
   dim('Usabilidade — padrão de design', 'baixa');
   await t('USA-01', 'theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)', () => {
