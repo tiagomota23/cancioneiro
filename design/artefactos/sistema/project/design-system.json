@@ -36,8 +36,8 @@
  },
  "lastChange": {
   "by": "Tiago",
-  "at": "2026-10-11T18:10:00Z",
-  "via": "GitHub · tiagomota23/cancioneiro (v193)",
-  "note": "Seletor de língua com versões do mesmo cântico noutras línguas."
+  "at": "2026-10-21T01:10:00Z",
+  "via": "GitHub · tiagomota23/cancioneiro (v201)",
+  "note": "Microfone e ajuda do reconhecimento só para contas com can_listen; área de toque de 44 px nos botões da barra de edição."
  }
 }
