@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v210';
+  const APP_VERSION = '2026-10-24 v211';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3118,8 +3118,8 @@
         ...r.movSongs.map(x => sb.from('collection_songs').update({ position: x.position, no_chords: !!x.no_chords, no_scores: !!x.no_scores }).eq('collection_id', o.id).eq('song_slug', x.song_slug)),
         ...r.updSecs.map(x => sb.from('collection_sections').update({ title: x.title, position: x.position }).eq('id', x.id)),
       ])).forEach(chk);
+      chk(await sb.from('collections').update(meta).eq('id', o.id)); // primeiro por publicar: só depois se trocam os grupos
       if (r.groups) d.groups = (await G.setCol(o, r.groups)) || d.groups;
-      chk(await sb.from('collections').update(meta).eq('id', o.id));
     }
     const dS = new Set(d.songs.map(x => x.song_slug));
     let edits = (o.edits || []).filter(x => dS.has(x.song_slug)); // os cânticos tirados levam a sua versão (cascade)

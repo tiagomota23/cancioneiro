@@ -30,3 +30,24 @@ drop policy if exists "grupos folha gerir" on public.collection_groups;
 create policy "grupos folha gerir" on public.collection_groups for all
   using ((select public.my_rank()) >= 4 or ((select public.my_rank()) = 3 and public.my_group(group_id) and public.col_group_ok(collection_id)))
   with check ((select public.my_rank()) >= 4 or ((select public.my_rank()) = 3 and public.my_group(group_id) and public.col_group_ok(collection_id)));
+
+-- Um Maestro que não está em todos os grupos não pode deixar uma folha publicada sem grupos (seria para todos os
+-- grupos): nem criá-la assim, nem publicá-la assim, nem tirar-lhe o último grupo. Verificado no fim do pedido (deferred).
+create or replace function public.col_groups_guard() returns trigger language plpgsql security definer set search_path = public as $$
+declare cid uuid;
+begin
+  if coalesce((select public.my_rank()), 0) <> 3 then return null; end if;
+  if not exists (select 1 from public.groups g where not public.my_group(g.id)) then return null; end if; -- está em todos
+  if tg_table_name = 'collections' then cid := new.id; else cid := old.collection_id; end if;
+  if exists (select 1 from public.collections c where c.id = cid and c.published)
+     and not exists (select 1 from public.collection_groups where collection_id = cid) then
+    raise exception 'Uma folha publicada tem de ficar com pelo menos um dos seus grupos.';
+  end if;
+  return null;
+end $$;
+drop trigger if exists col_groups_guard_c on public.collections;
+create constraint trigger col_groups_guard_c after insert or update on public.collections
+  deferrable initially deferred for each row execute function public.col_groups_guard();
+drop trigger if exists col_groups_guard_g on public.collection_groups;
+create constraint trigger col_groups_guard_g after delete on public.collection_groups
+  deferrable initially deferred for each row execute function public.col_groups_guard();
