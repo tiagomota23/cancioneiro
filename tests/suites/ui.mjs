@@ -1168,6 +1168,147 @@ async function suites(full) {
     return bad.length ? { fail: bad.join('; '), evidence: `acordes ${cA}/${cB}, páginas ${A.pages}/${C.pages}` } : { pass: `acordes ${cA} → ${cB} com no_chords; páginas ${A.pages} → ${C.pages} com no_scores` };
   }, { sev: 'média' });
 
+  // ---- v208: escolher como acrescentar em Editar folha; .col-edit-bar no topo ----
+  await t('FUN-58', 'Editar folha (v208): .col-edit-bar é a 1.ª linha de #rows; depois de escolher em #sa-list, «Acrescentar «X»» com «Cântico completo» (acrescenta, sem #cl-ed) e «Versão desta folha» (acrescenta e abre #cl-ed); Cancelar no #cl-ed deixa o cântico completo', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    await page.waitForSelector('#rows li', { timeout: 8000 });
+    if (!(await page.evaluate(() => document.querySelector('#rows > li')?.classList.contains('col-edit-bar')))) return '.col-edit-bar não é a 1.ª linha de #rows';
+    const has = sl => page.evaluate(x => !!document.querySelector(`#ce-rows li[data-key="${x}"]`), sl);
+    const pick = async q => {
+      await page.click('#ce-rows li.col-add button[data-sec="e3"]'); await sleep(400);
+      await page.fill('#sa-q', q); await sleep(500);
+      await page.locator('#sa-list button:not([disabled])').first().click(); await sleep(500);
+      return page.evaluate(() => document.querySelector('#app-dlg').open ? { title: document.querySelector('#app-dlg-title, #app-dlg h2')?.textContent.trim() || '', opts: [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.trim()) } : null);
+    };
+    await page.click('#col-mode'); await sleep(500);
+    const a = await pick('salve');
+    if (!a) return 'sem a escolha «Acrescentar «…»» depois de escolher o cântico';
+    if (!/^Acrescentar «Salve Regina/.test(a.title)) return 'título da escolha: ' + a.title;
+    if (!(/^Cântico completo/.test(a.opts[0] || '') && /^Versão desta folha/.test(a.opts[1] || ''))) return 'opções: ' + a.opts.join(' | ');
+    await page.locator('#app-dlg-list button').nth(0).click(); await sleep(500);
+    if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return '«Cântico completo» abriu #cl-ed';
+    if (!(await has('salve_regina'))) return '«Cântico completo» não acrescentou';
+    const b = await pick('amazing');
+    if (!b) return 'segunda escolha não apareceu';
+    await page.locator('#app-dlg-list button').nth(1).click();
+    await page.waitForSelector('#cl-ed[open]', { timeout: 8000 }).catch(() => {});
+    if (!(await page.evaluate(() => document.querySelector('#cl-ed').open))) return '«Versão desta folha» não abriu #cl-ed';
+    if (!(await has('amazing_grace'))) return '«Versão desta folha» não acrescentou o cântico';
+    await page.click('#cl-cancel'); await sleep(400);
+    if (await page.evaluate(() => document.querySelector('#app-dlg').open)) await page.click('#app-dlg-ok'), await sleep(300);
+    if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return 'Cancelar não fechou #cl-ed';
+    if (!(await has('amazing_grace'))) return 'Cancelar no #cl-ed tirou o cântico';
+    if (await page.evaluate(() => !!document.querySelector('#ce-rows li[data-key="amazing_grace"] small.col-edited'))) return 'Cancelar no #cl-ed deixou-o marcado como editado';
+    return true;
+  }), { sev: 'média' });
+
+  // ---- v209: grupos ----
+  const grpState = page => page.evaluate(() => ({ mine: JSON.parse(localStorage.getItem('cancioneiro.demo.mygroups') || 'null'), asked: JSON.parse(localStorage.getItem('cancioneiro.demo.groupsAsked') || 'null') }));
+  const dlgSw = page => page.evaluate(() => [...document.querySelectorAll('#app-dlg[open] .switch-row[data-g]')].map(b => ({ g: b.dataset.g, on: b.getAttribute('aria-checked') === 'true', vis: !b.closest('[hidden]') })));
+  await t('FUN-59', 'Grupos na 1.ª abertura (v209, ?grupos): janela «Os seus grupos» com um .switch-row[data-g] por grupo (g1..g5), «Guardar» e sem Cancelar; Guardar grava os escolhidos e não volta a perguntar', () => withApp({ perfil: 'coro', q: 'grupos', settle: 1500 }, async ({ page }) => {
+    await page.waitForSelector('#app-dlg[open]', { timeout: 8000 }).catch(() => {});
+    const d = await page.evaluate(() => ({ open: document.querySelector('#app-dlg').open, title: document.querySelector('#app-dlg[open] h2, #app-dlg-title')?.textContent.trim() || '', ok: document.querySelector('#app-dlg-ok')?.textContent.trim(), cancel: (b => b && !b.hidden && b.getBoundingClientRect().width > 0)(document.querySelector('#app-dlg-cancel')) }));
+    if (!d.open) return 'a pergunta dos grupos não apareceu';
+    if (!/Os seus grupos/.test(d.title)) return 'título: ' + d.title;
+    if (d.ok !== 'Guardar') return 'botão: ' + d.ok;
+    if (d.cancel) return 'tem Cancelar';
+    const sw = await dlgSw(page);
+    if (sw.map(x => x.g).join() !== 'g1,g2,g3,g4,g5') return 'interruptores: ' + sw.map(x => x.g).join();
+    for (const x of sw) if (x.g !== 'g3' && x.on) await page.click(`#app-dlg .switch-row[data-g="${x.g}"]`);
+    if (!(await dlgSw(page)).find(x => x.g === 'g3').on) await page.click('#app-dlg .switch-row[data-g="g3"]');
+    await page.click('#app-dlg-ok'); await sleep(600);
+    const st = await grpState(page);
+    if (JSON.stringify(st.mine) !== '["g3"]' || st.asked !== true) return 'gravado: ' + JSON.stringify(st);
+    // sem ?grupos não volta a perguntar
+    await page.evaluate(() => { location.search = '?demo&perfil=coro'; }); await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 10000 }).catch(() => {}); await sleep(1500);
+    return !(await page.evaluate(() => document.querySelector('#app-dlg').open && /Os seus grupos/.test(document.querySelector('#app-dlg').textContent))) || 'voltou a perguntar os grupos';
+  }), { sev: 'média' });
+  await t('FUN-60', 'Grupos no Perfil (v209): #perfis-groups com h3 «Grupos» e os interruptores (muda logo); sem nenhum aparece .grp-none «Sem grupo, não recebe folhas.» e o Coro deixa de ver as folhas; perfil só Cancioneiro: os grupos estão em #info-groups', async () => {
+    const bad = [];
+    await withApp({ perfil: 'coro' }, async ({ page }) => {
+      await page.click('#btn-perfil'); await sleep(500);
+      const r = await page.evaluate(() => { const el = document.querySelector('#perfis-groups'); return { h3: el?.querySelector('h3')?.textContent.trim(), n: el ? el.querySelectorAll('.switch-row[data-g]').length : 0 }; });
+      if (r.h3 !== 'Grupos' || r.n !== 5) { bad.push(`coro: #perfis-groups h3=${r.h3} interruptores=${r.n}`); return; }
+      for (const g of ['g1', 'g2', 'g3', 'g4', 'g5']) { await page.click(`#perfis-groups .switch-row[data-g="${g}"]`); await sleep(250); }
+      const st = await grpState(page);
+      if (JSON.stringify(st.mine) !== '[]') bad.push('coro: depois de desligar todos, gravado ' + JSON.stringify(st.mine));
+      const none = await page.evaluate(() => document.querySelector('#perfis-groups .grp-none')?.textContent.trim() || '');
+      if (none !== 'Sem grupo, não recebe folhas.') bad.push('coro: .grp-none «' + none + '»');
+      await page.click('#perfis-close'); await sleep(300);
+      await page.click('#btn-menu'); await sleep(500);
+      if (await page.evaluate(() => [...document.querySelectorAll('a[href^="#/lista/colecao-"]')].some(a => a.getBoundingClientRect().width > 0))) bad.push('coro sem grupo ainda vê folhas na gaveta');
+    });
+    await withApp({ perfil: 'cancioneiro' }, async ({ page }) => {
+      await page.click('#btn-perfil'); await sleep(500);
+      const r = await page.evaluate(() => ({ solo: document.body.classList.contains('solo'), n: document.querySelectorAll('#info-groups .switch-row[data-g]').length, infoOpen: document.querySelector('#info').open }));
+      if (!r.infoOpen) bad.push('cancioneiro: o símbolo do perfil não abriu a informação');
+      if (r.n !== 5) bad.push(`cancioneiro: #info-groups com ${r.n} interruptores (solo=${r.solo})`);
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
+  await t('FUN-61', 'Visibilidade por grupos no ?demo (v209): folha só do grupo g1 → Coro em g2 não a vê, em g1 vê, Maestro vê sempre; folha sem grupos → vista por quem tem algum grupo; sem grupo nenhuma', async () => {
+    const bad = [];
+    const cols = () => demoCols().map(c => c.id === 'demo1' ? { ...c, groups: [{ group_id: 'g1' }] } : c);
+    const sees = async (perfil, mine) => withApp({ perfil, cols: cols(), storage: { 'cancioneiro.demo.mygroups': mine, 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(500);
+      return page.evaluate(() => [...document.querySelectorAll('a[href^="#/lista/colecao-"]')].map(a => a.getAttribute('href').slice(17)));
+    });
+    const want = [['coro', ['g2'], { demo1: false }], ['coro', ['g1'], { demo1: true }], ['maestro', [], { demo1: true }], ['cancioneiro', ['g4'], { demo2: true }], ['cancioneiro', [], { demo2: false }], ['coro', [], { demo1: false }]];
+    for (const [perfil, mine, exp] of want) {
+      const got = await sees(perfil, mine);
+      if (!Array.isArray(got)) { bad.push(`${perfil} ${mine}: ${JSON.stringify(got)}`); continue; }
+      for (const [id, v] of Object.entries(exp)) if (got.includes(id) !== v) bad.push(`${perfil} [${mine}] ${v ? 'não vê' : 'vê'} ${id}`);
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta' });
+  await t('FUN-62', 'Publicar com grupos (v209): «Publicar «X»» com «Todos os grupos» [data-g="*"] ligado e lista escondida; desligar mostra os grupos e desativa OK; escolher um grupo → publica só para ele; meta «Coro · <grupo> · até …»; #ce-groups mostra o grupo', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    await page.waitForSelector('#col-pub', { timeout: 8000 }).catch(() => {});
+    if (!(await vis(page, '#col-pub'))) return 'sem #col-pub na folha por publicar';
+    await page.click('#col-pub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await sleep(300);
+    const t0 = await page.evaluate(() => document.querySelector('#app-dlg[open]')?.textContent || '');
+    if (!/Publicar «Folha em edição»/.test(t0)) return 'janela: ' + t0.slice(0, 60);
+    let sw = await dlgSw(page);
+    const all = sw.find(x => x.g === '*');
+    if (!all || !all.on) return '«Todos os grupos» ausente ou desligado';
+    if (sw.some(x => x.g !== '*' && x.vis)) return 'lista de grupos visível com «Todos» ligado';
+    await page.click('#app-dlg .switch-row[data-g="*"]'); await sleep(200);
+    sw = await dlgSw(page);
+    if (!sw.filter(x => x.g !== '*').every(x => x.vis)) return 'ao desligar «Todos» os grupos não aparecem';
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled))) return 'OK ativo sem nenhum grupo';
+    await page.click('#app-dlg .switch-row[data-g="g2"]'); await sleep(200);
+    if (await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled)) return 'OK desativado com um grupo';
+    await page.click('#app-dlg-ok'); await sleep(900);
+    const c = await page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === 'demoE'));
+    if (c.published !== true) return 'não publicou';
+    if (JSON.stringify((c.groups || []).map(x => x.group_id)) !== '["g2"]') return 'grupos gravados: ' + JSON.stringify(c.groups);
+    const meta = await page.evaluate(() => document.querySelector('.col-meta')?.textContent.replace(/\s+/g, ' ').trim() || '');
+    if (!/^Coro · Liceus · até /.test(meta)) return 'meta: ' + meta;
+    await page.click('#col-mode'); await sleep(500);
+    const cg = await page.evaluate(() => document.querySelector('#ce-groups')?.textContent.trim());
+    return cg === 'Liceus' || '#ce-groups: ' + cg;
+  }), { sev: 'média' });
+  await t('FUN-63', 'Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino', () => withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
+    await page.waitForSelector('li[data-group]', { timeout: 10000 }).catch(() => {});
+    const r = await page.evaluate(() => ({ users: document.querySelectorAll('.adm-groups').length, groups: [...document.querySelectorAll('li[data-group]')].map(l => l.dataset.group + (l.querySelector('.grp-ren') && l.querySelector('.grp-del') ? '' : '!')) }));
+    if (!r.users) return 'sem .adm-groups nos utilizadores';
+    if (r.groups.join() !== 'g1,g2,g3,g4,g5') return 'grupos: ' + r.groups.join();
+    const sub = '#grp-add button[type=submit]';
+    if (!(await page.evaluate(q => document.querySelector(q).disabled, sub))) return 'Acrescentar grupo ativo sem nome';
+    await page.fill('#grp-name', 'liceus'); await sleep(200); await page.click(sub); await sleep(600);
+    const err = await page.evaluate(() => (document.querySelector('#app-dlg[open]')?.textContent || '') + (document.querySelector('.toast')?.textContent || '') + (document.querySelector('#gestao, .admin')?.textContent || ''));
+    if (!/Já existe um grupo com esse nome/.test(err)) return 'nome repetido (maiúsculas) aceite ou sem aviso';
+    if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); }
+    await page.fill('#grp-name', 'Grupo novo de teste'); await page.click(sub); await sleep(800);
+    const n = await page.evaluate(() => [...document.querySelectorAll('li[data-group]')].filter(l => /Grupo novo de teste/.test(l.textContent)).length);
+    if (n !== 1) return 'grupo novo não apareceu';
+    await page.click('li[data-group="g5"] .grp-del'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+    const t1 = await page.evaluate(() => document.querySelector('#app-dlg[open]')?.textContent || '');
+    if (!/Retirar o grupo «Fraternidade»/.test(t1)) return 'Retirar: ' + t1.slice(0, 60);
+    if ((await dlgSw(page)).some(x => x.g === 'g5')) return 'a escolha de destino inclui o próprio grupo';
+    await page.click('#app-dlg .switch-row[data-g="g1"]'); await sleep(200); await page.click('#app-dlg-ok'); await sleep(800);
+    if (await page.evaluate(() => !!document.querySelector('li[data-group="g5"]'))) return 'o grupo não foi retirado';
+    return true;
+  }), { sev: 'média' });
+
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {
     await sleep(500);
