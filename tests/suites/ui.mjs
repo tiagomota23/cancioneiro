@@ -1245,14 +1245,14 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('FUN-61', 'Visibilidade por grupos no ?demo (v209): folha só do grupo g1 → Coro em g2 não a vê, em g1 vê, Maestro vê sempre; folha sem grupos → vista por quem tem algum grupo; sem grupo nenhuma', async () => {
+  await t('FUN-61', 'Visibilidade por grupos no ?demo (v209): folha só do grupo g1 → Coro e Maestro em g2 não a veem, em g1 veem (v210), Gestor vê sempre; folha sem grupos → vista por quem tem algum grupo; sem grupo nenhuma', async () => {
     const bad = [];
     const cols = () => demoCols().map(c => c.id === 'demo1' ? { ...c, groups: [{ group_id: 'g1' }] } : c);
     const sees = async (perfil, mine) => withApp({ perfil, cols: cols(), storage: { 'cancioneiro.demo.mygroups': mine, 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
       await page.click('#btn-menu'); await sleep(500);
       return page.evaluate(() => [...document.querySelectorAll('a[href^="#/lista/colecao-"]')].map(a => a.getAttribute('href').slice(17)));
     });
-    const want = [['coro', ['g2'], { demo1: false }], ['coro', ['g1'], { demo1: true }], ['maestro', [], { demo1: true }], ['cancioneiro', ['g4'], { demo2: true }], ['cancioneiro', [], { demo2: false }], ['coro', [], { demo1: false }]];
+    const want = [['coro', ['g2'], { demo1: false }], ['coro', ['g1'], { demo1: true }], ['maestro', [], { demo1: false }], ['maestro', ['g2'], { demo1: false }], ['maestro', ['g1'], { demo1: true }], ['gestor', [], { demo1: true }], ['cancioneiro', ['g4'], { demo2: true }], ['cancioneiro', [], { demo2: false }], ['coro', [], { demo1: false }]];
     for (const [perfil, mine, exp] of want) {
       const got = await sees(perfil, mine);
       if (!Array.isArray(got)) { bad.push(`${perfil} ${mine}: ${JSON.stringify(got)}`); continue; }
@@ -1286,6 +1286,34 @@ async function suites(full) {
     const cg = await page.evaluate(() => document.querySelector('#ce-groups')?.textContent.trim());
     return cg === 'Liceus' || '#ce-groups: ' + cg;
   }), { sev: 'média' });
+  await t('FUN-64', 'Maestro só com os seus grupos (v210, mygroups g2+g3): Publicar mostra só Liceus e CLU, sem «Todos os grupos», OK desativado até escolher; #ce-groups igual; folha nova nasce com g2+g3', async () => {
+    const bad = [];
+    const st = { 'cancioneiro.demo.mygroups': ['g2', 'g3'], 'cancioneiro.demo.groupsAsked': true };
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE', storage: st }, async ({ page }) => {
+      await page.waitForSelector('#col-pub', { timeout: 8000 }).catch(() => {});
+      await page.click('#col-pub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await sleep(300);
+      const sw = await dlgSw(page);
+      if (sw.map(x => x.g).join() !== 'g2,g3') bad.push('Publicar: interruptores ' + sw.map(x => x.g).join());
+      if (sw.some(x => x.on)) bad.push('Publicar: grupos já ligados');
+      if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled))) bad.push('Publicar: OK ativo sem grupo');
+      await page.click('#app-dlg .switch-row[data-g="g3"]'); await sleep(200);
+      if (await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled)) bad.push('Publicar: OK desativado com CLU');
+      await page.click('#app-dlg-cancel'); await sleep(300);
+      await page.click('#col-mode'); await sleep(500); await page.click('#ce-groups'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await sleep(300);
+      const sw2 = await dlgSw(page);
+      if (sw2.map(x => x.g).join() !== 'g2,g3') bad.push('#ce-groups: interruptores ' + sw2.map(x => x.g).join());
+      await page.click('#app-dlg-cancel'); await sleep(200);
+    });
+    await withApp({ perfil: 'maestro', storage: st }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(500); await page.click('.col-new'); await sleep(500);
+      await page.fill('#col-name', 'Folha de teste dos grupos'); await page.click('#col-save'); await sleep(1000);
+      const c = await page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.cols') || '[]').find(x => x.title === 'Folha de teste dos grupos'));
+      if (!c) { bad.push('folha nova não gravada'); return; }
+      const g = (c.groups || []).map(x => x.group_id).sort().join();
+      if (g !== 'g2,g3') bad.push('folha nova com grupos «' + g + '» (esperado g2,g3)');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta' });
   await t('FUN-63', 'Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino', () => withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
     await page.waitForSelector('li[data-group]', { timeout: 10000 }).catch(() => {});
     const r = await page.evaluate(() => ({ users: document.querySelectorAll('.adm-groups').length, groups: [...document.querySelectorAll('li[data-group]')].map(l => l.dataset.group + (l.querySelector('.grp-ren') && l.querySelector('.grp-del') ? '' : '!')) }));
