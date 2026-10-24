@@ -132,6 +132,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   v205: todos os cânticos da página da folha abrem com `/folha/<id>`; assim aberto, o cântico não mostra edições do
   original (Editar cântico, ficheiros, aprovar, versões). Maestro vê «abrir fora da folha para editar». As ações do item
   escolhido em Editar folha ficam numa linha por baixo dele.
+  v206: nota «Na folha «<título>»» (· letra desta folha), sem ligações. Interruptores Acordes / Partituras por cântico
+  em «Editar nesta folha» (só folha do Coro e só se o cântico os tem) → `collection_songs.no_chords / no_scores`
+  (grants por coluna). No PDF, um cântico leva acordes / partituras só com o seu interruptor e o de «Gerar PDF».
+  Indicador: «editado nesta folha · sem acordes · sem partituras» (`editLabel`).
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.

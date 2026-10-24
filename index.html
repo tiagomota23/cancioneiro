@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css?v=205">
-  <link rel="stylesheet" href="styles.css?v=205">
+  <link rel="stylesheet" href="theme.css?v=206">
+  <link rel="stylesheet" href="styles.css?v=206">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver"></span></p></div></div>
@@ -193,11 +193,12 @@
   <dialog id="cl-ed" class="editor cl-ed top-dlg">
     <h2 tabindex="-1" autofocus>Editar nesta folha</h2>
     <p class="small" id="cl-title"></p>
+    <div class="cl-flags"><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-chords"><span>Acordes</span><span class="switch"></span></button><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-scores"><span>Partituras</span><span class="switch"></span></button></div>
     <p class="ce-label" id="cl-inc">Incluir</p>
     <ul class="cl-sts" id="cl-sts"></ul>
     <p class="cl-text-link"><button type="button" class="revert-link" id="cl-text-btn">Editar texto</button></p>
     <textarea id="cl-text" spellcheck="false" autocapitalize="off" hidden></textarea>
-    <p class="small">Muda a letra só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. A letra original não muda.</p>
+    <p class="small">Muda o cântico só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. O original não muda.</p>
     <p class="small" id="cl-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="cl-reset" class="danger-fill">Repor original</button><span></span><button type="button" id="cl-cancel" class="ghost">Cancelar</button><button type="button" id="cl-save">Guardar</button></div>
   </dialog>
@@ -297,7 +298,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=205"></script>
-  <script src="app.js?v=205"></script>
+  <script src="config.js?v=206"></script>
+  <script src="app.js?v=206"></script>
 </body>
 </html>

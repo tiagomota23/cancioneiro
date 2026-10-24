@@ -17,3 +17,8 @@ grant select (collection_id, song_slug, edited_at) on public.collection_lyrics t
 drop policy if exists "folhas letras ler" on public.collection_lyrics;
 create policy "folhas letras ler" on public.collection_lyrics for select to authenticated
   using (exists (select 1 from public.collections c where c.id = collection_lyrics.collection_id));
+
+-- Acordes e partituras de cada cântico na folha (v206): ligados por omissão; o Maestro desliga-os em «Editar nesta folha»
+alter table public.collection_songs add column if not exists no_chords boolean not null default false;
+alter table public.collection_songs add column if not exists no_scores boolean not null default false;
+grant select (no_chords, no_scores), insert (no_chords, no_scores), update (no_chords, no_scores) on public.collection_songs to authenticated;
