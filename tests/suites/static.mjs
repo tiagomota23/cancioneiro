@@ -151,10 +151,10 @@ export default async function (level) {
     const c = read('supabase/functions/conteudo/index.ts');
     const m = c.match(/const full = b\.songs \?[\s\S]*?return \{([^}]*)\};/);
     if (!m) return 'bloco songs:true não encontrado';
-    const fields = m[1].split(',').map(x => x.split(':')[0].trim()).filter(Boolean).sort().join(',');
+    const fields = [...m[1].matchAll(/(?:^\s*|[,{]\s*)(\w+)\s*:/g)].map(x => x[1]).sort().join(',');
     const want = ['author', 'language', 'lyrics', 'number', 'slug', 'title', 'translation', 'translation_language'].sort().join(',');
     if (fields !== want) return 'campos: ' + fields;
-    return /lyrics: noChords\(s\.eff\)/.test(m[0]) || 'letra sem noChords';
+    return /lyrics: noChords\((s\.eff|effOf\(it\.slug, s\))\)/.test(m[0]) || 'letra sem noChords'; // v204: effOf = versão da folha ou a original
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (op shared)' });
 
   await t('SEG-12', 'conteudo: folha por publicar → endereço partilhado «expirado», share 409, e não conta para o Cancioneiro (colSet)', () => {
