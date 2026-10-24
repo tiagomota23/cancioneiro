@@ -136,6 +136,13 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   em «Editar nesta folha» (só folha do Coro e só se o cântico os tem) → `collection_songs.no_chords / no_scores`
   (grants por coluna). No PDF, um cântico leva acordes / partituras só com o seu interruptor e o de «Gerar PDF».
   Indicador: «editado nesta folha · sem acordes · sem partituras» (`editLabel`).
+- Grupos (v209, `supabase/grupos.sql`; arranque em `grupos-inicio.sql`, já corrido: 5 grupos e todas as contas em todos):
+  `groups`, `user_groups` (por email), `collection_groups`; `allowed_emails.groups_asked`. Cada pessoa escolhe os seus
+  (`set_my_groups`; Perfil → Grupos, ou a janela de informação no perfil só Cancioneiro; e a pergunta da 1.ª abertura).
+  Sem grupo não recebe folhas; folha sem grupos = todos os grupos; Maestro/Gestor veem todas. A RLS de `collections`
+  usa `col_group_ok(id)`; a função `conteudo` também filtra (colSet e versão da folha). Publicar e Editar folha escolhem
+  os grupos. Gestão: grupos de cada utilizador (`set_user_groups`), e o Gestor gere a lista (`group_save`,
+  `group_remove`: as folhas que ficam sem grupo passam a por publicar).
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.

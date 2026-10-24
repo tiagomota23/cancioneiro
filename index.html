@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css?v=208">
-  <link rel="stylesheet" href="styles.css?v=208">
+  <link rel="stylesheet" href="theme.css?v=209">
+  <link rel="stylesheet" href="styles.css?v=209">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver"></span></p></div></div>
@@ -144,6 +144,7 @@
     <button type="button" class="dlg-x" id="info-x" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="info-body" tabindex="-1" autofocus>
     <h2>Cancioneiro</h2>
+    <div id="info-groups" class="my-groups"></div>
     <p class="info-install"><button type="button" class="install-line" id="info-install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg><span>Adicionar a app ao ecrã principal</span></button></p>
     <p class="share-app"><button type="button" class="install-line" id="info-share-app"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg><span>Partilhar a app</span></button></p>
     <p class="share-app"><button type="button" class="install-line" id="info-tour"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/></svg><span>Ver o tutorial</span></button></p>
@@ -183,6 +184,7 @@
     <div class="aud-switch" id="ce-aud" role="group" aria-label="Público"><button type="button" data-v="coro">Coro</button><button type="button" data-v="cancioneiro">Cancioneiro</button></div>
     <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
+    <div class="col-field">Grupos<button type="button" class="ce-groups" id="ce-groups"></button></div>
     <p class="small" id="ce-until"></p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"></ul>
@@ -239,6 +241,7 @@
     <p class="perfis-install"><button type="button" class="install-line" id="perfis-install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg><span>Adicionar a app ao ecrã principal</span></button></p>
     <p class="perfis-line coro-only"><button type="button" class="install-line" id="perfis-newsong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Acrescentar um cântico</span></button></p>
     <div id="perfis-list" class="perfis-list"></div>
+    <div id="perfis-groups" class="my-groups"></div>
     <form method="dialog" class="info-actions perfis-actions"><button type="button" id="perfis-close">Fechar</button><button type="button" class="perfil-i" id="perfil-info" aria-label="Informação e ajuda" title="Informação e ajuda">i</button></form>
   </dialog>
 
@@ -298,7 +301,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=208"></script>
-  <script src="app.js?v=208"></script>
+  <script src="config.js?v=209"></script>
+  <script src="app.js?v=209"></script>
 </body>
 </html>

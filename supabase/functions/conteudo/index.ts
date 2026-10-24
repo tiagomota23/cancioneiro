@@ -302,6 +302,10 @@ const noChords = v => (v || []).map(st => ({ ...st, lines: st.lines.map(stripCho
 const validEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(e);
 const validLyrics = v => Array.isArray(v) && v.length <= 80 && v.every(st => st && (st.type === 'verse' || st.type === 'chorus') && Array.isArray(st.lines) && st.lines.length <= 80 && st.lines.every(l => typeof l === 'string' && l.length <= 300));
 
+// grupos da pessoa e se uma folha é para ela (sem grupos na folha = todos os grupos; pessoa sem grupo = nenhuma)
+const myGroups = async user => new Set((await rest(`user_groups?email=eq.${encodeURIComponent(user.email)}&select=group_id`).catch(() => [])).map(x => x.group_id));
+const groupOk = (mine, cg) => !mine || (mine.size > 0 && (!(cg || []).length || cg.some(x => mine.has(x.group_id))));
+
 Deno.serve(async (req) => {
   const H = { ...cors(req), 'Content-Type': 'application/json' };
   const out = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: H });
@@ -355,8 +359,10 @@ Deno.serve(async (req) => {
     let colSet = new Set();
     if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
-      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published)${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
-      colSet = new Set(rows.map(r => r.song_slug));
+      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published,collection_groups(group_id))${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
+      // grupos (abaixo de Maestro): só as folhas para todos os grupos ou de um dos seus; sem grupo, nenhuma
+      const mine = lvl >= 3 ? null : await myGroups(user);
+      colSet = new Set(rows.filter(r => groupOk(mine, r.collections.collection_groups)).map(r => r.song_slug));
     }
     // sem limite só para quem não cria coleções: um Maestro / Gestor não as pode usar para contornar os limites
     const free = user.rank >= 3 ? new Set() : colSet;
@@ -376,8 +382,8 @@ Deno.serve(async (req) => {
         const id = String(b.collection);
         if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
         const [o] = await rest(`collection_lyrics?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=lyrics`);
-        const [c] = o ? await rest(`collections?id=eq.${id}&select=audience,expires_at,published`) : [];
-        if (o && c && (lvl >= 3 || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2)))) { eff = o.lyrics; folha = true; }
+        const [c] = o ? await rest(`collections?id=eq.${id}&select=audience,expires_at,published,collection_groups(group_id)`) : [];
+        if (o && c && (lvl >= 3 || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2) && groupOk(await myGroups(user), c.collection_groups)))) { eff = o.lyrics; folha = true; }
       }
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha });

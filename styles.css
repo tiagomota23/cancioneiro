@@ -671,6 +671,7 @@ dialog form button.ghost, .edit-actions button.ghost, .info-actions button.ghost
 }
 .edit-btn svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .ghost-btn, .admin button.adm-del, .admin button.adm-no { background: var(--surface); border-color: var(--danger-border); color: var(--danger); }
+.admin button.grp-ren { background: var(--surface); border-color: var(--accent); color: var(--accent); } /* secundário */
 /* fora das linhas densas (lista de utilizadores, barra de aprovação), o botão é o normal de 40 px; «Editar cântico» é secundário */
 .edit-bar .edit-btn, .edit-bar .ghost-btn { height: var(--h-btn); padding: 0 18px; font-weight: 400; font-size: var(--fs-ui); }
 .edit-bar .edit-btn, .edit-bar .ghost-btn { position: relative; }
@@ -899,6 +900,12 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .cl-st.chorus { font-style: italic; }
 .cl-text-link { margin: 8px 0 0; }
 .cl-ed textarea { margin-top: 8px; }
+.my-groups h3 { margin: 14px 0 2px; font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; color: var(--text-soft); }
+.my-groups .small { margin: 2px 0 6px; }
+.my-groups .grp-none { color: var(--warn-ink); }
+body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
+.ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
+.adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
 /* ações do item escolhido: numa linha por baixo dele, à direita (não tapam o título, o autor nem «editado nesta folha») */
 .ce-acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 0 10px; background: var(--tint-soft); }
