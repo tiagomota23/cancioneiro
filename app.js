@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v211';
+  const APP_VERSION = '2026-10-24 v212';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2833,23 +2833,28 @@
   const colGroupIds = c => (c.groups || []).map(x => x.group_id).filter(id => groups.some(g => g.id === id));
   // a pessoa recebe esta folha pelos grupos? (Gestor: todas)
   const colGroupOk = c => lvl() >= 4 || !myGroupIds || (myGroupIds.size > 0 && (!colGroupIds(c).length || colGroupIds(c).some(id => myGroupIds.has(id))));
-  const groupsLabel = ids => ids.length ? ids.map(groupName).join(', ') : 'Todos os grupos';
+  const groupsLabel = ids => ids.length ? groups.filter(g => ids.includes(g.id)).map(g => g.name).join(', ') : 'Todos'; // pela ordem dos grupos
   // janela com um interruptor por grupo (e, com all, «Todos os grupos» por cima). Devolve os ids escolhidos ([] = todos), ou null.
   // para uma folha (own): o Maestro só escolhe grupos seus, e «Todos os grupos» só se estiver em todos
   const ownGroups = () => lvl() >= 4 || !myGroupIds ? groups : groups.filter(g => myGroupIds.has(g.id));
   async function pickGroups({ title, msg = '', html = '', ids = [], all = false, ok = 'Guardar', cancel = 'Cancelar', list = groups, own = false }) {
-    let need = false; // sem «Todos os grupos», uma folha precisa de pelo menos um grupo (vazio seria «todos»)
+    let need = false; // sem «Todos», uma folha precisa de pelo menos um grupo (vazio seria «todos»)
     if (own) { list = ownGroups(); all = all && list.length === groups.length; need = !all; if (!all && !ids.length) ids = list.length === 1 ? [list[0].id] : []; }
     const sw = (id, label, on, cls = '') => `<button type="button" class="switch-row pdf-opt${on ? ' on' : ''}${cls}" role="switch" aria-checked="${on}" data-g="${esc(id)}"><span>${esc(label)}</span><span class="switch"></span></button>`;
-    const allOn = all && !ids.length;
+    // «Todos» marca e desmarca todos os grupos; fica ligado quando todos estão ligados (folha sem grupos = todos)
+    if (all && !ids.length) ids = list.map(g => g.id);
+    const allOn = all && list.every(g => ids.includes(g.id));
     const asked = appDialog({ title, ok, cancel, html: (msg ? `<p>${esc(msg)}</p>` : '') + html +
-      (all ? sw('*', 'Todos os grupos', allOn) : '') + `<div class="grp-list"${allOn ? ' hidden' : ''}>${list.map(g => sw(g.id, g.name, ids.includes(g.id))).join('')}</div>` });
+      (all ? sw('*', 'Todos', allOn) : '') + `<div class="grp-list">${list.map(g => sw(g.id, g.name, ids.includes(g.id))).join('')}</div>` });
     const box = $('app-dlg-msg'), on = b => b.classList.contains('on');
-    const chosen = () => [...box.querySelectorAll('.grp-list .switch-row')].filter(on).map(b => b.dataset.g);
-    const gate = () => { const a = box.querySelector('[data-g="*"]'); $('app-dlg-ok').disabled = (a ? !on(a) : need) && !chosen().length; };
+    const set = (b, v) => { b.classList.toggle('on', v); b.setAttribute('aria-checked', v); };
+    const items = () => [...box.querySelectorAll('.grp-list .switch-row')];
+    const chosen = () => items().filter(on).map(b => b.dataset.g);
+    const gate = () => { $('app-dlg-ok').disabled = (all || need) && !chosen().length; };
     box.querySelectorAll('.switch-row').forEach(b => b.onclick = () => {
-      const v = !on(b); b.classList.toggle('on', v); b.setAttribute('aria-checked', v);
-      if (b.dataset.g === '*') box.querySelector('.grp-list').hidden = v;
+      const v = !on(b), a = box.querySelector('[data-g="*"]');
+      if (b === a) items().concat(a).forEach(x => set(x, v));
+      else { set(b, v); if (a) set(a, items().every(on)); }
       gate();
     });
     gate();
@@ -2983,11 +2988,13 @@
     title.hidden = false; $('status').textContent = '';
     if (!c || !colVisible(c)) { title.textContent = 'Folha'; rows.innerHTML = ''; $('status').textContent = c ? 'Esta folha já não está disponível.' : 'A carregar…'; if (!c) loadCollections().then(() => { if (location.hash === '#/lista/colecao-' + id) showCollection(id); }); return; }
     const can = lvl() >= 3, draft = c.published === false;
-    const meta = `<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'}${colGroupIds(c).length ? ' · ' + esc(groupsLabel(colGroupIds(c))) : ''} · ${colUntil(c)}</small>`;
+    // folha publicada: os grupos numa segunda linha (na por publicar escolhem-se ao Publicar)
+    const meta = `<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${colUntil(c)}</small>` +
+      (c.published !== false ? `<small class="col-meta">Grupos: ${esc(groupsLabel(colGroupIds(c)))}</small>` : '');
     // partilhar: só Maestro / Gestor, e só a folha publicada com cânticos
     const shareBtn = can && !draft && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
     // por publicar (só Maestro / Gestor a vê): etiqueta amarela por cima do título, como «por aprovar»
-    title.innerHTML = `${can && draft ? '<small class="pend pend-top">Por publicar</small>' : ''}${esc(c.title)}${shareBtn}${can ? meta : ''}`;
+    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? meta : ''}`; // por publicar: o botão Publicar (amarelo) já o diz
     const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     const items = withSongs(all);
     // Maestro / Gestor: «Editar folha» | «Publicar» na primeira linha, antes das secções e dos cânticos
