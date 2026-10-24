@@ -38,6 +38,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (switch, aria-checked desde v205) (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ☐ por correr |
 | FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
 | FUN-56 | Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores só em folha Coro e se o cântico os tem; Cancelar com mudança pede confirmação; marca «· sem acordes / · sem partituras»; grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch/#btn-chords e sem .scores a; Repor volta a false | ui | média | V | ☐ por correr |
+| FUN-57 | PDF da folha respeita no_chords/no_scores (v206): folha Coro amazing_grace + santa_lucia; no_chords num → menos acordes no texto mas o outro mantém; no_scores num → menos páginas (texto com vendor/pdfjs) | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
