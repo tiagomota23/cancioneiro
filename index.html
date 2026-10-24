@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css?v=212">
-  <link rel="stylesheet" href="styles.css?v=212">
+  <link rel="stylesheet" href="theme.css?v=213">
+  <link rel="stylesheet" href="styles.css?v=213">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver"></span></p></div></div>
@@ -185,6 +185,7 @@
     <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <div class="col-field">Grupos<button type="button" class="ce-groups" id="ce-groups"></button></div>
+    <p class="small ce-state" id="ce-state"></p>
     <p class="small" id="ce-until"></p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"></ul>
@@ -301,7 +302,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=212"></script>
-  <script src="app.js?v=212"></script>
+  <script src="config.js?v=213"></script>
+  <script src="app.js?v=213"></script>
 </body>
 </html>
