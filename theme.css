@@ -98,6 +98,10 @@
   --app-brand: #10835c;
   --app-brand-deep: #0b6b4b;
   --app-on-brand: #fff;
+
+  /* Cor das folhas em PDF (pelo público da folha) */
+  --folha-cancioneiro: #0e7f58; /* PDF de uma folha para o Cancioneiro */
+  --folha-coro: #1f6aa8;        /* PDF de uma folha para o Coro */
 }
 
 :root.perfil-coro {

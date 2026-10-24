@@ -47,6 +47,10 @@ for (const t of list('alpha')) {
 // cor fixa da app (capa): igual à marca do perfil Cancioneiro, não muda com o perfil
 const colorTok = Object.fromEntries(list('color').map(t => [t.name, t.value]));
 for (const n of ['brand', 'brand-deep', 'on-brand']) add('Cor fixa da app (capa; não muda com o perfil)', `app-${n}`, colorTok[n], null);
+// cor das folhas em PDF (papel branco): a do público da folha, não a do perfil de quem gera
+const accentOf = id => { const v = id ? (doc.perfis?.tokens || []).find(t => t.id === id)?.values?.accent : colorTok.accent; return v && typeof v === 'object' ? v.light : v; };
+add('Cor das folhas em PDF (pelo público da folha)', 'folha-cancioneiro', accentOf(null), 'PDF de uma folha para o Cancioneiro');
+add('Cor das folhas em PDF (pelo público da folha)', 'folha-coro', accentOf('coro'), 'PDF de uma folha para o Coro');
 // cores por perfil: :root.perfil-<id> substitui as da família color
 const perfis = (doc.perfis?.tokens || []).map(pf => {
   const decls = [];

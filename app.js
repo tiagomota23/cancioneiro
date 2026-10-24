@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v213';
+  const APP_VERSION = '2026-10-24 v214';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1357,6 +1357,7 @@
       const F = { r: await doc.embedFont(L.StandardFonts.Helvetica), b: await doc.embedFont(L.StandardFonts.HelveticaBold), i: await doc.embedFont(L.StandardFonts.HelveticaOblique) };
       // cada cântico: acordes / partituras só se a folha não os desligou para ele (numa folha do Coro)
       const off = (slug, k) => c.audience === 'coro' && !!colEntry(c, slug)[k];
+      pdfAud = c.audience === 'coro' ? 'coro' : 'cancioneiro';
       layoutLyrics(L, doc, F, c.title, items, slug => o.chords && !off(slug, 'no_chords'), lyrOf);
       if (o.scores) await appendScores(L, doc, F, songsIn.filter(s => !off(s.slug, 'no_scores')), msg);
       const bytes = await doc.save();
@@ -1371,7 +1372,9 @@
       msg(e instanceof Limit ? e.message : 'Não foi possível gerar o PDF. Verifique a ligação à internet.');
     }
   }
-  const GREEN = () => themeRgb('--light-accent', [0.06, 0.5, 0.35]); // PDF em papel branco: sempre a cor do modo claro
+  // PDF em papel branco: a cor do público da folha (azul do Coro, verde do Cancioneiro), não a do perfil de quem o gera
+  let pdfAud = null;
+  const GREEN = () => themeRgb(pdfAud ? '--folha-' + pdfAud : '--light-accent', [0.06, 0.5, 0.35]);
   function layoutLyrics(L, doc, F, colTitle, items, chordsFor, lyrOf) {
     const W = 595.28, H = 841.89, M = 34, GAP = 18;
     // título da coleção: centrado, a toda a largura da 1.ª página, com um traço por baixo
