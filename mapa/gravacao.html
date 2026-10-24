@@ -1077,6 +1077,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .my-groups .small { margin: 2px 0 6px; }
 .my-groups .grp-none { color: var(--warn-ink); }
 body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
+.ce-state { margin: 6px 0 0; } .ce-state .revert-link { padding: 6px 2px; }
 .ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
 .adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
@@ -1105,7 +1106,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="can-listen perfil-gestor has-mini">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v212</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v213</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1263,7 +1264,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v212</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v213</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1288,6 +1289,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
     <label class="col-field"><span>Título<span class="req" aria-hidden="true">*</span></span><input id="ce-name" maxlength="80" autocomplete="off" required="" style=""></label>
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <div class="col-field">Grupos<button type="button" class="ce-groups" id="ce-groups"></button></div>
+    <p class="small ce-state" id="ce-state"></p>
     <p class="small" id="ce-until"></p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"></ul>
