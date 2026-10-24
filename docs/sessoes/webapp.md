@@ -143,6 +143,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   usa `col_group_ok(id)`; a função `conteudo` também filtra (colSet e versão da folha). Publicar e Editar folha escolhem
   os grupos. Gestão: grupos de cada utilizador (`set_user_groups`), e o Gestor gere a lista (`group_save`,
   `group_remove`: as folhas que ficam sem grupo passam a por publicar).
+  v210 (`grupos-maestro.sql`): o Maestro também só vê / gere / publica folhas dos seus grupos (RLS de collections,
+  collection_songs, collection_sections, collection_groups; `my_group(gid)`; conteudo: bypass só com lvl ≥ 4). Ao publicar
+  só escolhe grupos seus, e «Todos os grupos» só se estiver em todos. O Maestro só põe/tira os seus grupos numa folha.
+  Folha nova de um Maestro que não está em todos os grupos nasce com os grupos dele. O Gestor vê e gere todas.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
