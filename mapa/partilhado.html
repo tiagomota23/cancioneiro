@@ -1097,7 +1097,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="shared-view no-session">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v205</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v206</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1160,7 +1160,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 25/10, 12:51</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 25/10, 13:01</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->
@@ -1275,11 +1275,12 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <dialog id="cl-ed" class="editor cl-ed top-dlg">
     <h2 tabindex="-1" autofocus="">Editar nesta folha</h2>
     <p class="small" id="cl-title"></p>
+    <div class="cl-flags"><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-chords"><span>Acordes</span><span class="switch"></span></button><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-scores"><span>Partituras</span><span class="switch"></span></button></div>
     <p class="ce-label" id="cl-inc">Incluir</p>
     <ul class="cl-sts" id="cl-sts"></ul>
     <p class="cl-text-link"><button type="button" class="revert-link" id="cl-text-btn">Editar texto</button></p>
     <textarea id="cl-text" spellcheck="false" autocapitalize="off" hidden="" style=""></textarea>
-    <p class="small">Muda a letra só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. A letra original não muda.</p>
+    <p class="small">Muda o cântico só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. O original não muda.</p>
     <p class="small" id="cl-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="cl-reset" class="danger-fill">Repor original</button><span></span><button type="button" id="cl-cancel" class="ghost">Cancelar</button><button type="button" id="cl-save">Guardar</button></div>
   </dialog>

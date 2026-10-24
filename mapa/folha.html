@@ -1097,7 +1097,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v205</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v206</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1136,7 +1136,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 31/10/2026 12:50</small></h2>
+    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 31/10/2026 13:00</small></h2>
     <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus/folha/demo1"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote/folha/demo1"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus/folha/demo1"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina/folha/demo1"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
     <p class="status" id="status"></p>
   </section>
@@ -1236,7 +1236,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v205</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v206</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1270,11 +1270,12 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
   <dialog id="cl-ed" class="editor cl-ed top-dlg">
     <h2 tabindex="-1" autofocus="">Editar nesta folha</h2>
     <p class="small" id="cl-title"></p>
+    <div class="cl-flags"><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-chords"><span>Acordes</span><span class="switch"></span></button><button type="button" class="switch-row pdf-opt" role="switch" aria-checked="true" id="cl-scores"><span>Partituras</span><span class="switch"></span></button></div>
     <p class="ce-label" id="cl-inc">Incluir</p>
     <ul class="cl-sts" id="cl-sts"></ul>
     <p class="cl-text-link"><button type="button" class="revert-link" id="cl-text-btn">Editar texto</button></p>
     <textarea id="cl-text" spellcheck="false" autocapitalize="off" hidden="" style=""></textarea>
-    <p class="small">Muda a letra só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. A letra original não muda.</p>
+    <p class="small">Muda o cântico só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. O original não muda.</p>
     <p class="small" id="cl-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="cl-reset" class="danger-fill">Repor original</button><span></span><button type="button" id="cl-cancel" class="ghost">Cancelar</button><button type="button" id="cl-save">Guardar</button></div>
   </dialog>
