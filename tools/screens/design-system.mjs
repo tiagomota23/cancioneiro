@@ -199,6 +199,7 @@ Duas famílias: \`serif\` (Marcellus) só em títulos e no nome da app; \`sans\`
 - Páginas dos cânticos (pares claro/escuro): \`paper\`, \`ink\`, \`ink-soft\`, \`chord\`, \`title\`, \`pdf-bg\`, \`pdf-title\`.
 - Estados: \`star\`, \`danger\` âmbar ${light('danger')} (+ \`danger-deep\`, \`danger-border\`; não vermelho, para não se confundir com o Maestro), \`pending-*\`, \`warn-*\`.
 - Por perfil (família \`perfis\`; classe \`perfil-<id>\` no \`<html>\`): o Cancioneiro usa as cores acima; ${(tokens.perfis?.tokens || []).map(p => `**${p.id}** — brand ${p.values.brand}, on-brand ${p.values['on-brand']}, accent ${p.values.accent.light}`).join('; ')}. Mudam também chord, pdf-title, tint, tint-soft, border, border-dash, line e meter-idle. Capa, ícone, theme-color e manifest ficam com as cores da app (\`app-brand\`, \`app-brand-deep\`, \`app-on-brand\`).
+- PDF das folhas (papel branco): \`folha-cancioneiro\` e \`folha-coro\`, derivadas em \`tools/theme/build.mjs\` do \`accent\` claro da família color e do perfil Coro. O PDF de uma folha usa a cor do público da folha, nunca a do perfil de quem o gera.
 - Opacidades derivadas: ${(tokens.alpha?.tokens || []).map(a => `\`${a.name}\` = \`${a.base}\` a ${a.value}`).join(', ')}.
 
 ## Forma e tamanho

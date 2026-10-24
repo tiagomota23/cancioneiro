@@ -34,6 +34,7 @@ Duas famílias: `serif` (Marcellus) só em títulos e no nome da app; `sans` (La
 - Páginas dos cânticos (pares claro/escuro): `paper`, `ink`, `ink-soft`, `chord`, `title`, `pdf-bg`, `pdf-title`.
 - Estados: `star`, `danger` âmbar #9a5b00 (+ `danger-deep`, `danger-border`; não vermelho, para não se confundir com o Maestro), `pending-*`, `warn-*`.
 - Por perfil (família `perfis`; classe `perfil-<id>` no `<html>`): o Cancioneiro usa as cores acima; **coro** — brand #a9d3ef, on-brand #12324a, accent #1f6aa8; **maestro** — brand #b35650, on-brand #fff, accent #a8453f; **gestor** — brand #d6dadd, on-brand #262b2f, accent #454f56. Mudam também chord, pdf-title, tint, tint-soft, border, border-dash, line e meter-idle. Capa, ícone, theme-color e manifest ficam com as cores da app (`app-brand`, `app-brand-deep`, `app-on-brand`).
+- PDF das folhas (papel branco): `folha-cancioneiro` e `folha-coro`, derivadas em `tools/theme/build.mjs` do `accent` claro da família color e do perfil Coro. O PDF de uma folha usa a cor do público da folha, nunca a do perfil de quem o gera.
 - Opacidades derivadas: `on-brand-line` = `on-brand` a 22%, `on-brand-outline` = `on-brand` a 70%, `scrim` = `shadow` a 45%.
 
 ## Forma e tamanho
