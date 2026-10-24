@@ -170,6 +170,21 @@ export default async function (level) {
     const c = read('supabase/functions/conteudo/index.ts');
     return /const ok = false[^\n]*\n[\s\S]{0,600}approved: ok/.test(c) || 'addsong pode aprovar logo';
   }, { sev: 'média', where: 'supabase/functions/conteudo/index.ts (op addsong)' });
+  await t('SEG-15', 'conteudo «Editar nesta folha» (v204): collyrics só Maestro+ (lvl < 3 → 403), valida coleção e letra e exige o cântico na folha; song com collection só dá a versão a quem vê a folha (publicada, ativa, público) e tira acordes ao Cancioneiro; shared usa a versão da folha', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    const cl = (c.match(/if \(op === 'collyrics'\)[\s\S]{0,1600}?\n    \}/) || [''])[0];
+    if (!cl) return "op collyrics não encontrada";
+    if (!/^\s*if \(op === 'collyrics'\)[^\n]*\n\s*if \(lvl < 3\) return denied\(\);/.test(cl)) bad.push('collyrics: a 1.ª verificação não é lvl < 3 → denied');
+    if (!/\[0-9a-f-\]\{36\}/.test(cl)) bad.push('collyrics: id da coleção não validado');
+    if (!/validLyrics\(v\)/.test(cl)) bad.push('collyrics: letra não validada');
+    if (!/collection_songs\?collection_id=eq\.\$\{id\}&song_slug=eq/.test(cl)) bad.push('collyrics: não confirma o cântico na folha');
+    if (!/limit\(user, 'save'/.test(cl)) bad.push('collyrics: sem limite de uso');
+    const sg = (c.match(/if \(op === 'song'\)[\s\S]{0,1800}?\n    \}/) || [''])[0];
+    if (!/lvl >= 3 \|\| \(c\.published && Date\.parse\(c\.expires_at\) > Date\.now\(\) && \(c\.audience === 'cancioneiro' \|\| lvl >= 2\)\)/.test(sg)) bad.push('song+collection: condição de visibilidade da folha mudou (rever)');
+    if (!/lvl >= 2 \? eff : noChords\(eff\)/.test(sg)) bad.push('song: versão da folha sem noChords para o Cancioneiro');
+    if (!/collection_lyrics\?collection_id=eq\.\$\{col\.id\}/.test(c) || !/own\.get\(slug\) \|\| s\.eff/.test(c)) bad.push('shared: não usa a versão da folha');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (ops collyrics, song, shared)' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];
