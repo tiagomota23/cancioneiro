@@ -1058,6 +1058,21 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows li[data-key] { position: relative; }
 .col-ed .ce-rows li.sel > a, .col-ed .ce-rows li.sel > .sec-line { background: var(--tint-soft); }
 .col-ed .ce-rows .sec-line { cursor: pointer; }
+/* versão de um cântico só nesta folha */
+.rows small.col-edited { display: block; margin-top: 3px; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; opacity: .8; } /* sobre a cor da marca */
+.col-ed .rows small.col-edited { color: var(--text-soft); opacity: 1; }
+.song .note.col-ver a { color: var(--accent); }
+.cl-ed .ce-label { margin: 12px 0 4px; color: var(--text-soft); }
+.cl-sts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cl-sts label { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.cl-sts input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
+.cl-sts input:not(:checked) + .cl-st { color: var(--text-faint); text-decoration: line-through; }
+.cl-st { font-size: var(--fs-ui); line-height: 1.4; }
+.cl-st.chorus { font-style: italic; }
+.cl-text-link { margin: 8px 0 0; }
+.cl-ed textarea { margin-top: 8px; }
+.pdf-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pdf-opt input { width: 22px; height: 22px; accent-color: var(--accent); }
 .ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
 .col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */
@@ -1084,7 +1099,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="can-listen perfil-gestor has-mini">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v203</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v204</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1241,7 +1256,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-21 v203</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v204</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1270,6 +1285,18 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
     <ul class="rows ce-rows" id="ce-rows"></ul>
     <p class="small" id="ce-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="ce-del" class="danger-fill">Apagar</button><span></span><button type="button" id="ce-cancel" class="ghost">Cancelar</button><button type="button" id="ce-save">Guardar</button></div>
+  </dialog>
+  <!-- Editar nesta folha: a letra de um cântico só nesta folha -->
+  <dialog id="cl-ed" class="editor cl-ed top-dlg">
+    <h2 tabindex="-1" autofocus="">Editar nesta folha</h2>
+    <p class="small" id="cl-title"></p>
+    <p class="ce-label" id="cl-inc">Incluir</p>
+    <ul class="cl-sts" id="cl-sts"></ul>
+    <p class="cl-text-link"><button type="button" class="revert-link" id="cl-text-btn">Editar texto</button></p>
+    <textarea id="cl-text" spellcheck="false" autocapitalize="off" hidden="" style=""></textarea>
+    <p class="small">Muda a letra só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. A letra original não muda.</p>
+    <p class="small" id="cl-msg" role="status"></p>
+    <div class="edit-actions"><button type="button" id="cl-reset" class="danger-fill">Repor original</button><span></span><button type="button" id="cl-cancel" class="ghost">Cancelar</button><button type="button" id="cl-save">Guardar</button></div>
   </dialog>
   <!-- Coleção: escolher onde pôr o cântico -->
   <dialog id="col-pick" class="col-dlg">
