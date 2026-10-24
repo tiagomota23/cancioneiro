@@ -886,6 +886,21 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows li[data-key] { position: relative; }
 .col-ed .ce-rows li.sel > a, .col-ed .ce-rows li.sel > .sec-line { background: var(--tint-soft); }
 .col-ed .ce-rows .sec-line { cursor: pointer; }
+/* versão de um cântico só nesta folha */
+.rows small.col-edited { display: block; margin-top: 3px; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; opacity: .8; } /* sobre a cor da marca */
+.col-ed .rows small.col-edited { color: var(--text-soft); opacity: 1; }
+.song .note.col-ver a { color: var(--accent); }
+.cl-ed .ce-label { margin: 12px 0 4px; color: var(--text-soft); }
+.cl-sts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cl-sts label { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.cl-sts input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
+.cl-sts input:not(:checked) + .cl-st { color: var(--text-faint); text-decoration: line-through; }
+.cl-st { font-size: var(--fs-ui); line-height: 1.4; }
+.cl-st.chorus { font-style: italic; }
+.cl-text-link { margin: 8px 0 0; }
+.cl-ed textarea { margin-top: 8px; }
+.pdf-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pdf-opt input { width: 22px; height: 22px; accent-color: var(--accent); }
 .ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
   background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
 .col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */

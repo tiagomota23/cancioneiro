@@ -123,6 +123,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Cores por perfil (v203): família `perfis` em `design/tokens.json` → `:root.perfil-<id>` em theme.css (a app põe a
   classe no `<html>`, para --accent e afins a apanharem). Cancioneiro = família color. A capa usa `--app-brand…` (sempre
   verde). Títulos das janelas em --accent. Apagar (--danger) em âmbar escuro em todos os perfis.
+- Folhas (v204): «Editar nesta folha» (✎ nas ações de um cântico em Editar folha) guarda a letra só dessa folha em
+  `collection_lyrics` (`supabase/folhas-letras.sql`; a letra só pela função `conteudo`: op `collyrics` para gravar, op
+  `song` com `collection` para ler, e a folha partilhada já a usa). A app só lê `edited_at`, embutido em
+  `collection_songs(…, edit:collection_lyrics(edited_at))` → `c.edits`. Sem chave direta para `collections` (o PostgREST
+  ficaria com duas ligações collections → collection_songs). O cântico aberto da folha: `#/cantico/<slug>/folha/<id>`.
+  PDF da folha: uma só opção com interruptores Acordes / Partituras (ligados por omissão numa folha do Coro).
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.

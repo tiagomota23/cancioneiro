@@ -321,6 +321,9 @@ Deno.serve(async (req) => {
       if (sh.views >= (col ? SHARE_COL_VIEWS : SHARE_VIEWS)) return out({ error: 'limite', message: 'Este endereço foi aberto demasiadas vezes.' }, 429);
       await rest(`song_shares?token=eq.${token}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ views: sh.views + 1 }) });
       const c = await songs();
+      // letras só desta folha (substituem a original na folha partilhada)
+      const own = col ? new Map((await rest(`collection_lyrics?collection_id=eq.${col.id}&select=song_slug,lyrics`)).map(x => [x.song_slug, x.lyrics])) : new Map();
+      const effOf = (slug, s) => own.get(slug) || s.eff;
       if (col && !b.slug) { // lista da coleção: secções e títulos
         const meta = new Map((await rest(`songs?slug=in.(${col.songs.map(x => `"${x.song_slug}"`).join(',') || '""'})&select=slug,title,author,number,language,translation_language`)).map(x => [x.slug, x]));
         const items = [...col.sections.map(x => ({ k: 'sec', title: x.title, pos: x.position })),
@@ -331,7 +334,7 @@ Deno.serve(async (req) => {
         const full = b.songs ? items.filter(it => it.k === 'song' && c.bySlug.has(it.slug)).map(it => {
           const s = c.bySlug.get(it.slug), m = meta.get(it.slug);
           return { slug: it.slug, title: m.title, author: m.author, number: m.number, language: m.language, translation_language: m.translation_language,
-            lyrics: noChords(s.eff), translation: s.translation || null };
+            lyrics: noChords(effOf(it.slug, s)), translation: s.translation || null };
         }) : undefined;
         return out({ collection: { id: col.id, title: col.title, audience: col.audience }, items, expires_at: until, songs: full });
       }
@@ -340,7 +343,7 @@ Deno.serve(async (req) => {
       const [m] = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&select=slug,title,author,language,translation_language,number`);
       const s = c.bySlug.get(slug);
       if (!m || !s) return out({ error: 'não encontrado' }, 404);
-      return out({ ...m, lyrics: noChords(s.eff), translation: s.translation || null, expires_at: until, collection: col ? { id: col.id, title: col.title } : undefined });
+      return out({ ...m, lyrics: noChords(effOf(slug, s)), translation: s.translation || null, expires_at: until, collection: col ? { id: col.id, title: col.title } : undefined });
     }
     const user = await who(req);
     if (!user) return out({ error: 'sem acesso' }, 403);
@@ -367,8 +370,31 @@ Deno.serve(async (req) => {
       const c = await songs(); const s = c.bySlug.get(slug);
       if (!visible(s)) return out({ error: 'não encontrado' }, 404);
       if (!free.has(slug) && !(await limit(user, 'song', slug))) return tooMany();
+      // com collection: a letra deste cântico só nessa folha (se a pessoa vê a folha e há versão da folha)
+      let eff = s.eff, folha = false;
+      if (b.collection) {
+        const id = String(b.collection);
+        if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
+        const [o] = await rest(`collection_lyrics?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=lyrics`);
+        const [c] = o ? await rest(`collections?id=eq.${id}&select=audience,expires_at,published`) : [];
+        if (o && c && (lvl >= 3 || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2)))) { eff = o.lyrics; folha = true; }
+      }
       // o perfil Cancioneiro não vê acordes
-      return out({ slug, lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit });
+      return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha });
+    }
+    if (op === 'collyrics') { // Maestro: letra de um cântico só numa folha (lyrics: null volta à letra original)
+      if (lvl < 3) return denied();
+      const id = String(b.collection || ''), slug = String(b.slug || ''), v = b.lyrics ?? null;
+      if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
+      if (v !== null && !validLyrics(v)) return out({ error: 'letra inválida' }, 400);
+      if (!(await limit(user, 'save', 'col:' + id + ':' + slug))) return tooMany();
+      const [cs] = await rest(`collection_songs?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=song_slug`);
+      if (!cs) return out({ error: 'O cântico não está nesta folha.' }, 404);
+      const key = `collection_lyrics?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}`;
+      if (v === null) { await rest(key, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); return out({ ok: true, edited_at: null }); }
+      const [r] = await rest('collection_lyrics?on_conflict=collection_id,song_slug', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ collection_id: id, song_slug: slug, lyrics: v, edited_by: user.email, edited_at: new Date().toISOString() }) });
+      return out({ ok: true, edited_at: r?.edited_at || null });
     }
     if (op === 'invite') { // "Partilhar a app": convite para um perfil até ao de quem convida (o acesso continua a precisar de aprovação)
       const role = String(b.role || 'cancioneiro');

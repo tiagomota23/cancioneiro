@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css?v=203">
-  <link rel="stylesheet" href="styles.css?v=203">
+  <link rel="stylesheet" href="theme.css?v=204">
+  <link rel="stylesheet" href="styles.css?v=204">
 </head>
 <body>
   <div id="splash" class="splash"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver"></span></p></div></div>
@@ -189,6 +189,18 @@
     <p class="small" id="ce-msg" role="status"></p>
     <div class="edit-actions"><button type="button" id="ce-del" class="danger-fill">Apagar</button><span></span><button type="button" id="ce-cancel" class="ghost">Cancelar</button><button type="button" id="ce-save">Guardar</button></div>
   </dialog>
+  <!-- Editar nesta folha: a letra de um cântico só nesta folha -->
+  <dialog id="cl-ed" class="editor cl-ed top-dlg">
+    <h2 tabindex="-1" autofocus>Editar nesta folha</h2>
+    <p class="small" id="cl-title"></p>
+    <p class="ce-label" id="cl-inc">Incluir</p>
+    <ul class="cl-sts" id="cl-sts"></ul>
+    <p class="cl-text-link"><button type="button" class="revert-link" id="cl-text-btn">Editar texto</button></p>
+    <textarea id="cl-text" spellcheck="false" autocapitalize="off" hidden></textarea>
+    <p class="small">Muda a letra só nesta folha: na folha, no cântico aberto a partir dela, na partilha e nos PDF. A letra original não muda.</p>
+    <p class="small" id="cl-msg" role="status"></p>
+    <div class="edit-actions"><button type="button" id="cl-reset" class="danger-fill">Repor original</button><span></span><button type="button" id="cl-cancel" class="ghost">Cancelar</button><button type="button" id="cl-save">Guardar</button></div>
+  </dialog>
   <!-- Coleção: escolher onde pôr o cântico -->
   <dialog id="col-pick" class="col-dlg">
     <h2 tabindex="-1" autofocus>Folhas</h2>
@@ -285,7 +297,7 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
-  <script src="config.js?v=203"></script>
-  <script src="app.js?v=203"></script>
+  <script src="config.js?v=204"></script>
+  <script src="app.js?v=204"></script>
 </body>
 </html>

@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-21 v203';
+  const APP_VERSION = '2026-10-24 v204';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -296,7 +296,8 @@
   // Modo de teste local (?demo): o mesmo, mas com a cópia songs.json e sem limites
   let demoFull = new Map();
   async function demoApi(op, b) {
-    if (op === 'song') { const s = demoFull.get(b.slug); return { lyrics: s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit }; }
+    if (op === 'song') { const s = demoFull.get(b.slug), own = b.collection && store.get('cancioneiro.demo.collyr', {})[b.collection + '/' + b.slug]; return { lyrics: own || s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit, folha: !!own }; }
+    if (op === 'collyrics') { const all = store.get('cancioneiro.demo.collyr', {}), k = b.collection + '/' + b.slug; if (b.lyrics) all[k] = b.lyrics; else delete all[k]; store.set('cancioneiro.demo.collyr', all); return { ok: true, edited_at: b.lyrics ? new Date().toISOString() : null }; }
     if (op === 'search') return { hits: demoSearch(b.q) };
     if (op === 'share') return { token: 'demo_' + b.slug, expires_at: new Date(Date.now() + 864e5).toISOString() };
     if (op === 'share' && b.collection) return { token: 'demoC_' + b.collection, expires_at: new Date(Date.now() + 864e5).toISOString() };
@@ -306,7 +307,8 @@
       if (b.slug) return demoApi('shared', { token: 'demo_' + b.slug });
       if (!demoFull.size) { const full = await (await fetch('songs.json')).json(); demoFull = new Map(full.map(x => [x.slug, x])); }
       const items = withSongs(colItems(c)).map(it => it.k === 'sec' ? { k: 'sec', title: it.ref.title } : { k: 'song', slug: it.key, title: demoFull.get(it.key).title, author: demoFull.get(it.key).author, number: demoFull.get(it.key).number });
-      const songs = b.songs ? await Promise.all(items.filter(it => it.k === 'song').map(async it => { const x = await demoApi('shared', { token: 'demo_' + it.slug }); delete x.expires_at; return x; })) : undefined;
+      const own = store.get('cancioneiro.demo.collyr', {});
+      const songs = b.songs ? await Promise.all(items.filter(it => it.k === 'song').map(async it => { const x = await demoApi('shared', { token: 'demo_' + it.slug }); delete x.expires_at; const o = own[c.id + '/' + it.slug]; if (o) x.lyrics = o.map(st => ({ ...st, lines: st.lines.map(stripChords) })); return x; })) : undefined;
       return { collection: { id: c.id, title: c.title }, expires_at: c.expires_at, items, songs };
     }
     if (op === 'shared') {
@@ -1056,14 +1058,19 @@
       `<li><button class="rec" data-i="${i}" data-path="${esc(f.path || '')}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
     // o perfil Cancioneiro não vê acordes
     const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
-    const lyrics = plain(data ? data.lyrics : []);
+    // aberto a partir de uma folha com a sua versão deste cântico: essa letra no original, com «ver original»
+    const fcol = songCol && cols.find(x => x.id === songCol), fedit = fcol && colEdited(fcol, slug) && mode === 'orig' ? fcol : null;
+    const fdata = fedit ? colLyrCached(fedit, slug) : null;
+    if (fedit && !fdata) getColLyrics(fedit, slug).then(() => { if (lastSongSlug === slug && songCol === fedit.id && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } }).catch(() => {});
+    const lyrics = plain((fedit ? fdata && fdata.lyrics : data && data.lyrics) || []);
     const body = plain((ver ? vdata && vdata.lyrics : mode === 'trad' ? data && data.translation : lyrics) || []);
-    const note = ver ? `<p class="note">Versão${ver.language !== s.language ? ' em ' + esc((LANGS[ver.language] || ver.language).toLowerCase()) : ''}: «${esc(ver.title)}»${ver.author ? ' — ' + esc(ver.author) : ''}${vdata ? '' : ' · a carregar…'}</p>`
+    const note = fedit ? `<p class="note col-ver">Versão desta folha${fdata ? '' : ' · a carregar…'} · <a href="#/cantico/${encodeURIComponent(slug)}">ver original</a></p>`
+      : ver ? `<p class="note">Versão${ver.language !== s.language ? ' em ' + esc((LANGS[ver.language] || ver.language).toLowerCase()) : ''}: «${esc(ver.title)}»${ver.author ? ' — ' + esc(ver.author) : ''}${vdata ? '' : ' · a carregar…'}</p>`
       : mode === 'trad' ? `<p class="note">${trVersion(s.translation_language) ? 'Versão em ' + esc(trName.toLowerCase()) : 'Tradução'}</p>` : '';
     const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
-    const canEdit = data && mode === 'orig' && lvl() >= 3 && extrasOn();
+    const canEdit = data && mode === 'orig' && !fedit && lvl() >= 3 && extrasOn();
     const original = srcOf(s).includes('original');
     // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
     const mine = session && s.added_by === session.user.email;
@@ -1203,11 +1210,19 @@
   async function shareCollection(c) {
     const fim = new Date(c.expires_at).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
     const list = [{ value: 'url', label: urlLabel(), sub: `Qualquer pessoa pode abrir até ${fim}, quando a folha expira (sem conta: só a letra e a tradução)` },
-      { value: 'pdf', label: 'Gerar PDF', sub: 'Título, secções, títulos e letras dos cânticos' }];
-    list.push({ value: 'coro', label: 'Gerar PDF para Coro', sub: 'Também com os acordes e as partituras' });
+      { value: 'pdf', label: 'Gerar PDF', sub: lvl() >= 2 ? 'Título, secções e letras; com acordes e partituras, se quiser' : 'Título, secções, títulos e letras dos cânticos' }];
     const v = await appChoose('Partilhar folha', list);
     if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim, c.title);
-    else if (v) collectionPdf(c, v === 'coro');
+    else if (v === 'pdf') { const o = await pdfOptions(c); if (o) collectionPdf(c, o); }
+  }
+  // PDF da folha: acordes e partituras à escolha (por omissão, ligados numa folha do Coro); o perfil Cancioneiro não os vê
+  async function pdfOptions(c) {
+    if (lvl() < 2) return { chords: false, scores: false };
+    const on = c.audience === 'coro' ? ' checked' : '';
+    const ok = await appDialog({ title: 'Gerar PDF', ok: 'Gerar', html:
+      `<label class="pdf-opt"><span>Acordes</span><input type="checkbox" role="switch" id="pdf-o-chords"${on}></label>` +
+      `<label class="pdf-opt"><span>Partituras</span><input type="checkbox" role="switch" id="pdf-o-scores"${on}></label>` });
+    return ok ? { chords: $('pdf-o-chords').checked, scores: $('pdf-o-scores').checked } : null;
   }
 
   // ---------- Endereço partilhado (#/p/<código>[/<cântico>]): sem conta, ou sem acesso ao cântico / coleção → só letra e tradução ----------
@@ -1320,8 +1335,9 @@
     return /^[\x20-\x7e]+$/.test(b) ? b : (c === 9 ? ' ' : '');
   }).join('');
   let pdfGen = null; // { blob, name, title } do PDF gerado que está a ser mostrado
-  async function collectionPdf(c, coro) {
-    const title = c.title + (coro ? ' (Coro)' : '');
+  async function collectionPdf(c, o) {
+    const kind = o.chords && o.scores ? 'coro' : o.chords ? 'acordes' : o.scores ? 'partituras' : '';
+    const title = c.title + (kind ? ` (${kind === 'coro' ? 'Coro' : kind})` : '');
     pdfGen = null; pdfUrl = null; $('pdf-download').hidden = true;
     $('pdfview').hidden = false; document.body.classList.add('pdf-open'); $('pdf-title').textContent = title;
     const msg = t => { $('pdfpages').innerHTML = `<p class="pdf-msg">${esc(t)}</p>`; };
@@ -1331,16 +1347,17 @@
       const items = withSongs(colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key)));
       const songsIn = items.filter(it => it.k === 'song').map(it => bySlug.get(it.key));
       let n = 0;
-      for (const s of songsIn) { msg(`A preparar as letras… (${++n}/${songsIn.length})`); try { await getLyrics(s.slug); } catch (e) { if (e instanceof Limit) throw e; } }
+      for (const s of songsIn) { msg(`A preparar as letras… (${++n}/${songsIn.length})`); try { await (colEdited(c, s.slug) ? getColLyrics(c, s.slug) : getLyrics(s.slug)); } catch (e) { if (e instanceof Limit) throw e; } }
+      const lyrOf = slug => ((colEdited(c, slug) ? colLyrCached(c, slug) : null) || lyr.get(slug) || {}).lyrics || []; // a versão desta folha, se houver
       const doc = await L.PDFDocument.create();
       doc.setTitle(pdfSafe(c.title)); doc.setCreator('Cancioneiro');
       const F = { r: await doc.embedFont(L.StandardFonts.Helvetica), b: await doc.embedFont(L.StandardFonts.HelveticaBold), i: await doc.embedFont(L.StandardFonts.HelveticaOblique) };
-      layoutLyrics(L, doc, F, c.title, items, coro);
-      if (coro) await appendScores(L, doc, F, songsIn, msg);
+      layoutLyrics(L, doc, F, c.title, items, o.chords, lyrOf);
+      if (o.scores) await appendScores(L, doc, F, songsIn, msg);
       const bytes = await doc.save();
       if ($('pdfview').hidden) return; // fechado entretanto
       const blob = new Blob([bytes], { type: 'application/pdf' });
-      pdfGen = { blob, title, name: (c.title.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'colecao') + (coro ? '-coro' : '') + '.pdf' };
+      pdfGen = { blob, title, name: (c.title.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'colecao') + (kind ? '-' + kind : '') + '.pdf' };
       pdfUrl = null;
       await openPdf({ blob }, title, null, 'application/pdf');
       $('pdf-download').hidden = false;
@@ -1350,7 +1367,7 @@
     }
   }
   const GREEN = () => themeRgb('--light-accent', [0.06, 0.5, 0.35]); // PDF em papel branco: sempre a cor do modo claro
-  function layoutLyrics(L, doc, F, colTitle, items, coro) {
+  function layoutLyrics(L, doc, F, colTitle, items, coro, lyrOf) {
     const W = 595.28, H = 841.89, M = 34, GAP = 18;
     // título da coleção: centrado, a toda a largura da 1.ª página, com um traço por baixo
     const TS = 20, tLines = (() => { const words = pdfSafe(colTitle).split(' '), out = []; let cur = '';
@@ -1389,7 +1406,7 @@
         // espaço antes de cada cântico (e antes de uma secção), que cai quando fica no topo de uma coluna
         const sp = fs * 2.4;
         if (units.length) { const r = pend.length ? pend : head; r[0] = { ...r[0], h: r[0].h + sp, pad: sp }; }
-        const st = (lyr.get(s.slug) || {}).lyrics || [];
+        const st = lyrOf(s.slug);
         const stanzas = [];
         for (const x of st) {
           const rows = [], font = x.type === 'chorus' ? F.i : F.r;
@@ -2407,7 +2424,7 @@
     });
     return { W: col ? 2 * maxW + GAP : maxW, H: Math.max(...cols), pos };
   }
-  let lastSongSlug = null, songScroll = 0;
+  let lastSongSlug = null, songScroll = 0, songCol = null;
   async function loadPdfJs() {
     if (!pdfjs) {
       pdfjs = await import(PDFJS + 'pdf.min.mjs');
@@ -2658,14 +2675,15 @@
     if (p) { closePdf(); showShared(p[1], p[2] ? safeDecode(p[2]) : null); window.scrollTo(0, 0); return; }
     document.body.classList.remove('shared-view', 'no-session', 'shared-sub'); sharedBack = null;
     if (!session) return;
-    const m = h.match(/^#\/cantico\/([^/]+)(\/partitura(?:\/(\d+))?)?$/);
+    const m = h.match(/^#\/cantico\/([^/]+)(?:\/folha\/([0-9A-Za-z-]{1,40}))?(\/partitura(?:\/(\d+))?)?$/);
     if (m) {
       const slug = safeDecode(m[1]);
-      if (m[2]) {
+      songCol = m[2] || null; // aberto a partir de uma folha (que pode ter a sua versão da letra)
+      if (m[3]) {
         if (lastSongSlug !== slug || $('view-song').hidden) showSong(slug);
         songScroll = window.scrollY;
         const s = bySlug.get(slug);
-        const sc = s && scoresOf(s)[+(m[3] || 0)];
+        const sc = s && scoresOf(s)[+(m[4] || 0)];
         if (sc) {
           const key = h;
           (async () => {
@@ -2758,8 +2776,12 @@
     if (!cols.length) cols = store.get(colsKey(), []);
     if (DEMO) { cols = store.get('cancioneiro.demo.cols', []); return; }
     try {
-      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,published,songs:collection_songs(song_slug,position),sections:collection_sections(id,title,position)').order('created_at');
-      if (!error && data) { cols = data; store.set(colsKey(), cols); }
+      const { data, error } = await sb.from('collections').select('id,title,audience,duration,expires_at,created_by,published,songs:collection_songs(song_slug,position,edit:collection_lyrics(edited_at)),sections:collection_sections(id,title,position)').order('created_at');
+      if (!error && data) {
+        // cânticos com versão desta folha (a letra vem à parte, pela função conteudo)
+        for (const c of data) { c.edits = []; for (const x of c.songs || []) { const e = Array.isArray(x.edit) ? x.edit[0] : x.edit; if (e) c.edits.push({ song_slug: x.song_slug, edited_at: e.edited_at }); delete x.edit; } }
+        cols = data; store.set(colsKey(), cols);
+      }
     } catch (e) { /* sem rede: fica a cópia */ }
     if (lvl() < 2 && allSongs.length) applySource();
   }
@@ -2778,6 +2800,29 @@
             ...(c.sections || []).map(x => ({ k: 'sec', key: 'sec:' + x.id, pos: x.position, ref: x }))]
       .sort((a, b) => a.pos - b.pos || (a.k === 'sec' ? -1 : 1));
   }
+  // letra de um cântico só nesta folha («Editar nesta folha»): vem da função conteudo e fica guardada como as outras
+  // (chave «folha/cântico»), com a data da edição para saber se mudou
+  const colEdit = (c, slug) => (c.edits || []).find(x => x.song_slug === slug);
+  const colEdited = (c, slug) => !!colEdit(c, slug);
+  const colLyrKey = (c, slug) => c.id + '/' + slug;
+  function colLyrCached(c, slug) {
+    const e = colEdit(c, slug), v = e && lyr.get(colLyrKey(c, slug));
+    return v && v.at === e.edited_at && !(v.nc && lvl() >= 2) ? v : null;
+  }
+  function getColLyrics(c, slug) {
+    const v = colLyrCached(c, slug); if (v) return Promise.resolve(v);
+    const k = colLyrKey(c, slug), e = colEdit(c, slug);
+    if (!pending.has(k)) pending.set(k, api('song', { slug, collection: c.id }).then(d => {
+      const v = { lyrics: d.lyrics || [], translation: d.translation || null, nc: lvl() < 2, at: e ? e.edited_at : null };
+      lyr.set(k, v); saveLyrCache();
+      return v;
+    }).finally(() => pending.delete(k)));
+    return pending.get(k);
+  }
+  // linha de um cântico com versão desta folha: abre essa versão e diz «editado nesta folha»
+  const markEdited = (html, c, slug) => html
+    .replace(`href="#/cantico/${encodeURIComponent(slug)}"`, `href="#/cantico/${encodeURIComponent(slug)}/folha/${c.id}"`)
+    .replace('</span><span class="n">', '<small class="col-edited">editado nesta folha</small></span><span class="n">');
   const ICON_CHECK = '<path d="M5 12.5l4.5 4.5L19 7"/>';
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
   // Folha: na página, sempre só leitura (só as secções com cânticos). Maestro / Gestor: «Editar folha» no fim (como
@@ -2800,7 +2845,7 @@
     const items = withSongs(all);
     rows.innerHTML = items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
-      : songRow(bySlug.get(it.key))).join('') +
+      : colEdited(c, it.key) ? markEdited(songRow(bySlug.get(it.key)), c, it.key) : songRow(bySlug.get(it.key))).join('') +
       (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
     if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
@@ -2823,7 +2868,7 @@
   const ICON_UP = '<path d="M12 19V5M6 11l6-6 6 6"/>', ICON_DOWN = '<path d="M12 5v14M6 13l6 6 6-6"/>';
   function openColEditor(c) {
     edOrig = c; ceSel = null;
-    edCol = { ...c, _draft: true, songs: (c.songs || []).map(x => ({ ...x })), sections: (c.sections || []).map(x => ({ ...x })) };
+    edCol = { ...c, _draft: true, songs: (c.songs || []).map(x => ({ ...x })), sections: (c.sections || []).map(x => ({ ...x })), lyrEd: new Map() };
     $('ce-msg').textContent = '';
     $('ce-name').value = c.title;
     renderColEditor(edCol); ceGate();
@@ -2839,7 +2884,7 @@
     // «+ Adicionar cântico» depois do último cântico de cada secção (e dos cânticos antes da primeira secção, se houver)
     const addLine = secId => `<li class="col-add"><button type="button" data-sec="${esc(secId || '')}">+ Adicionar cântico</button></li>`;
     // item escolhido: subir, descer e apagar por cima da linha, à direita
-    const acts = (i, sec) => `<span class="ce-acts"><button type="button" data-act="up" aria-label="Subir"${i === 0 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_UP}</svg></button>` +
+    const acts = (i, sec) => `<span class="ce-acts">${sec ? '' : `<button type="button" data-act="lyr" aria-label="Editar nesta folha">${PENCIL}</button>`}<button type="button" data-act="up" aria-label="Subir"${i === 0 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_UP}</svg></button>` +
       `<button type="button" data-act="down" aria-label="Descer"${i === all.length - 1 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_DOWN}</svg></button>` +
       `<button type="button" data-act="del" class="del" aria-label="${sec ? 'Apagar secção' : 'Remover da folha'}">${TRASH}</button>` +
       `<button type="button" data-act="ok" class="ok" aria-label="Fechar as ações"><svg viewBox="0 0 24 24">${ICON_CHECK}</svg></button></span>`;
@@ -2848,7 +2893,7 @@
       const sel = it.key === ceSel;
       if (it.k === 'sec') { if (open) html += addLine(cur); cur = it.ref.id; open = true;
         html += `<li class="col-sec${sel ? ' sel' : ''}" data-key="${esc(it.key)}"><div class="sec-line" role="button" tabindex="0" aria-expanded="${sel}">${sel ? `<button type="button" class="ce-name" aria-label="Mudar o nome da secção ${esc(it.ref.title)}">${PENCIL}${esc(it.ref.title)}</button>` : esc(it.ref.title)}</div>${sel ? acts(i, true) : ''}</li>`; }
-      else { open = true; html += songRow(bySlug.get(it.key)).replace('<li>', `<li data-key="${esc(it.key)}"${sel ? ' class="sel"' : ''}>`).replace(/<\/li>$/, (sel ? acts(i, false) : '') + '</li>'); }
+      else { open = true; const row = edEdited(c, it.key) ? markEdited(songRow(bySlug.get(it.key)), c, it.key) : songRow(bySlug.get(it.key)); html += row.replace('<li>', `<li data-key="${esc(it.key)}"${sel ? ' class="sel"' : ''}>`).replace(/<\/li>$/, (sel ? acts(i, false) : '') + '</li>'); }
     });
     if (open || !all.length) html += addLine(cur);
     const rows = $('ce-rows');
@@ -2858,6 +2903,7 @@
       e.preventDefault();
       const key = li.dataset.key, b = e.target.closest('button[data-act]');
       if (b && b.dataset.act === 'ok') { ceSel = null; renderColEditor(c); return; }
+      if (b && b.dataset.act === 'lyr') return openColLyr(c, key);
       if (b) { // subir / descer; apagar pede confirmação
         const it = all.find(x => x.key === key), sec = it.k === 'sec';
         if (b.dataset.act === 'del') {
@@ -2894,7 +2940,9 @@
       addSecs: d.sections.filter(x => !oX.has(x.id)),
       updSecs: d.sections.filter(x => oX.has(x.id) && (oX.get(x.id).title !== x.title || oX.get(x.id).position !== x.position)),
     };
-    r.changed = Object.keys(meta).length > 0 || ['delSongs', 'addSongs', 'movSongs', 'delSecs', 'addSecs', 'updSecs'].some(k => r[k].length);
+    // letras só desta folha: as que mudaram (null = voltar ao original), dos cânticos que ficam na folha
+    r.lyr = [...(d.lyrEd || [])].filter(([k, v]) => dS.has(k) && (v !== null || colEdited(o, k)));
+    r.changed = Object.keys(meta).length > 0 || ['delSongs', 'addSongs', 'movSongs', 'delSecs', 'addSecs', 'updSecs', 'lyr'].some(k => r[k].length);
     return r;
   }
   async function colCommit(o, d) {
@@ -2916,10 +2964,72 @@
       ])).forEach(chk);
       chk(await sb.from('collections').update(meta).eq('id', o.id));
     }
-    Object.assign(o, meta, { songs: d.songs, sections: d.sections });
+    const dS = new Set(d.songs.map(x => x.song_slug));
+    let edits = (o.edits || []).filter(x => dS.has(x.song_slug)); // os cânticos tirados levam a sua versão (cascade)
+    for (const [slug, v] of r.lyr) { // pela função conteudo (a letra é conteúdo protegido)
+      const res = await api('collyrics', { collection: o.id, slug, lyrics: v });
+      edits = edits.filter(x => x.song_slug !== slug);
+      if (v) { edits.push({ song_slug: slug, edited_at: res.edited_at }); lyr.set(colLyrKey(o, slug), { lyrics: v, translation: null, nc: false, at: res.edited_at }); }
+      else lyr.delete(colLyrKey(o, slug));
+    }
+    if (r.lyr.length) saveLyrCache();
+    Object.assign(o, meta, { songs: d.songs, sections: d.sections, edits });
     colStore();
     return true;
   }
+  // ---------- Editar nesta folha: a letra do cântico só nesta folha (o original não muda) ----------
+  // Caixas «Incluir» por estrofe (todas marcadas) e «Editar texto» para mudanças livres. Fica na cópia da folha
+  // (edCol.lyrEd) e só se grava com «Guardar» da folha.
+  const edEdited = (c, slug) => c.lyrEd && c.lyrEd.has(slug) ? c.lyrEd.get(slug) !== null : colEdited(edOrig || c, slug);
+  let clSlug = null, clBase = [], clStart = '';
+  const stKey = v => JSON.stringify(v);
+  const clPicked = () => clBase.filter((st, i) => { const b = $('cl-sts').querySelector(`input[data-i="${i}"]`); return b && b.checked; });
+  const clCurrent = () => $('cl-text').hidden ? clPicked() : fromText($('cl-text').value);
+  const clGate = () => { $('cl-save').disabled = !clSlug || !clBase.length || !clCurrent().length; };
+  function clTextMode(st) {
+    $('cl-text').value = toText(st); $('cl-text').hidden = false;
+    $('cl-sts').hidden = true; $('cl-inc').hidden = true; $('cl-text-btn').hidden = true; clGate();
+  }
+  async function openColLyr(c, slug) {
+    const s = bySlug.get(slug); clSlug = slug; clBase = [];
+    $('cl-title').textContent = s.title; $('cl-msg').textContent = 'A carregar a letra…';
+    $('cl-sts').innerHTML = ''; $('cl-sts').hidden = false; $('cl-inc').hidden = false; $('cl-text').hidden = true; $('cl-text-btn').hidden = false;
+    $('cl-reset').hidden = !edEdited(c, slug); clGate();
+    $('cl-ed').showModal();
+    try {
+      const orig = (await getLyrics(slug)).lyrics || [];
+      const cur = c.lyrEd.has(slug) ? c.lyrEd.get(slug) : colEdited(edOrig, slug) ? (await getColLyrics(edOrig, slug)).lyrics : null;
+      if (!$('cl-ed').open || clSlug !== slug) return;
+      clBase = orig;
+      // a versão da folha é um conjunto de estrofes do original (pela ordem)? caixas marcadas; se não, o texto
+      let picks = orig.map(() => true), free = false;
+      if (cur) { let j = 0; picks = orig.map(st => { const on = j < cur.length && stKey(cur[j]) === stKey(st); if (on) j++; return on; }); free = j < cur.length; }
+      $('cl-sts').innerHTML = orig.map((st, i) => `<li><label><input type="checkbox" data-i="${i}"${picks[i] ? ' checked' : ''}><span class="cl-st${st.type === 'chorus' ? ' chorus' : ''}">${st.lines.map(l => esc(stripChords(l))).join('<br>')}</span></label></li>`).join('');
+      if (free) clTextMode(cur);
+      clStart = stKey(clCurrent());
+      $('cl-msg').textContent = '';
+    } catch (e) { $('cl-msg').textContent = e instanceof Limit ? e.message : 'Não foi possível carregar a letra. Verifique a ligação à internet.'; }
+    clGate();
+  }
+  $('cl-sts').addEventListener('change', clGate);
+  $('cl-text').addEventListener('input', clGate);
+  $('cl-text-btn').onclick = () => clTextMode(clPicked());
+  const clDone = () => { $('cl-ed').close(); clSlug = null; if (edCol) renderColEditor(edCol); };
+  $('cl-save').onclick = () => {
+    const v = clCurrent(); if (!edCol || !clSlug || !v.length) return;
+    edCol.lyrEd.set(clSlug, stKey(v) === stKey(clBase) ? null : v); // igual ao original: sem versão da folha
+    clDone();
+  };
+  async function clCancel() {
+    if (clSlug && clBase.length && stKey(clCurrent()) !== clStart && !(await appConfirm('Sair sem guardar as alterações à letra?', 'Sair sem guardar'))) return;
+    clDone();
+  }
+  $('cl-cancel').onclick = clCancel;
+  $('cl-ed').addEventListener('cancel', e => { e.preventDefault(); clCancel(); }); // tecla Esc
+  $('cl-reset').onclick = async () => {
+    if (!edCol || !clSlug || !(await appConfirm(`Repor a letra original de «${bySlug.get(clSlug).title}» nesta folha?`, 'Repor original'))) return;
+    edCol.lyrEd.set(clSlug, null); clDone();
+  };
   // público, título e duração: só na cópia (gravados em «Guardar»)
   $('ce-aud').onclick = e => { const b = e.target.closest('button[data-v]'); if (b && edCol) { edCol.audience = b.dataset.v; renderColEditor(edCol); } };
   $('ce-name').oninput = () => { const t = $('ce-name').value.trim().slice(0, 80); if (edCol && t) edCol.title = t; };
