@@ -43,7 +43,7 @@ a{{color:#0f7a57}}a:hover{{color:#0a5a40}}
 <h1 style="margin: 0; font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: 36px; letter-spacing: 3px; color: #0f7a57">Opções: botões da folha</h1>
 <p style="margin: 0; font-size: 16px; line-height: 24px; color: #4a5a53">Onde ficam «✎ Editar folha» e «Publicar» na folha vista pelo Maestro (e Gestor). A app real (v206, perfil Maestro), só com a barra mudada de sítio. Pedido do Tiago a 24 out 2026.</p>
 </div>
-<div data-faixa style="display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-radius: 14px; background: #0b6b4b; color: #fff"><span style="flex: none; padding: 4px 12px; border-radius: 999px; background: #fff; color: #0b6b4b; font-size: 13px; font-weight: 700; letter-spacing: 1.2px">DECIDIDO</span><p style="margin: 0; font-size: 17px; line-height: 25px">Decidido a 24 out 2026: <b>A — no topo, como primeira linha</b>. Enviado à app; a marcar como implementado quando sair a versão.</p></div>
+<div data-faixa style="display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-radius: 14px; background: #0b6b4b; color: #fff"><span style="flex: none; padding: 4px 12px; border-radius: 999px; background: #fff; color: #0b6b4b; font-size: 13px; font-weight: 700; letter-spacing: 1.2px">DECIDIDO</span><p style="margin: 0; font-size: 17px; line-height: 25px">Decidido a 24 out 2026: <b>A — no topo, como primeira linha</b>. <b>Implementado na v208.</b></p></div>
 <div style="display: flex; gap: 48px">{"".join(col(*o) for o in OPC)}</div>
 {linhas}
 </div>
