@@ -382,7 +382,7 @@ export default async function (level) {
     if (r.dup) return `${r.dup} nomes de grupo repetidos`;
     return r.sem ? { warn: `${r.sem} conta(s) Coro/Cancioneiro sem grupo: não recebem folhas (escolha delas)` } : { pass: `${r.g} grupos; ${r.porPerguntar} contas ainda por escolher` };
   }, { sev: 'baixa' });
-  await t('DB-RLS-17', 'Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro não consegue deixar uma folha «para todos os grupos» (sem links) se não estiver em todos: nem tirando o último link, nem criando uma folha sem grupos', async () => {
+  await t('DB-RLS-17', 'Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder', async () => {
     const bad = [], out = {};
     const C = `'00000000-0000-4000-8000-0000000000c2'`, G1 = `(select id from public.groups order by position limit 1)`, G2 = `(select id from public.groups order by position offset 1 limit 1)`;
     const base = `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1}; insert into public.collections (id, title, audience, duration, expires_at, published) values (${C}, 'Teste grupos Maestro', 'coro', '1w', now() + interval '1 day', true);`;
@@ -395,12 +395,21 @@ export default async function (level) {
     const want = { soG2_ver: 0, soG2_update: 0, g1g2_ver: 1, g1g2_apagaG2: 0, g1g2_apagaG1: 1 };
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     // lacuna a confirmar: folha só de G1, o Maestro tira o link G1 → a folha fica sem grupos = para todos os grupos
-    out.soG1_tiraUltimo = await one(`insert into public.collection_groups values (${C}, ${G1});`, `with d as (delete from public.collection_groups where collection_id = ${C} returning 1) select count(*)::int from d;`);
-    if (out.soG1_tiraUltimo) bad.push('o Maestro (só em G1) tira o último grupo de uma folha, que passa a ser para todos os grupos');
+    // v211: col_groups_guard é um gatilho constraint deferred → forçar a verificação antes do rollback (set constraints all immediate)
+    const GUARD = /pelo menos um dos seus grupos/;
+    try { out.soG1_tiraUltimo = await one(`insert into public.collection_groups values (${C}, ${G1});`, `with d as (delete from public.collection_groups where collection_id = ${C} returning 1) select count(*)::int from d; set constraints all immediate; select 1;`); }
+    catch (e) { out.soG1_tiraUltimo = GUARD.test(e.message) ? 'recusado' : 'erro ' + e.message.slice(0, 60); }
+    if (out.soG1_tiraUltimo !== 'recusado') bad.push('o Maestro (só em G1) tira o último grupo de uma folha publicada: ' + out.soG1_tiraUltimo);
     // lacuna a confirmar: folha nova sem grupos criada pelo Maestro (só em G1) → para todos os grupos
-    let novaOk; try { const r = await sql(asRoleAfter('maestro', `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1};`, `with i as (insert into public.collections (title, audience, duration, expires_at, published) values ('Teste sem grupos', 'coro', '1w', now() + interval '1 day', true) returning 1) select count(*)::int n from i;`)); novaOk = r[0]?.n; } catch (e) { novaOk = 0; }
-    out.novaSemGrupos = novaOk;
-    if (novaOk) bad.push('o Maestro (só em G1) cria uma folha publicada sem grupos (para todos os grupos) pela API');
+    const setupM = `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1};`;
+    const ins = pub => `insert into public.collections (title, audience, duration, expires_at, published) values ('Teste sem grupos', 'coro', '1w', now() + interval '1 day', ${pub}); set constraints all immediate; select 1;`;
+    try { await sql(asRoleAfter('maestro', setupM, ins(true))); out.novaSemGrupos = 'aceite'; } catch (e) { out.novaSemGrupos = GUARD.test(e.message) ? 'recusado' : 'erro ' + e.message.slice(0, 60); }
+    if (out.novaSemGrupos !== 'recusado') bad.push('o Maestro (só em G1) cria uma folha publicada sem grupos: ' + out.novaSemGrupos);
+    // o que tem de continuar a passar: rascunho sem grupos; Maestro em todos os grupos a publicar sem grupos
+    try { await sql(asRoleAfter('maestro', setupM, ins(false))); out.rascunho = 'aceite'; } catch (e) { out.rascunho = 'erro ' + e.message.slice(0, 60); }
+    if (out.rascunho !== 'aceite') bad.push('rascunho sem grupos recusado ao Maestro: ' + out.rascunho);
+    try { await sql(asRoleAfter('maestro', `insert into public.user_groups (email, group_id) select ${emailOf('maestro')}, id from public.groups on conflict do nothing;`, ins(true))); out.maestroTodos = 'aceite'; } catch (e) { out.maestroTodos = 'erro ' + e.message.slice(0, 60); }
+    if (out.maestroTodos !== 'aceite') bad.push('Maestro em todos os grupos não publica sem grupos: ' + out.maestroTodos);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'média', where: 'supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
