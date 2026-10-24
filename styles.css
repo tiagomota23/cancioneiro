@@ -905,6 +905,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .my-groups .small { margin: 2px 0 6px; }
 .my-groups .grp-none { color: var(--warn-ink); }
 body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
+.ce-state { margin: 6px 0 0; } .ce-state .revert-link { padding: 6px 2px; }
 .ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
 .adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }

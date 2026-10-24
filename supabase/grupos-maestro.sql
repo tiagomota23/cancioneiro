@@ -51,3 +51,14 @@ create constraint trigger col_groups_guard_c after insert or update on public.co
 drop trigger if exists col_groups_guard_g on public.collection_groups;
 create constraint trigger col_groups_guard_g after delete on public.collection_groups
   deferrable initially deferred for each row execute function public.col_groups_guard();
+
+-- Trocar os grupos de uma folha numa só transação (v213): assim uma folha publicada nunca fica, entre dois pedidos,
+-- sem grupos. Corre com as permissões de quem chama (RLS: o Maestro só toca nos seus grupos).
+create or replace function public.set_collection_groups(cid uuid, ids uuid[]) returns setof uuid language plpgsql security invoker set search_path = public as $$
+begin
+  delete from public.collection_groups where collection_id = cid;
+  insert into public.collection_groups (collection_id, group_id) select cid, g from unnest(coalesce(ids, '{}')) g on conflict do nothing;
+  return query select group_id from public.collection_groups where collection_id = cid;
+end $$;
+revoke execute on function public.set_collection_groups(uuid, uuid[]) from public, anon;
+grant execute on function public.set_collection_groups(uuid, uuid[]) to authenticated;
