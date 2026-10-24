@@ -43,9 +43,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-59 | Grupos na 1.ª abertura (v209, ?grupos): «Os seus grupos», g1..g5, Guardar sem Cancelar; grava e não volta a perguntar | ui | média | V | ☐ por correr |
 | FUN-60 | Grupos no Perfil (v209): #perfis-groups (h3, interruptores, muda logo), .grp-none sem grupo e sem folhas; Cancioneiro solo em #info-groups | ui | média | V | ☐ por correr |
 | FUN-61 | Visibilidade por grupos no ?demo (v209/v210): folha de g1 invisível a Coro e Maestro em g2 ou sem grupo, visível em g1; Gestor vê sempre; folha sem grupos para quem tem grupo | ui | alta | V | ☐ por correr |
-| FUN-62 | Publicar com grupos (v209): «Todos os grupos» ligado, lista escondida; desligar mostra grupos e desativa OK; publica só para o escolhido; meta «Coro · grupo · até …»; #ce-groups | ui | média | V | ☐ por correr |
+| FUN-62 | Publicar com grupos (v209/v212): «Todos» + grupos visíveis e ligados; desligar «Todos» desliga todos e desativa OK; todos ligados liga «Todos»; um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus»; #ce-groups; sem .pend-top | ui | média | V | ☐ por correr |
 | FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ☐ por correr |
-| FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos», OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ☐ por correr |
+| FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos» (v212), OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ☐ por correr |
+| FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |

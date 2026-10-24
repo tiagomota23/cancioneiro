@@ -1260,33 +1260,61 @@ async function suites(full) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
-  await t('FUN-62', 'Publicar com grupos (v209): «Publicar «X»» com «Todos os grupos» [data-g="*"] ligado e lista escondida; desligar mostra os grupos e desativa OK; escolher um grupo → publica só para ele; meta «Coro · <grupo> · até …»; #ce-groups mostra o grupo', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+  await t('FUN-62', 'Publicar com grupos (v209/v212): «Publicar «X»» com «Todos» [data-g="*"] e todos os grupos ligados e visíveis; desligar «Todos» desliga todos e desativa OK; ligar todos um a um liga «Todos»; escolher um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus» (por publicar: só a 1.ª); #ce-groups mostra o grupo; sem .pend-top', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
     await page.waitForSelector('#col-pub', { timeout: 8000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'sem #col-pub na folha por publicar';
+    if (await count(page, '.pend-top')) return 'folha por publicar ainda com .pend-top (v212)';
+    const metas = () => page.evaluate(() => [...document.querySelectorAll('.col-meta')].map(m => m.textContent.replace(/\s+/g, ' ').trim()));
+    const m0 = await metas();
+    if (m0.length !== 1 || !/^Coro · até /.test(m0[0])) return 'folha por publicar: .col-meta ' + JSON.stringify(m0);
     await page.click('#col-pub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await sleep(300);
     const t0 = await page.evaluate(() => document.querySelector('#app-dlg[open]')?.textContent || '');
     if (!/Publicar «Folha em edição»/.test(t0)) return 'janela: ' + t0.slice(0, 60);
     let sw = await dlgSw(page);
     const all = sw.find(x => x.g === '*');
-    if (!all || !all.on) return '«Todos os grupos» ausente ou desligado';
-    if (sw.some(x => x.g !== '*' && x.vis)) return 'lista de grupos visível com «Todos» ligado';
+    if (!all || !all.on) return '«Todos» ausente ou desligado';
+    if (!/^Todos$/.test(await page.evaluate(() => document.querySelector('#app-dlg .switch-row[data-g="*"]').textContent.trim()))) return 'rótulo de [data-g="*"] não é «Todos»';
+    if (!sw.filter(x => x.g !== '*').every(x => x.on && x.vis)) return 'com «Todos» ligado os grupos não estão todos ligados e visíveis';
     await page.click('#app-dlg .switch-row[data-g="*"]'); await sleep(200);
     sw = await dlgSw(page);
-    if (!sw.filter(x => x.g !== '*').every(x => x.vis)) return 'ao desligar «Todos» os grupos não aparecem';
+    if (sw.some(x => x.on)) return 'desligar «Todos» não desligou os grupos';
     if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled))) return 'OK ativo sem nenhum grupo';
-    await page.click('#app-dlg .switch-row[data-g="g2"]'); await sleep(200);
+    for (const g of ['g1', 'g2', 'g3', 'g4', 'g5']) { await page.click(`#app-dlg .switch-row[data-g="${g}"]`); await sleep(100); }
+    if (!(await dlgSw(page)).find(x => x.g === '*').on) return 'ligar todos os grupos não ligou «Todos»';
+    for (const g of ['g1', 'g3', 'g4', 'g5']) { await page.click(`#app-dlg .switch-row[data-g="${g}"]`); await sleep(100); }
+    if ((await dlgSw(page)).find(x => x.g === '*').on) return 'desligar um grupo não desligou «Todos»';
     if (await page.evaluate(() => document.querySelector('#app-dlg-ok').disabled)) return 'OK desativado com um grupo';
     await page.click('#app-dlg-ok'); await sleep(900);
     const c = await page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === 'demoE'));
     if (c.published !== true) return 'não publicou';
     if (JSON.stringify((c.groups || []).map(x => x.group_id)) !== '["g2"]') return 'grupos gravados: ' + JSON.stringify(c.groups);
-    const meta = await page.evaluate(() => document.querySelector('.col-meta')?.textContent.replace(/\s+/g, ' ').trim() || '');
-    if (!/^Coro · Liceus · até /.test(meta)) return 'meta: ' + meta;
+    const m1 = await metas();
+    if (!(m1.length === 2 && /^Coro · até /.test(m1[0]) && m1[1] === 'Grupos: Liceus')) return 'folha publicada: .col-meta ' + JSON.stringify(m1);
     await page.click('#col-mode'); await sleep(500);
     const cg = await page.evaluate(() => document.querySelector('#ce-groups')?.textContent.trim());
     return cg === 'Liceus' || '#ce-groups: ' + cg;
   }), { sev: 'média' });
-  await t('FUN-64', 'Maestro só com os seus grupos (v210, mygroups g2+g3): Publicar mostra só Liceus e CLU, sem «Todos os grupos», OK desativado até escolher; #ce-groups igual; folha nova nasce com g2+g3', async () => {
+  await t('FUN-65', 'Folha publicada para todos (v212): .col-meta «Grupos: Todos»; vários grupos pela ordem dos grupos («Grupos: Liceus, CLU»); #col-aud e #ce-aud com Cancioneiro antes de Coro; #ce-groups «Todos»', async () => {
+    const bad = [];
+    for (const [groups, want] of [[[], 'Grupos: Todos'], [[{ group_id: 'g3' }, { group_id: 'g2' }], 'Grupos: Liceus, CLU']]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: demoCols().map(c => c.id === 'demo1' ? { ...c, published: true, groups } : c) }, async ({ page }) => {
+      await page.waitForSelector('.col-meta', { timeout: 8000 }).catch(() => {});
+      const m = await page.evaluate(() => [...document.querySelectorAll('.col-meta')].map(x => x.textContent.replace(/\s+/g, ' ').trim()));
+      if (m[1] !== want) bad.push(`grupos ${JSON.stringify(groups.map(x => x.group_id))}: «${m[1]}» (esperado «${want}»)`);
+      if (!groups.length) {
+        await page.click('#col-mode'); await sleep(500);
+        const r = await page.evaluate(() => ({ ce: [...document.querySelectorAll('#ce-aud button[data-v]')].map(b => b.dataset.v).join(), grp: document.querySelector('#ce-groups')?.textContent.trim() }));
+        if (r.ce !== 'cancioneiro,coro') bad.push('#ce-aud: ' + r.ce);
+        if (r.grp !== 'Todos') bad.push('#ce-groups: ' + r.grp);
+      }
+    });
+    await withApp({ perfil: 'maestro' }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(500); await page.click('.col-new'); await sleep(500);
+      const o = await page.evaluate(() => [...document.querySelectorAll('#col-aud button[data-v]')].map(b => b.dataset.v).join());
+      if (o !== 'cancioneiro,coro') bad.push('#col-aud: ' + o);
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'baixa' });
+  await t('FUN-64', 'Maestro só com os seus grupos (v210, mygroups g2+g3): Publicar mostra só Liceus e CLU, sem «Todos», OK desativado até escolher; #ce-groups igual; folha nova nasce com g2+g3', async () => {
     const bad = [];
     const st = { 'cancioneiro.demo.mygroups': ['g2', 'g3'], 'cancioneiro.demo.groupsAsked': true };
     await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE', storage: st }, async ({ page }) => {
