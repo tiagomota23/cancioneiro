@@ -360,8 +360,8 @@ Deno.serve(async (req) => {
     if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
       const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published,collection_groups(group_id))${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
-      // grupos (abaixo de Maestro): só as folhas para todos os grupos ou de um dos seus; sem grupo, nenhuma
-      const mine = lvl >= 3 ? null : await myGroups(user);
+      // grupos (abaixo de Gestor): só as folhas para todos os grupos ou de um dos seus; sem grupo, nenhuma
+      const mine = lvl >= 4 ? null : await myGroups(user);
       colSet = new Set(rows.filter(r => groupOk(mine, r.collections.collection_groups)).map(r => r.song_slug));
     }
     // sem limite só para quem não cria coleções: um Maestro / Gestor não as pode usar para contornar os limites
@@ -383,7 +383,8 @@ Deno.serve(async (req) => {
         if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
         const [o] = await rest(`collection_lyrics?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=lyrics`);
         const [c] = o ? await rest(`collections?id=eq.${id}&select=audience,expires_at,published,collection_groups(group_id)`) : [];
-        if (o && c && (lvl >= 3 || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2) && groupOk(await myGroups(user), c.collection_groups)))) { eff = o.lyrics; folha = true; }
+        const gOk = async () => groupOk(await myGroups(user), c.collection_groups);
+        if (o && c && (lvl >= 4 || (lvl >= 3 && await gOk()) || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2) && await gOk()))) { eff = o.lyrics; folha = true; }
       }
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha });
@@ -394,8 +395,10 @@ Deno.serve(async (req) => {
       if (!/^[0-9a-f-]{36}$/.test(id)) return out({ error: 'coleção inválida' }, 400);
       if (v !== null && !validLyrics(v)) return out({ error: 'letra inválida' }, 400);
       if (!(await limit(user, 'save', 'col:' + id + ':' + slug))) return tooMany();
-      const [cs] = await rest(`collection_songs?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=song_slug`);
+      const [cs] = await rest(`collection_songs?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}&select=song_slug,collections(collection_groups(group_id))`);
       if (!cs) return out({ error: 'O cântico não está nesta folha.' }, 404);
+      // o Maestro só mexe nas folhas dos seus grupos (o Gestor em todas)
+      if (lvl < 4 && !groupOk(await myGroups(user), cs.collections?.collection_groups)) return denied();
       const key = `collection_lyrics?collection_id=eq.${id}&song_slug=eq.${encodeURIComponent(slug)}`;
       if (v === null) { await rest(key, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); return out({ ok: true, edited_at: null }); }
       const [r] = await rest('collection_lyrics?on_conflict=collection_id,song_slug', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
