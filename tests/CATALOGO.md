@@ -36,6 +36,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação .danger-fill); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ☐ por correr |
 | FUN-53 | Versão da folha (v204): small.col-edited e ligação #/cantico/<slug>/folha/<id>; .note.col-ver «Versão desta folha · ver original»; sem «Editar cântico»; Cancioneiro sem acordes (Maestro, Coro, Cancioneiro) | ui | média | V | ☐ por correr |
 | FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ☐ por correr |
+| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
