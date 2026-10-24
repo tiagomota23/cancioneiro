@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v201, 2026-10-21** — 192 ok · 1 falha (FUN-51, baixa: tutorial na 1.ª abertura sem o passo do microfone para quem tem can_listen) · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-21-v201-full.md` (DB-FN-04, FUN-50 e FUN-51 corrigidos no teste e corridos de novo na mesma execução). A semanal da v200 (19/out) não correu: o ambiente bloqueou o comando.
+Última execução completa: **v204, 2026-10-24** — 201 ok · 0 falhas · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-24-v204-full.md` (SEG-11, FUN-39, FUN-52 e USA-16 falharam por erro do teste depois da v203/v204; corrigidos e corridos de novo na mesma execução).
 
 ---
 
@@ -32,11 +32,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-48 | Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro; #ver-promo Acrescentar/Retirar com confirmação; versões do original sem botão (v196) | ui | média | V | ✓ |
 | FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
 | FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
-| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ (v202; falhou na v201: 1.ª abertura sem o passo do microfone) |
-| FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação .danger-fill); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ☐ por correr |
-| FUN-53 | Versão da folha (v204): small.col-edited e ligação #/cantico/<slug>/folha/<id>; .note.col-ver «Versão desta folha · ver original»; sem «Editar cântico»; Cancioneiro sem acordes (Maestro, Coro, Cancioneiro) | ui | média | V | ☐ por correr |
-| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ☐ por correr |
-| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
+| FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ |
+| FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ✓ |
+| FUN-53 | Versão da folha (v204): small.col-edited e ligação #/cantico/<slug>/folha/<id>; .note.col-ver «Versão desta folha · ver original»; sem «Editar cântico»; Cancioneiro sem acordes (Maestro, Coro, Cancioneiro) | ui | média | V | ✓ |
+| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ✓ |
+| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ✓ |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -66,7 +66,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
-| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ☐ por correr |
+| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ✓ |
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
@@ -166,18 +166,18 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-02 | styles.css sem cores fixas (só variáveis do tema) | static | baixa | V | ✓ |
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
 | USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
-| USA-05 | Tokens: on-brand sobre brand/brand-deep; accent e chord sobre paper (claro e escuro); danger sobre surface; ≥ 4.5:1 na base e nos 4 perfis (v203) | static | média | V | ☐ por correr |
+| USA-05 | Tokens: on-brand sobre brand/brand-deep; accent e chord sobre paper (claro e escuro); danger sobre surface; ≥ 4.5:1 na base e nos 4 perfis (v203) | static | média | V | ✓ |
 | USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ✓ |
-| USA-18 | Texto e ícones sobre a cor da marca (texto ≥ 4.5:1 opaco, ícones ≥ 3:1): índice e gaveta nos 4 perfis, folha, edição (v203) | ui | média | V | ☐ por correr |
+| USA-18 | Texto e ícones sobre a cor da marca (texto ≥ 4.5:1 opaco, ícones ≥ 3:1): índice e gaveta nos 4 perfis, folha, edição (v203) | ui | média | V | ✓ |
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ✓ |
 | USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ✓ |
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176) | ui | baixa | V | ✓ |
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
-| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa sempre --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ☐ por correr |
+| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa sempre --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
-| USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ☐ por correr |
+| USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
 | USA-14 | Nomes acessíveis em botões/ligações; `lang="pt"` | ui | média | V | ✓ |
 | USA-15 | Diálogos com título e botão de fechar | ui | baixa | V | ✓ |
@@ -203,14 +203,14 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ✓ |
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
-| SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ☐ por correr |
+| SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
 | SEG-25 | Auth só Google | live | alta | V | ✓ |
-| SEG-26 | conteudo sem sessão → 403 em todas as operações (inclui collyrics desde v204) | live | crítica | V | ☐ por correr |
+| SEG-26 | conteudo sem sessão → 403 em todas as operações (inclui collyrics desde v204) | live | crítica | V | ✓ |
 | SEG-27 | shared: token mal formado 400/WAF, desconhecido 410 | live | alta | V | ✓ |
 | SEG-28 | conteudo não reflete origens estranhas (CORS) | live | alta | V | ✓ |
 | SEG-29 | transcribe: CORS só para a origem do GitHub Pages (v156) | live | baixa | V | ✓ |
@@ -224,7 +224,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
 | DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
-| DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ☐ por correr |
+| DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ✓ |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
@@ -259,7 +259,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ✓ |
 | INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
-| INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ☐ por correr |
+| INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |

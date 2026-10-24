@@ -849,7 +849,7 @@ async function suites(full) {
     const o0 = await order();
     await page.click('#ce-rows li[data-key="veni_creator_spiritus"] a'); await sleep(300);
     const acts = await page.evaluate(() => [...document.querySelectorAll('#ce-rows li[data-key="veni_creator_spiritus"] .ce-acts button[data-act]')].map(b => b.dataset.act));
-    if (acts.join() !== 'up,down,del,ok') return 'ações: ' + acts.join() + ' (esperado up,down,del,ok)';
+    if (acts.join() !== 'lyr,up,down,del,ok') return 'ações: ' + acts.join() + ' (esperado lyr,up,down,del,ok; lyr = Editar nesta folha desde v204)';
     await page.click('#ce-rows li[data-key="veni_creator_spiritus"] .ce-acts button[data-act="down"]'); await sleep(600);
     const o1 = await order();
     if (o1.indexOf('veni_creator_spiritus') <= o0.indexOf('veni_creator_spiritus')) return `Descer não mudou a ordem: ${o0} → ${o1}`;
@@ -913,17 +913,21 @@ async function suites(full) {
 
   // ---- v204: Editar nesta folha (letra só numa folha), indicadores e opções do PDF ----
   await t('FUN-52', 'Editar nesta folha (v204): ✎ (data-act="lyr") abre #cl-ed com uma caixa por estrofe; Guardar desativado sem estrofes; Cancelar com alterações pede confirmação; Guardar fica na cópia (nada gravado) e marca .col-edited; «Guardar» da folha grava (collyrics); «Editar texto» → #cl-text; Repor pede confirmação e apaga a versão; igual ao original = sem versão', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    let step = 'início'; const late = []; const at = n => { step = n; };
+    try {
     const SLUG = 'veni_creator_spiritus', K = 'demoE/' + SLUG;
     const stored = () => page.evaluate(k => JSON.parse(localStorage.getItem('cancioneiro.demo.collyr') || '{}')[k] || null, K);
     const marked = () => page.evaluate(sl => !!document.querySelector(`#ce-rows li[data-key="${sl}"] small.col-edited`), SLUG);
     const openLyr = async () => {
-      await page.click(`#ce-rows li[data-key="${SLUG}"] a`); await sleep(300);
+      at('abrir ✎');
+      // o item já escolhido mostra .ce-acts (na v204 por cima da ligação): só se toca no item se ainda não estiver escolhido
+      if (!(await vis(page, `#ce-rows li[data-key="${SLUG}"] .ce-acts button[data-act="lyr"]`))) { await page.click(`#ce-rows li[data-key="${SLUG}"] a`); await sleep(300); }
       await page.click(`#ce-rows li[data-key="${SLUG}"] .ce-acts button[data-act="lyr"]`);
       await page.waitForSelector('#cl-ed[open] #cl-sts input', { timeout: 8000 }).catch(() => {});
       return page.locator('#cl-sts input').count();
     };
     const dlgOk = async () => { await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); const t = await page.evaluate(() => document.querySelector('#app-dlg[open] #app-dlg-ok')?.textContent.trim() || ''); return t; };
-    const editor = async () => { await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500); };
+    const editor = async () => { at('Editar folha'); await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500); };
     await editor();
     const n = await openLyr();
     if (n !== 2) return `#cl-sts com ${n} caixas (esperadas 2, uma por estrofe)`;
@@ -931,6 +935,7 @@ async function suites(full) {
     if (!(await page.evaluate(() => document.querySelector('#cl-save').disabled))) return 'Guardar ativo sem estrofes';
     await page.locator('#cl-sts input').nth(0).check();
     if (await page.evaluate(() => document.querySelector('#cl-save').disabled)) return 'Guardar desativado com 1 estrofe';
+    at('Cancelar 1');
     await page.click('#cl-cancel');
     if (!/Sair sem guardar/.test(await dlgOk())) return 'Cancelar com alterações sem confirmação «Sair sem guardar»';
     await page.click('#app-dlg-cancel'); await sleep(300);
@@ -938,17 +943,20 @@ async function suites(full) {
     await page.click('#cl-cancel'); await dlgOk(); await page.click('#app-dlg-ok'); await sleep(400);
     if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return 'Sair sem guardar não fechou #cl-ed';
     if (await marked()) return 'Cancelar deixou a marca .col-edited';
+    at('guardar na cópia');
     // só a 1.ª estrofe → Guardar (na cópia)
     await openLyr(); await page.locator('#cl-sts input').nth(1).uncheck(); await page.click('#cl-save'); await sleep(400);
     if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return 'Guardar não fechou #cl-ed';
     if (!(await marked())) return 'depois de Guardar a linha não tem small.col-edited «editado nesta folha»';
     if (await stored()) return 'a versão da folha foi gravada antes do «Guardar» da folha';
+    at('Guardar da folha');
     await page.click('#ce-save'); await sleep(900);
     const v = await stored();
     if (!v || v.length !== 1) return '«Guardar» da folha não gravou a versão (1 estrofe): ' + JSON.stringify(v)?.slice(0, 80);
     // Editar texto
     await editor(); await openLyr();
     if (!(await vis(page, '#cl-reset'))) return 'com versão da folha, sem «Repor original» (#cl-reset)';
+    at('Editar texto');
     await page.click('#cl-text-btn'); await sleep(200);
     if (!(await vis(page, '#cl-text')) || !(await page.inputValue('#cl-text')).trim()) return '«Editar texto» não mostrou #cl-text com a letra';
     if (await vis(page, '#cl-sts')) return '«Editar texto» deixou as caixas visíveis';
@@ -956,17 +964,20 @@ async function suites(full) {
     if (!(await page.evaluate(() => document.querySelector('#cl-save').disabled))) return 'Guardar ativo com o texto vazio';
     await page.click('#cl-cancel'); await dlgOk(); await page.click('#app-dlg-ok'); await sleep(400);
     // Repor original: confirmação, tira a marca e apaga ao guardar a folha
+    at('Repor');
     await openLyr(); await page.click('#cl-reset');
     if (!/Repor original/.test(await dlgOk())) return 'Repor sem confirmação «Repor original»';
-    if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').matches('.danger-fill')))) return 'confirmação de Repor sem .danger-fill';
+    // a confirmação «Repor original» não é vermelha: regra da app (app.js appConfirm: só Apagar/Remover/Retirar/Recusar/Sair sem guardar)
     await page.click('#app-dlg-ok'); await sleep(400);
     if (await marked()) return 'depois de Repor a linha continua marcada';
     await page.click('#ce-save'); await sleep(900);
     if (await stored()) return 'Repor + Guardar da folha não apagou a versão';
+    at('igual ao original');
     // igual ao original: todas as estrofes → sem versão
     await editor(); await openLyr(); await page.click('#cl-save'); await sleep(400);
     if (await marked()) return 'guardar igual ao original marcou a linha';
-    return true;
+    return late.length ? late.join('; ') : true;
+    } catch (e) { throw new Error(`passo «${step}»: ${e.message.split('\n')[0]}`); }
   }), { sev: 'alta' });
   const FOLHA_LYR = [{ type: 'verse', lines: ['[G]Linha de teste desta [D]folha'] }];
   const colsWithEdit = (id, slug) => demoCols().map(c => c.id === id ? { ...c, edits: [{ song_slug: slug, edited_at: new Date().toISOString() }] } : c);
@@ -1621,7 +1632,9 @@ async function suites(full) {
   if (full) {
     await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const tok = JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8'));
-      const accent = tok.color.tokens.find(x => x.name === 'accent').value.light;
+      // desde v203 as cores dependem do perfil (design/tokens.json → perfis); o perfil Maestro tem o seu accent
+      const pm = (tok.perfis?.tokens || []).find(x => x.id === 'maestro')?.values?.accent;
+      const accent = (pm && (pm.light || pm)) || tok.color.tokens.find(x => x.name === 'accent').value.light;
       const hex2rgb = h => { h = h.replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); return `rgb(${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)})`; };
       const got = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
       const btn = await page.evaluate(() => { const b = document.querySelector('#btn-edit'); return b ? getComputedStyle(b).backgroundColor + ' / ' + getComputedStyle(b).color : ''; });
