@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v215';
+  const APP_VERSION = '2026-10-24 v216';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1212,7 +1212,10 @@
   async function shareCollection(c) {
     const fim = new Date(c.expires_at).toLocaleString('pt-PT', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
     const list = [{ value: 'url', label: urlLabel(), sub: `Qualquer pessoa pode abrir até ${fim}, quando a folha expira (sem conta: só a letra e a tradução)` },
-      { value: 'pdf', label: 'Gerar PDF', sub: lvl() >= 2 ? 'Título, secções e letras; com acordes e partituras, se quiser' : 'Título, secções, títulos e letras dos cânticos' }];
+      { value: 'pdf', label: 'Gerar PDF', sub: lvl() >= 2 ? 'Título, secções e letras; com acordes e partituras, se quiser' : 'Título, secções, títulos e letras dos cânticos' },
+      // por email a todos os utilizadores dos grupos da folha: ainda desligado (falta um remetente que entregue a todos)
+      { value: 'mail-url', label: 'Enviar endereço por email', sub: 'A todos os utilizadores dos grupos da folha · em breve', disabled: true },
+      { value: 'mail-pdf', label: 'Enviar PDF por email', sub: 'A todos os utilizadores dos grupos da folha, em anexo · em breve', disabled: true }];
     const v = await appChoose('Partilhar folha', list);
     if (v === 'url') copyShareUrl(api('share', { collection: c.id }), 'válido até ' + fim, c.title);
     else if (v === 'pdf') { const o = await pdfOptions(c); if (o) collectionPdf(c, o); }
@@ -1958,7 +1961,7 @@
       const inp = $('app-dlg-input'); inp.hidden = input === null; inp.value = input ?? '';
       d.classList.toggle('top-dlg', input !== null); // com caixa de texto: fica no topo (o teclado não a faz saltar)
       const lst = $('app-dlg-list'); lst.hidden = !list;
-      lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
+      lst.innerHTML = (list || []).map((o, i) => `<button class="tpl-apply" data-i="${i}"${o.disabled ? ' disabled' : ''}><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('');
       // confirmações que apagam ou deitam fora (Apagar, Remover, Retirar, Recusar, Repor, Sair sem guardar): botão vermelho
       $('app-dlg-ok').classList.toggle('danger-fill', input === null && !list && /^(Apagar|Remover|Retirar|Recusar|Repor|Sair sem guardar)/.test(ok || ''));
       if (okHtml) $('app-dlg-ok').innerHTML = okHtml; else $('app-dlg-ok').textContent = ok; $('app-dlg-ok').hidden = !!list || ok === null;
@@ -1970,7 +1973,7 @@
       inp.oninput = gate; gate();
       $('app-dlg-ok').onclick = () => done(input !== null ? inp.value : true);
       $('app-dlg-cancel').onclick = () => done(input !== null || list ? null : false);
-      lst.querySelectorAll('button').forEach(b => b.onclick = () => done(list[+b.dataset.i].value));
+      lst.querySelectorAll('button:not([disabled])').forEach(b => b.onclick = () => done(list[+b.dataset.i].value));
       $('app-dlg-extra').onclick = () => done({ extra: true, value: inp.value });
       inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); if (!$('app-dlg-ok').disabled) done(inp.value); } };
       d.oncancel = e => { e.preventDefault(); done(input !== null || list ? null : false); };
