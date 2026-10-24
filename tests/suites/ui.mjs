@@ -970,7 +970,8 @@ async function suites(full) {
     at('Repor');
     await openLyr(); await page.click('#cl-reset');
     if (!/Repor original/.test(await dlgOk())) return 'Repor sem confirmação «Repor original»';
-    // a confirmação «Repor original» não é vermelha: regra da app (app.js appConfirm: só Apagar/Remover/Retirar/Recusar/Sair sem guardar)
+    // v207: «Repor» entrou na regra das confirmações vermelhas (app.js appConfirm)
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').matches('.danger-fill')))) late.push('confirmação «Repor original» sem .danger-fill (v207)');
     await page.click('#app-dlg-ok'); await sleep(400);
     if (await marked()) return 'depois de Repor a linha continua marcada';
     await page.click('#ce-save'); await sleep(900);
@@ -1684,7 +1685,7 @@ async function suites(full) {
     if (!seen.length) return 'nenhuma linha de ações com 2+ botões encontrada';
     return bad.length ? bad.join('; ') : { pass: seen.length + ' linhas: ' + seen.slice(0, 4).join('; ') };
   }, { sev: 'baixa' });
-  await t('USA-21', 'Confirmações destrutivas (Apagar, Remover, Retirar, Recusar, Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto e outras confirmações sem (v176)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+  await t('USA-21', 'Confirmações destrutivas (Apagar, Remover, Retirar, Recusar, Repor, Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto e outras confirmações sem (v176; Repor desde v207)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
     const ok = () => page.evaluate(() => ({ t: document.querySelector('#app-dlg-ok').textContent.trim(), d: document.querySelector('#app-dlg-ok').classList.contains('danger-fill'), open: document.querySelector('#app-dlg').open }));
     const bad = [];
     await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
@@ -1692,6 +1693,13 @@ async function suites(full) {
     await page.click('#col-add-sec'); await sleep(300); let o = await ok();
     if (!o.open) bad.push('«Nova secção» não abriu'); else if (o.d) bad.push('caixa de texto com danger-fill');
     await page.click('#app-dlg-cancel'); await sleep(300);
+    // v207: repor original em «Editar nesta folha» (precisa de uma versão: tira a 2.ª estrofe e guarda na cópia)
+    const lyr = async () => { const sel = '#ce-rows li[data-key="adoro_te_devote"]'; if (!(await vis(page, sel + ' .ce-acts button[data-act="lyr"]'))) { await page.click(sel + ' a'); await sleep(300); } await page.click(sel + ' .ce-acts button[data-act="lyr"]'); await page.waitForSelector('#cl-ed[open] #cl-sts input', { timeout: 8000 }).catch(() => {}); await sleep(200); };
+    await lyr(); await page.locator('#cl-sts input').nth(1).uncheck(); await page.click('#cl-save'); await sleep(400);
+    await lyr(); await page.click('#cl-reset'); await sleep(300);
+    o = await ok(); if (!/^Repor/.test(o.t) || !o.d) bad.push(`repor original: «${o.t}» danger-fill=${o.d}`);
+    await page.click('#app-dlg-cancel'); await sleep(300); await page.click('#cl-cancel'); await sleep(300);
+    if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); }
     // remover cântico
     await page.click('#ce-rows li[data-key="veni_creator_spiritus"] a'); await sleep(300);
     await page.click('#ce-rows li[data-key="veni_creator_spiritus"] .ce-acts button[data-act="del"]'); await sleep(300);
