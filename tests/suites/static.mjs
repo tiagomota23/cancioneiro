@@ -185,8 +185,9 @@ export default async function (level) {
     if (!/collection_lyrics\?collection_id=eq\.\$\{col\.id\}/.test(c) || !/own\.get\(slug\) \|\| s\.eff/.test(c)) bad.push('shared: não usa a versão da folha');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (ops collyrics, song, shared)' });
-  await t('SEG-16', 'conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email e, se a leitura falhar, ficam vazios (não recebe folhas); Maestro+ sem filtro', () => {
+  await t('SEG-16', 'conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email (em minúsculas, de who()) e, se a leitura falhar, ficam vazios (não recebe folhas); Maestro+ sem filtro', () => {
     const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    if (!/const email = \(u\.email \|\| ''\)\.toLowerCase\(\);[\s\S]{0,200}return a \? \{ id: u\.id, email,/.test(c)) bad.push('who() já não devolve o email em minúsculas (user_groups guarda-o em minúsculas)');
     if (!/const myGroups = async user => new Set\(\(await rest\(`user_groups\?email=eq\.\$\{encodeURIComponent\(user\.email\)\}&select=group_id`\)\.catch\(\(\) => \[\]\)\)/.test(c)) bad.push('myGroups mudou (rever: email da pessoa e falha → vazio)');
     if (!/const groupOk = \(mine, cg\) => !mine \|\| \(mine\.size > 0 && \(!\(cg \|\| \[\]\)\.length \|\| cg\.some\(x => mine\.has\(x\.group_id\)\)\)\)/.test(c)) bad.push('groupOk mudou (rever)');
     if (!/colSet = new Set\(rows\.filter\(r => groupOk\(mine, r\.collections\.collection_groups\)\)/.test(c)) bad.push('colSet sem filtro de grupos');

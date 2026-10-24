@@ -212,7 +212,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
 | SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
-| SEG-16 | conteudo e grupos (v209): colSet e song+collection com groupOk; grupos da pessoa por email, falha → vazio; Maestro+ sem filtro | static | alta | V | ☐ por correr |
+| SEG-16 | conteudo e grupos (v209): colSet e song+collection com groupOk; grupos da pessoa por email em minúsculas (who()), falha → vazio; Maestro+ sem filtro | static | alta | V | ☐ por correr |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ☐ por correr |
