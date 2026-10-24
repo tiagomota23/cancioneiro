@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v204';
+  const APP_VERSION = '2026-10-24 v205';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1059,18 +1059,20 @@
     // o perfil Cancioneiro não vê acordes
     const plain = st => lvl() < 2 ? (st || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })) : st;
     // aberto a partir de uma folha com a sua versão deste cântico: essa letra no original, com «ver original»
+    // aberto a partir de uma folha: sem as edições do cântico original (letra, ficheiros, aprovar, versões); fazem-se fora da folha
     const fcol = songCol && cols.find(x => x.id === songCol), fedit = fcol && colEdited(fcol, slug) && mode === 'orig' ? fcol : null;
     const fdata = fedit ? colLyrCached(fedit, slug) : null;
     if (fedit && !fdata) getColLyrics(fedit, slug).then(() => { if (lastSongSlug === slug && songCol === fedit.id && !$('view-song').hidden) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); } }).catch(() => {});
     const lyrics = plain((fedit ? fdata && fdata.lyrics : data && data.lyrics) || []);
     const body = plain((ver ? vdata && vdata.lyrics : mode === 'trad' ? data && data.translation : lyrics) || []);
     const note = fedit ? `<p class="note col-ver">Versão desta folha${fdata ? '' : ' · a carregar…'} · <a href="#/cantico/${encodeURIComponent(slug)}">ver original</a></p>`
+      : fcol && lvl() >= 3 && mode === 'orig' && extrasOn() ? `<p class="note col-ver">Aberto a partir da folha · <a href="#/cantico/${encodeURIComponent(slug)}">abrir fora da folha para editar</a></p>`
       : ver ? `<p class="note">Versão${ver.language !== s.language ? ' em ' + esc((LANGS[ver.language] || ver.language).toLowerCase()) : ''}: «${esc(ver.title)}»${ver.author ? ' — ' + esc(ver.author) : ''}${vdata ? '' : ' · a carregar…'}</p>`
       : mode === 'trad' ? `<p class="note">${trVersion(s.translation_language) ? 'Versão em ' + esc(trName.toLowerCase()) : 'Tradução'}</p>` : '';
     const edited = !!s.is_edited;
     const rights = extrasOn() && s.rights ? `<p class="rights">${esc(s.rights)}</p>` : '';
     // editar e promover: perfil Maestro ou superior (escondido na vista "Cancioneiro", que mostra os cânticos como eram)
-    const canEdit = data && mode === 'orig' && !fedit && lvl() >= 3 && extrasOn();
+    const canEdit = data && mode === 'orig' && !fcol && lvl() >= 3 && extrasOn();
     const original = srcOf(s).includes('original');
     // cântico novo por aprovar: o Maestro aprova ou recusa; quem o acrescentou pode retirá-lo
     const mine = session && s.added_by === session.user.email;
@@ -1078,10 +1080,10 @@
     const simHtml = sims.length ? `<div class="sim-list"><b>Atenção: parecido com cânticos que já existem</b>${sims.map(x => `<a href="#/cantico/${encodeURIComponent(x.slug)}">${esc(x.title)}${x.author ? ' — ' + esc(x.author) : ''}<small>${esc(x.why)}</small></a>`).join('')}</div>` : '';
     // só o Maestro / Gestor aprova, recusa ou apaga cânticos novos
     const pendHtml = s.approved === false
-      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="edit-btn danger-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
+      ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 && !fcol ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="edit-btn danger-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
       : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
-    const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn(); // Maestro / Gestor: em "Editar cântico"
+    const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn() && !fcol; // Maestro / Gestor: em "Editar cântico"
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
     // ficheiros enviados pela app: o Maestro / Gestor pode apagá-los (os importados ficam)
     const ups = canFiles ? (s.files || []).filter(f => /^enviados\//.test(f.path || '')) : [];
@@ -1090,7 +1092,7 @@
       ? `<p class="edit-bar">${canEdit && edited ? `<span>Letra editada${s.edited_by ? ' por ' + esc(s.edited_by.split('@')[0]) : ''}${s.edited_at ? ' em ' + new Date(s.edited_at).toLocaleDateString('pt-PT') : ''}</span><button class="revert-link" id="btn-revert">Repor original</button>` : ''}${canEdit ? '<button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>Editar cântico</button>' : ''}${fileBtns ? `<span class="file-btns">${fileBtns}</span>` : ''}</p>`
       : '';
     // Maestro / Gestor: pôr no Cancioneiro (ou tirar) a versão escolhida; as do site original ficam sempre
-    const verBtn = ver && lvl() >= 3 && extrasOn() && !(inCancioneiro(ver) && srcOf(ver).includes('original'))
+    const verBtn = ver && !fcol && lvl() >= 3 && extrasOn() && !(inCancioneiro(ver) && srcOf(ver).includes('original'))
       ? `<p class="edit-bar"><button class="edit-btn" id="ver-promo">${inCancioneiro(ver) ? 'Retirar esta versão do Cancioneiro' : 'Acrescentar esta versão ao Cancioneiro'}</button></p>` : '';
     $('song').innerHTML = `
       ${s.approved === false ? '<small class="pend pend-top">Por aprovar</small>' : ''}<h1>${esc(s.title)}</h1>
@@ -1218,11 +1220,12 @@
   // PDF da folha: acordes e partituras à escolha (por omissão, ligados numa folha do Coro); o perfil Cancioneiro não os vê
   async function pdfOptions(c) {
     if (lvl() < 2) return { chords: false, scores: false };
-    const on = c.audience === 'coro' ? ' checked' : '';
-    const ok = await appDialog({ title: 'Gerar PDF', ok: 'Gerar', html:
-      `<label class="pdf-opt"><span>Acordes</span><input type="checkbox" role="switch" id="pdf-o-chords"${on}></label>` +
-      `<label class="pdf-opt"><span>Partituras</span><input type="checkbox" role="switch" id="pdf-o-scores"${on}></label>` });
-    return ok ? { chords: $('pdf-o-chords').checked, scores: $('pdf-o-scores').checked } : null;
+    const on = c.audience === 'coro';
+    const sw = (id, label) => `<button type="button" class="switch-row pdf-opt${on ? ' on' : ''}" role="switch" aria-checked="${on}" id="${id}"><span>${label}</span><span class="switch"></span></button>`;
+    const asked = appDialog({ title: 'Gerar PDF', ok: 'Gerar', html: sw('pdf-o-chords', 'Acordes') + sw('pdf-o-scores', 'Partituras') });
+    $('app-dlg-msg').querySelectorAll('.switch-row').forEach(b => b.onclick = () => { const v = !b.classList.contains('on'); b.classList.toggle('on', v); b.setAttribute('aria-checked', v); });
+    const isOn = id => $(id).classList.contains('on');
+    return await asked ? { chords: isOn('pdf-o-chords'), scores: isOn('pdf-o-scores') } : null;
   }
 
   // ---------- Endereço partilhado (#/p/<código>[/<cântico>]): sem conta, ou sem acesso ao cântico / coleção → só letra e tradução ----------
@@ -2819,10 +2822,10 @@
     }).finally(() => pending.delete(k)));
     return pending.get(k);
   }
-  // linha de um cântico com versão desta folha: abre essa versão e diz «editado nesta folha»
-  const markEdited = (html, c, slug) => html
-    .replace(`href="#/cantico/${encodeURIComponent(slug)}"`, `href="#/cantico/${encodeURIComponent(slug)}/folha/${c.id}"`)
-    .replace('</span><span class="n">', '<small class="col-edited">editado nesta folha</small></span><span class="n">');
+  // linha de um cântico com versão desta folha: diz «editado nesta folha»
+  const markEdited = html => html.replace('</span><span class="n">', '<small class="col-edited">editado nesta folha</small></span><span class="n">');
+  // cântico na página da folha: abre-se «a partir da folha» (a versão da folha, se houver, e sem as edições do original)
+  const colRow = (c, slug) => { const h = songRow(bySlug.get(slug)).replace(`href="#/cantico/${encodeURIComponent(slug)}"`, `href="#/cantico/${encodeURIComponent(slug)}/folha/${c.id}"`); return colEdited(c, slug) ? markEdited(h) : h; };
   const ICON_CHECK = '<path d="M5 12.5l4.5 4.5L19 7"/>';
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
   // Folha: na página, sempre só leitura (só as secções com cânticos). Maestro / Gestor: «Editar folha» no fim (como
@@ -2845,7 +2848,7 @@
     const items = withSongs(all);
     rows.innerHTML = items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
-      : colEdited(c, it.key) ? markEdited(songRow(bySlug.get(it.key)), c, it.key) : songRow(bySlug.get(it.key))).join('') +
+      : colRow(c, it.key)).join('') +
       (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
     if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
@@ -2893,7 +2896,7 @@
       const sel = it.key === ceSel;
       if (it.k === 'sec') { if (open) html += addLine(cur); cur = it.ref.id; open = true;
         html += `<li class="col-sec${sel ? ' sel' : ''}" data-key="${esc(it.key)}"><div class="sec-line" role="button" tabindex="0" aria-expanded="${sel}">${sel ? `<button type="button" class="ce-name" aria-label="Mudar o nome da secção ${esc(it.ref.title)}">${PENCIL}${esc(it.ref.title)}</button>` : esc(it.ref.title)}</div>${sel ? acts(i, true) : ''}</li>`; }
-      else { open = true; const row = edEdited(c, it.key) ? markEdited(songRow(bySlug.get(it.key)), c, it.key) : songRow(bySlug.get(it.key)); html += row.replace('<li>', `<li data-key="${esc(it.key)}"${sel ? ' class="sel"' : ''}>`).replace(/<\/li>$/, (sel ? acts(i, false) : '') + '</li>'); }
+      else { open = true; const row = edEdited(c, it.key) ? markEdited(songRow(bySlug.get(it.key))) : songRow(bySlug.get(it.key)); html += row.replace('<li>', `<li data-key="${esc(it.key)}"${sel ? ' class="sel"' : ''}>`).replace(/<\/li>$/, (sel ? acts(i, false) : '') + '</li>'); }
     });
     if (open || !all.length) html += addLine(cur);
     const rows = $('ce-rows');

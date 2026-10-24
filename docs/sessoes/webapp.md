@@ -129,6 +129,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   `collection_songs(…, edit:collection_lyrics(edited_at))` → `c.edits`. Sem chave direta para `collections` (o PostgREST
   ficaria com duas ligações collections → collection_songs). O cântico aberto da folha: `#/cantico/<slug>/folha/<id>`.
   PDF da folha: uma só opção com interruptores Acordes / Partituras (ligados por omissão numa folha do Coro).
+  v205: todos os cânticos da página da folha abrem com `/folha/<id>`; assim aberto, o cântico não mostra edições do
+  original (Editar cântico, ficheiros, aprovar, versões). Maestro vê «abrir fora da folha para editar». As ações do item
+  escolhido em Editar folha ficam numa linha por baixo dele.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
