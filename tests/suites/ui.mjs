@@ -1405,6 +1405,37 @@ async function suites(full) {
     return true;
   }), { sev: 'média' });
 
+  await t('FUN-67', 'Cor do PDF da folha pelo público (v214): folha Coro → #1f6aa8 (--folha-coro), folha Cancioneiro → #0e7f58 (--folha-cancioneiro), em qualquer perfil; a outra cor não aparece (cores de preenchimento/traço lidas com pdfjs getOperatorList)', async () => {
+    const bad = [], ev = [];
+    const colorsOf = async (perfil, id) => withApp({ perfil, hash: '#/lista/colecao-' + id, isMobile: false, hasTouch: false }, async ({ page }) => {
+      await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
+      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
+      if (await page.evaluate(() => !!document.querySelector('#app-dlg[open] #pdf-o-chords'))) await page.click('#app-dlg-ok');
+      await page.waitForSelector('#pdfpages canvas', { timeout: 30000 }).catch(() => {});
+      const dl = page.waitForEvent('download', { timeout: 15000 }).catch(() => null);
+      await page.click('#pdf-download'); const d = await dl;
+      if (!d) return null;
+      const b64 = fs.readFileSync(await d.path()).toString('base64');
+      return page.evaluate(async b => {
+        const lib = await import('/vendor/pdfjs/pdf.min.mjs'); lib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+        const doc = await lib.getDocument({ data: Uint8Array.from(atob(b), c => c.charCodeAt(0)), isEvalSupported: false }).promise;
+        const O = lib.OPS, out = new Set();
+        const hex = a => typeof a === 'string' ? a.toLowerCase() : '#' + [...a].slice(0, 3).map(v => Math.round((v <= 1 ? v * 255 : v)).toString(16).padStart(2, '0')).join('');
+        const page = await doc.getPage(1), ol = await page.getOperatorList();
+        ol.fnArray.forEach((f, i) => { if ([O.setFillRGBColor, O.setStrokeRGBColor].includes(f)) out.add(hex(ol.argsArray[i].length === 1 ? ol.argsArray[i][0] : ol.argsArray[i])); });
+        return [...out];
+      }, b64);
+    });
+    for (const [perfil, id, want, not] of [['maestro', 'demo1', '#1f6aa8', '#0e7f58'], ['maestro', 'demo2', '#0e7f58', '#1f6aa8'], ['coro', 'demo1', '#1f6aa8', '#0e7f58'], ['gestor', 'demo2', '#0e7f58', '#1f6aa8']]) {
+      const cs = await colorsOf(perfil, id);
+      if (!cs) { bad.push(`${perfil}/${id}: sem PDF`); continue; }
+      ev.push(`${perfil}/${id}: ${cs.join(' ')}`);
+      if (!cs.includes(want)) bad.push(`${perfil}/${id}: sem ${want} (cores ${cs.join(' ')})`);
+      if (cs.includes(not)) bad.push(`${perfil}/${id}: tem também ${not}`);
+    }
+    return bad.length ? { fail: bad.join('; '), evidence: ev.join(' | ') } : { pass: ev.join(' | ') };
+  }, { sev: 'baixa' });
+
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {
     await sleep(500);
