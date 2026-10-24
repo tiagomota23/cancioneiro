@@ -10,7 +10,7 @@ if (!file) { console.error('uso: node restaurar-dados.mjs dados.json [--tabela=n
 const only = (opts.find(o => o.startsWith('--tabela=')) || '').split('=')[1];
 const dados = JSON.parse(readFileSync(file, 'utf8'));
 const ORDEM = ['songs', 'song_sources', 'song_tags', 'song_files', 'allowed_emails', 'collections', 'collection_songs',
-  'collection_sections', 'collection_templates', 'song_shares', 'drive_folders', 'song_edits', 'sync_log', 'drive_sync_log', 'favorites'];
+  'collection_sections', 'collection_lyrics', 'collection_templates', 'song_shares', 'drive_folders', 'song_edits', 'sync_log', 'drive_sync_log', 'favorites'];
 const extra = Object.keys(dados).filter(t => !ORDEM.includes(t));
 if (extra.length) console.error('Aviso: tabelas na cópia que este script não conhece (ignoradas):', extra.join(', '));
 
