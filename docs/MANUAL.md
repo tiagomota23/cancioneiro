@@ -79,7 +79,7 @@ Principais tabelas:
 - `song_sources` (original, coro_clu, songbook, canti2024, novos), `song_tags` (grupos: Coro CLU, momentos da Missa, Songbook, CANTI 2024, Categoria),
   `song_files` (gravações e partituras: caminho no bucket; páginas dos livros como `livros/<livro>.pdf#p=N&c=recortes`), `song_edits` (histórico de edições).
 - `allowed_emails` (quem entra e com que perfil), `access_requests` (pedidos), `invites` (convites), `favorites`.
-- `collections`, `collection_songs`, `collection_sections`, `collection_templates` (folhas).
+- `collections`, `collection_songs`, `collection_sections`, `collection_templates`, `collection_lyrics` (folhas; collection_lyrics tem letras editadas por folha).
 - `song_shares` (endereços partilhados de 24 h), `access_log` (limites de uso), `job_requests` (pedidos dos agendamentos).
 - `sync_log`, `health_log`, `drive_files`, `drive_folders`, `drive_state` (autorização do Drive), `drive_sync_log`.
 
