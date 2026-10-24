@@ -120,6 +120,9 @@ async function withApp(o, fn) {
     return r;
   } finally { await app.close(); }
 }
+// interruptores (v205: button.switch-row role=switch; estado em aria-checked)
+const swOn = (page, sel) => page.evaluate(q => { const e = document.querySelector(q); return e ? e.getAttribute('aria-checked') === 'true' : undefined; }, sel);
+const swSet = async (page, sel, v) => { if ((await swOn(page, sel)) !== v) { await page.click(sel); await sleep(150); } };
 const vis = (page, sel) => page.locator(sel).first().isVisible().catch(() => false);
 // textContent (o CSS põe títulos em maiúsculas: innerText devolveria «CANCIONEIRO» em vez do texto real)
 const txt = (page, sel) => page.locator(sel).first().evaluate(e => e.textContent).catch(() => '');
@@ -981,36 +984,51 @@ async function suites(full) {
   }), { sev: 'alta' });
   const FOLHA_LYR = [{ type: 'verse', lines: ['[G]Linha de teste desta [D]folha'] }];
   const colsWithEdit = (id, slug) => demoCols().map(c => c.id === id ? { ...c, edits: [{ song_slug: slug, edited_at: new Date().toISOString() }] } : c);
-  await t('FUN-53', 'Versão da folha (v204): linha com small.col-edited «editado nesta folha» e ligação #/cantico/<slug>/folha/<id>; o cântico abre a versão com .note.col-ver «Versão desta folha · ver original» e sem «Editar cântico»; «ver original» volta à letra original; perfil Cancioneiro sem acordes', async () => {
+  await t('FUN-53', 'Cântico aberto da folha (v204–v206): todas as ligações da folha são #/cantico/<slug>/folha/<id>; o editado tem small.col-edited «editado nesta folha»; aberto da folha: .note.col-ver «Na folha «título»» (+ « · letra desta folha» com versão), sem ligações, sem #btn-edit/#btn-add-rec/#btn-add-score/#song-approve/#song-reject/#ver-promo; #/cantico/<slug> volta ao original com #btn-edit (Maestro); perfil Cancioneiro sem acordes', async () => {
     const bad = [];
-    for (const [perfil, id, slug] of [['maestro', 'demo1', 'salve_regina'], ['coro', 'demo1', 'salve_regina'], ['cancioneiro', 'demo2', 'amazing_grace']]) await withApp({ perfil, hash: '#/lista/colecao-' + id, cols: colsWithEdit(id, slug), storage: { 'cancioneiro.demo.collyr': { [id + '/' + slug]: FOLHA_LYR } } }, async ({ page }) => {
+    const HIDE = ['#btn-edit', '#btn-add-rec', '#btn-add-score', '#song-approve', '#song-reject', '#ver-promo'];
+    for (const [perfil, id, slug, title] of [['maestro', 'demo1', 'salve_regina', 'Missa de domingo'], ['coro', 'demo1', 'salve_regina', 'Missa de domingo'], ['cancioneiro', 'demo2', 'amazing_grace', 'Encontro de jovens']]) await withApp({ perfil, hash: '#/lista/colecao-' + id, cols: colsWithEdit(id, slug), storage: { 'cancioneiro.demo.collyr': { [id + '/' + slug]: FOLHA_LYR } } }, async ({ page }) => {
       await page.waitForSelector('#rows li a', { timeout: 8000 }).catch(() => {});
-      const row = await page.evaluate(sl => { const a = [...document.querySelectorAll('#rows li a')].find(x => x.getAttribute('href')?.includes('/cantico/' + sl)); return a ? { href: a.getAttribute('href'), mark: a.querySelector('small.col-edited')?.textContent.trim() || '' } : null; }, slug);
-      if (!row) { bad.push(`${perfil}: linha de ${slug} não encontrada`); return; }
-      if (row.href !== `#/cantico/${slug}/folha/${id}`) bad.push(`${perfil}: ligação ${row.href}`);
-      if (!/editado nesta folha/.test(row.mark)) bad.push(`${perfil}: sem «editado nesta folha»`);
+      const rows = await page.evaluate(() => [...document.querySelectorAll('#rows li a[href^="#/cantico/"]')].map(a => ({ href: a.getAttribute('href'), mark: a.querySelector('small.col-edited')?.textContent.trim() || '' })));
+      const k = perfil;
+      const notFolha = rows.filter(r => !/\/folha\//.test(r.href)); if (notFolha.length) bad.push(`${k}: ligações sem /folha/: ${notFolha.map(r => r.href).join(', ')}`);
+      const row = rows.find(r => r.href === `#/cantico/${slug}/folha/${id}`);
+      if (!row) { bad.push(`${k}: linha de ${slug} sem #/cantico/${slug}/folha/${id}`); return; }
+      if (!/^editado nesta folha/.test(row.mark)) bad.push(`${k}: sem «editado nesta folha»`);
+      const others = rows.filter(r => r !== row && r.mark); if (others.length) bad.push(`${k}: marca em cânticos não editados`);
       await page.click(`#rows li a[href="${row.href}"]`); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(800);
-      const r = await page.evaluate(() => ({ note: document.querySelector('#song .note.col-ver')?.textContent.replace(/\s+/g, ' ').trim() || '', orig: document.querySelector('#song .note.col-ver a')?.getAttribute('href') || '', text: document.querySelector('#song').textContent, chords: document.querySelectorAll('#song .chord, #song .ch').length }));
-      if (!/Versão desta folha/.test(r.note) || !/ver original/.test(r.note)) bad.push(`${perfil}: nota «${r.note.slice(0, 60)}»`);
-      if (!/Linha de teste desta/.test(r.text)) bad.push(`${perfil}: não mostra a versão da folha`);
-      if (await vis(page, '#btn-edit')) bad.push(`${perfil}: «Editar cântico» visível na versão da folha`);
-      if (perfil === 'cancioneiro' && (r.chords || /\[G\]|\[D\]/.test(r.text))) bad.push('Cancioneiro: versão da folha com acordes');
-      if (r.orig !== '#/cantico/' + slug) { bad.push(`${perfil}: «ver original» → ${r.orig}`); return; }
-      await page.click('#song .note.col-ver a'); await sleep(800);
-      if (/Linha de teste desta/.test(await txt(page, '#song'))) bad.push(`${perfil}: «ver original» continua na versão da folha`);
-      if (perfil === 'maestro' && !(await vis(page, '#btn-edit'))) bad.push('maestro: original sem «Editar cântico»');
+      const r = await page.evaluate(() => { const n = document.querySelector('#song .note.col-ver'); return { note: n ? n.textContent.replace(/\s+/g, ' ').trim() : '', links: n ? n.querySelectorAll('a').length : -1, text: document.querySelector('#song').textContent, chords: document.querySelectorAll('#song .ch').length }; });
+      if (r.note !== `Na folha «${title}» · letra desta folha`) bad.push(`${k}: nota «${r.note}»`);
+      if (r.links > 0) bad.push(`${k}: nota com ligações`);
+      if (!/Linha de teste desta/.test(r.text)) bad.push(`${k}: não mostra a letra desta folha`);
+      for (const h of HIDE) if (await vis(page, h)) bad.push(`${k}: ${h} visível no cântico aberto da folha`);
+      if (perfil === 'cancioneiro' && r.chords) bad.push('Cancioneiro: letra da folha com acordes');
+      // outro cântico da mesma folha, sem versão
+      const other = rows.find(x => x !== row);
+      if (other) {
+        await page.evaluate(h => { location.hash = h; }, other.href); await sleep(800);
+        const n2 = await page.evaluate(() => document.querySelector('#song .note.col-ver')?.textContent.replace(/\s+/g, ' ').trim() || '');
+        if (n2 !== `Na folha «${title}»`) bad.push(`${k}: cântico sem versão, nota «${n2}»`);
+        if (await vis(page, '#btn-edit')) bad.push(`${k}: #btn-edit visível no cântico sem versão aberto da folha`);
+      }
+      // fora da folha: original
+      await page.evaluate(sl => { location.hash = '#/cantico/' + sl; }, slug); await sleep(800);
+      const r3 = await page.evaluate(() => ({ note: !!document.querySelector('#song .note.col-ver'), text: document.querySelector('#song').textContent }));
+      if (r3.note) bad.push(`${k}: fora da folha ainda com .note.col-ver`);
+      if (/Linha de teste desta/.test(r3.text)) bad.push(`${k}: fora da folha mostra a letra da folha`);
+      if (perfil === 'maestro' && !(await vis(page, '#btn-edit'))) bad.push('maestro: fora da folha sem «Editar cântico»');
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('FUN-54', 'PDF da folha (v204): «Partilhar folha» só com um «Gerar PDF» → opções #pdf-o-chords e #pdf-o-scores (ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo', async () => {
+  await t('FUN-54', 'PDF da folha (v204): «Partilhar folha» só com um «Gerar PDF» → opções #pdf-o-chords e #pdf-o-scores (button.switch-row, aria-checked desde v205; ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo', async () => {
     const bad = [];
     const gen = async (page, chords, scores) => {
       await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
       const pdfs = await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).count();
       if (pdfs !== 1) bad.push(`${pdfs} opções «Gerar PDF» (esperada 1)`);
       await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
-      const st = await page.evaluate(() => ({ c: document.querySelector('#pdf-o-chords')?.checked, s: document.querySelector('#pdf-o-scores')?.checked }));
-      if (chords !== undefined) { await page.locator('#pdf-o-chords').setChecked(chords); await page.locator('#pdf-o-scores').setChecked(scores); }
+      const st = { c: await swOn(page, '#pdf-o-chords'), s: await swOn(page, '#pdf-o-scores') };
+      if (chords !== undefined) { await swSet(page, '#pdf-o-chords', chords); await swSet(page, '#pdf-o-scores', scores); }
       await page.click('#app-dlg-ok');
       await page.waitForSelector('#pdfpages canvas', { timeout: 25000 }).catch(() => {});
       const dl = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
@@ -1038,7 +1056,7 @@ async function suites(full) {
     return withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', isMobile: false, hasTouch: false, cols: colsWithEdit('demo1', 'salve_regina'), storage: { 'cancioneiro.demo.collyr': { 'demo1/salve_regina': ver } } }, async ({ page }) => {
       await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
       await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
-      if (await page.evaluate(() => !!document.querySelector('#app-dlg[open] #pdf-o-chords'))) { await page.locator('#pdf-o-chords').setChecked(false); await page.locator('#pdf-o-scores').setChecked(false); await page.click('#app-dlg-ok'); }
+      if (await page.evaluate(() => !!document.querySelector('#app-dlg[open] #pdf-o-chords'))) { await swSet(page, '#pdf-o-chords', false); await swSet(page, '#pdf-o-scores', false); await page.click('#app-dlg-ok'); }
       await page.waitForSelector('#pdfpages canvas', { timeout: 25000 }).catch(() => {});
       const dl = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
       await page.click('#pdf-download'); const d = await dl;
@@ -1055,6 +1073,68 @@ async function suites(full) {
       orig.forEach((st, i) => { const has = T.includes(norm(first(st))); if (i === 2 && has) bad.push('estrofe retirada (3.ª) aparece no PDF'); if (i !== 2 && !has) bad.push(`${i + 1}.ª estrofe não aparece no PDF`); });
       return bad.length ? bad.join('; ') : { pass: `${T.length} caracteres extraídos` };
     });
+  }, { sev: 'média' });
+
+  await t('FUN-56', 'Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores (switch, ligados) só numa folha Coro e se o cântico tem acordes / partituras; Cancelar com mudança pede confirmação; Guardar marca «editado nesta folha · sem acordes / · sem partituras» e grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch nem #btn-chords / sem .scores a; Repor volta tudo a false', async () => {
+    const bad = [];
+    const cols = page => page.evaluate(() => JSON.parse(localStorage.getItem('cancioneiro.demo.cols') || '[]'));
+    const openLyr = async (page, slug) => {
+      if (!(await vis(page, `#ce-rows li[data-key="${slug}"] .ce-acts button[data-act="lyr"]`))) { await page.click(`#ce-rows li[data-key="${slug}"] a`); await sleep(300); }
+      await page.click(`#ce-rows li[data-key="${slug}"] .ce-acts button[data-act="lyr"]`);
+      await page.waitForSelector('#cl-ed[open] #cl-sts input', { timeout: 8000 }).catch(() => {}); await sleep(200);
+    };
+    const mark = (page, slug) => page.evaluate(sl => document.querySelector(`#ce-rows li[data-key="${sl}"] small.col-edited`)?.textContent.trim() || '', slug);
+    // folha Cancioneiro: sem interruptores; mudar para Coro → amazing_grace tem acordes
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo2' }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await openLyr(page, 'amazing_grace');
+      if (await vis(page, '#cl-chords') || await vis(page, '#cl-scores')) bad.push('folha Cancioneiro: interruptores visíveis');
+      await page.click('#cl-cancel'); await sleep(300);
+      await page.click('#ce-aud button[data-v="coro"]'); await sleep(300);
+      await openLyr(page, 'amazing_grace');
+      if (!(await vis(page, '#cl-chords'))) { bad.push('folha Coro: amazing_grace (com acordes) sem #cl-chords'); return; }
+      if ((await swOn(page, '#cl-chords')) !== true) bad.push('#cl-chords não começa ligado');
+      await swSet(page, '#cl-chords', false);
+      await page.click('#cl-cancel');
+      await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      if (!/Sair sem guardar/.test(await page.evaluate(() => document.querySelector('#app-dlg[open] #app-dlg-ok')?.textContent || ''))) bad.push('Cancelar com interruptor mudado sem confirmação');
+      await page.click('#app-dlg-cancel'); await sleep(300);
+      await page.click('#cl-save'); await sleep(400);
+      const m = await mark(page, 'amazing_grace');
+      if (m !== 'editado nesta folha · sem acordes') bad.push(`marca «${m}» (esperado «editado nesta folha · sem acordes»)`);
+      await page.click('#ce-save'); await sleep(900);
+      const e = (await cols(page)).find(c => c.id === 'demo2')?.songs.find(x => x.song_slug === 'amazing_grace');
+      if (!e || e.no_chords !== true) bad.push('no_chords não gravado com «Guardar» da folha: ' + JSON.stringify(e));
+      // aberto da folha: sem acordes
+      await page.evaluate(() => { location.hash = '#/cantico/amazing_grace/folha/demo2'; }); await sleep(900);
+      if (await page.evaluate(() => document.querySelectorAll('#song .ch').length)) bad.push('aberto da folha com no_chords: há .ch');
+      if (await vis(page, '#btn-chords')) bad.push('aberto da folha com no_chords: #btn-chords visível');
+      await page.evaluate(() => { location.hash = '#/cantico/amazing_grace'; }); await sleep(900);
+      if (!(await page.evaluate(() => document.querySelectorAll('#song .ch').length))) bad.push('fora da folha amazing_grace sem acordes');
+      // Repor: volta tudo a false
+      await page.evaluate(() => { location.hash = '#/lista/colecao-demo2'; }); await sleep(600);
+      await page.click('#col-mode'); await sleep(500); await openLyr(page, 'amazing_grace');
+      await page.click('#cl-reset'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(400);
+      if (await mark(page, 'amazing_grace')) bad.push('depois de Repor a marca continua');
+      await page.click('#ce-save'); await sleep(900);
+      const e2 = (await cols(page)).find(c => c.id === 'demo2')?.songs.find(x => x.song_slug === 'amazing_grace');
+      if (e2 && (e2.no_chords || e2.no_scores)) bad.push('Repor + Guardar não pôs no_chords/no_scores a false');
+    });
+    // partituras: demo1 / adoro_te_devote
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await openLyr(page, 'adoro_te_devote');
+      if (!(await vis(page, '#cl-scores'))) { bad.push('adoro_te_devote (com partitura) sem #cl-scores'); return; }
+      await swSet(page, '#cl-scores', false); await page.click('#cl-save'); await sleep(400);
+      const m = await mark(page, 'adoro_te_devote');
+      if (m !== 'editado nesta folha · sem partituras') bad.push(`marca «${m}»`);
+      await page.click('#ce-save'); await sleep(900);
+      await page.evaluate(() => { location.hash = '#/cantico/adoro_te_devote/folha/demo1'; }); await sleep(900);
+      if (await page.evaluate(() => document.querySelectorAll('#song .scores a').length)) bad.push('aberto da folha com no_scores: há .scores a');
+      await page.evaluate(() => { location.hash = '#/cantico/adoro_te_devote'; }); await sleep(900);
+      if (!(await page.evaluate(() => document.querySelectorAll('#song .scores a').length))) bad.push('fora da folha adoro_te_devote sem partitura');
+    });
+    return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
 
   // ---- v150: endereços partilhados guardados no telemóvel ----

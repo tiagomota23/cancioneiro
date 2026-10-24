@@ -172,6 +172,16 @@ export default async function (level) {
     const [all] = await sql(`select count(*)::int n from public.collection_lyrics`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(vis) } : { pass: `${all.n} versões de folha; visíveis ` + JSON.stringify(vis) };
   }, { sev: 'alta', where: 'supabase/folhas-letras.sql' });
+  await t('DB-RLS-14', 'collection_songs.no_chords / no_scores (v206): authenticated tem SELECT, INSERT e UPDATE nessas colunas; Coro não as muda (em rollback), Maestro sim', async () => {
+    const r = await sql(`select column_name, string_agg(privilege_type, ',' order by privilege_type) p from information_schema.column_privileges where table_schema='public' and table_name='collection_songs' and grantee='authenticated' and column_name in ('no_chords','no_scores') group by 1 order by 1`);
+    const bad = [];
+    for (const c of ['no_chords', 'no_scores']) { const x = r.find(y => y.column_name === c); if (!x) bad.push(`${c}: coluna sem permissões (ou não existe)`); else if (!['INSERT', 'SELECT', 'UPDATE'].every(p => x.p.split(',').includes(p))) bad.push(`${c}: ${x.p}`); }
+    // a RLS de UPDATE não dá erro: só não muda linhas; conta-se com returning (tudo em rollback)
+    const changed = async who => { try { const [x] = await sql(asRole(who, `with u as (update public.collection_songs set no_chords = not coalesce(no_chords, false) where (collection_id, song_slug) = (select collection_id, song_slug from public.collection_songs order by collection_id, song_slug limit 1) returning 1) select count(*)::int n from u;`)); return x ? x.n : 0; } catch (e) { return /permission denied|42501/.test(e.message) ? 0 : 'erro ' + e.message.slice(0, 60); } };
+    const coro = await changed('coro'), maestro = await changed('maestro');
+    if (coro !== 0) bad.push('Coro muda no_chords: ' + coro); if (maestro !== 1) bad.push('Maestro não muda no_chords: ' + maestro);
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('DB-RLS-10', 'Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
     try {
       await sql(`begin; insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0b1','t','coro','24h', now() + interval '1 day'); insert into public.collection_songs (collection_id, song_slug) select '00000000-0000-4000-8000-00000000c0b1', slug from public.songs order by slug limit 11; rollback;`);

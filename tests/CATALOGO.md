@@ -34,9 +34,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
 | FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ |
 | FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ✓ |
-| FUN-53 | Versão da folha (v204): small.col-edited e ligação #/cantico/<slug>/folha/<id>; .note.col-ver «Versão desta folha · ver original»; sem «Editar cântico»; Cancioneiro sem acordes (Maestro, Coro, Cancioneiro) | ui | média | V | ✓ |
-| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ✓ |
-| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ✓ |
+| FUN-53 | Cântico aberto da folha (v204–v206): todas as ligações /folha/<id>; .col-edited só no editado; nota «Na folha «título»» (+ « · letra desta folha»), sem ligações; sem #btn-edit, #btn-add-rec, #btn-add-score, aprovar/recusar, #ver-promo; #/cantico/<slug> volta ao original; Cancioneiro sem acordes | ui | média | V | ☐ por correr |
+| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (switch, aria-checked desde v205) (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ☐ por correr |
+| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
+| FUN-56 | Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores só em folha Coro e se o cântico os tem; Cancelar com mudança pede confirmação; marca «· sem acordes / · sem partituras»; grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch/#btn-chords e sem .scores a; Repor volta a false | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -66,7 +67,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
-| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ✓ |
+| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ☐ por correr |
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
@@ -225,6 +226,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
 | DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
 | DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ✓ |
+| DB-RLS-14 | collection_songs.no_chords/no_scores (v206): authenticated com SELECT/INSERT/UPDATE nessas colunas; Coro não muda (RLS), Maestro muda (em rollback) | db | média | V | ☐ por correr |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
