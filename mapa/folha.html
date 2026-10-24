@@ -1059,8 +1059,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-ed .ce-rows li.sel > a, .col-ed .ce-rows li.sel > .sec-line { background: var(--tint-soft); }
 .col-ed .ce-rows .sec-line { cursor: pointer; }
 /* versão de um cântico só nesta folha */
-.rows small.col-edited { display: block; margin-top: 3px; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; opacity: .8; } /* sobre a cor da marca */
-.col-ed .rows small.col-edited { color: var(--text-soft); opacity: 1; }
+.rows small.col-edited { display: block; margin-top: 3px; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; } /* sobre a cor da marca: --on-brand, como o resto da linha */
+.col-ed .rows small.col-edited { color: var(--text-soft); }
 .song .note.col-ver a { color: var(--accent); }
 .cl-ed .ce-label { margin: 12px 0 4px; color: var(--text-soft); }
 .cl-sts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -1071,11 +1071,9 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .cl-st.chorus { font-style: italic; }
 .cl-text-link { margin: 8px 0 0; }
 .cl-ed textarea { margin-top: 8px; }
-.pdf-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.pdf-opt input { width: 22px; height: 22px; accent-color: var(--accent); }
-.ce-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; padding-left: 16px;
-  background: linear-gradient(to right, transparent, var(--tint-soft) 16px); }
-.col-ed .ce-rows li.col-sec .ce-acts { top: auto; bottom: 4px; transform: none; } /* secção: por cima do nome, como nos cânticos */
+.switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
+/* ações do item escolhido: numa linha por baixo dele, à direita (não tapam o título, o autor nem «editado nesta folha») */
+.ce-acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 0 10px; background: var(--tint-soft); }
 .ce-acts button, .ce-name { display: inline-flex; align-items: center; justify-content: center; background: none; color: var(--accent); }
 .ce-acts button { position: relative; width: 38px; height: 38px; padding: 0; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
 .ce-acts button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */
@@ -1099,7 +1097,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v204</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v205</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1138,8 +1136,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 31/10/2026 12:40</small></h2>
-    <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
+    <h2 class="list-title" id="list-title">Missa de domingo<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg></button><small class="col-meta">Coro · até 31/10/2026 12:50</small></h2>
+    <ul class="rows" id="rows"><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus/folha/demo1"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote/folha/demo1"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus/folha/demo1"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina/folha/demo1"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button></p></li></ul>
     <p class="status" id="status"></p>
   </section>
 
@@ -1238,7 +1236,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v204</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v205</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
