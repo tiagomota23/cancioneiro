@@ -43,7 +43,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-59 | Grupos na 1.ª abertura (v209, ?grupos): «Os seus grupos», g1..g5, Guardar sem Cancelar; grava e não volta a perguntar | ui | média | V | ☐ por correr |
 | FUN-60 | Grupos no Perfil (v209): #perfis-groups (h3, interruptores, muda logo), .grp-none sem grupo e sem folhas; Cancioneiro solo em #info-groups | ui | média | V | ☐ por correr |
 | FUN-61 | Visibilidade por grupos no ?demo (v209/v210): folha de g1 invisível a Coro e Maestro em g2 ou sem grupo, visível em g1; Gestor vê sempre; folha sem grupos para quem tem grupo | ui | alta | V | ☐ por correr |
-| FUN-62 | Publicar com grupos (v209/v212): «Todos» + grupos visíveis e ligados; desligar «Todos» desliga todos e desativa OK; todos ligados liga «Todos»; um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus»; #ce-groups; sem .pend-top | ui | média | V | ☐ por correr |
+| FUN-62 | Publicar com grupos (v209/v212): «Todos» + grupos visíveis e ligados; desligar «Todos» desliga todos e desativa OK; todos ligados liga «Todos»; um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus»; #ce-groups; sem .pend-top; sem «Partilhar» por publicar (v215) | ui | média | V | ☐ por correr |
 | FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ☐ por correr |
 | FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos» (v212), OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ☐ por correr |
 | FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ☐ por correr |
@@ -56,7 +56,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-07b | Estrela no Maestro/Gestor: sem .book, .on só nos Preferidos, aria-label «Coleções e folhas», abre #col-pick (v187) | ui | média | V | ✓ |
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
-| FUN-10 | Folha publicada (Maestro): só leitura, partilhar e «Editar folha» (#col-mode) no fim da lista; sem body.col-editing (v164) | ui | alta | V | ✓ |
+| FUN-10 | Folha publicada (Maestro): só leitura; .col-edit-bar na 1.ª linha (v208) com «Editar folha» e «Partilhar» (button.edit-btn.col-share à direita, fora do título, v215) | ui | alta | V | ☐ por correr |
 | FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ✓ |
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ✓ |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177; sem número, v179) | ui | alta | V | ✓ |

@@ -341,13 +341,16 @@ async function suites(full) {
     if (/Folha expirada/.test(seen.coro)) bad.push('Coro vê folha expirada');
     return bad.length ? bad.join('; ') : true;
   });
-  await t('FUN-10', 'Folha publicada (Maestro): secções e cânticos só de leitura, partilhar e «Editar folha» no fim da lista (v164)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+  await t('FUN-10', 'Folha publicada (Maestro): secções e cânticos só de leitura; .col-edit-bar na 1.ª linha (v208) com «Editar folha» e, à direita, button.edit-btn.col-share «Partilhar» (v215, fora do título)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
     await page.waitForSelector('#rows li'); await sleep(300);
     const s = await txt(page, '#rows');
     if (!/Entrada/.test(s) || !/Comunhão/.test(s) || !/Veni Creator/i.test(s)) return 'conteúdo da folha: ' + s.slice(0, 150);
     if (!/Editar folha/.test(await txt(page, '#col-mode'))) return 'botão: «' + (await txt(page, '#col-mode')) + '»';
-    if (!(await page.evaluate(() => document.querySelector('#rows li:last-child')?.contains(document.querySelector('#col-mode'))))) return '«Editar folha» não está no fim da lista';
+    // v208: a barra de edição é a 1.ª linha; v215: «Partilhar» é um botão com texto na barra, à direita de «Editar folha», fora do título
+    if (!(await page.evaluate(() => { const b = document.querySelector('#rows > li.col-edit-bar'); return !!b && b === document.querySelector('#rows > li') && b.contains(document.querySelector('#col-mode')); }))) return '«Editar folha» não está na .col-edit-bar da 1.ª linha';
     if (!(await vis(page, '#col-share'))) return 'falta partilhar';
+    const sh = await page.evaluate(() => { const b = document.querySelector('#col-share'), m = document.querySelector('#col-mode'); return { cls: b.matches('button.edit-btn.col-share'), txt: b.textContent.trim(), bar: !!b.closest('.col-edit-bar'), title: !!b.closest('#list-title'), right: b.getBoundingClientRect().left >= m.getBoundingClientRect().right - 1 }; });
+    if (!sh.cls || sh.txt !== 'Partilhar' || !sh.bar || sh.title || !sh.right) return '«Partilhar»: ' + JSON.stringify(sh);
     for (const sel of ['#col-set', 'li.col-add', 'li[data-key]']) if (await count(page, '#rows ' + sel)) return 'na folha há ' + sel;
     return (await page.evaluate(() => document.body.classList.contains('col-editing'))) ? 'body.col-editing ainda existe' : true;
   }));
@@ -1264,6 +1267,7 @@ async function suites(full) {
     await page.waitForSelector('#col-pub', { timeout: 8000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'sem #col-pub na folha por publicar';
     if (await count(page, '.pend-top')) return 'folha por publicar ainda com .pend-top (v212)';
+    if (await count(page, '#col-share')) return 'folha por publicar com «Partilhar» (v215: só publicada)';
     const metas = () => page.evaluate(() => [...document.querySelectorAll('.col-meta')].map(m => m.textContent.replace(/\s+/g, ' ').trim()));
     const m0 = await metas();
     if (m0.length !== 1 || !/^Coro · até /.test(m0[0])) return 'folha por publicar: .col-meta ' + JSON.stringify(m0);
