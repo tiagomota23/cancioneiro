@@ -47,6 +47,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ☐ por correr |
 | FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos» (v212), OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ☐ por correr |
 | FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ☐ por correr |
+| FUN-66 | Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» / «Por publicar»; #ce-unpub com confirmação despublica logo; Guardar só com grupos mantém publicada («continua publicada»); outra mudança → por publicar | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -239,7 +240,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-14 | collection_songs.no_chords/no_scores (v206): authenticated com SELECT/INSERT/UPDATE nessas colunas; Coro não muda (RLS), Maestro muda (em rollback) | db | média | V | ☐ por correr |
 | DB-RLS-15 | Grupos (v209): RLS nas 3 tabelas; anon nada; Coro só os seus user_groups, sem escrita em collection_groups; Maestro lê todos; group_save/group_remove só Gestor (nome único, maiúsculas); set_user_groups só Maestro+; set_my_groups recusa sem acesso | db | alta | V | ☐ por correr |
 | DB-RLS-16 | Folhas por grupo (v209/v210, em rollback): Coro sem grupo não vê; folha de outro grupo invisível ao Coro e ao Maestro, visível ao Gestor; com grupo do Coro visível; sem grupos visível | db | alta | V | ☐ por correr |
-| DB-RLS-17 | Maestro e grupos (v210, em rollback, Maestro só em G1): folha só G2 invisível e sem update; G1+G2 visível, apaga só o link G1; v211 col_groups_guard: Maestro sem todos os grupos não deixa folha publicada sem grupos (último link, criar publicada); rascunho e Maestro em todos passam | db | média | V | ☐ por correr |
+| DB-RLS-17 | Maestro e grupos (v210, em rollback, Maestro só em G1): folha só G2 invisível e sem update; G1+G2 visível, apaga só o link G1; v211 col_groups_guard: Maestro sem todos os grupos não deixa folha publicada sem grupos (último link, criar publicada); rascunho e Maestro em todos passam; set_collection_groups (v213): invoker, só authenticated, [G1] ok, {} guarda, [G2]/Coro recusados | db | média | V | ☐ por correr |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
