@@ -145,6 +145,33 @@ export default async function (level) {
     if (r.maestro.pub !== false) bad.push('nova folha não começa por publicar (published=' + r.maestro.pub + ')');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : true;
   });
+  await t('DB-RLS-13', 'collection_lyrics (v204): RLS ligada; anon sem nada; authenticated só SELECT de collection_id, song_slug, edited_at (nunca lyrics nem edited_by), sem escrita; ler lyrics como Coro/Maestro é recusado; Coro/Cancioneiro só veem linhas de folhas que veem', async () => {
+    const bad = [];
+    const [t1] = await sql(`select c.relrowsecurity rls from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='collection_lyrics'`);
+    if (!t1) return 'tabela public.collection_lyrics não existe';
+    if (!t1.rls) bad.push('RLS desligada');
+    const tg = await sql(`select grantee, privilege_type from information_schema.role_table_grants where table_schema='public' and table_name='collection_lyrics' and grantee in ('anon','authenticated','PUBLIC')`);
+    if (tg.length) bad.push('permissões de tabela: ' + tg.map(x => x.grantee + ' ' + x.privilege_type).join(', '));
+    const cp = await sql(`select grantee, column_name, privilege_type from information_schema.column_privileges where table_schema='public' and table_name='collection_lyrics' and grantee in ('anon','authenticated','PUBLIC')`);
+    const want = ['authenticated SELECT collection_id', 'authenticated SELECT edited_at', 'authenticated SELECT song_slug'];
+    const got = cp.map(x => `${x.grantee} ${x.privilege_type} ${x.column_name}`).sort();
+    if (JSON.stringify(got) !== JSON.stringify(want)) bad.push('colunas: ' + got.join(', '));
+    for (const who of ['coro', 'maestro']) {
+      try { await sql(asRole(who, `select lyrics from public.collection_lyrics limit 1;`)); bad.push(`${who} lê lyrics`); } catch (e) { if (!/permission denied/.test(e.message)) bad.push(`${who}: ${e.message.slice(0, 60)}`); }
+      try { await sql(asRole(who, `select edited_by from public.collection_lyrics limit 1;`)); bad.push(`${who} lê edited_by`); } catch (e) { if (!/permission denied/.test(e.message)) bad.push(`${who}: ${e.message.slice(0, 60)}`); }
+    }
+    for (const who of ['anon']) { try { await sql(asRole(who, `select song_slug from public.collection_lyrics limit 1;`)); bad.push('anon lê collection_lyrics'); } catch (e) { if (!/permission denied/.test(e.message)) bad.push('anon: ' + e.message.slice(0, 60)); } }
+    // escrita pelo browser: nunca (em rollback)
+    for (const who of ['maestro', 'gestor']) {
+      let ok; try { ok = await writes(who, `insert into public.collection_lyrics (collection_id, song_slug, lyrics) select collection_id, song_slug, '[]'::jsonb from public.collection_songs limit 1;`); } catch (e) { ok = false; }
+      if (ok === true) bad.push(`${who} escreve em collection_lyrics`);
+    }
+    // linhas visíveis: só de folhas que o papel vê
+    const vis = {};
+    for (const who of ['cancioneiro', 'coro', 'maestro']) { const [r] = await sql(asRole(who, `select count(*)::int n, count(*) filter (where collection_id not in (select id from public.collections))::int fora from public.collection_lyrics;`)); vis[who] = r.n; if (r.fora) bad.push(`${who} vê ${r.fora} linhas de folhas que não vê`); }
+    const [all] = await sql(`select count(*)::int n from public.collection_lyrics`);
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(vis) } : { pass: `${all.n} versões de folha; visíveis ` + JSON.stringify(vis) };
+  }, { sev: 'alta', where: 'supabase/folhas-letras.sql' });
   await t('DB-RLS-10', 'Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
     try {
       await sql(`begin; insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0b1','t','coro','24h', now() + interval '1 day'); insert into public.collection_songs (collection_id, song_slug) select '00000000-0000-4000-8000-00000000c0b1', slug from public.songs order by slug limit 11; rollback;`);
@@ -274,6 +301,18 @@ export default async function (level) {
     if (r.orfas) bad.push(`${r.orfas} versões sem principal`); if (r.cadeias) bad.push(`${r.cadeias} versões de versões`); if (r.propria) bad.push(`${r.propria} versões de si próprias`); if (r.juntados) bad.push(`${r.juntados} cânticos juntados ainda existem`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: r.n + ' versões' };
   }, { sev: 'média' });
+  await t('INT-18', 'Versões de folha (collection_lyrics, v204): cada uma pertence a um cântico que está na folha; letra é uma lista não vazia de estrofes {type, lines[]}; diferente do original', async () => {
+    const [r] = await sql(`select count(*)::int n,
+      count(*) filter (where not exists (select 1 from public.collection_songs cs where cs.collection_id=l.collection_id and cs.song_slug=l.song_slug))::int orfas,
+      count(*) filter (where jsonb_typeof(l.lyrics) <> 'array' or jsonb_array_length(l.lyrics) = 0)::int vazias,
+      count(*) filter (where exists (select 1 from jsonb_array_elements(case when jsonb_typeof(l.lyrics)='array' then l.lyrics else '[]' end) e where jsonb_typeof(e->'lines') <> 'array' or not (e ? 'type')))::int mal,
+      count(*) filter (where l.lyrics = coalesce(s.lyrics_edit, s.lyrics))::int iguais
+      from public.collection_lyrics l left join public.songs s on s.slug = l.song_slug`);
+    const bad = [];
+    if (r.orfas) bad.push(`${r.orfas} sem o cântico na folha`); if (r.vazias) bad.push(`${r.vazias} vazias`); if (r.mal) bad.push(`${r.mal} com estrofes mal formadas`);
+    if (r.iguais) bad.push(`${r.iguais} iguais ao original (deviam não existir)`);
+    return bad.length ? bad.join('; ') : { pass: `${r.n} versões de folha` };
+  }, { sev: 'baixa' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

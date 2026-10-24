@@ -636,7 +636,9 @@ async function suites(full) {
   if (full) {
     await t('FUN-28', 'Exportar PDF de uma folha (pdf-lib): abre no visor e «Descarregar» dá um PDF', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
       await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
-      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).filter({ hasNotText: /Coro/ }).first().click();
+      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).filter({ hasNotText: /Coro/ }).first().click(); await sleep(500);
+      // v204: «Gerar PDF» abre as opções (acordes / partituras)
+      if (await page.evaluate(() => !!document.querySelector('#app-dlg[open] #pdf-o-chords'))) { await page.click('#app-dlg-ok'); }
       await page.waitForSelector('#pdfpages canvas', { timeout: 20000 }).catch(() => {});
       if (!(await count(page, '#pdfpages canvas'))) return 'PDF não apareceu no visor: ' + (await txt(page, '#pdfpages')).slice(0, 100);
       if (!(await vis(page, '#pdf-download'))) return 'sem botão Descarregar';
@@ -908,6 +910,116 @@ async function suites(full) {
     if (JSON.stringify((await keys()).map(x => x.split('=')[0])) !== JSON.stringify(k.map(x => x.split('=')[0]))) bad.push('ordem (mover)');
     return bad.length ? 'não ficou gravado: ' + bad.join(', ') : true;
   }));
+
+  // ---- v204: Editar nesta folha (letra só numa folha), indicadores e opções do PDF ----
+  await t('FUN-52', 'Editar nesta folha (v204): ✎ (data-act="lyr") abre #cl-ed com uma caixa por estrofe; Guardar desativado sem estrofes; Cancelar com alterações pede confirmação; Guardar fica na cópia (nada gravado) e marca .col-edited; «Guardar» da folha grava (collyrics); «Editar texto» → #cl-text; Repor pede confirmação e apaga a versão; igual ao original = sem versão', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+    const SLUG = 'veni_creator_spiritus', K = 'demoE/' + SLUG;
+    const stored = () => page.evaluate(k => JSON.parse(localStorage.getItem('cancioneiro.demo.collyr') || '{}')[k] || null, K);
+    const marked = () => page.evaluate(sl => !!document.querySelector(`#ce-rows li[data-key="${sl}"] small.col-edited`), SLUG);
+    const openLyr = async () => {
+      await page.click(`#ce-rows li[data-key="${SLUG}"] a`); await sleep(300);
+      await page.click(`#ce-rows li[data-key="${SLUG}"] .ce-acts button[data-act="lyr"]`);
+      await page.waitForSelector('#cl-ed[open] #cl-sts input', { timeout: 8000 }).catch(() => {});
+      return page.locator('#cl-sts input').count();
+    };
+    const dlgOk = async () => { await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); const t = await page.evaluate(() => document.querySelector('#app-dlg[open] #app-dlg-ok')?.textContent.trim() || ''); return t; };
+    const editor = async () => { await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500); };
+    await editor();
+    const n = await openLyr();
+    if (n !== 2) return `#cl-sts com ${n} caixas (esperadas 2, uma por estrofe)`;
+    for (const i of [0, 1]) await page.locator('#cl-sts input').nth(i).uncheck();
+    if (!(await page.evaluate(() => document.querySelector('#cl-save').disabled))) return 'Guardar ativo sem estrofes';
+    await page.locator('#cl-sts input').nth(0).check();
+    if (await page.evaluate(() => document.querySelector('#cl-save').disabled)) return 'Guardar desativado com 1 estrofe';
+    await page.click('#cl-cancel');
+    if (!/Sair sem guardar/.test(await dlgOk())) return 'Cancelar com alterações sem confirmação «Sair sem guardar»';
+    await page.click('#app-dlg-cancel'); await sleep(300);
+    if (!(await page.evaluate(() => document.querySelector('#cl-ed').open))) return 'cancelar a confirmação fechou #cl-ed';
+    await page.click('#cl-cancel'); await dlgOk(); await page.click('#app-dlg-ok'); await sleep(400);
+    if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return 'Sair sem guardar não fechou #cl-ed';
+    if (await marked()) return 'Cancelar deixou a marca .col-edited';
+    // só a 1.ª estrofe → Guardar (na cópia)
+    await openLyr(); await page.locator('#cl-sts input').nth(1).uncheck(); await page.click('#cl-save'); await sleep(400);
+    if (await page.evaluate(() => document.querySelector('#cl-ed').open)) return 'Guardar não fechou #cl-ed';
+    if (!(await marked())) return 'depois de Guardar a linha não tem small.col-edited «editado nesta folha»';
+    if (await stored()) return 'a versão da folha foi gravada antes do «Guardar» da folha';
+    await page.click('#ce-save'); await sleep(900);
+    const v = await stored();
+    if (!v || v.length !== 1) return '«Guardar» da folha não gravou a versão (1 estrofe): ' + JSON.stringify(v)?.slice(0, 80);
+    // Editar texto
+    await editor(); await openLyr();
+    if (!(await vis(page, '#cl-reset'))) return 'com versão da folha, sem «Repor original» (#cl-reset)';
+    await page.click('#cl-text-btn'); await sleep(200);
+    if (!(await vis(page, '#cl-text')) || !(await page.inputValue('#cl-text')).trim()) return '«Editar texto» não mostrou #cl-text com a letra';
+    if (await vis(page, '#cl-sts')) return '«Editar texto» deixou as caixas visíveis';
+    await page.fill('#cl-text', ''); await sleep(200);
+    if (!(await page.evaluate(() => document.querySelector('#cl-save').disabled))) return 'Guardar ativo com o texto vazio';
+    await page.click('#cl-cancel'); await dlgOk(); await page.click('#app-dlg-ok'); await sleep(400);
+    // Repor original: confirmação, tira a marca e apaga ao guardar a folha
+    await openLyr(); await page.click('#cl-reset');
+    if (!/Repor original/.test(await dlgOk())) return 'Repor sem confirmação «Repor original»';
+    if (!(await page.evaluate(() => document.querySelector('#app-dlg-ok').matches('.danger-fill')))) return 'confirmação de Repor sem .danger-fill';
+    await page.click('#app-dlg-ok'); await sleep(400);
+    if (await marked()) return 'depois de Repor a linha continua marcada';
+    await page.click('#ce-save'); await sleep(900);
+    if (await stored()) return 'Repor + Guardar da folha não apagou a versão';
+    // igual ao original: todas as estrofes → sem versão
+    await editor(); await openLyr(); await page.click('#cl-save'); await sleep(400);
+    if (await marked()) return 'guardar igual ao original marcou a linha';
+    return true;
+  }), { sev: 'alta' });
+  const FOLHA_LYR = [{ type: 'verse', lines: ['[G]Linha de teste desta [D]folha'] }];
+  const colsWithEdit = (id, slug) => demoCols().map(c => c.id === id ? { ...c, edits: [{ song_slug: slug, edited_at: new Date().toISOString() }] } : c);
+  await t('FUN-53', 'Versão da folha (v204): linha com small.col-edited «editado nesta folha» e ligação #/cantico/<slug>/folha/<id>; o cântico abre a versão com .note.col-ver «Versão desta folha · ver original» e sem «Editar cântico»; «ver original» volta à letra original; perfil Cancioneiro sem acordes', async () => {
+    const bad = [];
+    for (const [perfil, id, slug] of [['maestro', 'demo1', 'salve_regina'], ['coro', 'demo1', 'salve_regina'], ['cancioneiro', 'demo2', 'amazing_grace']]) await withApp({ perfil, hash: '#/lista/colecao-' + id, cols: colsWithEdit(id, slug), storage: { 'cancioneiro.demo.collyr': { [id + '/' + slug]: FOLHA_LYR } } }, async ({ page }) => {
+      await page.waitForSelector('#rows li a', { timeout: 8000 }).catch(() => {});
+      const row = await page.evaluate(sl => { const a = [...document.querySelectorAll('#rows li a')].find(x => x.getAttribute('href')?.includes('/cantico/' + sl)); return a ? { href: a.getAttribute('href'), mark: a.querySelector('small.col-edited')?.textContent.trim() || '' } : null; }, slug);
+      if (!row) { bad.push(`${perfil}: linha de ${slug} não encontrada`); return; }
+      if (row.href !== `#/cantico/${slug}/folha/${id}`) bad.push(`${perfil}: ligação ${row.href}`);
+      if (!/editado nesta folha/.test(row.mark)) bad.push(`${perfil}: sem «editado nesta folha»`);
+      await page.click(`#rows li a[href="${row.href}"]`); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(800);
+      const r = await page.evaluate(() => ({ note: document.querySelector('#song .note.col-ver')?.textContent.replace(/\s+/g, ' ').trim() || '', orig: document.querySelector('#song .note.col-ver a')?.getAttribute('href') || '', text: document.querySelector('#song').textContent, chords: document.querySelectorAll('#song .chord, #song .ch').length }));
+      if (!/Versão desta folha/.test(r.note) || !/ver original/.test(r.note)) bad.push(`${perfil}: nota «${r.note.slice(0, 60)}»`);
+      if (!/Linha de teste desta/.test(r.text)) bad.push(`${perfil}: não mostra a versão da folha`);
+      if (await vis(page, '#btn-edit')) bad.push(`${perfil}: «Editar cântico» visível na versão da folha`);
+      if (perfil === 'cancioneiro' && (r.chords || /\[G\]|\[D\]/.test(r.text))) bad.push('Cancioneiro: versão da folha com acordes');
+      if (r.orig !== '#/cantico/' + slug) { bad.push(`${perfil}: «ver original» → ${r.orig}`); return; }
+      await page.click('#song .note.col-ver a'); await sleep(800);
+      if (/Linha de teste desta/.test(await txt(page, '#song'))) bad.push(`${perfil}: «ver original» continua na versão da folha`);
+      if (perfil === 'maestro' && !(await vis(page, '#btn-edit'))) bad.push('maestro: original sem «Editar cântico»');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
+  await t('FUN-54', 'PDF da folha (v204): «Partilhar folha» só com um «Gerar PDF» → opções #pdf-o-chords e #pdf-o-scores (ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo', async () => {
+    const bad = [];
+    const gen = async (page, chords, scores) => {
+      await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
+      const pdfs = await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).count();
+      if (pdfs !== 1) bad.push(`${pdfs} opções «Gerar PDF» (esperada 1)`);
+      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
+      const st = await page.evaluate(() => ({ c: document.querySelector('#pdf-o-chords')?.checked, s: document.querySelector('#pdf-o-scores')?.checked }));
+      if (chords !== undefined) { await page.locator('#pdf-o-chords').setChecked(chords); await page.locator('#pdf-o-scores').setChecked(scores); }
+      await page.click('#app-dlg-ok');
+      await page.waitForSelector('#pdfpages canvas', { timeout: 25000 }).catch(() => {});
+      const dl = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+      await page.click('#pdf-download'); const d = await dl;
+      return { st, name: d ? d.suggestedFilename() : null };
+    };
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', isMobile: false, hasTouch: false }, async ({ page }) => {
+      const a = await gen(page);
+      if (!(a.st.c === true && a.st.s === true)) bad.push('folha Coro: opções ' + JSON.stringify(a.st) + ' (esperadas ligadas)');
+      if (a.name !== 'Missa-de-domingo-coro.pdf') bad.push('acordes+partituras: ficheiro ' + a.name);
+    });
+    for (const [c, sc, suf] of [[true, false, '-acordes'], [false, true, '-partituras'], [false, false, '']]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', isMobile: false, hasTouch: false }, async ({ page }) => {
+      const a = await gen(page, c, sc); if (a.name !== `Missa-de-domingo${suf}.pdf`) bad.push(`${suf || 'sem opções'}: ficheiro ${a.name}`);
+    });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo2', isMobile: false, hasTouch: false }, async ({ page }) => {
+      const a = await gen(page);
+      if (!(a.st.c === false && a.st.s === false)) bad.push('folha Cancioneiro: opções ' + JSON.stringify(a.st) + ' (esperadas desligadas)');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
 
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {

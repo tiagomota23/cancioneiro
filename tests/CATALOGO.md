@@ -33,6 +33,9 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
 | FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
 | FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ (v202; falhou na v201: 1.ª abertura sem o passo do microfone) |
+| FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação .danger-fill); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ☐ por correr |
+| FUN-53 | Versão da folha (v204): small.col-edited e ligação #/cantico/<slug>/folha/<id>; .note.col-ver «Versão desta folha · ver original»; sem «Editar cântico»; Cancioneiro sem acordes (Maestro, Coro, Cancioneiro) | ui | média | V | ☐ por correr |
+| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -62,7 +65,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
-| FUN-28 | Exportar PDF de uma folha (pdf-lib) | ui | média | S | ✓ |
+| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ☐ por correr |
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
@@ -199,13 +202,14 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-12 | conteudo: folha por publicar → partilha «expirado», share 409, fora do colSet (v159) | static | alta | V | ✓ |
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
+| SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ☐ por correr |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
 | SEG-25 | Auth só Google | live | alta | V | ✓ |
-| SEG-26 | conteudo sem sessão → 403 em todas as operações | live | crítica | V | ✓ |
+| SEG-26 | conteudo sem sessão → 403 em todas as operações (inclui collyrics desde v204) | live | crítica | V | ☐ por correr |
 | SEG-27 | shared: token mal formado 400/WAF, desconhecido 410 | live | alta | V | ✓ |
 | SEG-28 | conteudo não reflete origens estranhas (CORS) | live | alta | V | ✓ |
 | SEG-29 | transcribe: CORS só para a origem do GitHub Pages (v156) | live | baixa | V | ✓ |
@@ -219,6 +223,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
 | DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
+| DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ☐ por correr |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
@@ -253,6 +258,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ✓ |
 | INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
+| INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |

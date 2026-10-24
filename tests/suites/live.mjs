@@ -122,7 +122,7 @@ export default async function (level) {
   });
   await t('SEG-26', 'conteudo: sem sessão → 403 em todas as operações (song, search, file, users, save, scrape…)', async () => {
     const bad = [];
-    for (const op of ['song', 'search', 'file', 'users', 'save', 'scrape', 'upload', 'addsong', 'user', 'invite', 'share']) {
+    for (const op of ['song', 'search', 'file', 'users', 'save', 'scrape', 'upload', 'addsong', 'user', 'invite', 'share', 'collyrics']) {
       const r = await fn('conteudo', { op, slug: 'x', q: 'xxx', url: 'http://127.0.0.1/' });
       if (r.status !== 403) bad.push(`${op}: ${r.status}`);
     }
