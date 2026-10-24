@@ -1137,6 +1137,36 @@ async function suites(full) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
 
+  await t('FUN-57', 'PDF da folha respeita no_chords / no_scores (v206): folha Coro com amazing_grace e santa_lucia, «Acordes» e «Partituras» ligados; com no_chords num cântico os acordes do PDF diminuem mas os do outro ficam; com no_scores num cântico o PDF tem menos páginas', async () => {
+    const CHORD = /^[A-G](#|b)?(m|maj|min|dim|aug|sus)?\d*(\/[A-G](#|b)?)?$/;
+    const folha = flags => [...demoCols(), { id: 'demoP', title: 'Folha PDF', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: 'demo@localhost', sections: [],
+      songs: [{ song_slug: 'amazing_grace', position: 0, ...(flags.amazing_grace || {}) }, { song_slug: 'santa_lucia', position: 1, ...(flags.santa_lucia || {}) }] }];
+    const gen = flags => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoP', isMobile: false, hasTouch: false, cols: folha(flags) }, async ({ page }) => {
+      await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
+      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
+      await swSet(page, '#pdf-o-chords', true); await swSet(page, '#pdf-o-scores', true); await page.click('#app-dlg-ok');
+      await page.waitForSelector('#pdfpages canvas', { timeout: 30000 }).catch(() => {});
+      const dl = page.waitForEvent('download', { timeout: 15000 }).catch(() => null);
+      await page.click('#pdf-download'); const d = await dl;
+      if (!d) return { err: 'sem descarga' };
+      const b64 = fs.readFileSync(await d.path()).toString('base64');
+      return page.evaluate(async b => {
+        const lib = await import('/vendor/pdfjs/pdf.min.mjs'); lib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+        const doc = await lib.getDocument({ data: Uint8Array.from(atob(b), c => c.charCodeAt(0)), isEvalSupported: false }).promise;
+        const items = []; for (let i = 1; i <= doc.numPages; i++) items.push(...(await (await doc.getPage(i)).getTextContent()).items.map(x => x.str.trim()).filter(Boolean));
+        return { pages: doc.numPages, items };
+      }, b64);
+    });
+    const A = await gen({}), B = await gen({ amazing_grace: { no_chords: true } }), C = await gen({ santa_lucia: { no_scores: true } });
+    for (const [k, r] of [['base', A], ['no_chords', B], ['no_scores', C]]) if (!r || r.err) return `${k}: ${r ? r.err : 'sem resultado'}`;
+    const chords = r => r.items.filter(x => CHORD.test(x)).length;
+    const cA = chords(A), cB = chords(B), bad = [];
+    if (!cA) bad.push('PDF com «Acordes» ligado sem acordes no texto (o teste não consegue ler os acordes)');
+    else { if (!(cB < cA)) bad.push(`no_chords em amazing_grace: acordes ${cA} → ${cB} (esperado menos)`); if (!(cB > 0)) bad.push('no_chords num cântico tirou também os acordes do outro'); }
+    if (!(C.pages < A.pages)) bad.push(`no_scores em santa_lucia: páginas ${A.pages} → ${C.pages} (esperado menos)`);
+    return bad.length ? { fail: bad.join('; '), evidence: `acordes ${cA}/${cB}, páginas ${A.pages}/${C.pages}` } : { pass: `acordes ${cA} → ${cB} com no_chords; páginas ${A.pages} → ${C.pages} com no_scores` };
+  }, { sev: 'média' });
+
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {
     await sleep(500);
