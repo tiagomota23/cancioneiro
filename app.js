@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v207';
+  const APP_VERSION = '2026-10-24 v208';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2855,10 +2855,10 @@
     title.innerHTML = `${can && draft ? '<small class="pend pend-top">Por publicar</small>' : ''}${esc(c.title)}${shareBtn}${can ? meta : ''}`;
     const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     const items = withSongs(all);
-    rows.innerHTML = items.map(it => it.k === 'sec'
+    // Maestro / Gestor: «Editar folha» | «Publicar» na primeira linha, antes das secções e dos cânticos
+    rows.innerHTML = (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '') + items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
-      : colRow(c, it.key)).join('') +
-      (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '');
+      : colRow(c, it.key)).join('');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
     if (!items.some(it => it.k === 'song')) $('status').textContent = 'Folha vazia.';
     if ($('col-share')) $('col-share').onclick = () => shareCollection(c);
@@ -3263,8 +3263,14 @@
           const sid = curSec();
           await toggleInCollection(c, b.dataset.slug, true);
           await placeInSection(c, b.dataset.slug, sid);
-          $('sec-add').close(); toast(sid ? 'Acrescentado a «' + secName() + '»' : 'Acrescentado à folha');
+          $('sec-add').close();
           if (location.hash === '#/lista/colecao-' + c.id) showCollection(c.id);
+          // em Editar folha: o cântico completo, ou já a versão desta folha (estrofes, acordes e partituras)
+          const slug = b.dataset.slug;
+          if (c._draft && c === edCol && await appChoose(`Acrescentar «${bySlug.get(slug).title}»`, [
+            { value: 'full', label: 'Cântico completo', sub: 'Como está no Cancioneiro' },
+            { value: 'ver', label: 'Versão desta folha', sub: 'Escolher estrofes, acordes e partituras' }]) === 'ver') openColLyr(c, slug);
+          else toast(sid ? 'Acrescentado a «' + secName() + '»' : 'Acrescentado à folha');
         } catch (e) { b.disabled = false; appAlert(/máximo/.test(e.message) ? e.message : 'Não foi possível acrescentar: ' + (e.message || e)); }
       });
     };

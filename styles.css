@@ -916,7 +916,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .col-dlg .aud-switch, .col-ed .aud-switch { margin: 0 0 6px; }
 /* «Editar folha» no fim da folha, como «Editar cântico» no fim do cântico (aqui sobre a cor da marca) */
 .rows li.col-edit-bar { padding: 0 14px; }
-.rows li.col-edit-bar .edit-bar { margin: 16px 0 8px; }
+.rows li.col-edit-bar .edit-bar { margin: 4px 0 12px; } /* no topo da lista, por baixo do título e da data */
 .rows li.col-edit-bar .edit-btn { color: var(--on-brand); border-color: var(--on-brand-outline); }
 .rows li.col-edit-bar .edit-btn.col-pub { background: var(--on-brand); border-color: var(--on-brand); color: var(--brand-deep); }
 /* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
