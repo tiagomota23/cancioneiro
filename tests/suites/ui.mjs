@@ -1021,6 +1021,31 @@ async function suites(full) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
 
+  await t('FUN-55', 'PDF da folha usa a versão da folha (v204): estrofe retirada em «Editar nesta folha» não aparece no PDF; as outras aparecem (texto extraído com vendor/pdfjs)', () => {
+    const orig = fixture.find(x => x.slug === 'salve_regina').lyrics, ver = orig.filter((_, i) => i !== 2);
+    const first = st => st.lines[0].replace(/\[[^\]]*\]/g, '').trim();
+    return withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', isMobile: false, hasTouch: false, cols: colsWithEdit('demo1', 'salve_regina'), storage: { 'cancioneiro.demo.collyr': { 'demo1/salve_regina': ver } } }, async ({ page }) => {
+      await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
+      await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
+      if (await page.evaluate(() => !!document.querySelector('#app-dlg[open] #pdf-o-chords'))) { await page.locator('#pdf-o-chords').setChecked(false); await page.locator('#pdf-o-scores').setChecked(false); await page.click('#app-dlg-ok'); }
+      await page.waitForSelector('#pdfpages canvas', { timeout: 25000 }).catch(() => {});
+      const dl = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+      await page.click('#pdf-download'); const d = await dl;
+      if (!d) return 'sem descarga do PDF';
+      const b64 = fs.readFileSync(await d.path()).toString('base64');
+      const text = await page.evaluate(async b => {
+        const lib = await import('/vendor/pdfjs/pdf.min.mjs'); lib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+        const doc = await lib.getDocument({ data: Uint8Array.from(atob(b), c => c.charCodeAt(0)), isEvalSupported: false }).promise;
+        let out = ''; for (let i = 1; i <= doc.numPages; i++) out += (await (await doc.getPage(i)).getTextContent()).items.map(x => x.str).join(' ') + '\n';
+        return out;
+      }, b64);
+      const norm = x => x.normalize('NFC').replace(/\s+/g, ' ').trim();
+      const T = norm(text), bad = [];
+      orig.forEach((st, i) => { const has = T.includes(norm(first(st))); if (i === 2 && has) bad.push('estrofe retirada (3.ª) aparece no PDF'); if (i !== 2 && !has) bad.push(`${i + 1}.ª estrofe não aparece no PDF`); });
+      return bad.length ? bad.join('; ') : { pass: `${T.length} caracteres extraídos` };
+    });
+  }, { sev: 'média' });
+
   // ---- v150: endereços partilhados guardados no telemóvel ----
   await t('SHR-01', 'Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados', () => withApp({ q: 'semconta', hash: '#/p/demoC_demo1', wait: '#rows li' }, async ({ page }) => {
     await sleep(500);
