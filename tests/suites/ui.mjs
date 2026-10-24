@@ -1426,7 +1426,7 @@ async function suites(full) {
         return [...out];
       }, b64);
     });
-    for (const [perfil, id, want, not] of [['maestro', 'demo1', '#1f6aa8', '#0e7f58'], ['maestro', 'demo2', '#0e7f58', '#1f6aa8'], ['coro', 'demo1', '#1f6aa8', '#0e7f58'], ['gestor', 'demo2', '#0e7f58', '#1f6aa8']]) {
+    for (const [perfil, id, want, not] of [['maestro', 'demo1', '#1f6aa8', '#0e7f58'], ['maestro', 'demo2', '#0e7f58', '#1f6aa8'], ['gestor', 'demo1', '#1f6aa8', '#0e7f58'], ['gestor', 'demo2', '#0e7f58', '#1f6aa8']]) {
       const cs = await colorsOf(perfil, id);
       if (!cs) { bad.push(`${perfil}/${id}: sem PDF`); continue; }
       ev.push(`${perfil}/${id}: ${cs.join(' ')}`);

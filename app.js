@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v214';
+  const APP_VERSION = '2026-10-24 v215';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2994,13 +2994,14 @@
     const meta = `<small class="col-meta">${c.audience === 'coro' ? 'Coro' : 'Cancioneiro'} · ${colUntil(c)}</small>` +
       (c.published !== false ? `<small class="col-meta">Grupos: ${esc(groupsLabel(colGroupIds(c)))}</small>` : '');
     // partilhar: só Maestro / Gestor, e só a folha publicada com cânticos
-    const shareBtn = can && !draft && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="col-share" id="col-share" aria-label="Partilhar folha" title="Partilhar"><svg viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>' : '';
+    // partilhar: botão branco à direita de «Editar folha» (por publicar, esse lugar é do «Publicar»)
+    const shareBtn = can && !draft && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="edit-btn col-share" id="col-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg>Partilhar</button>' : '';
     // por publicar (só Maestro / Gestor a vê): etiqueta amarela por cima do título, como «por aprovar»
-    title.innerHTML = `${esc(c.title)}${shareBtn}${can ? meta : ''}`; // por publicar: o botão Publicar (amarelo) já o diz
+    title.innerHTML = `${esc(c.title)}${can ? meta : ''}`; // por publicar: o botão Publicar (amarelo) já o diz
     const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     const items = withSongs(all);
     // Maestro / Gestor: «Editar folha» | «Publicar» na primeira linha, antes das secções e dos cânticos
-    rows.innerHTML = (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : ''}</p></li>` : '') + items.map(it => it.k === 'sec'
+    rows.innerHTML = (can ? `<li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode">${PENCIL}Editar folha</button>${draft ? '<button class="edit-btn col-pub" id="col-pub">Publicar</button>' : shareBtn}</p></li>` : '') + items.map(it => it.k === 'sec'
       ? `<li class="col-sec"><a href="#" class="sec-line" tabindex="-1">${esc(it.ref.title)}</a></li>`
       : colRow(c, it.key)).join('');
     rows.querySelectorAll('a.sec-line').forEach(a => a.onclick = e => e.preventDefault());
