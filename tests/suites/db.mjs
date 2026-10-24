@@ -382,7 +382,7 @@ export default async function (level) {
     if (r.dup) return `${r.dup} nomes de grupo repetidos`;
     return r.sem ? { warn: `${r.sem} conta(s) Coro/Cancioneiro sem grupo: não recebem folhas (escolha delas)` } : { pass: `${r.g} grupos; ${r.porPerguntar} contas ainda por escolher` };
   }, { sev: 'baixa' });
-  await t('DB-RLS-17', 'Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder', async () => {
+  await t('DB-RLS-17', 'Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder; set_collection_groups (v213) security invoker, só authenticated, [G1] aceite, {} recusado pela guarda, [G2] e Coro recusados', async () => {
     const bad = [], out = {};
     const C = `'00000000-0000-4000-8000-0000000000c2'`, G1 = `(select id from public.groups order by position limit 1)`, G2 = `(select id from public.groups order by position offset 1 limit 1)`;
     const base = `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1}; insert into public.collections (id, title, audience, duration, expires_at, published) values (${C}, 'Teste grupos Maestro', 'coro', '1w', now() + interval '1 day', true);`;
@@ -410,6 +410,14 @@ export default async function (level) {
     if (out.rascunho !== 'aceite') bad.push('rascunho sem grupos recusado ao Maestro: ' + out.rascunho);
     try { await sql(asRoleAfter('maestro', `insert into public.user_groups (email, group_id) select ${emailOf('maestro')}, id from public.groups on conflict do nothing;`, ins(true))); out.maestroTodos = 'aceite'; } catch (e) { out.maestroTodos = 'erro ' + e.message.slice(0, 60); }
     if (out.maestroTodos !== 'aceite') bad.push('Maestro em todos os grupos não publica sem grupos: ' + out.maestroTodos);
+    // v213: set_collection_groups (security invoker; RLS de quem chama) na mesma folha publicada só de G1
+    const [fn] = await sql(`select p.prosecdef d, has_function_privilege('anon', p.oid, 'execute') anon, has_function_privilege('authenticated', p.oid, 'execute') auth from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='set_collection_groups'`);
+    if (!fn) bad.push('set_collection_groups não existe'); else { if (fn.d) bad.push('set_collection_groups é SECURITY DEFINER (devia ser invoker)'); if (fn.anon) bad.push('anon executa set_collection_groups'); if (!fn.auth) bad.push('authenticated não executa set_collection_groups'); }
+    const scg = async (who, ids, extra = '') => { try { const r = await sql(asRoleAfter(who, base + `insert into public.collection_groups values (${C}, ${G1});` + extra, `select count(*)::int n from public.set_collection_groups(${C}, ${ids}); set constraints all immediate; select 1 ok;`)); return 'aceite'; } catch (e) { return GUARD.test(e.message) ? 'guarda' : /row-level|permission denied|42501/i.test(e.message) ? 'RLS' : 'erro ' + e.message.slice(0, 60); } };
+    out.scg_mesmo = await scg('maestro', `array[${G1}]`); if (out.scg_mesmo !== 'aceite') bad.push('set_collection_groups(C,[G1]) do Maestro: ' + out.scg_mesmo);
+    out.scg_vazio = await scg('maestro', `'{}'::uuid[]`); if (out.scg_vazio !== 'guarda') bad.push('set_collection_groups(C,{}) do Maestro só em G1: ' + out.scg_vazio);
+    out.scg_outro = await scg('maestro', `array[${G2}]`); if (out.scg_outro === 'aceite') bad.push('set_collection_groups(C,[G2]) aceite a um Maestro que não está em G2');
+    out.scg_coro = await scg('coro', `array[${G1}]`); if (out.scg_coro === 'aceite') bad.push('set_collection_groups aceite a um Coro');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'média', where: 'supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {

@@ -1342,6 +1342,46 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
+  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo, sem Guardar) e «Por publicar» sem #ce-unpub; Guardar só com grupos mudados mantém publicada (aviso «continua publicada»); outra mudança → por publicar', async () => {
+    const bad = [];
+    const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
+    const state = page => page.evaluate(() => document.querySelector('#ce-state')?.textContent.replace(/\s+/g, ' ').trim() || '');
+    const pub = () => demoCols().map(c => c.id === 'demo1' ? { ...c, published: true } : c);
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      if (await state(page) !== 'Publicada · Despublicar') bad.push('publicada: #ce-state «' + await state(page) + '»');
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const q = await page.evaluate(() => document.querySelector('#app-dlg[open]')?.textContent || '');
+      if (!/Despublicar «Missa de domingo»\?/.test(q)) bad.push('confirmação: ' + q.slice(0, 60));
+      await page.click('#app-dlg-cancel'); await sleep(300);
+      if ((await col(page, 'demo1')).published !== true) bad.push('cancelar a confirmação despublicou');
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(700);
+      if ((await col(page, 'demo1')).published !== false) bad.push('Despublicar não pôs por publicar logo');
+      if (await state(page) !== 'Por publicar') bad.push('depois de despublicar: #ce-state «' + await state(page) + '»');
+      if (await count(page, '#ce-unpub')) bad.push('«Por publicar» ainda com #ce-unpub');
+    });
+    // só grupos mudados → continua publicada
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.click('#ce-groups'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      await page.click('#app-dlg .switch-row[data-g="*"]'); await sleep(150); await page.click('#app-dlg .switch-row[data-g="g3"]'); await sleep(150);
+      await page.click('#app-dlg-ok'); await sleep(400);
+      await page.click('#ce-save'); await sleep(900);
+      const t1 = await page.evaluate(() => [...document.querySelectorAll('.toast, #toast')].map(x => x.textContent).join(' '));
+      const c = await col(page, 'demo1');
+      if (c.published !== true) bad.push('só grupos mudados: ficou por publicar');
+      if (JSON.stringify((c.groups || []).map(x => x.group_id)) !== '["g3"]') bad.push('grupos gravados: ' + JSON.stringify(c.groups));
+      if (!/continua publicada/.test(t1)) bad.push('aviso: «' + t1.trim().slice(0, 60) + '»');
+    });
+    // outra mudança → por publicar
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.fill('#ce-name', 'Missa de domingo (mudada)'); await sleep(200);
+      await page.click('#ce-save'); await sleep(900);
+      if ((await col(page, 'demo1')).published !== false) bad.push('mudar o título não pôs por publicar');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-63', 'Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino', () => withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
     await page.waitForSelector('li[data-group]', { timeout: 10000 }).catch(() => {});
     const r = await page.evaluate(() => ({ users: document.querySelectorAll('.adm-groups').length, groups: [...document.querySelectorAll('li[data-group]')].map(l => l.dataset.group + (l.querySelector('.grp-ren') && l.querySelector('.grp-del') ? '' : '!')) }));

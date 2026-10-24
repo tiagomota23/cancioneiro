@@ -93,7 +93,7 @@ export default async function (level) {
   }, { sev: 'crítica' });
   await t('SEG-22', 'Sem sessão: funções RPC protegidas (my_rank, my_role, is_allowed, can_listen, grupos, backup_schema, backup_objects, call_notify)', async () => {
     const bad = [];
-    for (const f of ['my_rank', 'my_role', 'is_allowed', 'backup_schema', 'backup_objects', 'in_cancioneiro_collection', 'set_source_hashes', 'can_listen', 'my_groups', 'set_my_groups', 'set_user_groups', 'group_save', 'group_remove', 'col_group_ok']) {
+    for (const f of ['my_rank', 'my_role', 'is_allowed', 'backup_schema', 'backup_objects', 'in_cancioneiro_collection', 'set_source_hashes', 'can_listen', 'my_groups', 'set_my_groups', 'set_user_groups', 'group_save', 'group_remove', 'col_group_ok', 'my_group', 'set_collection_groups']) {
       const r = await get(`${SB}/rest/v1/rpc/${f}`, { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' }, body: '{}' });
       if (r.status === 200) bad.push(`${f}: 200 ${r.text().slice(0, 60)}`);
     }
