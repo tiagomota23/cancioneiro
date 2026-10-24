@@ -185,6 +185,14 @@ export default async function (level) {
     if (!/collection_lyrics\?collection_id=eq\.\$\{col\.id\}/.test(c) || !/own\.get\(slug\) \|\| s\.eff/.test(c)) bad.push('shared: não usa a versão da folha');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (ops collyrics, song, shared)' });
+  await t('SEG-16', 'conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email e, se a leitura falhar, ficam vazios (não recebe folhas); Maestro+ sem filtro', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    if (!/const myGroups = async user => new Set\(\(await rest\(`user_groups\?email=eq\.\$\{encodeURIComponent\(user\.email\)\}&select=group_id`\)\.catch\(\(\) => \[\]\)\)/.test(c)) bad.push('myGroups mudou (rever: email da pessoa e falha → vazio)');
+    if (!/const groupOk = \(mine, cg\) => !mine \|\| \(mine\.size > 0 && \(!\(cg \|\| \[\]\)\.length \|\| cg\.some\(x => mine\.has\(x\.group_id\)\)\)\)/.test(c)) bad.push('groupOk mudou (rever)');
+    if (!/colSet = new Set\(rows\.filter\(r => groupOk\(mine, r\.collections\.collection_groups\)\)/.test(c)) bad.push('colSet sem filtro de grupos');
+    if (!/lvl >= 3 \|\| \(c\.published[^\n]*groupOk\(await myGroups\(user\), c\.collection_groups\)/.test(c)) bad.push('song+collection sem filtro de grupos');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];

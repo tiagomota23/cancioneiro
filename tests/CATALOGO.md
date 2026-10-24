@@ -39,6 +39,12 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
 | FUN-56 | Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores só em folha Coro e se o cântico os tem; Cancelar com mudança pede confirmação; marca «· sem acordes / · sem partituras»; grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch/#btn-chords e sem .scores a; Repor volta a false | ui | média | V | ☐ por correr |
 | FUN-57 | PDF da folha respeita no_chords/no_scores (v206): folha Coro amazing_grace + santa_lucia; no_chords num → menos acordes no texto mas o outro mantém; no_scores num → menos páginas (texto com vendor/pdfjs) | ui | média | V | ☐ por correr |
+| FUN-58 | Editar folha (v208): .col-edit-bar 1.ª linha; depois de #sa-list, «Acrescentar «X»» com «Cântico completo» / «Versão desta folha» (abre #cl-ed); Cancelar no #cl-ed deixa o cântico completo | ui | média | V | ☐ por correr |
+| FUN-59 | Grupos na 1.ª abertura (v209, ?grupos): «Os seus grupos», g1..g5, Guardar sem Cancelar; grava e não volta a perguntar | ui | média | V | ☐ por correr |
+| FUN-60 | Grupos no Perfil (v209): #perfis-groups (h3, interruptores, muda logo), .grp-none sem grupo e sem folhas; Cancioneiro solo em #info-groups | ui | média | V | ☐ por correr |
+| FUN-61 | Visibilidade por grupos no ?demo (v209): folha de g1 invisível a Coro em g2, visível em g1 e ao Maestro; folha sem grupos para quem tem grupo; sem grupo nenhuma | ui | alta | V | ☐ por correr |
+| FUN-62 | Publicar com grupos (v209): «Todos os grupos» ligado, lista escondida; desligar mostra grupos e desativa OK; publica só para o escolhido; meta «Coro · grupo · até …»; #ce-groups | ui | média | V | ☐ por correr |
+| FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -206,9 +212,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
 | SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
+| SEG-16 | conteudo e grupos (v209): colSet e song+collection com groupOk; grupos da pessoa por email, falha → vazio; Maestro+ sem filtro | static | alta | V | ☐ por correr |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
-| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) | live | crítica | V | ✓ |
+| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ☐ por correr |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
 | SEG-25 | Auth só Google | live | alta | V | ✓ |
@@ -223,11 +230,13 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
-| DB-RLS-03 | authenticated: lista fechada de permissões | db | crítica | V | ✓ |
+| DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ☐ por correr |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
 | DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
 | DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ✓ |
 | DB-RLS-14 | collection_songs.no_chords/no_scores (v206): authenticated com SELECT/INSERT/UPDATE nessas colunas; Coro não muda (RLS), Maestro muda (em rollback) | db | média | V | ☐ por correr |
+| DB-RLS-15 | Grupos (v209): RLS nas 3 tabelas; anon nada; Coro só os seus user_groups, sem escrita em collection_groups; Maestro lê todos; group_save/group_remove só Gestor (nome único, maiúsculas); set_user_groups só Maestro+; set_my_groups recusa sem acesso | db | alta | V | ☐ por correr |
+| DB-RLS-16 | Folhas por grupo (v209, em rollback): Coro sem grupo não vê; folha de outro grupo invisível ao Coro e visível ao Maestro; com grupo do Coro visível; sem grupos visível | db | alta | V | ☐ por correr |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
@@ -263,6 +272,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
+| INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
