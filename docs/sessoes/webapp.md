@@ -147,6 +147,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   collection_songs, collection_sections, collection_groups; `my_group(gid)`; conteudo: bypass só com lvl ≥ 4). Ao publicar
   só escolhe grupos seus, e «Todos os grupos» só se estiver em todos. O Maestro só põe/tira os seus grupos numa folha.
   Folha nova de um Maestro que não está em todos os grupos nasce com os grupos dele. O Gestor vê e gere todas.
+- Por fazer (adiado pelo Tiago, 24 out): no menu Partilhar da folha, enviar por email o endereço ou o PDF a todos os
+  utilizadores dos grupos da folha. Destinatários: membros dos grupos da folha (todos, se a folha é para todos os
+  grupos) que veem o público da folha; sem grupo, nada. Ligação abre a folha na app; PDF com a escolha Acordes /
+  Partituras. Bloqueio: o Resend só tem o remetente de teste (só entrega ao Tiago); é preciso um domínio verificado no
+  Resend (ou Gmail com palavra-passe de app) antes de implementar.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
