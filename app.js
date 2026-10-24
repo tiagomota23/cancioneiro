@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v209';
+  const APP_VERSION = '2026-10-24 v211';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2788,7 +2788,8 @@
   const colsKey = () => 'cancioneiro.colecoes.' + (session ? session.user.id : 'anon');
   const expired = c => Date.parse(c.expires_at) <= Date.now();
   // ---------- Grupos: cada pessoa escolhe os seus (Perfil → Grupos; e na 1.ª vez que abre a app) ----------
-  // Uma folha sem grupos é para todos os grupos; quem não tem grupo não recebe folhas. Maestro e Gestor veem todas.
+  // Uma folha sem grupos é para todos os grupos; quem não tem grupo não recebe folhas. Só o Gestor vê todas: o Maestro
+  // vê, gere e publica só as folhas dos seus grupos (e só escolhe grupos seus ao publicar).
   const DEMO_GROUPS = ['Cavaleiros', 'Liceus', 'CLU', 'Trabalhadores', 'Fraternidade'].map((name, i) => ({ id: 'g' + (i + 1), name, position: i }));
   let groups = [], myGroupIds = null, groupsAsked = true; // myGroupIds: null = ainda não se sabe (o servidor já filtra)
   const demoG = (k, d) => store.get('cancioneiro.demo.' + k, d);
@@ -2818,6 +2819,9 @@
       if (DEMO) return;
       const { error } = await sb.from('collection_groups').delete().eq('collection_id', c.id); if (error) throw error;
       if (ids.length) { const { error: e2 } = await sb.from('collection_groups').insert(ids.map(group_id => ({ collection_id: c.id, group_id }))); if (e2) throw e2; }
+      // o Maestro só tira e põe os seus grupos: os outros grupos da folha ficam; devolve os que a folha tem agora
+      const { data } = await sb.from('collection_groups').select('group_id').eq('collection_id', c.id);
+      return data || ids.map(group_id => ({ group_id }));
     },
   };
   async function loadGroups() {
@@ -2827,18 +2831,22 @@
   }
   const groupName = id => (groups.find(g => g.id === id) || {}).name || '';
   const colGroupIds = c => (c.groups || []).map(x => x.group_id).filter(id => groups.some(g => g.id === id));
-  // a pessoa recebe esta folha pelos grupos? (Maestro / Gestor: todas)
-  const colGroupOk = c => lvl() >= 3 || !myGroupIds || (myGroupIds.size > 0 && (!colGroupIds(c).length || colGroupIds(c).some(id => myGroupIds.has(id))));
+  // a pessoa recebe esta folha pelos grupos? (Gestor: todas)
+  const colGroupOk = c => lvl() >= 4 || !myGroupIds || (myGroupIds.size > 0 && (!colGroupIds(c).length || colGroupIds(c).some(id => myGroupIds.has(id))));
   const groupsLabel = ids => ids.length ? ids.map(groupName).join(', ') : 'Todos os grupos';
   // janela com um interruptor por grupo (e, com all, «Todos os grupos» por cima). Devolve os ids escolhidos ([] = todos), ou null.
-  async function pickGroups({ title, msg = '', html = '', ids = [], all = false, ok = 'Guardar', cancel = 'Cancelar', list = groups }) {
+  // para uma folha (own): o Maestro só escolhe grupos seus, e «Todos os grupos» só se estiver em todos
+  const ownGroups = () => lvl() >= 4 || !myGroupIds ? groups : groups.filter(g => myGroupIds.has(g.id));
+  async function pickGroups({ title, msg = '', html = '', ids = [], all = false, ok = 'Guardar', cancel = 'Cancelar', list = groups, own = false }) {
+    let need = false; // sem «Todos os grupos», uma folha precisa de pelo menos um grupo (vazio seria «todos»)
+    if (own) { list = ownGroups(); all = all && list.length === groups.length; need = !all; if (!all && !ids.length) ids = list.length === 1 ? [list[0].id] : []; }
     const sw = (id, label, on, cls = '') => `<button type="button" class="switch-row pdf-opt${on ? ' on' : ''}${cls}" role="switch" aria-checked="${on}" data-g="${esc(id)}"><span>${esc(label)}</span><span class="switch"></span></button>`;
     const allOn = all && !ids.length;
     const asked = appDialog({ title, ok, cancel, html: (msg ? `<p>${esc(msg)}</p>` : '') + html +
       (all ? sw('*', 'Todos os grupos', allOn) : '') + `<div class="grp-list"${allOn ? ' hidden' : ''}>${list.map(g => sw(g.id, g.name, ids.includes(g.id))).join('')}</div>` });
     const box = $('app-dlg-msg'), on = b => b.classList.contains('on');
     const chosen = () => [...box.querySelectorAll('.grp-list .switch-row')].filter(on).map(b => b.dataset.g);
-    const gate = () => { const a = box.querySelector('[data-g="*"]'); $('app-dlg-ok').disabled = !!a && !on(a) && !chosen().length; };
+    const gate = () => { const a = box.querySelector('[data-g="*"]'); $('app-dlg-ok').disabled = (a ? !on(a) : need) && !chosen().length; };
     box.querySelectorAll('.switch-row').forEach(b => b.onclick = () => {
       const v = !on(b); b.classList.toggle('on', v); b.setAttribute('aria-checked', v);
       if (b.dataset.g === '*') box.querySelector('.grp-list').hidden = v;
@@ -2994,10 +3002,10 @@
     if ($('col-pub')) $('col-pub').onclick = async () => {
       if (!colSongs(c).some(x => bySlug.has(x.song_slug))) return appAlert('Uma folha sem cânticos não pode ser publicada. Acrescente pelo menos um cântico em «Editar folha».');
       // para que grupos (todos, por omissão)
-      const ids = await pickGroups({ title: `Publicar «${c.title}»`, all: true, ids: colGroupIds(c), ok: 'Publicar',
+      const ids = await pickGroups({ title: `Publicar «${c.title}»`, all: true, own: true, ids: colGroupIds(c), ok: 'Publicar',
         msg: `${c.audience === 'coro' ? 'O Coro' : 'Todos os perfis'} passa${c.audience === 'coro' ? '' : 'm'} a vê-la até ${new Date(c.expires_at).toLocaleDateString('pt-PT')}, nos grupos escolhidos.` });
       if (ids === null) return;
-      try { await G.setCol(c, ids); c.groups = ids.map(group_id => ({ group_id })); colStore(); }
+      try { c.groups = (await G.setCol(c, ids)) || ids.map(group_id => ({ group_id })); colStore(); }
       catch (e) { return appAlert('Não foi possível guardar os grupos: ' + (e.message || e)); }
       colSetPublished(c, true);
     };
@@ -3110,8 +3118,8 @@
         ...r.movSongs.map(x => sb.from('collection_songs').update({ position: x.position, no_chords: !!x.no_chords, no_scores: !!x.no_scores }).eq('collection_id', o.id).eq('song_slug', x.song_slug)),
         ...r.updSecs.map(x => sb.from('collection_sections').update({ title: x.title, position: x.position }).eq('id', x.id)),
       ])).forEach(chk);
-      if (r.groups) await G.setCol(o, r.groups);
-      chk(await sb.from('collections').update(meta).eq('id', o.id));
+      chk(await sb.from('collections').update(meta).eq('id', o.id)); // primeiro por publicar: só depois se trocam os grupos
+      if (r.groups) d.groups = (await G.setCol(o, r.groups)) || d.groups;
     }
     const dS = new Set(d.songs.map(x => x.song_slug));
     let edits = (o.edits || []).filter(x => dS.has(x.song_slug)); // os cânticos tirados levam a sua versão (cascade)
@@ -3198,7 +3206,7 @@
   $('ce-name').oninput = () => { const t = $('ce-name').value.trim().slice(0, 80); if (edCol && t) edCol.title = t; };
   $('ce-groups').onclick = async () => {
     if (!edCol) return;
-    const ids = await pickGroups({ title: 'Grupos da folha', all: true, ids: colGroupIds(edCol), ok: 'OK', msg: 'Quem recebe a folha (além do público escolhido).' });
+    const ids = await pickGroups({ title: 'Grupos da folha', all: true, own: true, ids: colGroupIds(edCol), ok: 'OK', msg: 'Quem recebe a folha (além do público escolhido).' });
     if (ids !== null && edCol) { edCol.groups = ids.map(group_id => ({ group_id })); renderColEditor(edCol); }
   };
   $('ce-dur').onchange = () => { if (edCol) { edCol.duration = $('ce-dur').value; renderColEditor(edCol); } };
@@ -3485,7 +3493,9 @@
       if (DEMO) { c = { id: 'demo' + Date.now(), ...row, published: false, songs: [], sections: [] }; cols.push(c); }
       else {
         const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by,published').single(); if (error) throw error;
-        c = { ...data, songs: [], sections: [] }; cols.push(c);
+        c = { ...data, songs: [], sections: [], groups: [] }; cols.push(c);
+        // Maestro que não está em todos os grupos: a folha nova fica logo só dos seus grupos (não a veem os outros grupos)
+        if (lvl() < 4 && myGroupIds && myGroupIds.size && ownGroups().length < groups.length) c.groups = (await G.setCol(c, [...myGroupIds])) || [];
       }
       colStore();
       $('col-dlg').close();

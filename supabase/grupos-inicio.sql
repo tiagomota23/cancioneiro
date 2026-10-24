@@ -4,3 +4,7 @@ insert into public.groups (name, position) values ('Cavaleiros', 0), ('Liceus', 
   on conflict do nothing;
 insert into public.user_groups (email, group_id) select ae.email, g.id from public.allowed_emails ae cross join public.groups g on conflict do nothing;
 update public.allowed_emails set groups_asked = true;
+
+-- 24 out 2026 (pedido do Tiago): afinal todas as contas recebem a pergunta dos grupos na próxima vez que abrirem a app
+-- (com todos os grupos já ligados; cada pessoa desliga os que não são seus).
+update public.allowed_emails set groups_asked = false;

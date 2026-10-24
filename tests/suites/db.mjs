@@ -35,6 +35,7 @@ export default async function (level) {
     const want = {
       collection_sections: 'DELETE,INSERT,SELECT,UPDATE', collection_songs: 'DELETE,INSERT,SELECT,UPDATE', collection_templates: 'DELETE,INSERT,SELECT,UPDATE',
       collections: 'DELETE,INSERT,SELECT,UPDATE', favorites: 'DELETE,INSERT,SELECT', song_files: 'SELECT', song_sources: 'SELECT', song_tags: 'SELECT', sync_log: 'SELECT',
+      groups: 'SELECT', user_groups: 'SELECT', collection_groups: 'DELETE,INSERT,SELECT', // v209: grupos
     };
     const r = await sql(`select table_name, string_agg(privilege_type, ',' order by privilege_type) p from information_schema.role_table_grants where table_schema='public' and grantee='authenticated' group by 1`);
     const got = Object.fromEntries(r.map(x => [x.table_name, x.p]));
@@ -182,6 +183,55 @@ export default async function (level) {
     if (coro !== 0) bad.push('Coro muda no_chords: ' + coro); if (maestro !== 1) bad.push('Maestro não muda no_chords: ' + maestro);
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  // ---- v209: grupos ----
+  const claimsOf = who => `json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text`;
+  const emailOf = who => `(select email from public.allowed_emails where role='${who}' order by email limit 1)`;
+  // corre «setup» como dono (em rollback) e depois «body» como o papel
+  const asRoleAfter = (who, setup, body) => `begin; ${setup} select set_config('request.jwt.claims', ${claimsOf(who)}, true); set local role authenticated; ${body} rollback;`;
+  const err = async q => { try { await sql(q); return null; } catch (e) { return e.message; } };
+  await t('DB-RLS-15', 'Grupos (v209): RLS nas 3 tabelas; anon sem nada; Coro só lê os seus user_groups e não escreve em collection_groups; Maestro lê os de todos; group_save/group_remove só Gestor; set_user_groups só Maestro+; set_my_groups recusa quem não tem acesso (tudo em rollback)', async () => {
+    const bad = [];
+    const rls = await sql(`select c.relname, c.relrowsecurity r from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('groups','user_groups','collection_groups')`);
+    if (rls.length !== 3) bad.push('tabelas de grupos: ' + rls.map(x => x.relname).join(','));
+    rls.filter(x => !x.r).forEach(x => bad.push(x.relname + ' sem RLS'));
+    const an = await sql(`select table_name, privilege_type from information_schema.role_table_grants where table_schema='public' and table_name in ('groups','user_groups','collection_groups') and grantee in ('anon','PUBLIC')`);
+    if (an.length) bad.push('anon: ' + an.map(x => x.table_name + ' ' + x.privilege_type).join(', '));
+    const [c1] = await sql(asRole('coro', `select count(*) filter (where email <> lower(coalesce(auth.jwt() ->> 'email','')))::int outros, count(*)::int n from public.user_groups;`));
+    if (c1.outros) bad.push(`Coro lê ${c1.outros} user_groups de outras pessoas`);
+    const [m1] = await sql(asRole('maestro', `select count(distinct email)::int pessoas from public.user_groups;`));
+    if (m1.pessoas < 2) bad.push(`Maestro só vê grupos de ${m1.pessoas} pessoa(s)`);
+    // escrita em collection_groups: Coro recusado (RLS)
+    const ins = `insert into public.collection_groups (collection_id, group_id) select c.id, g.id from public.collections c, public.groups g limit 1;`;
+    if (await writes('coro', ins).catch(() => false) === true) bad.push('Coro escreve em collection_groups');
+    // funções
+    const g0 = `(select id from public.groups order by position limit 1)`;
+    const e1 = await err(asRole('maestro', `select public.group_save(null, 'Teste ' || gen_random_uuid());`)); if (!/sem permiss/.test(e1 || '')) bad.push('group_save como Maestro: ' + (e1 || 'aceite'));
+    const e2 = await err(asRole('gestor', `select public.group_save(null, 'Teste ' || gen_random_uuid());`)); if (e2) bad.push('group_save como Gestor recusado: ' + e2.slice(0, 80));
+    const e3 = await err(asRole('gestor', `select public.group_save(null, (select name from public.groups limit 1));`)); if (!/Já existe/.test(e3 || '')) bad.push('group_save com nome repetido: ' + (e3 || 'aceite'));
+    const e4 = await err(asRole('gestor', `select public.group_save(null, upper((select name from public.groups limit 1)));`)); if (!/Já existe/.test(e4 || '')) bad.push('group_save com nome repetido em maiúsculas: ' + (e4 || 'aceite'));
+    const e5 = await err(asRole('maestro', `select public.group_remove(${g0}, '{}');`)); if (!/sem permiss/.test(e5 || '')) bad.push('group_remove como Maestro: ' + (e5 || 'aceite'));
+    const e6 = await err(asRole('coro', `select public.set_user_groups(${emailOf('cancioneiro')}, array[${g0}]);`)); if (!/sem permiss/.test(e6 || '')) bad.push('set_user_groups como Coro: ' + (e6 || 'aceite'));
+    const e7 = await err(asRole('maestro', `select public.set_user_groups(${emailOf('cancioneiro')}, array[${g0}]);`)); if (e7) bad.push('set_user_groups como Maestro recusado: ' + e7.slice(0, 80));
+    const e8 = await err(asRole('stranger', `select public.set_my_groups(array[${g0}]);`)); if (!/sem acesso/.test(e8 || '')) bad.push('set_my_groups sem acesso: ' + (e8 || 'aceite'));
+    const e9 = await err(`begin; set local role anon; select public.my_groups(); rollback;`); if (!/permission denied/.test(e9 || '')) bad.push('my_groups como anon: ' + (e9 || 'aceite'));
+    return bad.length ? bad.join('; ') : { pass: `Coro vê ${c1.n} grupos seus; Maestro vê grupos de ${m1.pessoas} pessoas` };
+  }, { sev: 'alta', where: 'supabase/grupos.sql' });
+  await t('DB-RLS-16', 'Folhas por grupo (v209, em rollback): Coro sem grupo não vê folhas; folha só de um grupo que o Coro não tem → invisível ao Coro e ao Maestro (v210), visível ao Gestor; com um grupo do Coro → visível; folha sem grupos → visível a quem tem grupo', async () => {
+    const bad = [], out = {};
+    const mk = `insert into public.collections (id, title, audience, duration, expires_at, published) values ('00000000-0000-4000-8000-0000000000c1', 'Teste grupos', 'coro', '1w', now() + interval '1 day', true);`;
+    const newG = `insert into public.groups (id, name, position) values ('00000000-0000-4000-8000-0000000000a1', 'Grupo de teste ' || gen_random_uuid(), 99);`;
+    const q = `select count(*)::int n from public.collections where id = '00000000-0000-4000-8000-0000000000c1';`;
+    const run = async (who, setup) => { const [r] = await sql(asRoleAfter(who, setup, q)); return r.n; };
+    out.semGrupos = await run('coro', mk); // folha para todos
+    out.coroSemGrupo = await run('coro', mk + ` delete from public.user_groups where email = ${emailOf('coro')};`);
+    out.outroGrupo = await run('coro', mk + newG + ` insert into public.collection_groups values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1');`);
+    out.outroGrupoMaestro = await run('maestro', mk + newG + ` insert into public.collection_groups values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1');`); // v210: Maestro só vê os seus grupos
+    out.outroGrupoGestor = await run('gestor', mk + newG + ` insert into public.collection_groups values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1');`);
+    out.grupoDoCoro = await run('coro', mk + ` insert into public.collection_groups select '00000000-0000-4000-8000-0000000000c1', group_id from public.user_groups where email = ${emailOf('coro')} limit 1;`);
+    const want = { semGrupos: 1, coroSemGrupo: 0, outroGrupo: 0, outroGrupoMaestro: 0, outroGrupoGestor: 1, grupoDoCoro: 1 };
+    for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
+  }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
   await t('DB-RLS-10', 'Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
     try {
       await sql(`begin; insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0b1','t','coro','24h', now() + interval '1 day'); insert into public.collection_songs (collection_id, song_slug) select '00000000-0000-4000-8000-00000000c0b1', slug from public.songs order by slug limit 11; rollback;`);
@@ -323,6 +373,45 @@ export default async function (level) {
     if (r.iguais) bad.push(`${r.iguais} iguais ao original (deviam não existir)`);
     return bad.length ? bad.join('; ') : { pass: `${r.n} versões de folha` };
   }, { sev: 'baixa' });
+  await t('INT-19', 'Grupos (v209): nomes únicos sem distinguir maiúsculas; collection_groups e user_groups apontam para grupos e folhas que existem; contas abaixo de Maestro sem grupo (não recebem folhas) assinaladas', async () => {
+    const [r] = await sql(`select (select count(*) from public.groups)::int g,
+      (select count(*) from (select lower(name) from public.groups group by 1 having count(*) > 1) x)::int dup,
+      (select count(*) from public.allowed_emails ae where ae.role in ('coro','cancioneiro') and ae.groups_asked and not exists (select 1 from public.user_groups ug where ug.email = ae.email))::int sem,
+      (select count(*) from public.allowed_emails ae where not ae.groups_asked)::int porPerguntar`);
+    if (!r.g) return 'nenhum grupo';
+    if (r.dup) return `${r.dup} nomes de grupo repetidos`;
+    return r.sem ? { warn: `${r.sem} conta(s) Coro/Cancioneiro sem grupo: não recebem folhas (escolha delas)` } : { pass: `${r.g} grupos; ${r.porPerguntar} contas ainda por escolher` };
+  }, { sev: 'baixa' });
+  await t('DB-RLS-17', 'Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder', async () => {
+    const bad = [], out = {};
+    const C = `'00000000-0000-4000-8000-0000000000c2'`, G1 = `(select id from public.groups order by position limit 1)`, G2 = `(select id from public.groups order by position offset 1 limit 1)`;
+    const base = `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1}; insert into public.collections (id, title, audience, duration, expires_at, published) values (${C}, 'Teste grupos Maestro', 'coro', '1w', now() + interval '1 day', true);`;
+    const one = async (setup, body) => { const r = await sql(asRoleAfter('maestro', base + setup, body)); return r[0] ? Object.values(r[0])[0] : null; };
+    out.soG2_ver = await one(`insert into public.collection_groups values (${C}, ${G2});`, `select count(*)::int from public.collections where id = ${C};`);
+    out.soG2_update = await one(`insert into public.collection_groups values (${C}, ${G2});`, `with u as (update public.collections set title = 'x' where id = ${C} returning 1) select count(*)::int from u;`);
+    out.g1g2_ver = await one(`insert into public.collection_groups values (${C}, ${G1}), (${C}, ${G2});`, `select count(*)::int from public.collections where id = ${C};`);
+    out.g1g2_apagaG2 = await one(`insert into public.collection_groups values (${C}, ${G1}), (${C}, ${G2});`, `with d as (delete from public.collection_groups where collection_id = ${C} and group_id = ${G2} returning 1) select count(*)::int from d;`);
+    out.g1g2_apagaG1 = await one(`insert into public.collection_groups values (${C}, ${G1}), (${C}, ${G2});`, `with d as (delete from public.collection_groups where collection_id = ${C} and group_id = ${G1} returning 1) select count(*)::int from d;`);
+    const want = { soG2_ver: 0, soG2_update: 0, g1g2_ver: 1, g1g2_apagaG2: 0, g1g2_apagaG1: 1 };
+    for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
+    // lacuna a confirmar: folha só de G1, o Maestro tira o link G1 → a folha fica sem grupos = para todos os grupos
+    // v211: col_groups_guard é um gatilho constraint deferred → forçar a verificação antes do rollback (set constraints all immediate)
+    const GUARD = /pelo menos um dos seus grupos/;
+    try { out.soG1_tiraUltimo = await one(`insert into public.collection_groups values (${C}, ${G1});`, `with d as (delete from public.collection_groups where collection_id = ${C} returning 1) select count(*)::int from d; set constraints all immediate; select 1;`); }
+    catch (e) { out.soG1_tiraUltimo = GUARD.test(e.message) ? 'recusado' : 'erro ' + e.message.slice(0, 60); }
+    if (out.soG1_tiraUltimo !== 'recusado') bad.push('o Maestro (só em G1) tira o último grupo de uma folha publicada: ' + out.soG1_tiraUltimo);
+    // lacuna a confirmar: folha nova sem grupos criada pelo Maestro (só em G1) → para todos os grupos
+    const setupM = `delete from public.user_groups where email = ${emailOf('maestro')} and group_id <> ${G1};`;
+    const ins = pub => `insert into public.collections (title, audience, duration, expires_at, published) values ('Teste sem grupos', 'coro', '1w', now() + interval '1 day', ${pub}); set constraints all immediate; select 1;`;
+    try { await sql(asRoleAfter('maestro', setupM, ins(true))); out.novaSemGrupos = 'aceite'; } catch (e) { out.novaSemGrupos = GUARD.test(e.message) ? 'recusado' : 'erro ' + e.message.slice(0, 60); }
+    if (out.novaSemGrupos !== 'recusado') bad.push('o Maestro (só em G1) cria uma folha publicada sem grupos: ' + out.novaSemGrupos);
+    // o que tem de continuar a passar: rascunho sem grupos; Maestro em todos os grupos a publicar sem grupos
+    try { await sql(asRoleAfter('maestro', setupM, ins(false))); out.rascunho = 'aceite'; } catch (e) { out.rascunho = 'erro ' + e.message.slice(0, 60); }
+    if (out.rascunho !== 'aceite') bad.push('rascunho sem grupos recusado ao Maestro: ' + out.rascunho);
+    try { await sql(asRoleAfter('maestro', `insert into public.user_groups (email, group_id) select ${emailOf('maestro')}, id from public.groups on conflict do nothing;`, ins(true))); out.maestroTodos = 'aceite'; } catch (e) { out.maestroTodos = 'erro ' + e.message.slice(0, 60); }
+    if (out.maestroTodos !== 'aceite') bad.push('Maestro em todos os grupos não publica sem grupos: ' + out.maestroTodos);
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
+  }, { sev: 'média', where: 'supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

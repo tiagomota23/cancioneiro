@@ -29,7 +29,7 @@ begin
 
   out := out || E'\n-- Restrições (chaves primárias e únicas primeiro, depois as estrangeiras e as verificações)\n';
   for r in select c.relname, k.conname, pg_get_constraintdef(k.oid) def from pg_constraint k join pg_class c on c.oid = k.conrelid
-           join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' order by case k.contype when 'p' then 0 when 'u' then 1 when 'f' then 2 else 3 end, 1, 2 loop
+           join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and k.contype <> 't' order by case k.contype when 'p' then 0 when 'u' then 1 when 'f' then 2 else 3 end, 1, 2 loop
     out := out || format(E'alter table public.%I add constraint %I %s;\n', r.relname, r.conname, r.def);
   end loop;
 

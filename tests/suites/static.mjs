@@ -180,11 +180,21 @@ export default async function (level) {
     if (!/collection_songs\?collection_id=eq\.\$\{id\}&song_slug=eq/.test(cl)) bad.push('collyrics: não confirma o cântico na folha');
     if (!/limit\(user, 'save'/.test(cl)) bad.push('collyrics: sem limite de uso');
     const sg = (c.match(/if \(op === 'song'\)[\s\S]{0,1800}?\n    \}/) || [''])[0];
-    if (!/lvl >= 3 \|\| \(c\.published && Date\.parse\(c\.expires_at\) > Date\.now\(\) && \(c\.audience === 'cancioneiro' \|\| lvl >= 2\)\)/.test(sg)) bad.push('song+collection: condição de visibilidade da folha mudou (rever)');
+    if (!/lvl >= 4 \|\| \(lvl >= 3 && await gOk\(\)\) \|\| \(c\.published && Date\.parse\(c\.expires_at\) > Date\.now\(\) && \(c\.audience === 'cancioneiro' \|\| lvl >= 2\) && await gOk\(\)\)/.test(sg)) bad.push('song+collection: condição de visibilidade da folha mudou (rever; v210: Gestor tudo, Maestro pelos grupos)');
     if (!/lvl >= 2 \? eff : noChords\(eff\)/.test(sg)) bad.push('song: versão da folha sem noChords para o Cancioneiro');
     if (!/collection_lyrics\?collection_id=eq\.\$\{col\.id\}/.test(c) || !/own\.get\(slug\) \|\| s\.eff/.test(c)) bad.push('shared: não usa a versão da folha');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts (ops collyrics, song, shared)' });
+  await t('SEG-16', 'conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email (em minúsculas, de who()) e, se a leitura falhar, ficam vazios (não recebe folhas); Gestor sem filtro e Maestro pelos seus grupos (v210), também em collyrics', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    if (!/const email = \(u\.email \|\| ''\)\.toLowerCase\(\);[\s\S]{0,200}return a \? \{ id: u\.id, email,/.test(c)) bad.push('who() já não devolve o email em minúsculas (user_groups guarda-o em minúsculas)');
+    if (!/const myGroups = async user => new Set\(\(await rest\(`user_groups\?email=eq\.\$\{encodeURIComponent\(user\.email\)\}&select=group_id`\)\.catch\(\(\) => \[\]\)\)/.test(c)) bad.push('myGroups mudou (rever: email da pessoa e falha → vazio)');
+    if (!/const groupOk = \(mine, cg\) => !mine \|\| \(mine\.size > 0 && \(!\(cg \|\| \[\]\)\.length \|\| cg\.some\(x => mine\.has\(x\.group_id\)\)\)\)/.test(c)) bad.push('groupOk mudou (rever)');
+    if (!/const mine = lvl >= 4 \? null : await myGroups\(user\);\s*colSet = new Set\(rows\.filter\(r => groupOk\(mine, r\.collections\.collection_groups\)\)/.test(c)) bad.push('colSet: filtro de grupos sem bypass só para o Gestor (v210)');
+    if (!/const gOk = async \(\) => groupOk\(await myGroups\(user\), c\.collection_groups\);/.test(c)) bad.push('song+collection sem filtro de grupos');
+    if (!/if \(lvl < 4 && !groupOk\(await myGroups\(user\), cs\.collections\?\.collection_groups\)\) return denied\(\);/.test(c)) bad.push('collyrics: Maestro não é recusado fora dos seus grupos (v210)');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];
