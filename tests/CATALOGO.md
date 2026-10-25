@@ -50,6 +50,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-66 | Estado da folha em Editar folha (v213/v217): #ce-state «Publicada · Despublicar» / «Por publicar»; #ce-unpub com confirmação despublica logo e fecha a edição (v218); com alterações «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada; Guardar mantém published («Folha guardada — continua publicada»), exceto mudar o público (v219, FUN-68) | ui | média | V | ☐ por correr |
 | FUN-67 | Cor do PDF da folha pelo público (v214): Coro #1f6aa8, Cancioneiro #0e7f58, em qualquer perfil que gera PDF (Maestro, Gestor, cores de perfil diferentes); a outra cor ausente (pdfjs getOperatorList) | ui | baixa | V | ☐ por correr |
 | FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ☐ por correr |
+| FUN-69 | Ordem das estrofes em «Editar nesta folha» (v222): ↑/↓ (.cl-mv; extremos desativados; não mexem no checkbox); outra ordem = versão (.col-edited), gravada pela ordem; reabre pela ordem da versão; Repor repõe a ordem | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
