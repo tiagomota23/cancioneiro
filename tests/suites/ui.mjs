@@ -1024,12 +1024,21 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('FUN-54', 'PDF da folha (v204): «Partilhar folha» só com um «Gerar PDF» → opções #pdf-o-chords e #pdf-o-scores (button.switch-row, aria-checked desde v205; ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo', async () => {
-    const bad = [];
+  await t('FUN-54', 'PDF da folha (v204): «Partilhar folha» com 4 linhas (endereço, um só «Gerar PDF», e «Enviar endereço/PDF por email» desligadas, que não fecham a janela, v216) → opções #pdf-o-chords e #pdf-o-scores (button.switch-row, aria-checked desde v205; ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo', async () => {
+    const bad = []; let menuChecked = false;
     const gen = async (page, chords, scores) => {
       await page.waitForSelector('#col-share'); await page.click('#col-share'); await sleep(500);
       const pdfs = await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).count();
       if (pdfs !== 1) bad.push(`${pdfs} opções «Gerar PDF» (esperada 1)`);
+      // v216: 4 linhas — endereço, Gerar PDF, e as duas de email desligadas (tocar nelas não fecha a janela)
+      if (!menuChecked) {
+        menuChecked = true;
+        const m = await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button')].map(b => ({ t: b.textContent.replace(/\s+/g, ' ').trim(), d: b.disabled })));
+        const ok = m.length === 4 && !m[0].d && /^Gerar PDF/.test(m[1].t) && !m[1].d && /^Enviar endereço por email/.test(m[2].t) && m[2].d && /^Enviar PDF por email/.test(m[3].t) && m[3].d;
+        if (!ok) bad.push('menu «Partilhar folha»: ' + JSON.stringify(m.map(x => x.t.slice(0, 30) + (x.d ? ' [desligada]' : ''))));
+        await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button[disabled]')].forEach(b => { b.click(); b.dispatchEvent(new MouseEvent('click', { bubbles: true })); })); await sleep(300);
+        if (!(await page.evaluate(() => document.querySelector('#app-dlg').open))) bad.push('tocar numa opção desligada fechou a janela');
+      }
       await page.locator('#app-dlg-list button').filter({ hasText: /Gerar PDF/ }).first().click(); await sleep(500);
       const st = { c: await swOn(page, '#pdf-o-chords'), s: await swOn(page, '#pdf-o-scores') };
       if (chords !== undefined) { await swSet(page, '#pdf-o-chords', chords); await swSet(page, '#pdf-o-scores', scores); }
