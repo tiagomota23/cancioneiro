@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-25 v218';
+  const APP_VERSION = '2026-10-25 v219';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3138,8 +3138,10 @@
   async function colCommit(o, d) {
     const r = colDiff(o, d);
     if (!r.changed) return false;
-    // guardar não muda «published»: uma folha publicada continua publicada (só «Despublicar» a despublica)
+    // guardar não muda «published»: uma folha publicada continua publicada (só «Despublicar» a despublica),
+    // exceto ao mudar o público (Coro ↔ Cancioneiro), que a deixa por publicar (a app avisa ao mudar)
     const meta = { ...r.meta };
+    if (meta.audience && o.published !== false) meta.published = false;
     if (!DEMO) {
       // tudo numa só transação (save_collection): se algo falhar, a folha fica como estava
       const known = new Set((o.sections || []).map(x => x.id));
@@ -3234,7 +3236,14 @@
     clDone();
   };
   // público, título e duração: só na cópia (gravados em «Guardar»)
-  $('ce-aud').onclick = e => { const b = e.target.closest('button[data-v]'); if (b && edCol) { edCol.audience = b.dataset.v; renderColEditor(edCol); } };
+  // mudar o público (Coro ↔ Cancioneiro) de uma folha publicada despublica-a ao guardar: avisa primeiro
+  $('ce-aud').onclick = async e => {
+    const b = e.target.closest('button[data-v]'); if (!b || !edCol || b.dataset.v === edCol.audience) return;
+    const v = b.dataset.v, name = v === 'coro' ? 'Coro' : 'Cancioneiro';
+    if (edOrig.published !== false && v !== edOrig.audience &&
+        !(await appConfirm(`Mudar o público para ${name}? Ao guardar, a folha fica por publicar: tem de a publicar de novo.`, 'Mudar'))) return;
+    if (edCol) { edCol.audience = v; renderColEditor(edCol); }
+  };
   $('ce-name').oninput = () => { const t = $('ce-name').value.trim().slice(0, 80); if (edCol && t) edCol.title = t; };
   $('ce-groups').onclick = async () => {
     if (!edCol) return;
@@ -3248,9 +3257,9 @@
     if (!$('ce-name').value.trim()) { $('ce-msg').textContent = 'Escreva um título.'; return; }
     $('ce-save').disabled = true;
     try {
-      const o = edOrig, changed = await colCommit(o, edCol);
+      const o = edOrig, wasPub = o.published !== false, changed = await colCommit(o, edCol);
       ceDone(); showCollection(o.id);
-      toast(changed ? (o.published !== false ? 'Folha guardada — continua publicada' : 'Folha guardada') : 'Sem alterações');
+      toast(changed ? (o.published !== false ? 'Folha guardada — continua publicada' : wasPub ? 'Folha guardada — por publicar (mudou o público)' : 'Folha guardada') : 'Sem alterações');
     } catch (e) { $('ce-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); await loadCollections(); }
     finally { ceGate(); }
   };

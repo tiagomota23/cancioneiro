@@ -1,6 +1,6 @@
 -- Guardar «Editar folha» numa só transação (v217): título/público/duração, cânticos (posição, acordes, partituras),
--- secções e grupos. Se algo falhar, a folha fica como estava. Não muda «published»: uma folha publicada continua
--- publicada (só «Despublicar» a despublica). Corre com as permissões de quem chama (RLS).
+-- secções e grupos. Se algo falhar, a folha fica como estava. Uma folha publicada continua publicada (só «Despublicar»
+-- a despublica), exceto quando se muda o público (Coro ↔ Cancioneiro): aí a app manda meta.published = false. Corre com as permissões de quem chama (RLS).
 -- p = { meta: {title?, audience?, duration?, expires_at?}, songs: [{song_slug, position, no_chords, no_scores}],
 --       sections: [{id (null = nova), title, position}], groups: [uuid] | null (null = não mexe) }
 create or replace function public.save_collection(cid uuid, p jsonb) returns jsonb language plpgsql security invoker set search_path = public as $$
@@ -10,7 +10,8 @@ begin
   if m <> '{}'::jsonb then
     update public.collections set
       title = coalesce(m->>'title', title), audience = coalesce(m->>'audience', audience),
-      duration = coalesce(m->>'duration', duration), expires_at = coalesce((m->>'expires_at')::timestamptz, expires_at)
+      duration = coalesce(m->>'duration', duration), expires_at = coalesce((m->>'expires_at')::timestamptz, expires_at),
+      published = coalesce((m->>'published')::boolean, published) -- só para despublicar (mudar o público de uma folha publicada)
     where id = cid;
     if not found then raise exception 'Sem permissão para esta folha.'; end if;
   end if;
