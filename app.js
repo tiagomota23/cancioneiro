@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-24 v216';
+  const APP_VERSION = '2026-10-25 v217';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2984,7 +2984,8 @@
   const TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
   // Folha: na página, sempre só leitura (só as secções com cânticos). Maestro / Gestor: «Editar folha» no fim (como
   // «Editar cântico») abre a edição por cima (janela col-ed): público, título, duração, cânticos e secções; cada mudança
-  // fica logo gravada. Enquanto está em edição a folha fica escondida (published = false) até «Publicar».
+  // grava-se em «Guardar». Uma folha nova fica por publicar até «Publicar»; uma publicada continua publicada ao guardar
+  // (só «Despublicar», na linha de estado de Editar folha, a despublica).
   const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>';
   const colUntil = c => { const fim = new Date(c.expires_at); return `${expired(c) ? 'expirou' : 'até'} ${fim.toLocaleDateString('pt-PT')} ${fim.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}`; };
   function showCollection(id) {
@@ -2999,7 +3000,6 @@
     // partilhar: só Maestro / Gestor, e só a folha publicada com cânticos
     // partilhar: botão branco à direita de «Editar folha» (por publicar, esse lugar é do «Publicar»)
     const shareBtn = can && !draft && colSongs(c).some(x => bySlug.has(x.song_slug)) ? '<button class="edit-btn col-share" id="col-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg>Partilhar</button>' : '';
-    // por publicar (só Maestro / Gestor a vê): etiqueta amarela por cima do título, como «por aprovar»
     title.innerHTML = `${esc(c.title)}${can ? meta : ''}`; // por publicar: o botão Publicar (amarelo) já o diz
     const all = colItems(c).filter(it => it.k === 'sec' || bySlug.has(it.key));
     const items = withSongs(all);
@@ -3026,7 +3026,7 @@
   }
   // ---------- Editar folha (janela por cima da folha) ----------
   // Trabalha numa cópia (edCol, _draft): nada vai para a base de dados até «Guardar»; «Cancelar» deita a cópia fora.
-  // Guardar alterações volta a pôr a folha por publicar (só os Maestros a veem até «Publicar»).
+  // Guardar não despublica: uma folha publicada continua publicada (tudo numa só transação, save_collection).
   const colStore = () => { if (DEMO) demoSave(); else store.set(colsKey(), cols); };
   const live = c => !DEMO && !c._draft; // a cópia de trabalho da janela de edição só se grava em «Guardar»
   const ceGate = (() => { const f = () => { $('ce-save').disabled = !$('ce-name').value.trim(); }; $('ce-name').addEventListener('input', f); return f; })(); // título obrigatório
@@ -3126,25 +3126,20 @@
   async function colCommit(o, d) {
     const r = colDiff(o, d);
     if (!r.changed) return false;
-    // só mudaram os grupos de uma folha publicada: continua publicada (os grupos trocam-se numa só transação)
-    const keepPub = o.published !== false && r.groups !== null && !Object.keys(r.meta).length &&
-      !['delSongs', 'addSongs', 'movSongs', 'delSecs', 'addSecs', 'updSecs', 'lyr'].some(k => r[k].length);
-    const meta = keepPub ? {} : { ...r.meta, published: false };
+    // guardar não muda «published»: uma folha publicada continua publicada (só «Despublicar» a despublica)
+    const meta = { ...r.meta };
     if (!DEMO) {
-      const chk = res => { if (res.error) throw res.error; return res; };
-      if (r.delSongs.length) chk(await sb.from('collection_songs').delete().eq('collection_id', o.id).in('song_slug', r.delSongs));
-      if (r.delSecs.length) chk(await sb.from('collection_sections').delete().in('id', r.delSecs));
-      if (r.addSongs.length) chk(await sb.from('collection_songs').insert(r.addSongs.map(x => ({ collection_id: o.id, song_slug: x.song_slug, position: x.position, no_chords: !!x.no_chords, no_scores: !!x.no_scores }))));
-      if (r.addSecs.length) {
-        const { data } = chk(await sb.from('collection_sections').insert(r.addSecs.map(x => ({ collection_id: o.id, title: x.title, position: x.position }))).select('id,title,position'));
-        r.addSecs.forEach(x => { const n = data.find(y => y.position === x.position); if (n) x.id = n.id; }); // ids verdadeiros
-      }
-      (await Promise.all([
-        ...r.movSongs.map(x => sb.from('collection_songs').update({ position: x.position, no_chords: !!x.no_chords, no_scores: !!x.no_scores }).eq('collection_id', o.id).eq('song_slug', x.song_slug)),
-        ...r.updSecs.map(x => sb.from('collection_sections').update({ title: x.title, position: x.position }).eq('id', x.id)),
-      ])).forEach(chk);
-      if (Object.keys(meta).length) chk(await sb.from('collections').update(meta).eq('id', o.id)); // primeiro por publicar: só depois se trocam os grupos
-      if (r.groups) d.groups = (await G.setCol(o, r.groups)) || d.groups;
+      // tudo numa só transação (save_collection): se algo falhar, a folha fica como estava
+      const known = new Set((o.sections || []).map(x => x.id));
+      const { data, error } = await sb.rpc('save_collection', { cid: o.id, p: {
+        meta,
+        songs: d.songs.map(x => ({ song_slug: x.song_slug, position: x.position, no_chords: !!x.no_chords, no_scores: !!x.no_scores })),
+        sections: d.sections.map(x => ({ id: known.has(x.id) ? x.id : null, title: x.title, position: x.position })),
+        groups: r.groups, // null = não mexe
+      } });
+      if (error) throw error;
+      d.sections = data.sections; // ids verdadeiros das secções novas
+      if (r.groups) d.groups = (data.groups || []).map(group_id => ({ group_id }));
     }
     const dS = new Set(d.songs.map(x => x.song_slug));
     let edits = (o.edits || []).filter(x => dS.has(x.song_slug)); // os cânticos tirados levam a sua versão (cascade)
@@ -3157,7 +3152,7 @@
     if (r.lyr.length) saveLyrCache();
     Object.assign(o, meta, { songs: d.songs, sections: d.sections, groups: d.groups, edits });
     colStore();
-    return keepPub ? 'pub' : true;
+    return true;
   }
   // ---------- Editar nesta folha: a letra do cântico só nesta folha (o original não muda) ----------
   // Caixas «Incluir» por estrofe (todas marcadas) e «Editar texto» para mudanças livres. Fica na cópia da folha
@@ -3243,7 +3238,7 @@
     try {
       const o = edOrig, changed = await colCommit(o, edCol);
       ceDone(); showCollection(o.id);
-      toast(changed === 'pub' ? 'Grupos alterados — a folha continua publicada' : changed ? 'Folha guardada — por publicar' : 'Sem alterações');
+      toast(changed ? (o.published !== false ? 'Folha guardada — continua publicada' : 'Folha guardada') : 'Sem alterações');
     } catch (e) { $('ce-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); await loadCollections(); }
     finally { ceGate(); }
   };

@@ -38,7 +38,11 @@ declare cid uuid;
 begin
   if coalesce((select public.my_rank()), 0) <> 3 then return null; end if;
   if not exists (select 1 from public.groups g where not public.my_group(g.id)) then return null; end if; -- está em todos
-  if tg_table_name = 'collections' then cid := new.id; else cid := old.collection_id; end if;
+  if tg_table_name = 'collections' then
+    -- só ao criar publicada ou ao publicar (editar uma folha já publicada para todos os grupos não a alarga)
+    if tg_op = 'UPDATE' and (old.published or not new.published) then return null; end if;
+    cid := new.id;
+  else cid := old.collection_id; end if;
   if exists (select 1 from public.collections c where c.id = cid and c.published)
      and not exists (select 1 from public.collection_groups where collection_id = cid) then
     raise exception 'Uma folha publicada tem de ficar com pelo menos um dos seus grupos.';

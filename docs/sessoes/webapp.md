@@ -152,6 +152,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   grupos) que veem o público da folha; sem grupo, nada. Ligação abre a folha na app; PDF com a escolha Acordes /
   Partituras. Bloqueio: o Resend só tem o remetente de teste (só entrega ao Tiago); é preciso um domínio verificado no
   Resend (ou Gmail com palavra-passe de app) antes de implementar.
+- v217: guardar em Editar folha já não despublica (só «Despublicar»). Tudo numa só transação: RPC
+  `save_collection(cid, p)` (`supabase/folhas-guardar.sql`, security invoker); as versões da letra (collyrics) vão depois,
+  pela função conteudo. O gatilho col_groups_guard só atua ao criar publicada, ao publicar ou ao tirar o último grupo.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
