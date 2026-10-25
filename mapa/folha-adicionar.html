@@ -117,6 +117,10 @@
   --app-brand: #10835c;
   --app-brand-deep: #0b6b4b;
   --app-on-brand: #fff;
+
+  /* Cor das folhas em PDF (pelo público da folha) */
+  --folha-cancioneiro: #0e7f58; /* PDF de uma folha para o Cancioneiro */
+  --folha-coro: #1f6aa8;        /* PDF de uma folha para o Coro */
 }
 
 :root.perfil-coro {
@@ -892,8 +896,7 @@ body:not(.can-listen) #btn-mic, body:not(.can-listen) .listen-only { display: no
 .up-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .up-del.armed { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* contorno da cor do botão (regra 9) */
 .mini-btn { flex: none; width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
-.list-title .col-share { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -10px -6px -10px 2px; vertical-align: middle; color: var(--on-brand); }
-.list-title .col-share svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+
 .pick-star { width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; border: 0; color: var(--accent); }
 dialog form button.perfil-i { width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: var(--pill); background: none; color: var(--accent);
   font-family: var(--serif); font-weight: 700; font-style: italic; font-size: 24px; line-height: 1; cursor: pointer; }
@@ -1099,14 +1102,16 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .rows li.col-edit-bar { padding: 0 14px; }
 .rows li.col-edit-bar .edit-bar { margin: 4px 0 12px; } /* no topo da lista, por baixo do título e da data */
 .rows li.col-edit-bar .edit-btn { color: var(--on-brand); border-color: var(--on-brand-outline); }
+.rows li.col-edit-bar .edit-btn.col-share { background: var(--on-brand); border-color: var(--on-brand); color: var(--brand-deep); } /* Partilhar: branco */
 .rows li.col-edit-bar .edit-btn.col-pub { background: var(--pending-bg); border-color: var(--pending-bg); color: var(--pending-ink); font-weight: 700; } /* por publicar: amarelo, em todos os perfis */
 /* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
 .rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
   font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
+.tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v213</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v216</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1260,7 +1265,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v213</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-24 v216</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1308,7 +1313,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
   <!-- Coleção: escolher onde pôr o cântico -->
   <dialog id="col-pick" class="col-dlg" open="">
     <h2 tabindex="-1" autofocus="">Coleções e folhas</h2>
-    <div id="col-pick-list" class="col-pick-list"><p class="pick-head">Coleções</p><button type="button" class="col-pick on" data-k="cancioneiro" aria-pressed="true" aria-disabled="true"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"></path><path d="M12 6.5V20"></path></svg><span>Cancioneiro<small>Faz parte do Cancioneiro original — não pode ser retirado</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><button type="button" class="col-pick on" data-k="fav" aria-pressed="true"><svg class="pick-ic fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg><span>Preferidos<small>Só para si</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><p class="pick-head">Folhas</p><button type="button" class="col-pick" data-k="c:demo1" aria-pressed="false"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"></path><path d="M14 3v5h5"></path></svg><span>Missa de domingo<small>Coro · até 31/10/2026</small></span></button><button type="button" class="col-pick on" data-k="c:demo2" aria-pressed="true"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"></path><path d="M14 3v5h5"></path></svg><span>Encontro de jovens<small>Cancioneiro · até 31/10/2026</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><button type="button" class="col-pick" data-k="c:demo3" aria-pressed="false"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21H6V3h8.5L19 7.5V11"></path><path d="M14 3v5h5"></path><path d="M19.2 13.3l2 2-5.7 5.7h-2v-2z"></path></svg><span>Missa do Natal<small>Por publicar · Coro · até 31/10/2026</small></span></button><button class="col-pick-new" id="col-pick-new">+ Nova folha</button></div>
+    <div id="col-pick-list" class="col-pick-list"><p class="pick-head">Coleções</p><button type="button" class="col-pick on" data-k="cancioneiro" aria-pressed="true" aria-disabled="true"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"></path><path d="M12 6.5V20"></path></svg><span>Cancioneiro<small>Faz parte do Cancioneiro original — não pode ser retirado</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><button type="button" class="col-pick on" data-k="fav" aria-pressed="true"><svg class="pick-ic fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"></path></svg><span>Preferidos<small>Só para si</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><p class="pick-head">Folhas</p><button type="button" class="col-pick" data-k="c:demo1" aria-pressed="false"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"></path><path d="M14 3v5h5"></path></svg><span>Missa de domingo<small>Coro · até 01/11/2026</small></span></button><button type="button" class="col-pick on" data-k="c:demo2" aria-pressed="true"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"></path><path d="M14 3v5h5"></path></svg><span>Encontro de jovens<small>Cancioneiro · até 01/11/2026</small></span><svg class="pick-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button><button type="button" class="col-pick" data-k="c:demo3" aria-pressed="false"><svg class="pick-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21H6V3h8.5L19 7.5V11"></path><path d="M14 3v5h5"></path><path d="M19.2 13.3l2 2-5.7 5.7h-2v-2z"></path></svg><span>Missa do Natal<small>Por publicar · Coro · até 01/11/2026</small></span></button><button class="col-pick-new" id="col-pick-new">+ Nova folha</button></div>
     <form method="dialog" class="info-actions"><span></span><button type="button" id="col-pick-close">Fechar</button></form>
   </dialog>
 

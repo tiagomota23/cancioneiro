@@ -117,6 +117,10 @@
   --app-brand: #10835c;
   --app-brand-deep: #0b6b4b;
   --app-on-brand: #fff;
+
+  /* Cor das folhas em PDF (pelo público da folha) */
+  --folha-cancioneiro: #0e7f58; /* PDF de uma folha para o Cancioneiro */
+  --folha-coro: #1f6aa8;        /* PDF de uma folha para o Coro */
 }
 
 :root.perfil-coro {
@@ -892,8 +896,7 @@ body:not(.can-listen) #btn-mic, body:not(.can-listen) .listen-only { display: no
 .up-del svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .up-del.armed { background: var(--danger); border-color: var(--danger); color: var(--on-accent); } /* contorno da cor do botão (regra 9) */
 .mini-btn { flex: none; width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
-.list-title .col-share { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border-radius: var(--pill); margin: -10px -6px -10px 2px; vertical-align: middle; color: var(--on-brand); }
-.list-title .col-share svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
+
 .pick-star { width: var(--hit); height: var(--hit); border-radius: var(--pill); display: grid; place-items: center; border: 0; color: var(--accent); }
 dialog form button.perfil-i { width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: var(--pill); background: none; color: var(--accent);
   font-family: var(--serif); font-weight: 700; font-style: italic; font-size: 24px; line-height: 1; cursor: pointer; }
@@ -1099,14 +1102,16 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .rows li.col-edit-bar { padding: 0 14px; }
 .rows li.col-edit-bar .edit-bar { margin: 4px 0 12px; } /* no topo da lista, por baixo do título e da data */
 .rows li.col-edit-bar .edit-btn { color: var(--on-brand); border-color: var(--on-brand-outline); }
+.rows li.col-edit-bar .edit-btn.col-share { background: var(--on-brand); border-color: var(--on-brand); color: var(--brand-deep); } /* Partilhar: branco */
 .rows li.col-edit-bar .edit-btn.col-pub { background: var(--pending-bg); border-color: var(--pending-bg); color: var(--pending-ink); font-weight: 700; } /* por publicar: amarelo, em todos os perfis */
 /* «+ Adicionar cântico» por baixo de cada secção e «+ Adicionar secção» no fim: como os outros «+ novo» */
 .rows li.col-add button { width: 100%; min-height: var(--hit); padding: 12px 14px; text-align: left; color: var(--accent);
   font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
+.tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen solo perfil-cancioneiro lvl-1 lvl-lt3 lvl-lt4">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v213</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v216</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1264,7 +1269,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-24 v213</p>
+    <p class="small" id="info-count">23 cânticos (Cancioneiro) · versão 2026-10-24 v216</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
