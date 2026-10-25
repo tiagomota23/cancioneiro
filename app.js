@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-25 v219';
+  const APP_VERSION = '2026-10-25 v220';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3236,13 +3236,28 @@
     clDone();
   };
   // público, título e duração: só na cópia (gravados em «Guardar»)
-  // mudar o público (Coro ↔ Cancioneiro) de uma folha publicada despublica-a ao guardar: avisa primeiro
+  // mudar o público (Coro ↔ Cancioneiro) de uma folha publicada: como «Despublicar» — muda e despublica logo, e sai
+  // da edição; com outras alterações por guardar, pergunta se as guarda ou deita fora
   $('ce-aud').onclick = async e => {
     const b = e.target.closest('button[data-v]'); if (!b || !edCol || b.dataset.v === edCol.audience) return;
-    const v = b.dataset.v, name = v === 'coro' ? 'Coro' : 'Cancioneiro';
-    if (edOrig.published !== false && v !== edOrig.audience &&
-        !(await appConfirm(`Mudar o público para ${name}? Ao guardar, a folha fica por publicar: tem de a publicar de novo.`, 'Mudar'))) return;
-    if (edCol) { edCol.audience = v; renderColEditor(edCol); }
+    const v = b.dataset.v, o = edOrig;
+    if (o.published === false) { edCol.audience = v; renderColEditor(edCol); return; } // por publicar: só na cópia
+    const info = `A folha passa a ser para ${v === 'coro' ? 'o Coro' : 'o Cancioneiro'} e fica por publicar: tem de a publicar de novo.`;
+    let save = false;
+    if (colDiff(o, edCol).changed) {
+      const c = await appChoose(`Mudar o público de «${o.title}»`, [
+        { value: 'save', label: 'Guardar e mudar', sub: 'Grava também as outras alterações feitas a esta folha' },
+        { value: 'discard', label: 'Descartar e mudar', sub: 'Deita fora as outras alterações feitas a esta folha' }], `Tem alterações por guardar. ${info}`);
+      if (!c) return;
+      save = c === 'save';
+    } else if (!(await appConfirm(`Mudar o público de «${o.title}»? ${info}`, 'Mudar'))) return;
+    // a cópia a gravar: a de trabalho (guardar) ou a folha como estava (descartar), com o novo público
+    const d = save ? edCol : { ...o, _draft: true, songs: (o.songs || []).map(x => ({ ...x })), sections: (o.sections || []).map(x => ({ ...x })), groups: (o.groups || []).map(x => ({ ...x })), lyrEd: new Map() };
+    d.audience = v;
+    try { await colCommit(o, d); }
+    catch (err) { $('ce-msg').textContent = 'Não foi possível mudar: ' + (err.message || err); return; } // fica na edição, nada mudou
+    ceDone(); showCollection(o.id);
+    toast(save ? 'Folha guardada — por publicar (mudou o público)' : 'Público mudado — folha por publicar');
   };
   $('ce-name').oninput = () => { const t = $('ce-name').value.trim().slice(0, 80); if (edCol && t) edCol.title = t; };
   $('ce-groups').onclick = async () => {
