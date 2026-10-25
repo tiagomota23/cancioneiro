@@ -43,7 +43,7 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
 ## Coordenação com as outras sessões (send_message do Claude Code Remote)
 | Sessão | id | O que faz | Quando a avisar |
 |---|---|---|---|
-| Mapa da app / design | `session_01GWkEx3J14wmMHpvf4WYAM9` | mapa visual (`mapa/`, `tools/screens/`), catálogo, quadro «Padrão de design», artefacto «Design System» (https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC) | **a cada subida de versão**: o que mudou visualmente, componentes novos, tokens novos/renomeados |
+| Mapa da app / design | `session_01GWkEx3J14wmMHpvf4WYAM9` | mapa visual (`mapa/`, `tools/screens/`), catálogo, quadro «Padrão de design», artefacto «Design System» (https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC) | **a cada subida de versão** (pedido do Tiago: todas as mudanças na interface, por pequenas que sejam; versões sem mudança visível também se dizem): o que mudou visualmente, componentes novos, tokens novos/renomeados, textos e ids |
 | Testes | `session_01MbBa3QkGyoxxLSRFoyRJmX` | catálogo de testes (`tests/CATALOGO.md`), `node tests/run.mjs`, relatórios | **a cada subida de versão** (nível rápido + o que a mudança toca) e pela rotina semanal |
 | Cópia de segurança | `session_01BKazgpooLjc3L4evvmL8vy` | `tools/backup/`, `.github/workflows/backup.yml`, `supabase/functions/backup`, `supabase/backup.sql`, `drive-auth?para=copia`, `docs/RECONSTRUIR.md`, `docs/AMBIENTE.md` | quando mudam tabelas, colunas, funções, buckets ou o papel de uma sessão |
 
