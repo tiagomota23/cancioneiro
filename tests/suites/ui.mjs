@@ -1759,20 +1759,23 @@ async function suites(full) {
     return miss.length ? 'depois de 6 min não recarregou: ' + miss.join(', ') : { pass: 'recarregou ' + [...new Set(got)].join(', ') };
   }), { sev: 'média' });
 
-  await t('RES-12', 'Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar» e em «Guardar e despublicar» a edição (#col-ed) fica aberta com o erro em #ce-msg e não há nenhum update de collections (published fica)', async () => {
+  await t('RES-12', 'Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220, «Não foi possível mudar: …») a edição (#col-ed) fica aberta com o erro em #ce-msg e não há nenhum update de collections (published fica)', async () => {
     const bad = [];
     const CID = '00000000-0000-4000-8000-00000000f0f1';
     const colRow = { id: CID, title: 'Folha real simulada', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: 'teste@example.invalid', published: true,
       songs: [{ song_slug: 'salve_regina', position: 0, no_chords: false, no_scores: false, edit: null }], sections: [], groups: [] };
-    for (const via of ['Guardar', 'Guardar e despublicar']) await withApp({ real: { role: 'maestro', rest: (tb, req) => {
+    for (const via of ['Guardar', 'Guardar e despublicar', 'Mudar o público']) await withApp({ real: { role: 'maestro', rest: (tb, req) => {
       if (tb.startsWith('rpc/save_collection')) return { status: 500, body: { message: 'falha simulada', code: 'XX000' } };
       if (tb.startsWith('collections') && req.method() === 'GET') return { body: [colRow] };
       return null;
     } }, hash: '#/lista/colecao-' + CID, wait: '#col-mode', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
       await page.click('#col-mode'); await sleep(600);
-      await page.fill('#ce-name', 'Folha real simulada (mudada)'); await sleep(200);
+      if (via !== 'Mudar o público') { await page.fill('#ce-name', 'Folha real simulada (mudada)'); await sleep(200); }
       const n0 = calls.length;
       if (via === 'Guardar') await page.click('#ce-save');
+      else if (via === 'Mudar o público') { // v220: sem alterações → confirmação «Mudar» e grava logo
+        await page.click('#ce-aud button[data-v="cancioneiro"]'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok');
+      }
       else {
         await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
         await page.locator('#app-dlg-list button').filter({ hasText: 'Guardar e despublicar' }).first().click();
@@ -1783,6 +1786,7 @@ async function suites(full) {
       const r = await page.evaluate(() => ({ open: document.querySelector('#col-ed').open, msg: document.querySelector('#ce-msg')?.textContent.trim() || '' }));
       if (!r.open) bad.push(`${via}: a edição fechou depois do erro`);
       if (!r.msg) bad.push(`${via}: sem erro em #ce-msg`);
+      else if (via === 'Mudar o público' && !/^Não foi possível mudar/.test(r.msg)) bad.push(`${via}: #ce-msg «${r.msg.slice(0, 60)}» (esperado «Não foi possível mudar: …»)`);
       const upd = after.filter(c => /^PATCH \/rest\/v1\/collections/.test(c));
       if (upd.length) bad.push(`${via}: houve update de collections (${upd.join(', ')})`);
     });
