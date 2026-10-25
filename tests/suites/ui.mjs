@@ -835,7 +835,8 @@ async function suites(full) {
     c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== true) return 'Guardar (v217: continua publicada): ' + JSON.stringify({ t: c.title, p: c.published });
     await page.click('#col-mode'); await sleep(500); await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(600);
     if ((await col('demo1')).published !== false) return '«Despublicar» não despublicou';
-    await page.click('#ce-cancel'); await sleep(400); if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); }
+    // v218: Despublicar fecha a edição
+    if (await page.evaluate(() => document.querySelector('#col-ed').open)) return '«Despublicar» sem alterações não fechou a edição (v218)';
     await page.reload(); await page.waitForSelector('#col-pub', { timeout: 10000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'folha por publicar sem «Publicar» na página';
     await page.click('#col-pub'); await sleep(400);
@@ -1359,7 +1360,7 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
-  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo, sem Guardar) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
+  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo e fecha a edição, v218; com alterações: «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
     const bad = [];
     const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
     const state = page => page.evaluate(() => document.querySelector('#ce-state')?.textContent.replace(/\s+/g, ' ').trim() || '');
@@ -1372,10 +1373,37 @@ async function suites(full) {
       if (!/Despublicar «Missa de domingo»\?/.test(q)) bad.push('confirmação: ' + q.slice(0, 60));
       await page.click('#app-dlg-cancel'); await sleep(300);
       if ((await col(page, 'demo1')).published !== true) bad.push('cancelar a confirmação despublicou');
-      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(700);
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const okT = await page.evaluate(() => document.querySelector('#app-dlg-ok').textContent.trim());
+      if (okT !== 'Despublicar') bad.push('sem alterações: OK «' + okT + '» (esperado «Despublicar»)');
+      await page.click('#app-dlg-ok'); await sleep(700);
       if ((await col(page, 'demo1')).published !== false) bad.push('Despublicar não pôs por publicar logo');
+      if (await page.evaluate(() => document.querySelector('#col-ed').open)) bad.push('Despublicar não fechou a edição (v218)');
+      if (!(await vis(page, '#col-pub'))) bad.push('depois de despublicar a página não tem #col-pub');
+      await page.click('#col-mode'); await sleep(500);
       if (await state(page) !== 'Por publicar') bad.push('depois de despublicar: #ce-state «' + await state(page) + '»');
       if (await count(page, '#ce-unpub')) bad.push('«Por publicar» ainda com #ce-unpub');
+    });
+    // v218: Despublicar com alterações → «Guardar e despublicar» / «Descartar e despublicar»; Cancelar não muda nada
+    for (const [choice, wantTitle] of [[null, null], ['Guardar e despublicar', 'Missa de domingo (despublicada)'], ['Descartar e despublicar', 'Missa de domingo']]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.fill('#ce-name', 'Missa de domingo (despublicada)'); await sleep(200);
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const opts = await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.replace(/\s+/g, ' ').trim()));
+      if (!(opts.length === 2 && /^Guardar e despublicar/.test(opts[0]) && /^Descartar e despublicar/.test(opts[1]))) { bad.push('com alterações: opções ' + JSON.stringify(opts)); return; }
+      if (!choice) {
+        await page.click('#app-dlg-cancel'); await sleep(400);
+        const c = await col(page, 'demo1');
+        if (c.published !== true || c.title !== 'Missa de domingo') bad.push('Cancelar mudou a folha: ' + JSON.stringify({ t: c.title, p: c.published }));
+        if (!(await page.evaluate(() => document.querySelector('#col-ed').open))) bad.push('Cancelar fechou a edição');
+        return;
+      }
+      await page.locator('#app-dlg-list button').filter({ hasText: choice }).first().click(); await sleep(900);
+      const c = await col(page, 'demo1');
+      if (c.published !== false) bad.push(`${choice}: não despublicou`);
+      if (c.title !== wantTitle) bad.push(`${choice}: título «${c.title}» (esperado «${wantTitle}»)`);
+      if (await page.evaluate(() => document.querySelector('#col-ed').open)) bad.push(`${choice}: a edição ficou aberta`);
+      if (!(await vis(page, '#col-pub'))) bad.push(`${choice}: sem #col-pub`);
     });
     // só grupos mudados → continua publicada
     await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
@@ -1676,6 +1704,35 @@ async function suites(full) {
     return miss.length ? 'depois de 6 min não recarregou: ' + miss.join(', ') : { pass: 'recarregou ' + [...new Set(got)].join(', ') };
   }), { sev: 'média' });
 
+  await t('RES-12', 'Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar» e em «Guardar e despublicar» a edição (#col-ed) fica aberta com o erro em #ce-msg e não há nenhum update de collections (published fica)', async () => {
+    const bad = [];
+    const CID = '00000000-0000-4000-8000-00000000f0f1';
+    const colRow = { id: CID, title: 'Folha real simulada', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: 'teste@example.invalid', published: true,
+      songs: [{ song_slug: 'salve_regina', position: 0, no_chords: false, no_scores: false, edit: null }], sections: [], groups: [] };
+    for (const via of ['Guardar', 'Guardar e despublicar']) await withApp({ real: { role: 'maestro', rest: (tb, req) => {
+      if (tb.startsWith('rpc/save_collection')) return { status: 500, body: { message: 'falha simulada', code: 'XX000' } };
+      if (tb.startsWith('collections') && req.method() === 'GET') return { body: [colRow] };
+      return null;
+    } }, hash: '#/lista/colecao-' + CID, wait: '#col-mode', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
+      await page.click('#col-mode'); await sleep(600);
+      await page.fill('#ce-name', 'Folha real simulada (mudada)'); await sleep(200);
+      const n0 = calls.length;
+      if (via === 'Guardar') await page.click('#ce-save');
+      else {
+        await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+        await page.locator('#app-dlg-list button').filter({ hasText: 'Guardar e despublicar' }).first().click();
+      }
+      await sleep(1500);
+      const after = calls.slice(n0);
+      if (!after.some(c => /rpc\/save_collection/.test(c))) bad.push(`${via}: a app não chamou rpc/save_collection`);
+      const r = await page.evaluate(() => ({ open: document.querySelector('#col-ed').open, msg: document.querySelector('#ce-msg')?.textContent.trim() || '' }));
+      if (!r.open) bad.push(`${via}: a edição fechou depois do erro`);
+      if (!r.msg) bad.push(`${via}: sem erro em #ce-msg`);
+      const upd = after.filter(c => /^PATCH \/rest\/v1\/collections/.test(c));
+      if (upd.length) bad.push(`${via}: houve update de collections (${upd.join(', ')})`);
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('RES-11', 'Lista de cânticos recusada pelo servidor (42501) com cópia guardada: a app mostra o aviso «Não foi possível atualizar a lista…» em vez de ficar calada (v195)', () => withApp({ real: { rest: tb => tb === 'songs' ? { status: 401, body: { code: '42501', message: 'permission denied for table songs' } } : null }, storage: { 'cancioneiro.songs.v2': fixture.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: false })) }, wait: false, settle: 0, allowErrors: true }, async ({ page }) => {
     await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 16000 }).catch(() => {});
     const seen = await page.waitForFunction(() => /Não foi possível atualizar a lista/.test(document.querySelector('.toast')?.textContent || ''), null, { timeout: 12000 }).then(() => true).catch(() => false);
