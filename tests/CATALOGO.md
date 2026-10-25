@@ -154,7 +154,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
 | RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ✓ |
 | RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ✓ |
-| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar» e «Guardar e despublicar» #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ☐ por correr |
+| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220) #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ☐ por correr |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)
