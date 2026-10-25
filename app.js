@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-25 v217';
+  const APP_VERSION = '2026-10-25 v218';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3047,12 +3047,24 @@
     $('ce-groups').textContent = groupsLabel(colGroupIds(c));
     // estado: publicada (pode despublicar já) ou por publicar
     $('ce-state').innerHTML = edOrig.published !== false ? 'Publicada · <button type="button" class="revert-link" id="ce-unpub">Despublicar</button>' : 'Por publicar';
+    // Despublicar: sai logo da edição; com alterações por guardar, pergunta se as guarda ou deita fora
     if ($('ce-unpub')) $('ce-unpub').onclick = async () => {
-      if (!(await appConfirm(`Despublicar «${edOrig.title}»? Deixa de a ver quem não é Maestro ou Gestor, até a publicar de novo.`, 'Despublicar'))) return;
-      await colSetPublished(edOrig, false, true);
-      if (edOrig.published !== false) return; // não foi possível (o aviso já apareceu)
-      if (edCol) { edCol.published = false; renderColEditor(edCol); }
-      toast('Folha despublicada');
+      const o = edOrig, info = 'Deixa de a ver quem não é Maestro ou Gestor, até a publicar de novo.';
+      let save = false;
+      if (colDiff(o, edCol).changed) {
+        const v = await appChoose(`Despublicar «${o.title}»`, [
+          { value: 'save', label: 'Guardar e despublicar', sub: 'Grava as alterações feitas a esta folha' },
+          { value: 'discard', label: 'Descartar e despublicar', sub: 'Deita fora as alterações feitas a esta folha' }], `Tem alterações por guardar. ${info}`);
+        if (!v) return;
+        save = v === 'save';
+      } else if (!(await appConfirm(`Despublicar «${o.title}»? ${info}`, 'Despublicar'))) return;
+      if (save) {
+        try { await colCommit(o, edCol); }
+        catch (e) { $('ce-msg').textContent = 'Não foi possível guardar: ' + (e.message || e); return; } // fica na edição, nada despublicado
+      }
+      ceDone();
+      await colSetPublished(o, false, true); // mostra a folha (e um aviso, se falhar)
+      if (o.published === false) toast(save ? 'Folha guardada e despublicada' : 'Folha despublicada');
     };
     const until = c.duration !== edOrig.duration ? { expires_at: new Date(Date.now() + DURS[c.duration][1]).toISOString() } : c;
     $('ce-until').textContent = `Disponível ${colUntil(until)}. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.`;
