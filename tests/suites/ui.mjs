@@ -107,7 +107,8 @@ async function open(o = {}) {
   await page.goto(url, { waitUntil: 'load' });
   if (o.wait !== false) await page.waitForSelector(o.wait || '#splash.gone', { state: 'attached', timeout: o.timeout || 15000 });
   const loadMs = Date.now() - t0;
-  await sleep(o.settle ?? 500);
+  // v221: a capa só começa a desvanecer 0,7 s depois de .gone e demora 0,5 s → ~1,2 s quando se espera pela capa
+  await sleep(o.settle ?? (o.wait === undefined ? 1200 : 500));
   if (o.open) { await page.click(o.open).catch(() => {}); await sleep(600); } // ex.: '#col-mode' abre a janela de edição da folha
   return { ctx, page, errs, calls, loadMs, close: () => ctx.close() };
 }
@@ -267,7 +268,7 @@ async function suites(full) {
     for (let i = 0; i < 30; i++) await page.click('#font-dec');
     const min = parseInt(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs')));
     if (min < 12) return 'A− desce abaixo de 12 px';
-    await page.reload(); await page.waitForSelector('#splash.gone', { state: 'attached' }); await sleep(400);
+    await page.reload(); await page.waitForSelector('#splash.gone', { state: 'attached' }); await sleep(1200);
     const fs2 = parseInt(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fs')));
     return fs2 === min || `depois de recarregar: ${fs2} (esperado ${min})`;
   }));
@@ -1951,7 +1952,7 @@ async function suites(full) {
     const fixed = await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page: p2 }) => { await p2.waitForSelector('#song h1'); await p2.click('#btn-fav'); await sleep(400); return { pass: String(await p2.getAttribute('#col-pick .col-pick[data-k="cancioneiro"]', 'aria-disabled')) }; });
     return fixed.pass === 'true' || 'cântico do original: opção Cancioneiro sem aria-disabled=true';
   }));
-  await t('USA-24', 'Cores por perfil (v203): <html> e <body> com .perfil-X do perfil ativo (e só esse), mudar de perfil troca a classe e --brand; capa (.splash) sempre com --app-brand #10835c; títulos das janelas (dialog h2) em --accent com contraste ≥ 4.5:1', async () => {
+  await t('USA-24', 'Cores por perfil (v203): <html> e <body> com .perfil-X do perfil ativo (e só esse), mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; títulos das janelas (dialog h2) em --accent com contraste ≥ 4.5:1', async () => {
     const bad = [], ev = [];
     const rgb = 'rgb(16, 131, 92)';
     for (const perfil of ['cancioneiro', 'coro', 'maestro', 'gestor']) for (const scheme of ['light', 'dark']) await withApp({ perfil, scheme }, async ({ page }) => {
@@ -1959,7 +1960,8 @@ async function suites(full) {
         const cls = el => [...el.classList].filter(c => c.startsWith('perfil-'));
         const probe = (v, el = document.body) => { const d = document.createElement('div'); d.style.color = `var(${v})`; el.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; };
         const sp = document.querySelector('#splash, .splash');
-        const spBrand = sp ? probe('--brand', sp) : null, spBg = sp ? getComputedStyle(sp).backgroundImage : '';
+        // v221: o verde da capa é o ::before (gradiente --app-brand → --app-brand-deep); a .splash já não redefine --brand
+        const spBg = sp ? getComputedStyle(sp, '::before').backgroundImage : '', spBrand = /rgb\(16, 131, 92\)/.test(spBg) ? 'rgb(16, 131, 92)' : spBg;
         const dlg = document.querySelector('#info'); dlg.showModal();
         const h2 = dlg.querySelector('h2'), hc = getComputedStyle(h2).color, acc = probe('--accent', dlg);
         let bg = 'rgba(0, 0, 0, 0)'; for (let e = h2; e && (bg === 'rgba(0, 0, 0, 0)' || /, 0\)$/.test(bg)); e = e.parentElement) bg = getComputedStyle(e).backgroundColor;
@@ -1972,7 +1974,7 @@ async function suites(full) {
       const k = `${perfil}/${scheme}`;
       if (JSON.stringify(r.html) !== JSON.stringify(['perfil-' + perfil])) bad.push(`${k}: <html> ${r.html.join(' ') || 'sem perfil-'}`);
       if (JSON.stringify(r.body) !== JSON.stringify(['perfil-' + perfil])) bad.push(`${k}: <body> ${r.body.join(' ') || 'sem perfil-'}`);
-      if (r.spBrand !== rgb) bad.push(`${k}: capa com --brand ${r.spBrand} (esperado ${rgb})`);
+      if (r.spBrand !== rgb) bad.push(`${k}: fundo da capa (.splash::before) ${r.spBrand} (esperado o gradiente a partir de ${rgb})`);
       if (r.hc !== r.acc) bad.push(`${k}: dialog h2 ${r.hc} ≠ --accent ${r.acc}`);
       if (r.cr < 4.5) bad.push(`${k}: dialog h2 ${r.hc} sobre ${r.bg} ${r.cr.toFixed(2)}:1`);
       ev.push(`${k} brand ${r.brand} h2 ${r.cr.toFixed(1)}:1`);

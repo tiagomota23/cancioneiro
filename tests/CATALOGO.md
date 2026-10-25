@@ -188,7 +188,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Repor/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176; Repor desde v207) | ui | baixa | V | ☐ por correr |
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
-| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa sempre --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
+| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
