@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-25 v221';
+  const APP_VERSION = '2026-10-25 v222';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3172,14 +3172,20 @@
   // Caixas «Incluir» por estrofe (todas marcadas) e «Editar texto» para mudanças livres. Fica na cópia da folha
   // (edCol.lyrEd) e só se grava com «Guardar» da folha.
   const edEdited = (c, slug) => c.lyrEd && c.lyrEd.has(slug) ? c.lyrEd.get(slug) !== null : colEdited(edOrig || c, slug);
-  let clSlug = null, clBase = [], clStart = '';
+  let clSlug = null, clBase = [], clStart = '', clOrder = []; // clOrder: estrofes do original pela ordem mostrada [{ i, on }]
   // interruptores Acordes / Partituras do cântico nesta folha (só numa folha do Coro, e só se o cântico os tem)
   const swOn = id => $(id).classList.contains('on');
   const swSet = (id, on) => { $(id).classList.toggle('on', on); $(id).setAttribute('aria-checked', on); };
   ['cl-chords', 'cl-scores'].forEach(id => $(id).onclick = () => swSet(id, !swOn(id)));
   const clState = () => stKey([clCurrent(), swOn('cl-chords'), swOn('cl-scores')]);
   const stKey = v => JSON.stringify(v);
-  const clPicked = () => clBase.filter((st, i) => { const b = $('cl-sts').querySelector(`input[data-i="${i}"]`); return b && b.checked; });
+  const clPicked = () => clOrder.filter(x => x.on).map(x => clBase[x.i]); // as incluídas, pela ordem mostrada
+  // caixas das estrofes: «Incluir» e ↑ ↓ para mudar a ordem (os botões não mexem na caixa)
+  function clRender() {
+    $('cl-sts').innerHTML = clOrder.map((x, k) => { const st = clBase[x.i]; return `<li data-k="${k}"><label><input type="checkbox"${x.on ? ' checked' : ''}><span class="cl-st${st.type === 'chorus' ? ' chorus' : ''}">${st.lines.map(l => esc(stripChords(l))).join('<br>')}</span></label>` +
+      `<span class="cl-mv"><button type="button" data-mv="-1" aria-label="Subir"${k === 0 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_UP}</svg></button><button type="button" data-mv="1" aria-label="Descer"${k === clOrder.length - 1 ? ' disabled' : ''}><svg viewBox="0 0 24 24">${ICON_DOWN}</svg></button></span></li>`; }).join('');
+    clGate();
+  }
   const clCurrent = () => $('cl-text').hidden ? clPicked() : fromText($('cl-text').value);
   const clGate = () => { $('cl-save').disabled = !clSlug || !clBase.length || !clCurrent().length; };
   function clTextMode(st) {
@@ -3187,7 +3193,7 @@
     $('cl-sts').hidden = true; $('cl-inc').hidden = true; $('cl-text-btn').hidden = true; clGate();
   }
   async function openColLyr(c, slug) {
-    const s = bySlug.get(slug); clSlug = slug; clBase = [];
+    const s = bySlug.get(slug); clSlug = slug; clBase = []; clOrder = [];
     $('cl-title').textContent = s.title; $('cl-msg').textContent = 'A carregar a letra…';
     $('cl-sts').innerHTML = ''; $('cl-sts').hidden = false; $('cl-inc').hidden = false; $('cl-text').hidden = true; $('cl-text-btn').hidden = false;
     const e = colEntry(c, slug);
@@ -3201,17 +3207,28 @@
       if (!$('cl-ed').open || clSlug !== slug) return;
       clBase = orig;
       $('cl-chords').hidden = !(c.audience === 'coro' && orig.some(st => st.lines.some(l => l.includes('['))));
-      // a versão da folha é um conjunto de estrofes do original (pela ordem)? caixas marcadas; se não, o texto
-      let picks = orig.map(() => true), free = false;
-      if (cur) { let j = 0; picks = orig.map(st => { const on = j < cur.length && stKey(cur[j]) === stKey(st); if (on) j++; return on; }); free = j < cur.length; }
-      $('cl-sts').innerHTML = orig.map((st, i) => `<li><label><input type="checkbox" data-i="${i}"${picks[i] ? ' checked' : ''}><span class="cl-st${st.type === 'chorus' ? ' chorus' : ''}">${st.lines.map(l => esc(stripChords(l))).join('<br>')}</span></label></li>`).join('');
+      // a versão da folha são estrofes do original (por qualquer ordem)? caixas pela ordem da versão, e as que ficaram
+      // de fora no fim, desmarcadas; se alguma estrofe não existe no original, fica o modo texto
+      clOrder = orig.map((st, i) => ({ i, on: true })); let free = false;
+      if (cur) {
+        const used = new Set(), order = [];
+        for (const st of cur) { const i = orig.findIndex((o, k) => !used.has(k) && stKey(o) === stKey(st)); if (i < 0) { free = true; break; } used.add(i); order.push({ i, on: true }); }
+        if (!free) clOrder = order.concat(orig.map((st, i) => ({ i, on: false })).filter(x => !used.has(x.i)));
+      }
+      clRender();
       if (free) clTextMode(cur);
       clStart = clState();
       $('cl-msg').textContent = '';
     } catch (e) { $('cl-msg').textContent = e instanceof Limit ? e.message : 'Não foi possível carregar a letra. Verifique a ligação à internet.'; }
     clGate();
   }
-  $('cl-sts').addEventListener('change', clGate);
+  $('cl-sts').addEventListener('change', e => { const li = e.target.closest('li[data-k]'); if (li) clOrder[+li.dataset.k].on = e.target.checked; clGate(); });
+  $('cl-sts').addEventListener('click', e => {
+    const b = e.target.closest('button[data-mv]'); if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const k = +b.closest('li').dataset.k, j = k + +b.dataset.mv; if (j < 0 || j >= clOrder.length) return;
+    [clOrder[k], clOrder[j]] = [clOrder[j], clOrder[k]]; clRender();
+  });
   $('cl-text').addEventListener('input', clGate);
   $('cl-text-btn').onclick = () => clTextMode(clPicked());
   const clDone = () => { $('cl-ed').close(); clSlug = null; if (edCol) renderColEditor(edCol); };
