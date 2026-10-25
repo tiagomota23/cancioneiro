@@ -816,7 +816,7 @@ async function suites(full) {
     if (/Veni Creator/i.test(direct.pass)) bad.push('Coro abre a folha por publicar pelo endereço');
     return bad.length ? bad.join('; ') : true;
   });
-  await t('FUN-38', 'Editar folha trabalha numa cópia: nada grava até «Guardar» (#ce-save, que põe por publicar); «Cancelar» com alterações pede confirmação e deita fora; «Publicar» (#col-pub) só em folhas por publicar; folha vazia não se publica (v165)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
+  await t('FUN-38', 'Editar folha trabalha numa cópia: nada grava até «Guardar» (#ce-save; desde v217 não muda published: só #ce-unpub despublica); «Cancelar» com alterações pede confirmação e deita fora; «Publicar» (#col-pub) só em folhas por publicar; folha vazia não se publica (v165)', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1' }, async ({ page }) => {
     const col = id => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(c => c.id === i), id);
     await page.waitForSelector('#col-mode');
     if (await count(page, '#col-pub')) return 'folha publicada mostra «Publicar»';
@@ -831,7 +831,11 @@ async function suites(full) {
     let c = await col('demo1'); if (c.title !== 'Missa de domingo' || c.published === false) return 'cancelar gravou alterações: ' + JSON.stringify({ t: c.title, p: c.published });
     await page.click('#col-mode'); await sleep(500);
     await page.fill('#ce-name', 'Missa de domingo (guardada)'); await page.click('#ce-save'); await sleep(700);
-    c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== false) return 'Guardar: ' + JSON.stringify({ t: c.title, p: c.published });
+    // v217: Guardar nunca muda published (só «Despublicar» despublica)
+    c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== true) return 'Guardar (v217: continua publicada): ' + JSON.stringify({ t: c.title, p: c.published });
+    await page.click('#col-mode'); await sleep(500); await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(600);
+    if ((await col('demo1')).published !== false) return '«Despublicar» não despublicou';
+    await page.click('#ce-cancel'); await sleep(400); if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); }
     await page.reload(); await page.waitForSelector('#col-pub', { timeout: 10000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'folha por publicar sem «Publicar» na página';
     await page.click('#col-pub'); await sleep(400);
@@ -1355,7 +1359,7 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
-  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo, sem Guardar) e «Por publicar» sem #ce-unpub; Guardar só com grupos mudados mantém publicada (aviso «continua publicada»); outra mudança → por publicar', async () => {
+  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo, sem Guardar) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
     const bad = [];
     const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
     const state = page => page.evaluate(() => document.querySelector('#ce-state')?.textContent.replace(/\s+/g, ' ').trim() || '');
@@ -1391,7 +1395,12 @@ async function suites(full) {
       await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
       await page.fill('#ce-name', 'Missa de domingo (mudada)'); await sleep(200);
       await page.click('#ce-save'); await sleep(900);
-      if ((await col(page, 'demo1')).published !== false) bad.push('mudar o título não pôs por publicar');
+      const t2 = await page.evaluate(() => [...document.querySelectorAll('.toast, #toast')].map(x => x.textContent).join(' '));
+      const c2 = await col(page, 'demo1');
+      // v217: Guardar nunca muda published
+      if (c2.published !== true) bad.push('mudar o título despublicou (v217: continua publicada)');
+      if (c2.title !== 'Missa de domingo (mudada)') bad.push('título não gravado');
+      if (!/Folha guardada — continua publicada/.test(t2)) bad.push('aviso: «' + t2.trim().slice(0, 60) + '»');
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
