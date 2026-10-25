@@ -1109,6 +1109,7 @@ async function suites(full) {
       if (await vis(page, '#cl-chords') || await vis(page, '#cl-scores')) bad.push('folha Cancioneiro: interruptores visíveis');
       await page.click('#cl-cancel'); await sleep(300);
       await page.click('#ce-aud button[data-v="coro"]'); await sleep(300);
+      if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); } // v219: folha publicada → confirmar a mudança de público
       await openLyr(page, 'amazing_grace');
       if (!(await vis(page, '#cl-chords'))) { bad.push('folha Coro: amazing_grace (com acordes) sem #cl-chords'); return; }
       if ((await swOn(page, '#cl-chords')) !== true) bad.push('#cl-chords não começa ligado');
@@ -1360,7 +1361,7 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
-  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo e fecha a edição, v218; com alterações: «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
+  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo e fecha a edição, v218; com alterações: «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada) e «Por publicar» sem #ce-unpub; Guardar mantém publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado; exceto mudar o público (v219, FUN-68)', async () => {
     const bad = [];
     const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
     const state = page => page.evaluate(() => document.querySelector('#ce-state')?.textContent.replace(/\s+/g, ' ').trim() || '');
@@ -1429,6 +1430,36 @@ async function suites(full) {
       if (c2.published !== true) bad.push('mudar o título despublicou (v217: continua publicada)');
       if (c2.title !== 'Missa de domingo (mudada)') bad.push('título não gravado');
       if (!/Folha guardada — continua publicada/.test(t2)) bad.push('aviso: «' + t2.trim().slice(0, 60) + '»');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
+  await t('FUN-68', 'Mudar o público de uma folha publicada (v219): #ce-aud pede confirmação (OK «Mudar»); Cancelar mantém o público; OK + Guardar → por publicar com o aviso «Folha guardada — por publicar (mudou o público)», #col-pub e meta «Cancioneiro · até …»; numa folha por publicar não pergunta', async () => {
+    const bad = [];
+    const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
+    const aud = page => page.evaluate(() => document.querySelector('#ce-aud button[aria-pressed="true"], #ce-aud button.on')?.dataset.v || '');
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: demoCols().map(c => c.id === 'demo1' ? { ...c, published: true } : c) }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.click('#ce-aud button[data-v="cancioneiro"]'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const ok = await page.evaluate(() => document.querySelector('#app-dlg').open ? document.querySelector('#app-dlg-ok').textContent.trim() : '');
+      if (ok !== 'Mudar') { bad.push('sem confirmação «Mudar» (OK «' + ok + '»)'); return; }
+      await page.click('#app-dlg-cancel'); await sleep(300);
+      if (await aud(page) !== 'coro') bad.push('Cancelar não manteve o público Coro: ' + await aud(page));
+      await page.click('#ce-aud button[data-v="cancioneiro"]'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(300);
+      if (await aud(page) !== 'cancioneiro') bad.push('OK não mudou o público');
+      if ((await col(page, 'demo1')).published !== true) bad.push('mudar o público despublicou antes de Guardar');
+      await page.click('#ce-save'); await sleep(900);
+      const t1 = await page.evaluate(() => [...document.querySelectorAll('.toast, #toast')].map(x => x.textContent).join(' '));
+      const c = await col(page, 'demo1');
+      if (c.published !== false || c.audience !== 'cancioneiro') bad.push('depois de Guardar: ' + JSON.stringify({ p: c.published, a: c.audience }));
+      if (!/Folha guardada — por publicar \(mudou o público\)/.test(t1)) bad.push('aviso: «' + t1.trim().slice(0, 70) + '»');
+      if (!(await vis(page, '#col-pub'))) bad.push('sem #col-pub');
+      const meta = await page.evaluate(() => document.querySelector('.col-meta')?.textContent.replace(/\s+/g, ' ').trim() || '');
+      if (!/^Cancioneiro · até /.test(meta)) bad.push('meta: ' + meta);
+    });
+    await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.click('#ce-aud button[data-v="cancioneiro"]'); await sleep(400);
+      if (await page.evaluate(() => document.querySelector('#app-dlg').open)) bad.push('folha por publicar: pediu confirmação ao mudar o público');
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
