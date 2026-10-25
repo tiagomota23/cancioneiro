@@ -66,7 +66,7 @@ const C = {
 - **Normal** — altura \`--h-btn\`, \`--fs-ui\` 400, espaço 0 18 px. Classes: \`dialog form button\`, \`.edit-actions button\`, \`.info-actions button\`, \`.tour-next\`, \`.sn-gen-btn\`.
 - **Pequeno** — altura \`--h-btn-sm\`, \`--fs-small\` 700, espaço 0 14 px — **só em linhas densas**: listas da gestão, barra «por aprovar» (\`.pend-bar\`) e o botão «✎ Editar folha» / «Editar cântico» (\`.edit-bar .edit-btn\`; sobre a cor da marca, contorno \`--on-brand\`). No resto, sempre o botão de 40 px (\`.edit-bar\` incluída).
 - **Cores** — destaque (cheio, \`--accent\` / \`--on-accent\`); secundário (\`.ghost\`: \`--surface\` com contorno e texto \`--accent\`); perigo (\`.ghost.danger\`, \`.ghost-btn\`, \`.adm-no\`, \`.adm-del\`: contorno \`--danger-border\`, texto \`--danger\`). Confirmar apagar: fundo \`--danger\`.
-- **Variantes de contexto** — «Apagar» na janela Editar folha é cheio de perigo (\`.edit-actions button.danger-fill\`: \`--danger\` / \`--on-accent\`), a pedido do Tiago; «Publicar» numa folha por publicar é cheio amarelo (\`.edit-btn.col-pub\`: fundo e contorno \`--pending-bg\`, texto \`--pending-ink\`, 700) — é ele que assinala a folha por publicar, sem etiqueta.
+- **Variantes de contexto** — «Apagar» na janela Editar folha é cheio de perigo (\`.edit-actions button.danger-fill\`: \`--danger\` / \`--on-accent\`), a pedido do Tiago; «Publicar» numa folha por publicar é cheio amarelo (\`.edit-btn.col-pub\`: fundo e contorno \`--pending-bg\`, texto \`--pending-ink\`, 700) — é ele que assinala a folha por publicar, sem etiqueta. Numa folha publicada, esse lugar é do «Partilhar», cheio branco sobre a marca (\`.edit-btn.col-share\`: \`--on-brand\`, texto \`--brand-deep\`, símbolo à esquerda).
 - **Confirmações que apagam ou deitam fora** (Apagar, Remover, Retirar, Recusar, Sair sem guardar, Repor…): o botão de confirmar é cheio de perigo (\`.danger-fill\`, borda \`--danger\`). As outras confirmações usam o botão de destaque. Na caixa «por aprovar», Recusar é cheio de perigo (\`.edit-btn.danger-btn\`) e Aprovar usa \`--light-accent\` (a caixa é clara também no modo escuro).
 - Nunca em maiúsculas; nunca outro raio que não \`--pill\`. Exceção: o botão «Entrar com Google» segue as regras da Google.`,
     html: `<div class="ds col"><dialog open><form class="row" onsubmit="return false"><button>Guardar</button><button class="ghost">Cancelar</button></form><div class="edit-actions row" style="margin-top:12px"><button class="ghost danger">Apagar</button></div></dialog>
@@ -77,7 +77,7 @@ const C = {
 - Ativos na cor \`--accent\`; inativos (fechar, limpar) em \`--text-faint\`.
 - O «×» de fechar é sempre o símbolo desenhado (M6 6l12 12M18 6L6 18), nunca um carácter. Classes: \`.dlg-x\`, \`.search .clear\`.
 - O «i» de informação (\`.perfil-i\`) é Marcellus 24 px 700 itálico na cor de destaque — o mesmo na barra de topo e na janela Perfil.
-- Sobre a cor da marca o símbolo é \`--on-brand\` (\`.col-share\`, botões do leitor \`.mini-btn\`).
+- Sobre a cor da marca o símbolo é \`--on-brand\` (botões do leitor \`.mini-btn\`).
 - Estrela na barra do cântico (todos os perfis): contorno, ou cheia de \`--star\` quando o cântico está nos Preferidos; tocar abre «Coleções e folhas».`,
     html: `<div class="ds row"><dialog open style="position:relative;width:220px;height:60px;padding:0"><button class="dlg-x" aria-label="Fechar">${x}</button><form onsubmit="return false" style="padding:8px"><button class="perfil-i" aria-label="Informação">i</button></form></dialog>
 <span class="pick-star" aria-label="Preferido">★</span>
