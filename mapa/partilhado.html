@@ -223,15 +223,19 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .splash {
   position: fixed; inset: 0; z-index: 50;
   display: grid; place-items: center;
-  --brand: var(--app-brand); --brand-deep: var(--app-brand-deep); --on-brand: var(--app-on-brand); /* a capa fica sempre verde */
+  /* a capa abre verde (a cor da app, por cima) e, ao sair, passa aos poucos para a cor do perfil e só depois desaparece */
   background: linear-gradient(180deg, var(--brand), var(--brand-deep));
-  transition: opacity .45s ease;
+  color: var(--app-on-brand);
+  transition: opacity .5s ease .7s, color .7s ease;
 }
+.splash::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--app-brand), var(--app-brand-deep)); transition: opacity .7s ease; }
+.splash > * { position: relative; }
 .splash h1 {
   font-family: var(--serif); font-weight: 400;
   font-size: var(--fs-display); letter-spacing: .14em; margin: 0 0 0 .14em;
 }
-.splash.gone { opacity: 0; pointer-events: none; }
+.splash.gone { opacity: 0; pointer-events: none; color: var(--on-brand); }
+.splash.gone::before { opacity: 0; }
 
 .view { min-height: 100dvh; }
 /* Fundo verde numa camada fixa: o iPhone não suporta background-attachment: fixed
@@ -680,7 +684,7 @@ html, body { touch-action: pan-x pan-y; }
 .tpl-row { display: flex; align-items: stretch; gap: 6px; }
 
 /* Se a app não arrancar (ficheiro não chegou), ao fim de 10 s a capa explica o que fazer */
-.splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: var(--on-brand); font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
+.splash::after { content: "Não foi possível abrir — feche e volte a abrir a app."; position: absolute; left: 24px; right: 24px; bottom: calc(60px + var(--safe-bottom)); text-align: center; color: inherit; font: 15px/1.4 var(--sans); opacity: 0; animation: splash-help 0s 10s forwards; }
 .splash.gone::after { display: none; }
 @keyframes splash-help { to { opacity: 1; } }
 
@@ -1111,7 +1115,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="shared-view no-session">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v220</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v221</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1174,7 +1178,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 26/10, 04:19</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 26/10, 04:25</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->
