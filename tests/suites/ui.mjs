@@ -1704,6 +1704,35 @@ async function suites(full) {
     return miss.length ? 'depois de 6 min não recarregou: ' + miss.join(', ') : { pass: 'recarregou ' + [...new Set(got)].join(', ') };
   }), { sev: 'média' });
 
+  await t('RES-12', 'Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar» e em «Guardar e despublicar» a edição (#col-ed) fica aberta com o erro em #ce-msg e não há nenhum update de collections (published fica)', async () => {
+    const bad = [];
+    const CID = '00000000-0000-4000-8000-00000000f0f1';
+    const colRow = { id: CID, title: 'Folha real simulada', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: 'teste@example.invalid', published: true,
+      songs: [{ song_slug: 'salve_regina', position: 0, no_chords: false, no_scores: false, edit: null }], sections: [], groups: [] };
+    for (const via of ['Guardar', 'Guardar e despublicar']) await withApp({ real: { role: 'maestro', rest: (tb, req) => {
+      if (tb.startsWith('rpc/save_collection')) return { status: 500, body: { message: 'falha simulada', code: 'XX000' } };
+      if (tb.startsWith('collections') && req.method() === 'GET') return { body: [colRow] };
+      return null;
+    } }, hash: '#/lista/colecao-' + CID, wait: '#col-mode', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
+      await page.click('#col-mode'); await sleep(600);
+      await page.fill('#ce-name', 'Folha real simulada (mudada)'); await sleep(200);
+      const n0 = calls.length;
+      if (via === 'Guardar') await page.click('#ce-save');
+      else {
+        await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+        await page.locator('#app-dlg-list button').filter({ hasText: 'Guardar e despublicar' }).first().click();
+      }
+      await sleep(1500);
+      const after = calls.slice(n0);
+      if (!after.some(c => /rpc\/save_collection/.test(c))) bad.push(`${via}: a app não chamou rpc/save_collection`);
+      const r = await page.evaluate(() => ({ open: document.querySelector('#col-ed').open, msg: document.querySelector('#ce-msg')?.textContent.trim() || '' }));
+      if (!r.open) bad.push(`${via}: a edição fechou depois do erro`);
+      if (!r.msg) bad.push(`${via}: sem erro em #ce-msg`);
+      const upd = after.filter(c => /^PATCH \/rest\/v1\/collections/.test(c));
+      if (upd.length) bad.push(`${via}: houve update de collections (${upd.join(', ')})`);
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('RES-11', 'Lista de cânticos recusada pelo servidor (42501) com cópia guardada: a app mostra o aviso «Não foi possível atualizar a lista…» em vez de ficar calada (v195)', () => withApp({ real: { rest: tb => tb === 'songs' ? { status: 401, body: { code: '42501', message: 'permission denied for table songs' } } : null }, storage: { 'cancioneiro.songs.v2': fixture.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: false })) }, wait: false, settle: 0, allowErrors: true }, async ({ page }) => {
     await page.waitForSelector('#splash.gone', { state: 'attached', timeout: 16000 }).catch(() => {});
     const seen = await page.waitForFunction(() => /Não foi possível atualizar a lista/.test(document.querySelector('.toast')?.textContent || ''), null, { timeout: 12000 }).then(() => true).catch(() => false);
