@@ -1073,7 +1073,14 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 .song .note.col-ver a { color: var(--accent); }
 .cl-ed .ce-label { margin: 12px 0 4px; color: var(--text-soft); }
 .cl-sts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.cl-sts label { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.cl-sts li { display: flex; gap: 8px; align-items: flex-start; padding: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.cl-sts label { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+/* ↑ ↓: mudar a ordem das estrofes (como as ações de item em Editar folha) */
+.cl-mv { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.cl-mv button { position: relative; width: 38px; height: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); color: var(--accent); }
+.cl-mv button::after { content: ""; position: absolute; inset: -3px; } /* área de toque de 44 */
+.cl-mv button:disabled { opacity: .5; }
+.cl-mv svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .cl-sts input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
 .cl-sts input:not(:checked) + .cl-st { color: var(--text-faint); text-decoration: line-through; }
 .cl-st { font-size: var(--fs-ui); line-height: 1.4; }
@@ -1115,7 +1122,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v221</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v222</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1273,7 +1280,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-25 v221</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-25 v222</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
