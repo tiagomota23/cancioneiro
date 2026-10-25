@@ -49,7 +49,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ☐ por correr |
 | FUN-66 | Estado da folha em Editar folha (v213/v217): #ce-state «Publicada · Despublicar» / «Por publicar»; #ce-unpub com confirmação despublica logo e fecha a edição (v218); com alterações «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada; Guardar mantém published («Folha guardada — continua publicada»), exceto mudar o público (v219, FUN-68) | ui | média | V | ☐ por correr |
 | FUN-67 | Cor do PDF da folha pelo público (v214): Coro #1f6aa8, Cancioneiro #0e7f58, em qualquer perfil que gera PDF (Maestro, Gestor, cores de perfil diferentes); a outra cor ausente (pdfjs getOperatorList) | ui | baixa | V | ☐ por correr |
-| FUN-68 | Mudar o público de uma folha publicada (v219): confirmação «Mudar»; Cancelar mantém; OK + Guardar → por publicar («mudou o público»), #col-pub, meta «Cancioneiro · até …»; folha por publicar sem pergunta | ui | média | V | ☐ por correr |
+| FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -154,7 +154,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
 | RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ✓ |
 | RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ✓ |
-| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar» e «Guardar e despublicar» #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ☐ por correr |
+| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220) #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ☐ por correr |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)
