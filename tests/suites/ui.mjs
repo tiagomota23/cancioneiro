@@ -1488,6 +1488,47 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-69', 'Ordem das estrofes em «Editar nesta folha» (v222): #cl-sts li[data-k] com .cl-mv ↑/↓ (↑ da 1.ª e ↓ da última desativados; não mexem no checkbox); outra ordem = versão (.col-edited) gravada pela ordem mostrada; reabrir mostra a ordem da versão; Repor original repõe a ordem', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo2' }, async ({ page }) => {
+    const SL = 'amazing_grace', K = 'demo2/' + SL;
+    const keys = () => page.evaluate(() => [...document.querySelectorAll('#cl-sts li[data-k]')].map(l => ({ k: l.dataset.k, on: l.querySelector('input').checked, up: l.querySelector('[data-mv="-1"]')?.disabled, down: l.querySelector('[data-mv="1"]')?.disabled })));
+    const openLyr = async () => {
+      if (!(await vis(page, `#ce-rows li[data-key="${SL}"] .ce-acts button[data-act="lyr"]`))) { await page.click(`#ce-rows li[data-key="${SL}"] a`); await sleep(300); }
+      await page.click(`#ce-rows li[data-key="${SL}"] .ce-acts button[data-act="lyr"]`);
+      await page.waitForSelector('#cl-ed[open] #cl-sts li[data-k]', { timeout: 8000 }).catch(() => {}); await sleep(200);
+    };
+    const mark = () => page.evaluate(sl => !!document.querySelector(`#ce-rows li[data-key="${sl}"] small.col-edited`), SL);
+    await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+    await openLyr();
+    const k0 = await keys();
+    if (k0.length < 2) return 'menos de 2 estrofes em #cl-sts li[data-k]: ' + k0.length;
+    if (!k0[0].up || k0[0].down) return '1.ª estrofe: ↑ devia estar desativado e ↓ ativo';
+    if (!k0[k0.length - 1].down) return 'última estrofe: ↓ devia estar desativado';
+    if (!k0.every(x => x.on)) return 'estrofes não começam todas marcadas';
+    // desmarcar a 2.ª e movê-la para cima: leva o estado (desmarcada)
+    await page.locator('#cl-sts li[data-k] input').nth(1).uncheck();
+    await page.locator('#cl-sts li[data-k]').nth(1).locator('[data-mv="-1"]').click(); await sleep(200);
+    let k1 = await keys();
+    if (k1[0].k !== k0[1].k || k1[1].k !== k0[0].k) return 'mover ↑ não trocou a ordem: ' + k1.map(x => x.k).join(',');
+    if (k1[0].on !== false || k1[1].on !== true) return 'mover mexeu nos checkboxes: ' + JSON.stringify(k1.map(x => x.on));
+    // voltar a marcar: ordem trocada com todas marcadas → versão
+    await page.locator('#cl-sts li[data-k] input').nth(0).check();
+    await page.click('#cl-save'); await sleep(400);
+    if (!(await mark())) return 'ordem diferente do original não marcou «editado nesta folha»';
+    await page.click('#ce-save'); await sleep(900);
+    const v = await page.evaluate(k => JSON.parse(localStorage.getItem('cancioneiro.demo.collyr') || '{}')[k] || null, K);
+    if (!v || v.length !== k0.length) return 'versão gravada: ' + JSON.stringify(v)?.slice(0, 80);
+    // reabrir: pela ordem da versão
+    await page.click('#col-mode'); await sleep(500); await openLyr();
+    const k2 = await keys();
+    if (k2[0].k !== k0[1].k) return 'ao reabrir a ordem não é a da versão: ' + k2.map(x => x.k).join(',');
+    // Repor original repõe a ordem
+    await page.click('#cl-reset'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(400);
+    if (await mark()) return 'depois de Repor a marca continua';
+    await openLyr();
+    const k3 = await keys();
+    if (k3.map(x => x.k).join() !== k0.map(x => x.k).join()) return 'Repor não repôs a ordem: ' + k3.map(x => x.k).join(',');
+    return true;
+  }), { sev: 'média' });
   await t('FUN-63', 'Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino', () => withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
     await page.waitForSelector('li[data-group]', { timeout: 10000 }).catch(() => {});
     const r = await page.evaluate(() => ({ users: document.querySelectorAll('.adm-groups').length, groups: [...document.querySelectorAll('li[data-group]')].map(l => l.dataset.group + (l.querySelector('.grp-ren') && l.querySelector('.grp-del') ? '' : '!')) }));
