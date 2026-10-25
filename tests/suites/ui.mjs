@@ -835,7 +835,8 @@ async function suites(full) {
     c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== true) return 'Guardar (v217: continua publicada): ' + JSON.stringify({ t: c.title, p: c.published });
     await page.click('#col-mode'); await sleep(500); await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(600);
     if ((await col('demo1')).published !== false) return '«Despublicar» não despublicou';
-    await page.click('#ce-cancel'); await sleep(400); if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.click('#app-dlg-ok'); await sleep(300); }
+    // v218: Despublicar fecha a edição
+    if (await page.evaluate(() => document.querySelector('#col-ed').open)) return '«Despublicar» sem alterações não fechou a edição (v218)';
     await page.reload(); await page.waitForSelector('#col-pub', { timeout: 10000 }).catch(() => {});
     if (!(await vis(page, '#col-pub'))) return 'folha por publicar sem «Publicar» na página';
     await page.click('#col-pub'); await sleep(400);
@@ -1359,7 +1360,7 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta' });
-  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo, sem Guardar) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
+  await t('FUN-66', 'Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo e fecha a edição, v218; com alterações: «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada) e «Por publicar» sem #ce-unpub; Guardar mantém sempre publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado', async () => {
     const bad = [];
     const col = (page, id) => page.evaluate(i => JSON.parse(localStorage.getItem('cancioneiro.demo.cols')).find(x => x.id === i), id);
     const state = page => page.evaluate(() => document.querySelector('#ce-state')?.textContent.replace(/\s+/g, ' ').trim() || '');
@@ -1372,10 +1373,37 @@ async function suites(full) {
       if (!/Despublicar «Missa de domingo»\?/.test(q)) bad.push('confirmação: ' + q.slice(0, 60));
       await page.click('#app-dlg-cancel'); await sleep(300);
       if ((await col(page, 'demo1')).published !== true) bad.push('cancelar a confirmação despublicou');
-      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(700);
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const okT = await page.evaluate(() => document.querySelector('#app-dlg-ok').textContent.trim());
+      if (okT !== 'Despublicar') bad.push('sem alterações: OK «' + okT + '» (esperado «Despublicar»)');
+      await page.click('#app-dlg-ok'); await sleep(700);
       if ((await col(page, 'demo1')).published !== false) bad.push('Despublicar não pôs por publicar logo');
+      if (await page.evaluate(() => document.querySelector('#col-ed').open)) bad.push('Despublicar não fechou a edição (v218)');
+      if (!(await vis(page, '#col-pub'))) bad.push('depois de despublicar a página não tem #col-pub');
+      await page.click('#col-mode'); await sleep(500);
       if (await state(page) !== 'Por publicar') bad.push('depois de despublicar: #ce-state «' + await state(page) + '»');
       if (await count(page, '#ce-unpub')) bad.push('«Por publicar» ainda com #ce-unpub');
+    });
+    // v218: Despublicar com alterações → «Guardar e despublicar» / «Descartar e despublicar»; Cancelar não muda nada
+    for (const [choice, wantTitle] of [[null, null], ['Guardar e despublicar', 'Missa de domingo (despublicada)'], ['Descartar e despublicar', 'Missa de domingo']]) await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
+      await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(500);
+      await page.fill('#ce-name', 'Missa de domingo (despublicada)'); await sleep(200);
+      await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {});
+      const opts = await page.evaluate(() => [...document.querySelectorAll('#app-dlg-list button')].map(b => b.textContent.replace(/\s+/g, ' ').trim()));
+      if (!(opts.length === 2 && /^Guardar e despublicar/.test(opts[0]) && /^Descartar e despublicar/.test(opts[1]))) { bad.push('com alterações: opções ' + JSON.stringify(opts)); return; }
+      if (!choice) {
+        await page.click('#app-dlg-cancel'); await sleep(400);
+        const c = await col(page, 'demo1');
+        if (c.published !== true || c.title !== 'Missa de domingo') bad.push('Cancelar mudou a folha: ' + JSON.stringify({ t: c.title, p: c.published }));
+        if (!(await page.evaluate(() => document.querySelector('#col-ed').open))) bad.push('Cancelar fechou a edição');
+        return;
+      }
+      await page.locator('#app-dlg-list button').filter({ hasText: choice }).first().click(); await sleep(900);
+      const c = await col(page, 'demo1');
+      if (c.published !== false) bad.push(`${choice}: não despublicou`);
+      if (c.title !== wantTitle) bad.push(`${choice}: título «${c.title}» (esperado «${wantTitle}»)`);
+      if (await page.evaluate(() => document.querySelector('#col-ed').open)) bad.push(`${choice}: a edição ficou aberta`);
+      if (!(await vis(page, '#col-pub'))) bad.push(`${choice}: sem #col-pub`);
     });
     // só grupos mudados → continua publicada
     await withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo1', cols: pub() }, async ({ page }) => {
