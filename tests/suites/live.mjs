@@ -193,7 +193,8 @@ export default async function (level) {
   dim('Desempenho — produção', 'média');
   await t('DES-01', 'Tamanho dos ficheiros da app (app.js, styles.css, theme.css, index.html) dentro do orçamento', async () => {
     await needHost(SITE);
-    const budget = { 'app.js': 260e3, 'styles.css': 80e3, 'theme.css': 15e3, 'index.html': 35e3 };
+    const budget = { 'app.js': 300e3, // 300 KB desde 2026-10-26 (decisão do Tiago; ~84 KB em gzip)
+      'styles.css': 80e3, 'theme.css': 15e3, 'index.html': 35e3 };
     const out = [], bad = [];
     for (const [f, max] of Object.entries(budget)) {
       const r = await get(SITE + f + (f.endsWith('.html') ? '' : '?v=' + v.app), { headers: { 'Accept-Encoding': 'gzip' } });

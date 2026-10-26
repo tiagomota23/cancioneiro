@@ -162,7 +162,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 | ID | O que se verifica | Como | Grav. | Freq. | Estado |
 |---|---|---|---|---|---|
-| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | ! |
+| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento (app.js 300 KB desde 2026-10-26, decisão do Tiago) | live | média | V | ☐ por correr |
 | DES-02 | Tempos de resposta (site, auth, função) — mediana de 3 | live | média | V | ✓ |
 | DES-03 | Arranque a frio da função conteudo < 5 s | live | média | S | ✓ |
 | ESC-01 | Chaves estrangeiras com índice (supabase/indices.sql, v156) | db | baixa | V | ✓ |
