@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v204, 2026-10-24** — 201 ok · 0 falhas · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-24-v204-full.md` (SEG-11, FUN-39, FUN-52 e USA-16 falharam por erro do teste depois da v203/v204; corrigidos e corridos de novo na mesma execução).
+Última execução completa: **v222, 2026-10-26** — 217 ok · 3 falhas (DB-FN-01 col_groups_guard executável por anon; INT-09 drive-sync com erro PGRST102; FUN-64 folha nova no ?demo sem os grupos do Maestro) · 3 avisos (USA-04 decisão; DES-01 app.js 268 KB; USA-10 .adm-groups 16 px) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-26-v222-full.md` (DB-RLS-15, DB-RLS-17, FUN-26, FUN-38, FUN-42, FUN-61, FUN-69 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
 
 ---
 
@@ -33,24 +33,24 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-49 | Ficheiros herdados de uma versão só com essa versão escolhida (frere_jacques: Francês sem a.pdf; Inglês com Partitura que abre) (v197) | ui | média | V | ✓ |
 | FUN-50 | Descarregar partitura (#pdf-download) em todas as partituras: PDF como está (título.pdf); página de livro junta num PDF (pdf-lib); mudar de partitura muda o ficheiro; erro de rede → #app-dlg; telemóvel → navigator.share com o ficheiro (v199) | ui | média | V | ✓ |
 | FUN-51 | Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e tutorial sem o passo do microfone; com permissão aparecem; valor guardado em cancioneiro.listen.*; ?demo sempre ativo (modo real simulado, rpc/can_listen) | ui | média | V | ✓ |
-| FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação .danger-fill desde v207); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ☐ por correr |
-| FUN-53 | Cântico aberto da folha (v204–v206): todas as ligações /folha/<id>; .col-edited só no editado; nota «Na folha «título»» (+ « · letra desta folha»), sem ligações; sem #btn-edit, #btn-add-rec, #btn-add-score, aprovar/recusar, #ver-promo; #/cantico/<slug> volta ao original; Cancioneiro sem acordes | ui | média | V | ☐ por correr |
-| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (switch, aria-checked desde v205) (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo (v216: 4 linhas, as 2 de email desligadas e sem fechar a janela) | ui | média | V | ☐ por correr |
-| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ☐ por correr |
-| FUN-56 | Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores só em folha Coro e se o cântico os tem; Cancelar com mudança pede confirmação; marca «· sem acordes / · sem partituras»; grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch/#btn-chords e sem .scores a; Repor volta a false (v219: confirma a mudança de público de demo2) | ui | média | V | ☐ por correr |
-| FUN-57 | PDF da folha respeita no_chords/no_scores (v206): folha Coro amazing_grace + santa_lucia; no_chords num → menos acordes no texto mas o outro mantém; no_scores num → menos páginas (texto com vendor/pdfjs) | ui | média | V | ☐ por correr |
-| FUN-58 | Editar folha (v208): .col-edit-bar 1.ª linha; depois de #sa-list, «Acrescentar «X»» com «Cântico completo» / «Versão desta folha» (abre #cl-ed); Cancelar no #cl-ed deixa o cântico completo | ui | média | V | ☐ por correr |
-| FUN-59 | Grupos na 1.ª abertura (v209, ?grupos): «Os seus grupos», g1..g5, Guardar sem Cancelar; grava e não volta a perguntar | ui | média | V | ☐ por correr |
-| FUN-60 | Grupos no Perfil (v209): #perfis-groups (h3, interruptores, muda logo), .grp-none sem grupo e sem folhas; Cancioneiro solo em #info-groups | ui | média | V | ☐ por correr |
-| FUN-61 | Visibilidade por grupos no ?demo (v209/v210): folha de g1 invisível a Coro e Maestro em g2 ou sem grupo, visível em g1; Gestor vê sempre; folha sem grupos para quem tem grupo | ui | alta | V | ☐ por correr |
-| FUN-62 | Publicar com grupos (v209/v212): «Todos» + grupos visíveis e ligados; desligar «Todos» desliga todos e desativa OK; todos ligados liga «Todos»; um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus»; #ce-groups; sem .pend-top; sem «Partilhar» por publicar (v215) | ui | média | V | ☐ por correr |
-| FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ☐ por correr |
-| FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos» (v212), OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ☐ por correr |
-| FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ☐ por correr |
-| FUN-66 | Estado da folha em Editar folha (v213/v217): #ce-state «Publicada · Despublicar» / «Por publicar»; #ce-unpub com confirmação despublica logo e fecha a edição (v218); com alterações «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada; Guardar mantém published («Folha guardada — continua publicada»), exceto mudar o público (v219, FUN-68) | ui | média | V | ☐ por correr |
-| FUN-67 | Cor do PDF da folha pelo público (v214): Coro #1f6aa8, Cancioneiro #0e7f58, em qualquer perfil que gera PDF (Maestro, Gestor, cores de perfil diferentes); a outra cor ausente (pdfjs getOperatorList) | ui | baixa | V | ☐ por correr |
-| FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ☐ por correr |
-| FUN-69 | Ordem das estrofes em «Editar nesta folha» (v222): ↑/↓ (.cl-mv; extremos desativados; não mexem no checkbox); outra ordem = versão (.col-edited), gravada pela ordem; reabre pela ordem da versão; Repor repõe a ordem | ui | média | V | ☐ por correr |
+| FUN-52 | Editar nesta folha (v204): ✎ → #cl-ed (caixa por estrofe, Guardar desativado sem estrofes, Cancelar com confirmação, «Editar texto», Repor com confirmação .danger-fill desde v207); fica na cópia e grava com «Guardar» da folha; igual ao original = sem versão | ui | alta | V | ✓ |
+| FUN-53 | Cântico aberto da folha (v204–v206): todas as ligações /folha/<id>; .col-edited só no editado; nota «Na folha «título»» (+ « · letra desta folha»), sem ligações; sem #btn-edit, #btn-add-rec, #btn-add-score, aprovar/recusar, #ver-promo; #/cantico/<slug> volta ao original; Cancioneiro sem acordes | ui | média | V | ✓ |
+| FUN-54 | PDF da folha (v204): um só «Gerar PDF» → #pdf-o-chords / #pdf-o-scores (switch, aria-checked desde v205) (ligadas na folha Coro, desligadas na Cancioneiro); nome -coro / -acordes / -partituras / sem sufixo (v216: 4 linhas, as 2 de email desligadas e sem fechar a janela) | ui | média | V | ✓ |
+| FUN-55 | PDF da folha usa a versão da folha (v204): estrofe retirada não aparece no PDF, as outras aparecem (texto extraído com vendor/pdfjs) | ui | média | V | ✓ |
+| FUN-56 | Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores só em folha Coro e se o cântico os tem; Cancelar com mudança pede confirmação; marca «· sem acordes / · sem partituras»; grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch/#btn-chords e sem .scores a; Repor volta a false (v219: confirma a mudança de público de demo2) | ui | média | V | ✓ |
+| FUN-57 | PDF da folha respeita no_chords/no_scores (v206): folha Coro amazing_grace + santa_lucia; no_chords num → menos acordes no texto mas o outro mantém; no_scores num → menos páginas (texto com vendor/pdfjs) | ui | média | V | ✓ |
+| FUN-58 | Editar folha (v208): .col-edit-bar 1.ª linha; depois de #sa-list, «Acrescentar «X»» com «Cântico completo» / «Versão desta folha» (abre #cl-ed); Cancelar no #cl-ed deixa o cântico completo | ui | média | V | ✓ |
+| FUN-59 | Grupos na 1.ª abertura (v209, ?grupos): «Os seus grupos», g1..g5, Guardar sem Cancelar; grava e não volta a perguntar | ui | média | V | ✓ |
+| FUN-60 | Grupos no Perfil (v209): #perfis-groups (h3, interruptores, muda logo), .grp-none sem grupo e sem folhas; Cancioneiro solo em #info-groups | ui | média | V | ✓ |
+| FUN-61 | Visibilidade por grupos no ?demo (v209/v210): folha de g1 invisível a Coro e Maestro em g2 ou sem grupo, visível em g1; Gestor vê sempre; folha sem grupos para quem tem grupo | ui | alta | V | ✓ |
+| FUN-62 | Publicar com grupos (v209/v212): «Todos» + grupos visíveis e ligados; desligar «Todos» desliga todos e desativa OK; todos ligados liga «Todos»; um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus»; #ce-groups; sem .pend-top; sem «Partilhar» por publicar (v215) | ui | média | V | ✓ |
+| FUN-63 | Gestão e grupos (v209, Gestor): .adm-groups; li[data-group] com .grp-ren/.grp-del; #grp-add obrigatório e único (maiúsculas); Retirar pede destinos sem o próprio | ui | média | V | ✓ |
+| FUN-64 | Maestro só com os seus grupos (v210, g2+g3): Publicar e #ce-groups só Liceus/CLU, sem «Todos» (v212), OK desativado sem grupo; folha nova com g2+g3 | ui | alta | V | ✗ |
+| FUN-65 | Folha para todos / vários grupos (v212): .col-meta «Grupos: Todos» / «Grupos: Liceus, CLU» (ordem dos grupos); #col-aud e #ce-aud Cancioneiro antes de Coro; #ce-groups «Todos» | ui | baixa | V | ✓ |
+| FUN-66 | Estado da folha em Editar folha (v213/v217): #ce-state «Publicada · Despublicar» / «Por publicar»; #ce-unpub com confirmação despublica logo e fecha a edição (v218); com alterações «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada; Guardar mantém published («Folha guardada — continua publicada»), exceto mudar o público (v219, FUN-68) | ui | média | V | ✓ |
+| FUN-67 | Cor do PDF da folha pelo público (v214): Coro #1f6aa8, Cancioneiro #0e7f58, em qualquer perfil que gera PDF (Maestro, Gestor, cores de perfil diferentes); a outra cor ausente (pdfjs getOperatorList) | ui | baixa | V | ✓ |
+| FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ✓ |
+| FUN-69 | Ordem das estrofes em «Editar nesta folha» (v222): ↑/↓ (.cl-mv; extremos desativados; não mexem no checkbox); outra ordem = versão (.col-edited), gravada pela ordem; reabre pela ordem da versão; Repor repõe a ordem | ui | média | V | ✓ |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -58,7 +58,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-07b | Estrela no Maestro/Gestor: sem .book, .on só nos Preferidos, aria-label «Coleções e folhas», abre #col-pick (v187) | ui | média | V | ✓ |
 | FUN-08 | Gaveta ☰: livros e folhas; fecha ao tocar fora | ui | alta | V | ✓ |
 | FUN-09 | Folhas por perfil e público; expiradas só para Maestro | ui | alta | V | ✓ |
-| FUN-10 | Folha publicada (Maestro): só leitura; .col-edit-bar na 1.ª linha (v208) com «Editar folha» e «Partilhar» (button.edit-btn.col-share à direita, fora do título, v215) | ui | alta | V | ☐ por correr |
+| FUN-10 | Folha publicada (Maestro): só leitura; .col-edit-bar na 1.ª linha (v208) com «Editar folha» e «Partilhar» (button.edit-btn.col-share à direita, fora do título, v215) | ui | alta | V | ✓ |
 | FUN-11 | Nova folha: público segmentado (#col-aud), «Criar» sem «Apagar», abre logo a edição (#col-ed); aparece na gaveta (v164/v165) | ui | alta | V | ✓ |
 | FUN-12 | Template só no diálogo «Nova folha» (#col-tpl-sel, «Criar ou mudar templates…»); a janela de edição não tem template (v164) | ui | média | V | ✓ |
 | FUN-13 | Novo cântico (Coro) fica «por aprovar» em Novos Cânticos («por aprovar» em .n, v177; sem número, v179) | ui | alta | V | ✓ |
@@ -80,7 +80,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | FUN-25 | Tutorial na 1.ª vez; «Saltar» não volta a mostrar | ui | média | V | ✓ |
 | FUN-26 | Proposta de instalar (Perfil / Informação) | ui | baixa | V | ✓ |
 | FUN-27 | Pesquisa por voz: janela «A ouvir», línguas, Cancelar (sem transcrever) | ui | média | V | ✓ |
-| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ☐ por correr |
+| FUN-28 | Exportar PDF de uma folha (pdf-lib) (v204: passa pelas opções do PDF) | ui | média | S | ✓ |
 | FUN-29 | Rotas desconhecidas, cânticos inexistentes e endereços mal codificados não partem a app | ui | média | S | ✓ |
 | FUN-30 | Ligação direta a um cântico sobrevive a recarregar | ui | alta | S | ✓ |
 | FUN-31 | Categorias e livros (latim, Songbook, Novos) | ui | média | S | ✓ |
@@ -100,7 +100,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SHR-06 | Preferidos: letras descarregadas ao abrir (modo real simulado) (v150) | ui | média | V | ✓ |
 | MAN-15 | Produção: abrir uma folha partilhada conta 1 abertura (views +1) e abrir cânticos não conta — só com uma folha de teste criada para isso | manual | média | por mudança | ☐ |
 | FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ✓ |
-| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) (v217: Guardar não muda published; despublicar com #ce-unpub) | ui | alta | V | ☐ por correr |
+| FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) (v217: Guardar não muda published; despublicar com #ce-unpub) | ui | alta | V | ✓ |
 | FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ✓ |
 | FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) | ui | média | V | ✓ |
 | FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ✓ |
@@ -155,14 +155,14 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | RES-09 | Lista do Supabase indisponível: mensagem em vez de ecrã vazio | ui | alta | S | ✓ |
 | RES-10 | Voltar à app depois de > 5 min recarrega cânticos, preferidos e folhas (e atualiza o SW); antes dos 5 min não (v194) | ui | média | V | ✓ |
 | RES-11 | Lista recusada pelo servidor (42501) com cópia guardada: aviso «Não foi possível atualizar a lista…» (v195) | ui | alta | V | ✓ |
-| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220) #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ☐ por correr |
+| RES-12 | Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220) #col-ed fica aberto com erro em #ce-msg e sem update de collections | ui | média | S | ✓ |
 | MAN-20 | Modo avião a meio de ouvir uma gravação / abrir partitura no telemóvel | manual | média | M | ☐ |
 
 ## 5. Escalabilidade e desempenho (medição; sem carga)
 
 | ID | O que se verifica | Como | Grav. | Freq. | Estado |
 |---|---|---|---|---|---|
-| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | ✓ |
+| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento | live | média | V | ! |
 | DES-02 | Tempos de resposta (site, auth, função) — mediana de 3 | live | média | V | ✓ |
 | DES-03 | Arranque a frio da função conteudo < 5 s | live | média | S | ✓ |
 | ESC-01 | Chaves estrangeiras com índice (supabase/indices.sql, v156) | db | baixa | V | ✓ |
@@ -186,11 +186,11 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-18 | Texto e ícones sobre a cor da marca (texto ≥ 4.5:1 opaco, ícones ≥ 3:1): índice e gaveta nos 4 perfis, folha, edição (v203) | ui | média | V | ✓ |
 | USA-19 | Campos obrigatórios: «*» (.req) e botão desativado até preencher (Novo cântico, Nova folha, Editar folha, Template, Gestão, caixa de texto com Enter) (v171) | ui | média | V | ✓ |
 | USA-20 | Botões lado a lado numa linha de ações com a mesma largura ±1 px (.edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns) (v175) | ui | baixa | V | ✓ |
-| USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Repor/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176; Repor desde v207) | ui | baixa | V | ☐ por correr |
+| USA-21 | Confirmações destrutivas (Apagar/Remover/Retirar/Recusar/Repor/Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto sem (v176; Repor desde v207) | ui | baixa | V | ✓ |
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
-| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ☐ por correr |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
+| USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ! |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
@@ -219,10 +219,10 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-13 | conteudo addsong: todos os cânticos novos começam por aprovar (v165) | static | média | V | ✓ |
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
 | SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
-| SEG-16 | conteudo e grupos (v209/v210): colSet e song+collection com groupOk; bypass só Gestor (lvl ≥ 4); collyrics recusa Maestro fora dos grupos; email em minúsculas (who()), falha → vazio | static | alta | V | ☐ por correr |
+| SEG-16 | conteudo e grupos (v209/v210): colSet e song+collection com groupOk; bypass só Gestor (lvl ≥ 4); collyrics recusa Maestro fora dos grupos; email em minúsculas (who()), falha → vazio | static | alta | V | ✓ |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
 | SEG-21 | Sem sessão: nenhuma tabela legível por REST | live | crítica | V | ✓ |
-| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ☐ por correr |
+| SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
 | SEG-25 | Auth só Google | live | alta | V | ✓ |
@@ -237,14 +237,14 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
-| DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ☐ por correr |
+| DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
 | DB-RLS-04 | songs: nunca lyrics/lyrics_edit/translation/source_hash para o browser | db | crítica | V | ✓ |
 | DB-RLS-12 | Todas as colunas pedidas pela app (fetchSongs e .from().select() em app.js) têm SELECT para authenticated (falha real da v193: version_of) | db | crítica | V | ✓ |
 | DB-RLS-13 | collection_lyrics (v204): RLS; anon nada; authenticated só SELECT collection_id/song_slug/edited_at; lyrics e edited_by recusados; sem escrita pelo browser; só linhas de folhas visíveis | db | alta | V | ✓ |
-| DB-RLS-14 | collection_songs.no_chords/no_scores (v206): authenticated com SELECT/INSERT/UPDATE nessas colunas; Coro não muda (RLS), Maestro muda (em rollback) | db | média | V | ☐ por correr |
-| DB-RLS-15 | Grupos (v209): RLS nas 3 tabelas; anon nada; Coro só os seus user_groups, sem escrita em collection_groups; Maestro lê todos; group_save/group_remove só Gestor (nome único, maiúsculas); set_user_groups só Maestro+; set_my_groups recusa sem acesso | db | alta | V | ☐ por correr |
-| DB-RLS-16 | Folhas por grupo (v209/v210, em rollback): Coro sem grupo não vê; folha de outro grupo invisível ao Coro e ao Maestro, visível ao Gestor; com grupo do Coro visível; sem grupos visível | db | alta | V | ☐ por correr |
-| DB-RLS-17 | Maestro e grupos (v210, em rollback, Maestro só em G1): folha só G2 invisível e sem update; G1+G2 visível, apaga só o link G1; v211 col_groups_guard: Maestro sem todos os grupos não deixa folha publicada sem grupos (último link, criar publicada); rascunho e Maestro em todos passam; set_collection_groups (v213): invoker, só authenticated, [G1] ok, {} guarda, [G2]/Coro recusados; v217: guarda só ao publicar; save_collection invoker e atómica, Coro recusado | db | média | V | ☐ por correr |
+| DB-RLS-14 | collection_songs.no_chords/no_scores (v206): authenticated com SELECT/INSERT/UPDATE nessas colunas; Coro não muda (RLS), Maestro muda (em rollback) | db | média | V | ✓ |
+| DB-RLS-15 | Grupos (v209): RLS nas 3 tabelas; anon nada; Coro só os seus user_groups, sem escrita em collection_groups; Maestro lê todos; group_save/group_remove só Gestor (nome único, maiúsculas); set_user_groups só Maestro+; set_my_groups recusa sem acesso | db | alta | V | ✓ |
+| DB-RLS-16 | Folhas por grupo (v209/v210, em rollback): Coro sem grupo não vê; folha de outro grupo invisível ao Coro e ao Maestro, visível ao Gestor; com grupo do Coro visível; sem grupos visível | db | alta | V | ✓ |
+| DB-RLS-17 | Maestro e grupos (v210, em rollback, Maestro só em G1): folha só G2 invisível e sem update; G1+G2 visível, apaga só o link G1; v211 col_groups_guard: Maestro sem todos os grupos não deixa folha publicada sem grupos (último link, criar publicada); rascunho e Maestro em todos passam; set_collection_groups (v213): invoker, só authenticated, [G1] ok, {} guarda, [G2]/Coro recusados; v217: guarda só ao publicar; save_collection invoker e atómica, Coro recusado | db | média | V | ✓ |
 | DB-RLS-05 | Cânticos por aprovar invisíveis a outros (perfil Coro) | db | média | V | ✓ |
 | DB-RLS-06 | Leitura por perfil (anon, sem acesso, Cancioneiro, Coro, Maestro, Gestor) | db | crítica | V | ✓ |
 | DB-RLS-07 | Escrita por perfil (em rollback): coleções/templates só Maestro+; letra, emails, registos, partilhas, preferidos alheios nunca | db | crítica | V | ✓ |
@@ -252,7 +252,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-09 | Coleções: expiradas, público, cântico visível ao Cancioneiro por coleção | db | alta | V | ✓ |
 | DB-RLS-11 | Folhas por publicar invisíveis a Coro/Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro+; novas começam por publicar (v159) | db | crítica | V | ✓ |
 | DB-RLS-10 | Máximo 10 cânticos por folha | db | baixa | V | ✓ |
-| DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✓ |
+| DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✗ |
 | DB-FN-02 | my_rank()/my_role() por perfil | db | alta | V | ✓ |
 | DB-FN-03 | Funções de backup e gatilhos fora do alcance de authenticated | db | alta | V | ✓ |
 | DB-FN-04 | can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → allowed_emails.can_listen; SECURITY DEFINER com search_path (v201) | db | média | S | ✓ |
@@ -280,12 +280,12 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
-| INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ☐ por correr |
+| INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ✓ |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
 | INT-08 | 7 agendamentos pg_cron ativos e sem falhas | db | alta | V | ✓ |
-| INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✓ |
+| INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✗ |
 | INT-10 | Cópia de segurança semanal com sucesso ≤ 8 dias | db | alta | V | ✓ |
 | INT-11 | Verificação semanal e conversão de gravações sem falhas | db | média | V | ✓ |
 | INT-12 | Partituras externas (pdf_url http) respondem | db | baixa | S | ✓ |

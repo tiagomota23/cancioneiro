@@ -187,7 +187,8 @@ export default async function (level) {
   const claimsOf = who => `json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text`;
   const emailOf = who => `(select email from public.allowed_emails where role='${who}' order by email limit 1)`;
   // corre «setup» como dono (em rollback) e depois «body» como o papel
-  const asRoleAfter = (who, setup, body) => `begin; ${setup} select set_config('request.jwt.claims', ${claimsOf(who)}, true); set local role authenticated; ${body} rollback;`;
+  // os gatilhos deferred do setup (col_groups_guard) verificam-se ainda como dono, antes de passar ao papel
+  const asRoleAfter = (who, setup, body) => `begin; ${setup} set constraints all immediate; set constraints all deferred; select set_config('request.jwt.claims', ${claimsOf(who)}, true); set local role authenticated; ${body} rollback;`;
   const err = async q => { try { await sql(q); return null; } catch (e) { return e.message; } };
   await t('DB-RLS-15', 'Grupos (v209): RLS nas 3 tabelas; anon sem nada; Coro só lê os seus user_groups e não escreve em collection_groups; Maestro lê os de todos; group_save/group_remove só Gestor; set_user_groups só Maestro+; set_my_groups recusa quem não tem acesso (tudo em rollback)', async () => {
     const bad = [];
@@ -201,17 +202,19 @@ export default async function (level) {
     const [m1] = await sql(asRole('maestro', `select count(distinct email)::int pessoas from public.user_groups;`));
     if (m1.pessoas < 2) bad.push(`Maestro só vê grupos de ${m1.pessoas} pessoa(s)`);
     // escrita em collection_groups: Coro recusado (RLS)
-    const ins = `insert into public.collection_groups (collection_id, group_id) select c.id, g.id from public.collections c, public.groups g limit 1;`;
+    // valores literais (o Coro não vê as folhas nem allowed_emails): a RLS recusa antes da chave estrangeira
+    const [lit] = await sql(`select (select id from public.groups order by position limit 1) g, (select email from public.allowed_emails where role='cancioneiro' order by email limit 1) e`);
+    const ins = `insert into public.collection_groups (collection_id, group_id) values (gen_random_uuid(), '${lit.g}');`;
     if (await writes('coro', ins).catch(() => false) === true) bad.push('Coro escreve em collection_groups');
     // funções
     const g0 = `(select id from public.groups order by position limit 1)`;
-    const e1 = await err(asRole('maestro', `select public.group_save(null, 'Teste ' || gen_random_uuid());`)); if (!/sem permiss/.test(e1 || '')) bad.push('group_save como Maestro: ' + (e1 || 'aceite'));
-    const e2 = await err(asRole('gestor', `select public.group_save(null, 'Teste ' || gen_random_uuid());`)); if (e2) bad.push('group_save como Gestor recusado: ' + e2.slice(0, 80));
+    const e1 = await err(asRole('maestro', `select public.group_save(null, 'T' || substr(md5(random()::text), 1, 8));`)); if (!/sem permiss/.test(e1 || '')) bad.push('group_save como Maestro: ' + (e1 || 'aceite'));
+    const e2 = await err(asRole('gestor', `select public.group_save(null, 'T' || substr(md5(random()::text), 1, 8));`)); if (e2) bad.push('group_save como Gestor recusado: ' + e2.slice(0, 80));
     const e3 = await err(asRole('gestor', `select public.group_save(null, (select name from public.groups limit 1));`)); if (!/Já existe/.test(e3 || '')) bad.push('group_save com nome repetido: ' + (e3 || 'aceite'));
     const e4 = await err(asRole('gestor', `select public.group_save(null, upper((select name from public.groups limit 1)));`)); if (!/Já existe/.test(e4 || '')) bad.push('group_save com nome repetido em maiúsculas: ' + (e4 || 'aceite'));
     const e5 = await err(asRole('maestro', `select public.group_remove(${g0}, '{}');`)); if (!/sem permiss/.test(e5 || '')) bad.push('group_remove como Maestro: ' + (e5 || 'aceite'));
-    const e6 = await err(asRole('coro', `select public.set_user_groups(${emailOf('cancioneiro')}, array[${g0}]);`)); if (!/sem permiss/.test(e6 || '')) bad.push('set_user_groups como Coro: ' + (e6 || 'aceite'));
-    const e7 = await err(asRole('maestro', `select public.set_user_groups(${emailOf('cancioneiro')}, array[${g0}]);`)); if (e7) bad.push('set_user_groups como Maestro recusado: ' + e7.slice(0, 80));
+    const e6 = await err(asRole('coro', `select public.set_user_groups('${lit.e}', array['${lit.g}'::uuid]);`)); if (!/sem permiss/.test(e6 || '')) bad.push('set_user_groups como Coro: ' + (e6 || 'aceite'));
+    const e7 = await err(asRole('maestro', `select public.set_user_groups('${lit.e}', array['${lit.g}'::uuid]);`)); if (e7) bad.push('set_user_groups como Maestro recusado: ' + e7.slice(0, 80));
     const e8 = await err(asRole('stranger', `select public.set_my_groups(array[${g0}]);`)); if (!/sem acesso/.test(e8 || '')) bad.push('set_my_groups sem acesso: ' + (e8 || 'aceite'));
     const e9 = await err(`begin; set local role anon; select public.my_groups(); rollback;`); if (!/permission denied/.test(e9 || '')) bad.push('my_groups como anon: ' + (e9 || 'aceite'));
     return bad.length ? bad.join('; ') : { pass: `Coro vê ${c1.n} grupos seus; Maestro vê grupos de ${m1.pessoas} pessoas` };
