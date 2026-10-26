@@ -281,7 +281,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
 | INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ✓ |
-| INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders | db | média | S | ☐ por correr |
+| INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
