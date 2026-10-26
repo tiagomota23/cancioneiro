@@ -105,7 +105,7 @@ Deno.serve(async () => {
           continue;
         }
         const songPath = parts.slice(0, 2).join('/');
-        const slug = folders.get(nk(songPath));
+        const slug = folders.get(nk(it.path)) || folders.get(nk(songPath)); // um ficheiro pode ter cântico próprio (ex.: pasta com vários hinos)
         let ext = (it.name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase() || '';
         if (!AUDIO[ext] && !SCORE[ext]) ext = BY_MIME[it.mime] || ext;
         const mime = AUDIO[ext] || SCORE[ext];

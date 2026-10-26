@@ -155,6 +155,15 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - v217: guardar em Editar folha já não despublica (só «Despublicar»). Tudo numa só transação: RPC
   `save_collection(cid, p)` (`supabase/folhas-guardar.sql`, security invoker); as versões da letra (collyrics) vão depois,
   pela função conteudo. O gatilho col_groups_guard só atua ao criar publicada, ao publicar ou ao tirar o último grupo.
+- Drive do Coro → app (regras do Tiago, 26 out):
+  - **Nunca tirar cânticos nem ficheiros da app** por terem desaparecido do Drive. O drive-sync só marca drive_files
+    como «removed» e o email diz «mantidos no Cancioneiro». Nada se apaga em songs nem em song_files.
+  - **Pastas novas sem cântico**: verificar sempre se correspondem a um cântico que já existe com outro nome (título,
+    autor, ficheiros). Se sim, ligar em drive_folders. Se não, criar o cântico (Coro, `coro_clu`/`missa`, «Para a Missa»,
+    Tema), ligar a pasta e apagar as linhas desses ficheiros em drive_files para a sincronização seguinte os importar.
+    A letra só vai para a base de dados (nunca para o repo). Se a partitura for digitalizada e não der para ler com
+    certeza, fica «(letra por transcrever …)», sem inventar.
+  - drive_folders aceita também o caminho de um ficheiro (pasta com vários cânticos, ex.: «Hinos laudes»).
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
