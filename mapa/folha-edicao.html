@@ -1093,7 +1093,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
 .ce-state { margin: 6px 0 0; } .ce-state .revert-link { padding: 6px 2px; }
 .ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
-.adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups { position: relative; cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups::after { content: ""; position: absolute; inset: -14px 0; } /* área de toque de 44 px */
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
 /* ações do item escolhido: numa linha por baixo dele, à direita (não tapam o título, o autor nem «editado nesta folha») */
 .ce-acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 0 10px; background: var(--tint-soft); }
@@ -1122,7 +1123,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v222</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v223</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1161,7 +1162,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       </button>
     </div>
     </div>
-    <h2 class="list-title" id="list-title">Missa de domingo<small class="col-meta">Coro · até 01/11/2026 13:16</small><small class="col-meta">Grupos: Todos</small></h2>
+    <h2 class="list-title" id="list-title">Missa de domingo<small class="col-meta">Coro · até 02/11/2026 08:44</small><small class="col-meta">Grupos: Todos</small></h2>
     <ul class="rows" id="rows"><li class="col-edit-bar"><p class="edit-bar"><button class="edit-btn" id="col-mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar folha</button><button class="edit-btn col-share" id="col-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11"></path><path d="M8 7.5l4-4 4 4"></path><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"></path></svg>Partilhar</button></p></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Entrada</a></li><li><a href="#/cantico/veni_creator_spiritus/folha/demo1"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Comunhão</a></li><li><a href="#/cantico/adoro_te_devote/folha/demo1"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li><a href="#/cantico/ave_verum_corpus/folha/demo1"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-sec"><a href="#" class="sec-line" tabindex="-1">Nossa Senhora</a></li><li><a href="#/cantico/salve_regina/folha/demo1"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li></ul>
     <p class="status" id="status"></p>
   </section>
@@ -1262,7 +1263,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-25 v222</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-26 v223</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
@@ -1288,7 +1289,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
     <label class="col-field">Duração<select id="ce-dur"><option value="24h">24 horas</option><option value="48h">48 horas</option><option value="1w">1 semana</option><option value="1m">1 mês</option></select></label>
     <div class="col-field">Grupos<button type="button" class="ce-groups" id="ce-groups">Todos</button></div>
     <p class="small ce-state" id="ce-state">Publicada · <button type="button" class="revert-link" id="ce-unpub">Despublicar</button></p>
-    <p class="small" id="ce-until">Disponível até 01/11/2026 13:16. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
+    <p class="small" id="ce-until">Disponível até 02/11/2026 08:44. Mudar a duração conta a partir de quando guardar; um mês depois de expirar, a folha é apagada.</p>
     <p class="ce-label">Cânticos</p>
     <ul class="rows ce-rows" id="ce-rows"><li class="col-sec" data-key="sec:s1"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Entrada</div></li><li data-key="veni_creator_spiritus"><a href="#/cantico/veni_creator_spiritus"><span class="t">Veni Creator Spiritus<span class="a">Rabano Mauro (séc. IX)</span></span><span class="n">5</span></a></li><li class="col-add"><button type="button" data-sec="s1">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s2"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Comunhão</div></li><li data-key="adoro_te_devote"><a href="#/cantico/adoro_te_devote"><span class="t">Adoro te devote<span class="a">S. Tomás de Aquino</span></span><span class="n">3</span></a></li><li data-key="ave_verum_corpus"><a href="#/cantico/ave_verum_corpus"><span class="t">Ave verum corpus<span class="a">Hino eucarístico (séc. XIV)</span></span><span class="n">4</span></a></li><li class="col-add"><button type="button" data-sec="s2">+ Adicionar cântico</button></li><li class="col-sec" data-key="sec:s3"><div class="sec-line" role="button" tabindex="0" aria-expanded="false">Nossa Senhora</div></li><li data-key="salve_regina"><a href="#/cantico/salve_regina"><span class="t">Salve Regina<span class="a">Antífona mariana</span></span><span class="n">1</span></a></li><li class="col-add"><button type="button" data-sec="s3">+ Adicionar cântico</button></li><li class="col-add col-add-end"><button type="button" id="col-add-sec">+ Adicionar secção</button></li></ul>
     <p class="small" id="ce-msg" role="status"></p>
