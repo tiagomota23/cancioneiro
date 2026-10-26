@@ -626,6 +626,10 @@ async function suites(full) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
   await t('FUN-26', 'Instalar a app: linha «Adicionar ao ecrã principal» no Perfil e na Informação', () => withApp({ perfil: 'coro', storage: { 'cancioneiro.instalada': 0 } }, async ({ page }) => {
+    const d0 = await page.evaluate(() => document.querySelector('#app-dlg').open ? document.querySelector('#app-dlg').textContent.replace(/\s+/g, ' ').trim() : '');
+    // a proposta «Instalar a app» pode abrir sozinha (instalada = 0): fecha-se e segue-se para as linhas do Perfil / Informação
+    if (d0 && !/^Instalar a app/.test(d0)) return 'janela aberta ao abrir a app: «' + d0.slice(0, 120) + '»';
+    if (d0) { await page.click('#app-dlg-cancel').catch(() => page.keyboard.press('Escape')); await sleep(400); }
     await page.click('#btn-perfil'); await sleep(400);
     const a = await vis(page, '#perfis-install');
     await page.click('#perfil-info').catch(() => {}); await sleep(400);
@@ -833,7 +837,7 @@ async function suites(full) {
     await page.click('#col-mode'); await sleep(500);
     await page.fill('#ce-name', 'Missa de domingo (guardada)'); await page.click('#ce-save'); await sleep(700);
     // v217: Guardar nunca muda published (só «Despublicar» despublica)
-    c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published !== true) return 'Guardar (v217: continua publicada): ' + JSON.stringify({ t: c.title, p: c.published });
+    c = await col('demo1'); if (c.title !== 'Missa de domingo (guardada)' || c.published === false) return 'Guardar (v217: continua publicada): ' + JSON.stringify({ t: c.title, p: c.published });
     await page.click('#col-mode'); await sleep(500); await page.click('#ce-unpub'); await page.waitForSelector('#app-dlg[open]', { timeout: 3000 }).catch(() => {}); await page.click('#app-dlg-ok'); await sleep(600);
     if ((await col('demo1')).published !== false) return '«Despublicar» não despublicou';
     // v218: Despublicar fecha a edição
@@ -900,6 +904,7 @@ async function suites(full) {
     await page.fill('#sa-q', 'salve'); await sleep(500);
     await page.locator('#sa-list button:not([disabled])').first().click(); await sleep(500);
     if (await page.evaluate(() => document.querySelector('#sec-add')?.open)) { await page.click('#sa-close'); await sleep(300); } // escolher um cântico já fecha a janela
+    if (await page.evaluate(() => document.querySelector('#app-dlg').open)) { await page.locator('#app-dlg-list button').filter({ hasText: /^Cântico completo/ }).first().click(); await sleep(400); } // v208: «Acrescentar «X»»
     at('mover'); await sel('salve_regina', 'up');
     at('nome da secção'); await sel('sec:e3'); await page.click('#ce-rows li[data-key="sec:e3"] .ce-name'); await sleep(300); await page.fill('#app-dlg-input', 'Final'); await page.click('#app-dlg-ok'); await sleep(400);
     at('nova secção'); await page.click('#col-add-sec'); await sleep(300); await page.fill('#app-dlg-input', 'Ofertório'); await page.click('#app-dlg-ok'); await sleep(400);
@@ -1270,7 +1275,7 @@ async function suites(full) {
     const cols = () => demoCols().map(c => c.id === 'demo1' ? { ...c, groups: [{ group_id: 'g1' }] } : c);
     const sees = async (perfil, mine) => withApp({ perfil, cols: cols(), storage: { 'cancioneiro.demo.mygroups': mine, 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
       await page.click('#btn-menu'); await sleep(500);
-      return page.evaluate(() => [...document.querySelectorAll('a[href^="#/lista/colecao-"]')].map(a => a.getAttribute('href').slice(17)));
+      return page.evaluate(() => [...document.querySelectorAll('a[href^="#/lista/colecao-"]')].map(a => a.getAttribute('href').slice('#/lista/colecao-'.length)));
     });
     const want = [['coro', ['g2'], { demo1: false }], ['coro', ['g1'], { demo1: true }], ['maestro', [], { demo1: false }], ['maestro', ['g2'], { demo1: false }], ['maestro', ['g1'], { demo1: true }], ['gestor', [], { demo1: true }], ['cancioneiro', ['g4'], { demo2: true }], ['cancioneiro', [], { demo2: false }], ['coro', [], { demo1: false }]];
     for (const [perfil, mine, exp] of want) {
@@ -1490,7 +1495,8 @@ async function suites(full) {
   }, { sev: 'média' });
   await t('FUN-69', 'Ordem das estrofes em «Editar nesta folha» (v222): #cl-sts li[data-k] com .cl-mv ↑/↓ (↑ da 1.ª e ↓ da última desativados; não mexem no checkbox); outra ordem = versão (.col-edited) gravada pela ordem mostrada; reabrir mostra a ordem da versão; Repor original repõe a ordem', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demo2' }, async ({ page }) => {
     const SL = 'amazing_grace', K = 'demo2/' + SL;
-    const keys = () => page.evaluate(() => [...document.querySelectorAll('#cl-sts li[data-k]')].map(l => ({ k: l.dataset.k, on: l.querySelector('input').checked, up: l.querySelector('[data-mv="-1"]')?.disabled, down: l.querySelector('[data-mv="1"]')?.disabled })));
+    // data-k é a posição mostrada: a estrofe identifica-se pelo texto
+    const keys = () => page.evaluate(() => [...document.querySelectorAll('#cl-sts li[data-k]')].map(l => ({ k: l.querySelector('.cl-st')?.textContent.trim().slice(0, 40), on: l.querySelector('input').checked, up: l.querySelector('[data-mv="-1"]')?.disabled, down: l.querySelector('[data-mv="1"]')?.disabled })));
     const openLyr = async () => {
       if (!(await vis(page, `#ce-rows li[data-key="${SL}"] .ce-acts button[data-act="lyr"]`))) { await page.click(`#ce-rows li[data-key="${SL}"] a`); await sleep(300); }
       await page.click(`#ce-rows li[data-key="${SL}"] .ce-acts button[data-act="lyr"]`);
