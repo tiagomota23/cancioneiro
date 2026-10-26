@@ -1093,7 +1093,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
 .ce-state { margin: 6px 0 0; } .ce-state .revert-link { padding: 6px 2px; }
 .ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
-.adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups { position: relative; cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups::after { content: ""; position: absolute; inset: -14px 0; } /* área de toque de 44 px */
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
 /* ações do item escolhido: numa linha por baixo dele, à direita (não tapam o título, o autor nem «editado nesta folha») */
 .ce-acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 0 10px; background: var(--tint-soft); }
@@ -1122,7 +1123,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v222</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v223</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1193,11 +1194,11 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <div class="spacer"></div>
     </header>
     <div id="admin" class="admin" data-ready="1"><h2>Pedidos de acesso</h2><ul class="adm-list">
-        <li data-req="00000000-0000-0000-0000-000000000000" data-email="novo@exemplo.pt"><div class="adm-who"><b>Pessoa Nova</b><span>novo@exemplo.pt</span><small>25/10/2026</small></div>
+        <li data-req="00000000-0000-0000-0000-000000000000" data-email="novo@exemplo.pt"><div class="adm-who"><b>Pessoa Nova</b><span>novo@exemplo.pt</span><small>26/10/2026</small></div>
           <div class="adm-act"><select class="req-role" aria-label="Perfil"><option value="cancioneiro" selected="">Cancioneiro</option><option value="coro">Coro</option><option value="maestro">Maestro</option><option value="gestor">Gestor</option></select><button class="adm-ok">Autorizar</button><button class="adm-no">Recusar</button></div></li></ul><h2>Utilizadores (2)</h2><ul class="adm-list">
         <li data-email="demo@localhost"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic"><circle cx="12" cy="12" r="7.5" style="fill:currentColor"></circle></svg>
           <b class="adm-name" role="button" tabindex="0" title="Mudar o nome (até a pessoa entrar com o Google)">Demo</b><span>demo@localhost</span>
-          <small>Última entrada: 25/10/2026 · (eu)</small>
+          <small>Última entrada: 26/10/2026 · (eu)</small>
           <small class="adm-groups" role="button" tabindex="0" title="Mudar os grupos">Sem grupo</small></div>
           <div class="adm-act"><select class="usr-role" aria-label="Perfil"><option value="cancioneiro">Cancioneiro</option><option value="coro">Coro</option><option value="maestro">Maestro</option><option value="gestor" selected="">Gestor</option></select><button class="adm-del" aria-label="Retirar acesso">Retirar</button></div></li>
         <li data-email="coro@exemplo.pt"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic"><circle cx="12" cy="12" r="7.5"></circle><text x="12" y="12.4" text-anchor="middle" dominant-baseline="central" style="fill:currentColor;stroke:none;font:700 9.5px Lato, -apple-system, Helvetica, Arial, sans-serif">C</text></svg>
@@ -1294,7 +1295,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-25 v222</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-10-26 v223</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

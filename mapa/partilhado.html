@@ -1093,7 +1093,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); text-trans
 body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os grupos na janela Perfil */
 .ce-state { margin: 6px 0 0; } .ce-state .revert-link { padding: 6px 2px; }
 .ce-groups { display: block; width: 100%; margin-top: 4px; min-height: var(--hit); padding: 0 12px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 400 var(--fs-field)/1.2 var(--sans); text-transform: none; letter-spacing: 0; }
-.adm-groups { cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups { position: relative; cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); }
+.adm-groups::after { content: ""; position: absolute; inset: -14px 0; } /* área de toque de 44 px */
 .switch-row.pdf-opt { display: flex; width: 100%; justify-content: space-between; border-bottom: 1px solid var(--line); border-radius: 0; }
 /* ações do item escolhido: numa linha por baixo dele, à direita (não tapam o título, o autor nem «editado nesta folha») */
 .ce-acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 0 10px; background: var(--tint-soft); }
@@ -1122,7 +1123,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="shared-view no-session">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v222</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v223</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1185,7 +1186,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
         <button data-mode="orig" class="on">Latim</button>
         <button data-mode="trad" class="">Tradução · Português</button></div></div>
       <div class="stanza verse"><div class="line">Salve, Regina, mater misericordiae,</div><div class="line">vita, dulcedo et spes nostra, salve.</div></div><div class="stanza verse"><div class="line">Ad te clamamus, exsules filii Hevae.</div><div class="line">Ad te suspiramus, gementes et flentes</div><div class="line">in hac lacrimarum valle.</div></div><div class="stanza verse"><div class="line">Eia ergo, advocata nostra,</div><div class="line">illos tuos misericordes oculos ad nos converte.</div></div><div class="stanza verse"><div class="line">Et Iesum, benedictum fructum ventris tui,</div><div class="line">nobis post hoc exsilium ostende.</div><div class="line">O clemens, o pia, o dulcis Virgo Maria.</div></div>
-      <p class="shared-foot">Partilhado do Cancioneiro · válido até 26/10, 13:17</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
+      <p class="shared-foot">Partilhado do Cancioneiro · válido até 27/10, 08:45</p><p class="shared-foot"><button class="revert-link" id="shared-login">Entrar no Cancioneiro</button></p></article>
   </section>
 
   <!-- Gestão de utilizadores (perfil Gestor) -->
