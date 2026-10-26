@@ -441,7 +441,7 @@ export default async function (level) {
     out.scg_coro = await scg('coro', `array[${G1}]`); if (out.scg_coro === 'aceite') bad.push('set_collection_groups aceite a um Coro');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'média', where: 'supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)' });
-  await t('INT-20', 'Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)', async () => {
+  await t('INT-20', 'Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders ou em skipped («sem cântico associado») de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)', async () => {
     const [r] = await sql(`select
       (select count(*) from public.drive_files d where d.status in ('imported','removed') and d.song_slug is not null and not exists (select 1 from public.song_files f where f.drive_id = d.id))::int sem_song_file,
       (select count(*) from public.drive_files d where d.song_slug is not null and not exists (select 1 from public.songs s where s.slug = d.song_slug))::int sem_cantico,
@@ -455,7 +455,10 @@ export default async function (level) {
         where status = 'reported' and split_part(path, '/', 1) in ('missa','gestos') and split_part(path, '/', 3) <> ''),
       sem as (select p from pastas where not exists (select 1 from public.drive_folders f where lower(f.path) = lower(pastas.p))
         and not exists (select 1 from public.drive_folders f where lower(f.path) like lower(pastas.p) || '/%')),
-      vistas as (select distinct jsonb_array_elements_text(summary->'newFolders') p from public.drive_sync_log where summary ? 'newFolders')
+      vistas as (select distinct jsonb_array_elements_text(summary->'newFolders') p from public.drive_sync_log where summary ? 'newFolders'
+        union -- também conta como reportado um ficheiro da pasta em «ignorados (pasta sem cântico associado)»
+        select distinct split_part(x, '/', 1) || '/' || split_part(x, '/', 2) from public.drive_sync_log, jsonb_array_elements_text(summary->'skipped') x
+        where summary ? 'skipped' and x like '%sem cântico associado%')
       select count(*)::int n from sem where not exists (select 1 from vistas v where lower(v.p) = lower(sem.p))`);
     const bad = [];
     if (r.sem_song_file) bad.push(`${r.sem_song_file} ficheiros do Drive importados/removidos sem o song_file (apagado?)`);
