@@ -441,13 +441,15 @@ export default async function (level) {
     out.scg_coro = await scg('coro', `array[${G1}]`); if (out.scg_coro === 'aceite') bad.push('set_collection_groups aceite a um Coro');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'média', where: 'supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)' });
-  await t('INT-20', 'Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders de alguma verificação', async () => {
+  await t('INT-20', 'Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)', async () => {
     const [r] = await sql(`select
       (select count(*) from public.drive_files d where d.status in ('imported','removed') and d.song_slug is not null and not exists (select 1 from public.song_files f where f.drive_id = d.id))::int sem_song_file,
       (select count(*) from public.drive_files d where d.song_slug is not null and not exists (select 1 from public.songs s where s.slug = d.song_slug))::int sem_cantico,
       (select count(*) from public.drive_folders f where not exists (select 1 from public.songs s where s.slug = f.song_slug))::int mapa_orfao,
       (select count(*) from public.drive_files where status = 'removed')::int removidos,
-      (select count(*) from public.song_files f join public.drive_files d on d.id = f.drive_id where d.status = 'removed')::int song_files_de_removidos`);
+      (select count(*) from public.song_files f join public.drive_files d on d.id = f.drive_id where d.status = 'removed')::int song_files_de_removidos,
+      (select count(*) from (select drive_id from public.song_files where drive_id is not null group by 1 having count(*) > 1) x)::int dup_drive,
+      (select count(*) from (select song_slug, path from public.song_files group by 1, 2 having count(*) > 1) x)::int dup_path`);
     const unreported = await sql(`with pastas as (
         select distinct split_part(path, '/', 1) || '/' || split_part(path, '/', 2) p from public.drive_files
         where status = 'reported' and split_part(path, '/', 1) in ('missa','gestos') and split_part(path, '/', 3) <> ''),
@@ -459,6 +461,8 @@ export default async function (level) {
     if (r.sem_song_file) bad.push(`${r.sem_song_file} ficheiros do Drive importados/removidos sem o song_file (apagado?)`);
     if (r.sem_cantico) bad.push(`${r.sem_cantico} ficheiros do Drive com cântico que já não existe`);
     if (r.mapa_orfao) bad.push(`${r.mapa_orfao} mapeamentos drive_folders para cânticos que não existem`);
+    if (r.dup_drive) bad.push(`${r.dup_drive} drive_id com mais de um song_file`);
+    if (r.dup_path) bad.push(`${r.dup_path} song_files repetidos (mesmo cântico e caminho)`);
     if (unreported[0].n) bad.push(`${unreported[0].n} pastas de missa/ ou gestos/ sem mapeamento que nunca apareceram em newFolders`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.removidos} removidos no Drive; ${r.song_files_de_removidos} song_files mantidos de ficheiros removidos` };
   }, { sev: 'média', where: 'supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files' });
