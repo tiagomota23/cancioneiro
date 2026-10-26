@@ -1,0 +1,2116 @@
+{
+ "version": "223",
+ "level": "full",
+ "date": "2026-10-26",
+ "secs": 1424,
+ "reruns": [
+  {
+   "at": "2026-10-26T10:16",
+   "only": "DB-,INT-,ESC-0",
+   "ids": [
+    "DB-RLS-01",
+    "DB-RLS-02",
+    "DB-RLS-03",
+    "DB-RLS-04",
+    "DB-RLS-12",
+    "DB-RLS-05",
+    "DB-RLS-06",
+    "DB-RLS-07",
+    "DB-RLS-08",
+    "DB-RLS-09",
+    "DB-RLS-11",
+    "DB-RLS-13",
+    "DB-RLS-14",
+    "DB-RLS-15",
+    "DB-RLS-16",
+    "DB-RLS-10",
+    "DB-FN-01",
+    "DB-FN-02",
+    "DB-FN-04",
+    "DB-FN-03",
+    "DB-ST-01",
+    "DB-ST-02",
+    "INT-01",
+    "INT-02",
+    "INT-12",
+    "INT-03",
+    "INT-04",
+    "INT-13",
+    "INT-14",
+    "INT-15",
+    "INT-16",
+    "INT-17",
+    "INT-18",
+    "INT-19",
+    "DB-RLS-17",
+    "INT-20",
+    "INT-05",
+    "INT-06",
+    "INT-07",
+    "INT-08",
+    "INT-09",
+    "INT-10",
+    "INT-11",
+    "ESC-01",
+    "ESC-02",
+    "ESC-03",
+    "ESC-04"
+   ]
+  },
+  {
+   "at": "2026-10-26T10:16",
+   "only": "INT-20",
+   "ids": [
+    "INT-20"
+   ]
+  }
+ ],
+ "results": [
+  {
+   "id": "EST-01",
+   "title": "APP_VERSION, ?v=N (index.html) e CACHE (sw.js) coincidem",
+   "status": "pass",
+   "detail": "v223",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "app.js APP_VERSION · index.html ?v= · sw.js CACHE",
+   "ms": 7
+  },
+  {
+   "id": "EST-02",
+   "title": "APP_VERSION tem a data e o formato «AAAA-MM-DD vN»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 4
+  },
+  {
+   "id": "EST-03",
+   "title": "sw.js: todos os ficheiros do SHELL existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "where": "sw.js SHELL",
+   "ms": 1
+  },
+  {
+   "id": "EST-04",
+   "title": "sw.js: a versão do supabase-js no CDN e no index.html é a mesma da CSP",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — versões",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "LNK-01",
+   "title": "Todas as referências locais (href/src) das páginas existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 2
+  },
+  {
+   "id": "LNK-02",
+   "title": "manifest.json: ícones existem, start_url e scope relativos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 1
+  },
+  {
+   "id": "LNK-03",
+   "title": "Ficheiros referidos no app.js (vendor, worker, sw) existem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — repositório",
+   "sev": "média",
+   "ms": 5
+  },
+  {
+   "id": "SEG-01",
+   "title": "CSP presente em index/admin/drive com object-src none e base-uri self",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-02",
+   "title": "Hash CSP dos scripts inline (admin.html, drive.html) corresponde ao conteúdo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "admin.html / drive.html <meta CSP>",
+   "ms": 3
+  },
+  {
+   "id": "SEG-03",
+   "title": "supabase-js do CDN tem SRI (integrity + crossorigin) e versão fixa",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 0
+  },
+  {
+   "id": "SEG-04",
+   "title": "Nenhum segredo no repositório (service_role, chaves Groq/Resend/Google, tokens)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 189
+  },
+  {
+   "id": "SEG-05",
+   "title": "config.js só tem a chave anon (role=anon)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "crítica",
+   "ms": 0
+  },
+  {
+   "id": "SEG-06",
+   "title": "Nenhuma letra de cântico versionada (songs.json, seed/ fora do repositório)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 14
+  },
+  {
+   "id": "SEG-07",
+   "title": "Ficheiros vendor (pdf.js, pdf-lib) iguais à referência",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 23
+  },
+  {
+   "id": "SEG-08",
+   "title": "Funções do servidor: CORS do conteudo só para o GitHub Pages; OIDC com repo/ramo/workflow fixos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-09",
+   "title": "Workflows: permissões mínimas, ações com versão, sem segredos em claro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "SEG-10",
+   "title": "SQL do repositório: o filtro «approved» da política «leitura familia» (novos.sql) está no esquema",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "baixa",
+   "ms": 0
+  },
+  {
+   "id": "SEG-11",
+   "title": "conteudo «shared» com songs:true devolve só os campos previstos e a letra sem acordes (noChords)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts (op shared)",
+   "ms": 1
+  },
+  {
+   "id": "SEG-12",
+   "title": "conteudo: folha por publicar → endereço partilhado «expirado», share 409, e não conta para o Cancioneiro (colSet)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts",
+   "ms": 1
+  },
+  {
+   "id": "SEG-13",
+   "title": "conteudo addsong: todos os cânticos novos começam por aprovar, também os de um Maestro (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "média",
+   "where": "supabase/functions/conteudo/index.ts (op addsong)",
+   "ms": 0
+  },
+  {
+   "id": "SEG-15",
+   "title": "conteudo «Editar nesta folha» (v204): collyrics só Maestro+ (lvl < 3 → 403), valida coleção e letra e exige o cântico na folha; song com collection só dá a versão a quem vê a folha (publicada, ativa, público) e tira acordes ao Cancioneiro; shared usa a versão da folha",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts (ops collyrics, song, shared)",
+   "ms": 1
+  },
+  {
+   "id": "SEG-16",
+   "title": "conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email (em minúsculas, de who()) e, se a leitura falhar, ficam vazios (não recebe folhas); Gestor sem filtro e Maestro pelos seus grupos (v210), também em collyrics",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts",
+   "ms": 0
+  },
+  {
+   "id": "SEG-14",
+   "title": "transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "média",
+   "where": "supabase/functions/transcribe/index.ts, supabase/reconhecimento.sql",
+   "ms": 0
+  },
+  {
+   "id": "USA-01",
+   "title": "theme.css gerado de design/tokens.json está atualizado (tools/theme/build.mjs --check)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 112
+  },
+  {
+   "id": "USA-05",
+   "title": "Tokens: on-brand sobre brand e brand-deep ≥ 4.5:1; accent e chord sobre paper (claro e escuro) e danger sobre surface ≥ 4.5:1 — base e os 4 perfis (design/tokens.json, v203)",
+   "status": "pass",
+   "detail": "cancioneiro: on-brand/brand 4.75, coro: on-brand/brand 8.38, maestro: on-brand/brand 4.81, gestor: on-brand/brand 10.16",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "média",
+   "where": "design/tokens.json (color e perfis) → theme.css",
+   "ms": 1
+  },
+  {
+   "id": "USA-02",
+   "title": "styles.css não usa cores fixas fora de theme.css (exceto na secção COMPONENTES documentada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "USA-03",
+   "title": "Botões só com ícone têm aria-label (index.html)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 0
+  },
+  {
+   "id": "USA-04",
+   "title": "viewport não bloqueia o zoom (maximum-scale=1 / user-scalable=no)",
+   "status": "warn",
+   "detail": "viewport «width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover» impede ampliar com os dedos (WCAG 1.4.4); A−/A+ compensa só na letra",
+   "dim": "Usabilidade — padrão de design",
+   "sev": "baixa",
+   "ms": 1
+  },
+  {
+   "id": "LNK-10",
+   "title": "Página principal responde 200 e é o Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 516
+  },
+  {
+   "id": "LNK-11",
+   "title": "Versão publicada = versão do repositório (index.html ?v=, app.js, sw.js)",
+   "status": "pass",
+   "detail": "v223",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 634
+  },
+  {
+   "id": "LNK-12",
+   "title": "Todos os recursos da página principal respondem 200",
+   "status": "pass",
+   "detail": "12 recursos",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 1281
+  },
+  {
+   "id": "LNK-13",
+   "title": "Páginas auxiliares respondem: privacidade.html, admin.html, drive.html, manifest, ícones, vendor",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 828
+  },
+  {
+   "id": "LNK-14",
+   "title": "Endereço inexistente devolve 404 (sem expor listagem)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — produção",
+   "sev": "baixa",
+   "ms": 55
+  },
+  {
+   "id": "LNK-15",
+   "title": "Ligações externas das páginas (privacidade e outras) respondem",
+   "status": "pass",
+   "detail": "5 ligações",
+   "dim": "Ligações e navegação — produção",
+   "sev": "baixa",
+   "ms": 3086
+  },
+  {
+   "id": "LNK-16",
+   "title": "drive.html mostra o texto do endereço como texto (sem HTML) e recusa ser emoldurada",
+   "status": "pass",
+   "detail": "",
+   "dim": "Ligações e navegação — produção",
+   "sev": "alta",
+   "ms": 39
+  },
+  {
+   "id": "SEG-20",
+   "title": "SRI do supabase-js corresponde ao ficheiro servido pelo CDN",
+   "status": "pass",
+   "detail": "registo npm (jsDelivr inacessível daqui)",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 451
+  },
+  {
+   "id": "SEG-21",
+   "title": "Sem sessão: tabelas não se leem pela API REST (songs, allowed_emails, access_log, favorites, song_shares, invites…)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 6267
+  },
+  {
+   "id": "SEG-22",
+   "title": "Sem sessão: funções RPC protegidas (my_rank, my_role, is_allowed, can_listen, grupos, backup_schema, backup_objects, call_notify)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 4292
+  },
+  {
+   "id": "SEG-23",
+   "title": "Armazenamento: bucket «coro» privado (endereço público e lista sem sessão recusados)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 594
+  },
+  {
+   "id": "SEG-24",
+   "title": "Endereço assinado falso / adulterado é recusado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 472
+  },
+  {
+   "id": "SEG-25",
+   "title": "Auth: entrada só com Google; registo por email/telefone/anónimo desligado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 285
+  },
+  {
+   "id": "SEG-26",
+   "title": "conteudo: sem sessão → 403 em todas as operações (song, search, file, users, save, scrape…)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 5572
+  },
+  {
+   "id": "SEG-27",
+   "title": "conteudo «shared»: token mal formado → 400; token desconhecido → 410 (sem escrever nada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 666
+  },
+  {
+   "id": "SEG-28",
+   "title": "conteudo: CORS só devolve a origem do GitHub Pages (origem estranha não é refletida)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 138
+  },
+  {
+   "id": "SEG-29",
+   "title": "transcribe: CORS só para a origem do GitHub Pages (desde v156)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 168
+  },
+  {
+   "id": "SEG-30",
+   "title": "transcribe: sem sessão → 403 (não chega ao Groq)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 549
+  },
+  {
+   "id": "SEG-31",
+   "title": "backup e gravacoes: sem token OIDC / token forjado → 401",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "ms": 805
+  },
+  {
+   "id": "SEG-32",
+   "title": "notify: tipos inválidos / ids mal formados → 400 (sem enviar emails)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "ms": 619
+  },
+  {
+   "id": "SEG-33",
+   "title": "Erros das funções não expõem detalhes internos (pilha, chaves, nomes de tabelas)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 446
+  },
+  {
+   "id": "SEG-34",
+   "title": "Cabeçalhos do GitHub Pages: HTTPS forçado (HSTS) e tipo de conteúdo correto",
+   "status": "pass",
+   "detail": "HSTS: max-age=31556952 (http:// não verificável: o proxy deste ambiente só aceita HTTPS)",
+   "dim": "Segurança — produção",
+   "sev": "baixa",
+   "ms": 481
+  },
+  {
+   "id": "DES-01",
+   "title": "Tamanho dos ficheiros da app (app.js, styles.css, theme.css, index.html) dentro do orçamento",
+   "status": "pass",
+   "detail": "app.js 268 KB, styles.css 69 KB, theme.css 8 KB, index.html 25 KB",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 211
+  },
+  {
+   "id": "DES-02",
+   "title": "Tempo de resposta do site e do Supabase (1 pedido cada, mediana de 3)",
+   "status": "pass",
+   "detail": "site 34 ms, auth 144 ms, função conteudo 117 ms",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 878
+  },
+  {
+   "id": "DES-03",
+   "title": "Arranque a frio da função conteudo (OPTIONS) abaixo de 5 s",
+   "status": "pass",
+   "detail": "149 ms",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 150
+  },
+  {
+   "id": "FUN-01.gestor",
+   "title": "Arranque no perfil gestor: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "26 linhas, 2933 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4443
+  },
+  {
+   "id": "FUN-01.maestro",
+   "title": "Arranque no perfil maestro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "26 linhas, 2416 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3668
+  },
+  {
+   "id": "FUN-01.coro",
+   "title": "Arranque no perfil coro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "26 linhas, 2380 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3627
+  },
+  {
+   "id": "FUN-01.cancioneiro",
+   "title": "Arranque no perfil cancioneiro: índice com cânticos e sem erros JS",
+   "status": "pass",
+   "detail": "8 linhas, 2407 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3654
+  },
+  {
+   "id": "FUN-02",
+   "title": "Pesquisa por título, autor e letra; limpar repõe o índice",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 7459
+  },
+  {
+   "id": "FUN-03",
+   "title": "Cântico: título, letra, botões de idioma (original ↔ tradução)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4115
+  },
+  {
+   "id": "FUN-03b",
+   "title": "Versão noutra língua (translation_language ≠ pt): botão só com a língua («Espanhol», sem «Tradução ·») e nota «Versão em espanhol»; tradução pt mantém «Tradução · Português» (v192)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4708
+  },
+  {
+   "id": "FUN-47",
+   "title": "Versões do mesmo cântico: fora das listas e da pesquisa; botões data-mode=\"v:<slug>\" no principal; nota «Versão em …: «título» — autor»; #/cantico/<versão> vai para o principal; perfil Cancioneiro só vê versões a que tem acesso (v193)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 10761
+  },
+  {
+   "id": "FUN-48",
+   "title": "Versões e Cancioneiro: perfil Cancioneiro só vê versões do Cancioneiro (frere_jacques: Francês | Português); Maestro, numa versão fora do original, tem #ver-promo «Acrescentar…» → confirmação → «Retirar…»; versões do original sem o botão (v196)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 9526
+  },
+  {
+   "id": "FUN-49",
+   "title": "Ficheiros herdados de uma versão só aparecem com essa versão escolhida: frere_jacques «Francês» sem a.pdf; «Inglês» com «Partitura» que abre o visor (v197)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4522
+  },
+  {
+   "id": "FUN-04",
+   "title": "A−/A+ mudam o tamanho da letra e a escolha fica guardada",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 8488
+  },
+  {
+   "id": "FUN-05",
+   "title": "Modo escuro: o botão alterna o tema e fica guardado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4193
+  },
+  {
+   "id": "FUN-06",
+   "title": "Acordes: Coro vê e esconde acordes; Cancioneiro nunca vê acordes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 8145
+  },
+  {
+   "id": "FUN-07",
+   "title": "Preferidos (Coro): ☆ marca e desmarca; lista Preferidos atualiza",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5403
+  },
+  {
+   "id": "FUN-07b",
+   "title": "Estrela do cântico no Maestro: sempre estrela (sem .book), .on só nos Preferidos (não por estar numa folha), aria-label «Coleções e folhas» e abre #col-pick (v187)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5041
+  },
+  {
+   "id": "FUN-08",
+   "title": "Menu ☰: abre a gaveta com livros e folhas; fecha no fundo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4731
+  },
+  {
+   "id": "FUN-09",
+   "title": "Folhas por perfil: Coro vê a do Coro; Cancioneiro só a do Cancioneiro; expirada só para Maestro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 12503
+  },
+  {
+   "id": "FUN-10",
+   "title": "Folha publicada (Maestro): secções e cânticos só de leitura; .col-edit-bar na 1.ª linha (v208) com «Editar folha» e, à direita, button.edit-btn.col-share «Partilhar» (v215, fora do título)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3959
+  },
+  {
+   "id": "FUN-11",
+   "title": "Nova folha: público segmentado, «Criar» abre logo a edição; a folha aparece na gaveta (v164)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6899
+  },
+  {
+   "id": "FUN-12",
+   "title": "Template só no diálogo «Nova folha» (#col-tpl-sel, com «Criar ou mudar templates…»); a janela de edição não tem template",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 5472
+  },
+  {
+   "id": "FUN-13",
+   "title": "Novo cântico (Coro): formulário, guardar, aparece em Novos Cânticos por aprovar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 7002
+  },
+  {
+   "id": "FUN-13b",
+   "title": "Novo cântico de um Maestro também fica por aprovar (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5834
+  },
+  {
+   "id": "FUN-13c",
+   "title": "Apagar cântico novo aprovado: só em «Editar cântico» (#sn-del, com confirmação) e volta a Novos Cânticos; sem #song-reject na página; #sn-del escondido em cânticos que não são novos (v166)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 10177
+  },
+  {
+   "id": "FUN-14",
+   "title": "Editar letra (Maestro): editor abre, guarda e mostra «Letra editada» com Repor original",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5551
+  },
+  {
+   "id": "FUN-15",
+   "title": "Gravações: tocar abre o mini-leitor; parar fecha-o",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5702
+  },
+  {
+   "id": "FUN-16",
+   "title": "Partitura: visor PDF desenha a página, zoom +/− e Voltar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5096
+  },
+  {
+   "id": "FUN-50",
+   "title": "Descarregar partitura (#pdf-download) em todas as partituras: PDF tal como está (título.pdf), página de livro junta num PDF (pdf-lib), ao mudar de partitura o ficheiro é o da nova, erro de rede → #app-dlg (v199)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 15637
+  },
+  {
+   "id": "FUN-17",
+   "title": "Partilhar cântico: gera endereço #/p/<código> (copiado ou mostrado)",
+   "status": "pass",
+   "detail": "menu de partilha: #/p/demo_salve_regina",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5728
+  },
+  {
+   "id": "FUN-17b",
+   "title": "Partilhar letra (Coro): copia sempre; com menu de partilha chama-se «Partilhar letra» e abre navigator.share({title,text}); sem menu, «Copiar letra» e aviso «Letra copiada» (v188)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 10005
+  },
+  {
+   "id": "FUN-18",
+   "title": "Endereço partilhado sem conta: só letra (sem acordes) e tradução, com botão de entrar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 2928
+  },
+  {
+   "id": "FUN-19",
+   "title": "Endereço partilhado inválido: mensagem clara (sem ecrã em branco)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3617
+  },
+  {
+   "id": "FUN-20",
+   "title": "Folha partilhada sem conta: lista com secções e abre cânticos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4490
+  },
+  {
+   "id": "FUN-21",
+   "title": "Gestão de utilizadores: Gestor vê utilizadores e pedidos; Coro não tem acesso",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 8900
+  },
+  {
+   "id": "FUN-22",
+   "title": "Perfil: menu mostra só perfis até ao da pessoa; mudar de perfil esconde funções",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5629
+  },
+  {
+   "id": "FUN-23",
+   "title": "Terminar sessão: volta ao ecrã de entrada e limpa a lista",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 4483
+  },
+  {
+   "id": "FUN-24",
+   "title": "Ecrã de entrada (sem sessão): botão Google e ligação de privacidade",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 2927
+  },
+  {
+   "id": "FUN-24b",
+   "title": "Regresso do Google (?code=): a capa fica ~2 s como numa abertura normal (v173)",
+   "status": "pass",
+   "detail": "2329 ms",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 2426
+  },
+  {
+   "id": "FUN-25",
+   "title": "Tutorial: aparece na 1.ª vez e «Saltar» fecha-o sem voltar a aparecer",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8327
+  },
+  {
+   "id": "FUN-51",
+   "title": "Microfone só com can_listen (v201): sem permissão #btn-mic e .listen-only escondidos e o tutorial salta o passo do microfone; com permissão aparecem (modo real simulado); no ?demo sempre ativo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 34228
+  },
+  {
+   "id": "FUN-26",
+   "title": "Instalar a app: linha «Adicionar ao ecrã principal» no Perfil e na Informação",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 4953
+  },
+  {
+   "id": "FUN-27",
+   "title": "Pesquisa por voz: abre a janela «A ouvir», mostra línguas e Cancelar fecha (sem transcrever)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 5419
+  },
+  {
+   "id": "FUN-28",
+   "title": "Exportar PDF de uma folha (pdf-lib): abre no visor e «Descarregar» dá um PDF",
+   "status": "pass",
+   "detail": "partilhado application/pdf:5843",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 13008
+  },
+  {
+   "id": "FUN-29",
+   "title": "Rotas: endereços desconhecidos e cânticos inexistentes não partem a app",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5456
+  },
+  {
+   "id": "FUN-30",
+   "title": "Ligação direta a um cântico sobrevive a recarregar a página",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6011
+  },
+  {
+   "id": "FUN-31",
+   "title": "Categorias e livros: lista latim, Songbook, Novos Cânticos",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4247
+  },
+  {
+   "id": "FUN-31b",
+   "title": "Novos Cânticos: filtro Todos / Por aprovar / Só no Coro / No Cancioneiro, por esta ordem (v178/v180)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 3660
+  },
+  {
+   "id": "FUN-32",
+   "title": "Aprovar cântico novo (Maestro): «Aprovar para…» (Cancioneiro / Coro); Cancelar não aprova; aprovar põe sempre no Coro e, para o Cancioneiro, também promove (v172)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8301
+  },
+  {
+   "id": "FUN-33",
+   "title": "Página inicial: cada secção com cânticos tem título; perfil Cancioneiro sem título por cima de «Todos os cânticos»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 7269
+  },
+  {
+   "id": "FUN-45",
+   "title": "Secção Cancioneiro (Coro+): «Todos os cânticos» e restantes categorias só com cânticos do Cancioneiro (v189)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3652
+  },
+  {
+   "id": "FUN-46",
+   "title": "«Todos os cânticos» (Coro+): secção no fim da página inicial com categorias tema-* (7, com Gestos); ausente no perfil Cancioneiro, no menu ☰ e no seletor de categoria (v190/v191)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 12802
+  },
+  {
+   "id": "FUN-34",
+   "title": "Páginas de categoria: antetítulo (.list-kicker) com a secção para Coro+; nenhum no perfil Cancioneiro",
+   "status": "pass",
+   "detail": "20 categorias: Cancioneiro, Coro, Momentos da Missa, Songbook, CANTI 2024, Todos os cânticos",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 11379
+  },
+  {
+   "id": "FUN-35",
+   "title": "Menu ☰: Preferidos e Novos Cânticos no topo; «Livros» e «Folhas» (perfil Cancioneiro sem título «Livros»: Preferidos, Cancioneiro); secção vazia escondida (v165/v184)",
+   "status": "pass",
+   "detail": "Coro: Preferidos, Novos Cânticos · Livros",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 16258
+  },
+  {
+   "id": "FUN-36",
+   "title": "Tutorial (Maestro): o passo que aponta para «+ Nova folha» encontra o elemento",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 12524
+  },
+  {
+   "id": "FUN-37",
+   "title": "Folha por publicar: Coro e Cancioneiro não a veem; Maestro vê-a na gaveta com «não publicada»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 19967
+  },
+  {
+   "id": "FUN-38",
+   "title": "Editar folha trabalha numa cópia: nada grava até «Guardar» (#ce-save; desde v217 não muda published: só #ce-unpub despublica); «Cancelar» com alterações pede confirmação e deita fora; «Publicar» (#col-pub) só em folhas por publicar; folha vazia não se publica (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 15474
+  },
+  {
+   "id": "FUN-39",
+   "title": "Edição: tocar num item mostra .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 6969
+  },
+  {
+   "id": "FUN-40",
+   "title": "Edição: «+ Adicionar cântico» por secção — Comunhão traz os cânticos do momento, Saída vem vazia; «+ Adicionar secção» no fim",
+   "status": "pass",
+   "detail": "Comunhão: 2 cânticos",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 5707
+  },
+  {
+   "id": "FUN-42",
+   "title": "Edição: várias mudanças (acrescentar, mover, mudar o nome, nova/apagar secção, remover, público, título, duração) só ficam gravadas com «Guardar» — recarregar mostra todas (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 14744
+  },
+  {
+   "id": "FUN-52",
+   "title": "Editar nesta folha (v204): ✎ (data-act=\"lyr\") abre #cl-ed com uma caixa por estrofe; Guardar desativado sem estrofes; Cancelar com alterações pede confirmação; Guardar fica na cópia (nada gravado) e marca .col-edited; «Guardar» da folha grava (collyrics); «Editar texto» → #cl-text; Repor pede confirmação e apaga a versão; igual ao original = sem versão",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 11561
+  },
+  {
+   "id": "FUN-53",
+   "title": "Cântico aberto da folha (v204–v206): todas as ligações da folha são #/cantico/<slug>/folha/<id>; o editado tem small.col-edited «editado nesta folha»; aberto da folha: .note.col-ver «Na folha «título»» (+ « · letra desta folha» com versão), sem ligações, sem #btn-edit/#btn-add-rec/#btn-add-score/#song-approve/#song-reject/#ver-promo; #/cantico/<slug> volta ao original com #btn-edit (Maestro); perfil Cancioneiro sem acordes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 18354
+  },
+  {
+   "id": "FUN-54",
+   "title": "PDF da folha (v204): «Partilhar folha» com 4 linhas (endereço, um só «Gerar PDF», e «Enviar endereço/PDF por email» desligadas, que não fecham a janela, v216) → opções #pdf-o-chords e #pdf-o-scores (button.switch-row, aria-checked desde v205; ligadas numa folha Coro, desligadas numa Cancioneiro); ficheiro <título>-coro / -acordes / -partituras / sem sufixo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 26198
+  },
+  {
+   "id": "FUN-55",
+   "title": "PDF da folha usa a versão da folha (v204): estrofe retirada em «Editar nesta folha» não aparece no PDF; as outras aparecem (texto extraído com vendor/pdfjs)",
+   "status": "pass",
+   "detail": "918 caracteres extraídos",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 5516
+  },
+  {
+   "id": "FUN-56",
+   "title": "Acordes e partituras por cântico na folha (v206): #cl-chords/#cl-scores (switch, ligados) só numa folha Coro e se o cântico tem acordes / partituras; Cancelar com mudança pede confirmação; Guardar marca «editado nesta folha · sem acordes / · sem partituras» e grava no_chords/no_scores com «Guardar» da folha; aberto da folha sem .ch nem #btn-chords / sem .scores a; Repor volta tudo a false",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 22174
+  },
+  {
+   "id": "FUN-57",
+   "title": "PDF da folha respeita no_chords / no_scores (v206): folha Coro com amazing_grace e santa_lucia, «Acordes» e «Partituras» ligados; com no_chords num cântico os acordes do PDF diminuem mas os do outro ficam; com no_scores num cântico o PDF tem menos páginas",
+   "status": "pass",
+   "detail": "acordes 27 → 7 com no_chords; páginas 5 → 3 com no_scores",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 15741
+  },
+  {
+   "id": "FUN-58",
+   "title": "Editar folha (v208): .col-edit-bar é a 1.ª linha de #rows; depois de escolher em #sa-list, «Acrescentar «X»» com «Cântico completo» (acrescenta, sem #cl-ed) e «Versão desta folha» (acrescenta e abre #cl-ed); Cancelar no #cl-ed deixa o cântico completo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8170
+  },
+  {
+   "id": "FUN-59",
+   "title": "Grupos na 1.ª abertura (v209, ?grupos): janela «Os seus grupos» com um .switch-row[data-g] por grupo (g1..g5), «Guardar» e sem Cancelar; Guardar grava os escolhidos e não volta a perguntar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8541
+  },
+  {
+   "id": "FUN-60",
+   "title": "Grupos no Perfil (v209): #perfis-groups com h3 «Grupos» e os interruptores (muda logo); sem nenhum aparece .grp-none «Sem grupo, não recebe folhas.» e o Coro deixa de ver as folhas; perfil só Cancioneiro: os grupos estão em #info-groups",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 10558
+  },
+  {
+   "id": "FUN-61",
+   "title": "Visibilidade por grupos no ?demo (v209): folha só do grupo g1 → Coro e Maestro em g2 não a veem, em g1 veem (v210), Gestor vê sempre; folha sem grupos → vista por quem tem algum grupo; sem grupo nenhuma",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 37507
+  },
+  {
+   "id": "FUN-62",
+   "title": "Publicar com grupos (v209/v212): «Publicar «X»» com «Todos» [data-g=\"*\"] e todos os grupos ligados e visíveis; desligar «Todos» desliga todos e desativa OK; ligar todos um a um liga «Todos»; escolher um grupo → publica só para ele; .col-meta «Coro · até …» + «Grupos: Liceus» (por publicar: só a 1.ª); #ce-groups mostra o grupo; sem .pend-top",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 6906
+  },
+  {
+   "id": "FUN-65",
+   "title": "Folha publicada para todos (v212): .col-meta «Grupos: Todos»; vários grupos pela ordem dos grupos («Grupos: Liceus, CLU»); #col-aud e #ce-aud com Cancioneiro antes de Coro; #ce-groups «Todos»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 12532
+  },
+  {
+   "id": "FUN-64",
+   "title": "Maestro só com os seus grupos (v210, mygroups g2+g3): Publicar mostra só Liceus e CLU, sem «Todos», OK desativado até escolher; #ce-groups igual; folha nova nasce com g2+g3",
+   "status": "fail",
+   "detail": "folha nova com grupos «» (esperado g2,g3)",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 11398
+  },
+  {
+   "id": "FUN-66",
+   "title": "Estado da folha em Editar folha (v213): #ce-state «Publicada · Despublicar» numa publicada (#ce-unpub → confirmação «Despublicar «X»?» → por publicar logo e fecha a edição, v218; com alterações: «Guardar e despublicar» / «Descartar e despublicar», Cancelar não muda nada) e «Por publicar» sem #ce-unpub; Guardar mantém publicada (v217; aviso «Folha guardada — continua publicada»), também com o título mudado; exceto mudar o público (v219, FUN-68)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 32635
+  },
+  {
+   "id": "FUN-68",
+   "title": "Mudar o público de uma folha publicada (v220): grava logo (público + por publicar), fecha a edição e mostra #col-pub; sem alterações: confirmação «Mudar» («Público mudado — folha por publicar»); com alterações: «Guardar e mudar» (título novo) / «Descartar e mudar» (título antigo), «Folha guardada — por publicar (mudou o público)»; Cancelar não muda nada; folha por publicar não pergunta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 25776
+  },
+  {
+   "id": "FUN-69",
+   "title": "Ordem das estrofes em «Editar nesta folha» (v222): #cl-sts li[data-k] com .cl-mv ↑/↓ (↑ da 1.ª e ↓ da última desativados; não mexem no checkbox); outra ordem = versão (.col-edited) gravada pela ordem mostrada; reabrir mostra a ordem da versão; Repor original repõe a ordem",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 8241
+  },
+  {
+   "id": "FUN-63",
+   "title": "Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 6772
+  },
+  {
+   "id": "FUN-67",
+   "title": "Cor do PDF da folha pelo público (v214): folha Coro → #1f6aa8 (--folha-coro), folha Cancioneiro → #0e7f58 (--folha-cancioneiro), em qualquer perfil; a outra cor não aparece (cores de preenchimento/traço lidas com pdfjs getOperatorList)",
+   "status": "pass",
+   "detail": "maestro/demo1: #1f6aa8 #1a1a1a #737373 | maestro/demo2: #0e7f58 #1a1a1a #737373 | gestor/demo1: #1f6aa8 #1a1a1a #737373 | gestor/demo2: #0e7f58 #1a1a1a #737373",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 20679
+  },
+  {
+   "id": "SHR-01",
+   "title": "Folha partilhada: a lista traz a letra de todos os cânticos (sem acordes) e fica guardada em cancioneiro.partilhados",
+   "status": "pass",
+   "detail": "3 cânticos guardados",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3427
+  },
+  {
+   "id": "SHR-02",
+   "title": "Folha partilhada: abrir um cântico não pede nada à rede (vem da memória) e abre sem rede",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 3800
+  },
+  {
+   "id": "SHR-03",
+   "title": "Folha partilhada sem rede depois de recarregar (service worker + armazenamento)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 9497
+  },
+  {
+   "id": "SHR-04",
+   "title": "Partilhas expiradas são apagadas do armazenamento ao abrir",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 3424
+  },
+  {
+   "id": "SHR-05",
+   "title": "Cântico partilhado sozinho também fica guardado e abre sem rede",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 4059
+  },
+  {
+   "id": "SHR-06",
+   "title": "Preferidos: letras descarregadas ao abrir, como as folhas (modo real simulado)",
+   "status": "pass",
+   "detail": "pedidas: de_colores, santa_lucia",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 9468
+  },
+  {
+   "id": "LNK-20",
+   "title": "Todas as ligações internas (#/…) visíveis no índice, gaveta e cântico abrem um ecrã válido",
+   "status": "pass",
+   "detail": "30 ligações",
+   "dim": "Ligações e navegação — app",
+   "sev": "média",
+   "ms": 11716
+  },
+  {
+   "id": "SEG-40",
+   "title": "XSS: títulos, autores, letras, rótulos e etiquetas com HTML não executam (lista, pesquisa, cântico, folha, partilha)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 8939
+  },
+  {
+   "id": "SEG-41",
+   "title": "XSS: nome de folha e de secção com HTML não executam",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 4694
+  },
+  {
+   "id": "SEG-42",
+   "title": "Letra protegida: copiar, menu de contexto e selecionar texto bloqueados na letra",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "baixa",
+   "ms": 3632
+  },
+  {
+   "id": "SEG-43",
+   "title": "Modo ?demo não funciona fora de localhost (só em localhost/127.0.0.1)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "crítica",
+   "ms": 1
+  },
+  {
+   "id": "SEG-44",
+   "title": "CSP do index.html não bloqueia nada da app em uso normal (modo real simulado)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — interface",
+   "sev": "alta",
+   "ms": 3000
+  },
+  {
+   "id": "EST-10",
+   "title": "Sessão longa: 150 navegações sem erros, memória e nós DOM estáveis",
+   "status": "pass",
+   "detail": "heap 10 → 10 MB, nós 563 → 690",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 14780
+  },
+  {
+   "id": "EST-11",
+   "title": "Service worker regista-se, guarda a app e abre sem rede (offline)",
+   "status": "pass",
+   "detail": "caches cancioneiro-v223; 26 linhas sem rede",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 10885
+  },
+  {
+   "id": "EST-12",
+   "title": "Service worker: ao mudar de versão apaga as caches antigas (exceto cancioneiro-media)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — interface",
+   "sev": "alta",
+   "ms": 1
+  },
+  {
+   "id": "EST-13",
+   "title": "localStorage corrompido não impede a app de abrir",
+   "status": "pass",
+   "detail": "",
+   "dim": "Estabilidade — interface",
+   "sev": "média",
+   "ms": 3643
+  },
+  {
+   "id": "RES-01",
+   "title": "Supabase em baixo, com sessão guardada: a capa sai e há mensagem (não fica presa)",
+   "status": "pass",
+   "detail": "2333 ms; «Não foi possível carregar os cânticos. Verifique a ligação à internet.»",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 4974
+  },
+  {
+   "id": "RES-02",
+   "title": "Supabase lento (7 s por pedido): a app abre com a sessão guardada em ≤ 12 s",
+   "status": "pass",
+   "detail": "2332 ms",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 2461
+  },
+  {
+   "id": "RES-03",
+   "title": "Função conteudo com erro 500 ao abrir um cântico: mensagem no cântico, sem erro JS",
+   "status": "pass",
+   "detail": "      Não foi possível carregar a letra. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 4451
+  },
+  {
+   "id": "RES-04",
+   "title": "Limite de uso (429): a mensagem do servidor chega à pessoa",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 4470
+  },
+  {
+   "id": "RES-05",
+   "title": "Sessão expirada (401 e renovação recusada): não fica em ciclo, mostra entrada ou mensagem",
+   "status": "pass",
+   "detail": "Não foi possível carregar os cânticos. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 9482
+  },
+  {
+   "id": "RES-06",
+   "title": "Partitura indisponível (armazenamento 403): mensagem «Não foi possível abrir a partitura»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 6172
+  },
+  {
+   "id": "RES-07",
+   "title": "Sem rede a meio: marcar preferido repõe o estado e avisa",
+   "status": "pass",
+   "detail": "Não foi possível guardar o preferido. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 5010
+  },
+  {
+   "id": "RES-08",
+   "title": "Dados incompletos (sem autor, letra vazia, sem ficheiros, número em falta) não partem a app",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 6542
+  },
+  {
+   "id": "RES-09",
+   "title": "Sessão guardada sem Supabase e sem cópia da lista: mensagem em vez de ecrã vazio",
+   "status": "pass",
+   "detail": "Não foi possível carregar os cânticos. Verifique a ligação à internet.",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 5457
+  },
+  {
+   "id": "RES-10",
+   "title": "Voltar à app depois de > 5 min em segundo plano recarrega cânticos, preferidos e folhas; antes dos 5 min não (modo real simulado) (v194)",
+   "status": "pass",
+   "detail": "recarregou songs, favorites, collections",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 6978
+  },
+  {
+   "id": "RES-12",
+   "title": "Guardar a folha falha (v218, modo real simulado, rpc save_collection → 500): em «Guardar», «Guardar e despublicar» e ao mudar o público (v220, «Não foi possível mudar: …») a edição (#col-ed) fica aberta com o erro em #ce-msg e não há nenhum update de collections (published fica)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "média",
+   "ms": 15965
+  },
+  {
+   "id": "RES-11",
+   "title": "Lista de cânticos recusada pelo servidor (42501) com cópia guardada: a app mostra o aviso «Não foi possível atualizar a lista…» em vez de ficar calada (v195)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Resiliência",
+   "sev": "alta",
+   "ms": 2477
+  },
+  {
+   "id": "ESC-10",
+   "title": "Índice com 2000 cânticos: abre e desenha em tempo razoável",
+   "status": "pass",
+   "detail": "26 linhas, abriu em 2417 ms (inclui capa de 2 s), tarefas longas 0 ms",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "média",
+   "ms": 2773
+  },
+  {
+   "id": "ESC-11",
+   "title": "Pesquisa em 2000 cânticos: resposta < 400 ms por tecla",
+   "status": "pass",
+   "detail": "máx. 17 ms",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "média",
+   "ms": 3703
+  },
+  {
+   "id": "ESC-12",
+   "title": "Métricas de carregamento (FCP, LCP, CLS) no telemóvel",
+   "status": "pass",
+   "detail": "FCP 40 ms, LCP 40 ms, CLS 0.000 (local, sem rede real)",
+   "dim": "Escalabilidade e desempenho — interface",
+   "sev": "baixa",
+   "ms": 3231
+  },
+  {
+   "id": "USA-10",
+   "title": "Alvos de toque ≥ 44×44 px (botões e ligações visíveis)",
+   "status": "pass",
+   "detail": "exceções aceites: rec, edit-btn, adm-ok, adm-no, adm-del, usr-role, search, btn-edit, adm-add>button, col-mode, col-pub",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 18808
+  },
+  {
+   "id": "USA-11",
+   "title": "Ecrãs pequenos (320 px) e paisagem: sem deslocamento horizontal",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 44275
+  },
+  {
+   "id": "USA-12",
+   "title": "Contraste de texto (WCAG AA 4.5:1) no índice e no cântico, claro e escuro, nos 4 perfis (cores por perfil desde v203); folha e edição",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 73988
+  },
+  {
+   "id": "USA-13",
+   "title": "Teclado: Tab percorre os controlos com foco visível; Escape fecha diálogos",
+   "status": "pass",
+   "detail": "btn-perfil → btn-menu → search → btn-mic → A → A → A → A",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 4796
+  },
+  {
+   "id": "USA-14",
+   "title": "Nomes acessíveis: todos os botões e ligações visíveis têm texto ou aria-label; idioma da página pt",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 18763
+  },
+  {
+   "id": "USA-15",
+   "title": "Diálogos têm título e botão de fechar visível",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 3625
+  },
+  {
+   "id": "USA-17",
+   "title": "Livro no cântico (Maestro): opções .col-pick[data-k] com aria-pressed; original com aria-disabled; acrescentar ao Cancioneiro e retirar com confirmação; teclado (Espaço/Enter) (v165)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 9903
+  },
+  {
+   "id": "USA-24",
+   "title": "Cores por perfil (v203): <html> e <body> com .perfil-X do perfil ativo (e só esse), mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; títulos das janelas (dialog h2) em --accent com contraste ≥ 4.5:1",
+   "status": "pass",
+   "detail": "cancioneiro/light brand rgb(16, 131, 92) h2 5.0:1 | cancioneiro/dark brand rgb(16, 131, 92) h2 5.0:1 | coro/light brand rgb(169, 211, 239) h2 5.7:1 | coro/dark brand rgb(169, 211, 239) h2 5.7:1 | maestro/light brand rgb(179, 86, 80) h2 5.9:1 | maestro/dark brand rgb(179, 86, 80) h2 5.9:1 | gestor/light brand rgb(214, 218, 221) h2 8.4:1 | gestor/dark brand rgb(214, 218, 221) h2 8.4:1",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "where": "app.js setPerfil (~2016), theme.css :root.perfil-*, styles.css .splash / dialog h2",
+   "ms": 33970
+  },
+  {
+   "id": "USA-18",
+   "title": "Texto e ícones sobre a cor da marca: texto ≥ 4.5:1 e opaco; ícones ≥ 3:1 (índice e gaveta nos 4 perfis, folha, e com a janela de edição aberta) (v203: cores por perfil)",
+   "status": "pass",
+   "detail": "marca rgb(16,131,92) / rgb(11,107,75)",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 39182
+  },
+  {
+   "id": "USA-19",
+   "title": "Campos obrigatórios: «*» (.req) e botão desativado até preencher — Novo cântico, Nova folha, Editar folha, Template, Gestão (email), caixa de texto da app (v171)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "média",
+   "ms": 21233
+  },
+  {
+   "id": "USA-20",
+   "title": "Botões lado a lado numa linha de ações com a mesma largura (±1 px; na .pend-bar à direita, sem ocupar a linha): .edit-actions, .info-actions, .pend-bar, .edit-bar, .file-btns (v175/v177)",
+   "status": "pass",
+   "detail": "7 linhas: Informação: info .info-actions [152.4, 152.4]; Novo cântico: song-new .edit-actions [157.3, 157.3]; Cântico por aprovar: song .pend-bar [78.1, 78.1]; Editar cântico: song-new .edit-actions [157.3, 157.3]",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 20529
+  },
+  {
+   "id": "USA-21",
+   "title": "Confirmações destrutivas (Apagar, Remover, Retirar, Recusar, Repor, Sair sem guardar) com #app-dlg-ok.danger-fill; caixas de texto e outras confirmações sem (v176; Repor desde v207)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 9372
+  },
+  {
+   "id": "USA-22",
+   "title": "Editar folha: rodapé em linha a 390 e 320 px (Apagar | Cancelar | Guardar), em coluna (.stack) a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185)",
+   "status": "pass",
+   "detail": "390: linha [Apagar, Cancelar, Guardar] · 320: linha [Apagar, Cancelar, Guardar] · 260: coluna [Guardar, Cancelar, Apagar]",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 12815
+  },
+  {
+   "id": "USA-23",
+   "title": "Ação principal primeiro = à direita em linha, em cima em coluna: OK|Cancelar (também vermelho), Fechar|Terminar sessão, Procurar|Cancelar, Publicar|Editar folha (também a 220 px), Aprovar|Recusar (v185)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 21371
+  },
+  {
+   "id": "USA-16",
+   "title": "Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens",
+   "status": "pass",
+   "detail": "--accent #a8453f; Editar rgba(0, 0, 0, 0) / rgb(168, 69, 63)",
+   "dim": "Usabilidade e acessibilidade",
+   "sev": "baixa",
+   "ms": 3641
+  },
+  {
+   "id": "COM-01",
+   "title": "Computador (Chromium 1280×800, rato): índice, cântico e gaveta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 3624
+  },
+  {
+   "id": "COM-02",
+   "title": "WebKit (Safari) disponível para testes",
+   "status": "skip",
+   "detail": "Playwright WebKit não está instalado neste ambiente (só Chromium em /opt/pw-browsers); testes Safari ficam manuais (ver MAN-01..03)",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 9
+  },
+  {
+   "id": "COM-03",
+   "title": "PWA: manifest válido (nome, ícones 192 e 512, display standalone, theme_color)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Compatibilidade",
+   "sev": "média",
+   "ms": 1
+  },
+  {
+   "id": "DB-RLS-01",
+   "title": "RLS ligada em todas as tabelas do esquema public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1047
+  },
+  {
+   "id": "DB-RLS-02",
+   "title": "anon sem nenhuma permissão em tabelas, vistas e sequências de public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1894
+  },
+  {
+   "id": "DB-RLS-03",
+   "title": "authenticated: permissões exatamente as esperadas (lista fechada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 680
+  },
+  {
+   "id": "DB-RLS-04",
+   "title": "songs: authenticated lê só colunas sem letra (lyrics, lyrics_edit, translation, source_hash nunca)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 668
+  },
+  {
+   "id": "DB-RLS-12",
+   "title": "Todas as colunas que a app pede pela API (fetchSongs e cada .from(…).select(…) em app.js) têm permissão SELECT para authenticated (v195: version_of sem grant partia a lista)",
+   "status": "pass",
+   "detail": "60 colunas em 14 tabelas",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "where": "grants por coluna em public.* vs selects de app.js",
+   "ms": 684
+  },
+  {
+   "id": "DB-RLS-05",
+   "title": "Política «leitura familia» esconde cânticos novos por aprovar a quem não os acrescentou (perfil Coro)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "Supabase: policy «leitura familia» em public.songs (comparar com supabase/novos.sql)",
+   "ms": 1390
+  },
+  {
+   "id": "DB-RLS-06",
+   "title": "Leitura por perfil (contagens): anon/sem acesso 0; Cancioneiro sem ficheiros nem etiquetas; Coro+ tudo",
+   "status": "pass",
+   "detail": "{\"anon\":\"negado\",\"stranger\":{\"songs\":0,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":0},\"cancioneiro\":{\"songs\":455,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":7},\"coro\":{\"songs\":1831,\"extra\":1376,\"files\":2401,\"tags\":2594,\"cols\":0,\"sync\":7},\"maestro\":{\"songs\":1832,\"extra\":1377,\"files\":2401,\"tags\":2594,\"cols\":5,\"sync\":7},\"gestor\":{\"songs\":1832,\"extra\":1377,\"files\":2401,\"tags\":2594,\"cols\":5,\"sync\":7}}",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 4994
+  },
+  {
+   "id": "DB-RLS-07",
+   "title": "Escrita por perfil (em rollback): coleções só Maestro+; letra/emails/registos nunca pelo browser",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 29004
+  },
+  {
+   "id": "DB-RLS-08",
+   "title": "Preferidos: cada pessoa só lê / apaga os seus (outro user_id invisível)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 675
+  },
+  {
+   "id": "DB-RLS-09",
+   "title": "Coleções: Coro não vê coleção expirada; Cancioneiro não vê coleção do Coro; Cancioneiro vê cântico de coleção ativa para o Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 2041
+  },
+  {
+   "id": "DB-RLS-11",
+   "title": "Folhas por publicar (published=false): invisíveis a Coro e Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro/Gestor; novas começam por publicar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 2764
+  },
+  {
+   "id": "DB-RLS-13",
+   "title": "collection_lyrics (v204): RLS ligada; anon sem nada; authenticated só SELECT de collection_id, song_slug, edited_at (nunca lyrics nem edited_by), sem escrita; ler lyrics como Coro/Maestro é recusado; Coro/Cancioneiro só veem linhas de folhas que veem",
+   "status": "pass",
+   "detail": "0 versões de folha; visíveis {\"cancioneiro\":0,\"coro\":0,\"maestro\":0}",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/folhas-letras.sql",
+   "ms": 9676
+  },
+  {
+   "id": "DB-RLS-14",
+   "title": "collection_songs.no_chords / no_scores (v206): authenticated tem SELECT, INSERT e UPDATE nessas colunas; Coro não as muda (em rollback), Maestro sim",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "ms": 2068
+  },
+  {
+   "id": "DB-RLS-15",
+   "title": "Grupos (v209): RLS nas 3 tabelas; anon sem nada; Coro só lê os seus user_groups e não escreve em collection_groups; Maestro lê os de todos; group_save/group_remove só Gestor; set_user_groups só Maestro+; set_my_groups recusa quem não tem acesso (tudo em rollback)",
+   "status": "pass",
+   "detail": "Coro vê 5 grupos seus; Maestro vê grupos de 11 pessoas",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/grupos.sql",
+   "ms": 10698
+  },
+  {
+   "id": "DB-RLS-16",
+   "title": "Folhas por grupo (v209, em rollback): Coro sem grupo não vê folhas; folha só de um grupo que o Coro não tem → invisível ao Coro e ao Maestro (v210), visível ao Gestor; com um grupo do Coro → visível; folha sem grupos → visível a quem tem grupo",
+   "status": "pass",
+   "detail": "{\"semGrupos\":1,\"coroSemGrupo\":0,\"outroGrupo\":0,\"outroGrupoMaestro\":0,\"outroGrupoGestor\":1,\"grupoDoCoro\":1}",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/grupos.sql (col_group_ok, «colecoes ler»)",
+   "ms": 4365
+  },
+  {
+   "id": "DB-RLS-10",
+   "title": "Coleções: máximo de 10 cânticos por folha (gatilho)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "baixa",
+   "ms": 681
+  },
+  {
+   "id": "DB-FN-01",
+   "title": "Funções SECURITY DEFINER com search_path fixo e sem EXECUTE para anon",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 783
+  },
+  {
+   "id": "DB-FN-02",
+   "title": "my_rank()/my_role(): sem acesso → 0/null; cada perfil → o seu nível",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 3466
+  },
+  {
+   "id": "DB-FN-04",
+   "title": "can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → o valor de allowed_emails.can_listen; SECURITY DEFINER com search_path (v201)",
+   "status": "pass",
+   "detail": "6/11 contas com reconhecimento; {\"stranger\":false,\"cancioneiro\":true,\"coro\":true,\"maestro\":true,\"gestor\":true}",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "média",
+   "where": "supabase/reconhecimento.sql",
+   "ms": 7475
+  },
+  {
+   "id": "DB-FN-03",
+   "title": "Funções de backup e gatilhos não executáveis por authenticated",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 659
+  },
+  {
+   "id": "DB-ST-01",
+   "title": "Bucket «coro» privado, com tipos e tamanho limitados e sem políticas de leitura direta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 2635
+  },
+  {
+   "id": "DB-ST-02",
+   "title": "Partilhas: tokens com ≥ 16 caracteres (≥ 96 bits) e validade ≤ 24 h (cânticos)",
+   "status": "pass",
+   "detail": "0 partilhas",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 723
+  },
+  {
+   "id": "INT-01",
+   "title": "Ficheiros dos cânticos existem no armazenamento (song_files → storage.objects)",
+   "status": "pass",
+   "detail": "2401 ficheiros; livros por página: livros/songbook.pdf, livros/canti2024.pdf",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1488
+  },
+  {
+   "id": "INT-02",
+   "title": "Partituras antigas (songs.pdf_url internas) existem no armazenamento",
+   "status": "pass",
+   "detail": "34 internas; 12 ligações externas (ver INT-12)",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 662
+  },
+  {
+   "id": "INT-12",
+   "title": "Partituras externas (pdf_url http/https) ainda respondem",
+   "status": "pass",
+   "detail": "12 ligações",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 12529
+  },
+  {
+   "id": "INT-03",
+   "title": "Objetos órfãos no armazenamento (sem cântico nem livro)",
+   "status": "pass",
+   "detail": "1427 objetos",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 790
+  },
+  {
+   "id": "INT-04",
+   "title": "Cânticos: número único, título e letra presentes, fontes válidas",
+   "status": "pass",
+   "detail": "1832 cânticos",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 824
+  },
+  {
+   "id": "INT-13",
+   "title": "Cânticos novos aprovados estão todos no Coro (song_sources coro_clu) (v174)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 724
+  },
+  {
+   "id": "INT-14",
+   "title": "«Todos os cânticos»: nenhum cântico sem categoria (consulta de docs/sessoes/webapp.md; tarefa contínua da sessão principal) (v190)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 703
+  },
+  {
+   "id": "INT-15",
+   "title": "Etiquetas «Tema» só com os nomes das categorias de «Todos os cânticos» (v191: sem «Infantis e de gestos»)",
+   "status": "pass",
+   "detail": "Cânticos do Movimento 19, Espirituais e gospel 17, Gestos 2, Infantis 7, Liturgia e Missa 144, Pop, rock e canções de autor 191, Populares e tradicionais 132",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 659
+  },
+  {
+   "id": "INT-16",
+   "title": "os_crocodilos / dos_cocodrilos: dos_cocodrilos é versão (es, songbook, fora do Cancioneiro, com a página do Songbook) de os_crocodilos, que só tem a fonte original e não tem tradução (v196)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 688
+  },
+  {
+   "id": "INT-17",
+   "title": "Versões (songs.version_of): apontam para um principal que existe e não é ele próprio versão; os cânticos juntados já não existem (v193)",
+   "status": "pass",
+   "detail": "36 versões",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 712
+  },
+  {
+   "id": "INT-18",
+   "title": "Versões de folha (collection_lyrics, v204): cada uma pertence a um cântico que está na folha; letra é uma lista não vazia de estrofes {type, lines[]}; diferente do original",
+   "status": "pass",
+   "detail": "0 versões de folha",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 703
+  },
+  {
+   "id": "INT-19",
+   "title": "Grupos (v209): nomes únicos sem distinguir maiúsculas; collection_groups e user_groups apontam para grupos e folhas que existem; contas abaixo de Maestro sem grupo (não recebem folhas) assinaladas",
+   "status": "pass",
+   "detail": "5 grupos; undefined contas ainda por escolher",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 668
+  },
+  {
+   "id": "DB-RLS-17",
+   "title": "Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder; set_collection_groups (v213) security invoker, só authenticated, [G1] aceite, {} recusado pela guarda, [G2] e Coro recusados; v217: editar uma publicada sem grupos passa, publicar sem grupos recusado; save_collection invoker, atómica, Coro recusado",
+   "status": "pass",
+   "detail": "{\"soG2_ver\":0,\"soG2_update\":0,\"g1g2_ver\":1,\"g1g2_apagaG2\":0,\"g1g2_apagaG1\":1,\"soG1_tiraUltimo\":\"recusado\",\"novaSemGrupos\":\"recusado\",\"rascunho\":\"aceite\",\"maestroTodos\":\"aceite\",\"editaPublicadaTodos\":\"aceite\",\"publicaSemGrupos\":\"recusado\",\"atomica\":{\"title\":\"Teste grupos Maestro\",\"n\":1},\"saveTitulo\":\"Título novo\",\"saveCoro\":\"recusado\",\"scg_mesmo\":\"aceite\",\"scg_vazio\":\"guarda\",\"scg_outro\":\"RLS\",\"scg_coro\":\"RLS\"}",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "where": "supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)",
+   "ms": 13968
+  },
+  {
+   "id": "INT-20",
+   "title": "Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)",
+   "status": "fail",
+   "detail": "1 pastas de missa/ ou gestos/ sem mapeamento que nunca apareceram em newFolders",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "evidence": "{\"sem_song_file\":0,\"sem_cantico\":0,\"mapa_orfao\":0,\"removidos\":0,\"song_files_de_removidos\":0,\"dup_drive\":0,\"dup_path\":0}",
+   "where": "supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files",
+   "ms": 1941,
+   "rerun": true
+  },
+  {
+   "id": "INT-05",
+   "title": "Cancioneiro: cânticos do site original estão todos no Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 688
+  },
+  {
+   "id": "INT-06",
+   "title": "Coleções: cânticos e secções apontam para coleções e cânticos existentes; posições sem repetição",
+   "status": "pass",
+   "detail": "5 folhas",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 691
+  },
+  {
+   "id": "INT-07",
+   "title": "Limpezas automáticas a funcionar (partilhas, coleções, convites, pedidos antigos)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 664
+  },
+  {
+   "id": "INT-08",
+   "title": "Agendamentos pg_cron presentes e ativos (7 tarefas) e sem falhas recentes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1387
+  },
+  {
+   "id": "INT-09",
+   "title": "Verificações semanais recentes: site original (sync_log), Drive do Coro (drive_sync_log), saúde (health_log) — ≤ 8 dias e sem erro",
+   "status": "pass",
+   "detail": "sync 2026-10-26, drive 2026-10-26, saúde 2026-10-26",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 702
+  },
+  {
+   "id": "INT-10",
+   "title": "Cópia de segurança semanal (GitHub Action «Cópia de segurança») concluída com sucesso há ≤ 8 dias",
+   "status": "pass",
+   "detail": "última boa 2026-10-26",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 629
+  },
+  {
+   "id": "INT-11",
+   "title": "Verificação semanal e conversão de gravações (GitHub Actions) sem falhas recentes",
+   "status": "pass",
+   "detail": "verificacao-semanal.yml 2026-10-19, converter-gravacoes.yml 2026-10-25",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 754
+  },
+  {
+   "id": "ESC-01",
+   "title": "Índices nas chaves estrangeiras usadas pela app (song_files.song_slug, collection_sections.collection_id, song_shares.collection_id, access_log)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "baixa",
+   "ms": 685
+  },
+  {
+   "id": "ESC-02",
+   "title": "Plano da lista de cânticos (perfil Coro, como a app pede) abaixo de 300 ms",
+   "status": "pass",
+   "detail": "52 ms",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 717
+  },
+  {
+   "id": "ESC-03",
+   "title": "Limites do plano Supabase: base de dados < 400 MB, armazenamento < 800 MB, access_log < 200 mil linhas",
+   "status": "pass",
+   "detail": "BD 23 MB, armazenamento 475 MB, access_log 757",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 677
+  },
+  {
+   "id": "ESC-04",
+   "title": "access_log: consulta de limites por pessoa usa o índice (user_id, kind, at)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 717
+  }
+ ]
+}
