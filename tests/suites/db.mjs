@@ -445,7 +445,7 @@ export default async function (level) {
     const [r] = await sql(`select
       (select count(*) from public.drive_files d where d.status in ('imported','removed') and d.song_slug is not null and not exists (select 1 from public.song_files f where f.drive_id = d.id))::int sem_song_file,
       (select count(*) from public.drive_files d where d.song_slug is not null and not exists (select 1 from public.songs s where s.slug = d.song_slug))::int sem_cantico,
-      (select count(*) from public.drive_folders f where not exists (select 1 from public.songs s where s.slug = f.song_slug))::int mapa_orfao,
+      (select count(*) from public.drive_folders f where f.song_slug is not null and not exists (select 1 from public.songs s where s.slug = f.song_slug))::int mapa_orfao, -- song_slug null = pasta conhecida sem cântico
       (select count(*) from public.drive_files where status = 'removed')::int removidos,
       (select count(*) from public.song_files f join public.drive_files d on d.id = f.drive_id where d.status = 'removed')::int song_files_de_removidos,
       (select count(*) from (select drive_id from public.song_files where drive_id is not null group by 1 having count(*) > 1) x)::int dup_drive,
