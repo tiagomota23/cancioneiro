@@ -2,7 +2,69 @@
  "version": "223",
  "level": "full",
  "date": "2026-10-26",
- "secs": 1287,
+ "secs": 1424,
+ "reruns": [
+  {
+   "at": "2026-10-26T10:16",
+   "only": "DB-,INT-,ESC-0",
+   "ids": [
+    "DB-RLS-01",
+    "DB-RLS-02",
+    "DB-RLS-03",
+    "DB-RLS-04",
+    "DB-RLS-12",
+    "DB-RLS-05",
+    "DB-RLS-06",
+    "DB-RLS-07",
+    "DB-RLS-08",
+    "DB-RLS-09",
+    "DB-RLS-11",
+    "DB-RLS-13",
+    "DB-RLS-14",
+    "DB-RLS-15",
+    "DB-RLS-16",
+    "DB-RLS-10",
+    "DB-FN-01",
+    "DB-FN-02",
+    "DB-FN-04",
+    "DB-FN-03",
+    "DB-ST-01",
+    "DB-ST-02",
+    "INT-01",
+    "INT-02",
+    "INT-12",
+    "INT-03",
+    "INT-04",
+    "INT-13",
+    "INT-14",
+    "INT-15",
+    "INT-16",
+    "INT-17",
+    "INT-18",
+    "INT-19",
+    "DB-RLS-17",
+    "INT-20",
+    "INT-05",
+    "INT-06",
+    "INT-07",
+    "INT-08",
+    "INT-09",
+    "INT-10",
+    "INT-11",
+    "ESC-01",
+    "ESC-02",
+    "ESC-03",
+    "ESC-04"
+   ]
+  },
+  {
+   "at": "2026-10-26T10:16",
+   "only": "INT-20",
+   "ids": [
+    "INT-20"
+   ]
+  }
+ ],
  "results": [
   {
    "id": "EST-01",
@@ -1616,6 +1678,439 @@
    "dim": "Compatibilidade",
    "sev": "média",
    "ms": 1
+  },
+  {
+   "id": "DB-RLS-01",
+   "title": "RLS ligada em todas as tabelas do esquema public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1047
+  },
+  {
+   "id": "DB-RLS-02",
+   "title": "anon sem nenhuma permissão em tabelas, vistas e sequências de public",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 1894
+  },
+  {
+   "id": "DB-RLS-03",
+   "title": "authenticated: permissões exatamente as esperadas (lista fechada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 680
+  },
+  {
+   "id": "DB-RLS-04",
+   "title": "songs: authenticated lê só colunas sem letra (lyrics, lyrics_edit, translation, source_hash nunca)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 668
+  },
+  {
+   "id": "DB-RLS-12",
+   "title": "Todas as colunas que a app pede pela API (fetchSongs e cada .from(…).select(…) em app.js) têm permissão SELECT para authenticated (v195: version_of sem grant partia a lista)",
+   "status": "pass",
+   "detail": "60 colunas em 14 tabelas",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "where": "grants por coluna em public.* vs selects de app.js",
+   "ms": 684
+  },
+  {
+   "id": "DB-RLS-05",
+   "title": "Política «leitura familia» esconde cânticos novos por aprovar a quem não os acrescentou (perfil Coro)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "Supabase: policy «leitura familia» em public.songs (comparar com supabase/novos.sql)",
+   "ms": 1390
+  },
+  {
+   "id": "DB-RLS-06",
+   "title": "Leitura por perfil (contagens): anon/sem acesso 0; Cancioneiro sem ficheiros nem etiquetas; Coro+ tudo",
+   "status": "pass",
+   "detail": "{\"anon\":\"negado\",\"stranger\":{\"songs\":0,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":0},\"cancioneiro\":{\"songs\":455,\"extra\":0,\"files\":0,\"tags\":0,\"cols\":0,\"sync\":7},\"coro\":{\"songs\":1831,\"extra\":1376,\"files\":2401,\"tags\":2594,\"cols\":0,\"sync\":7},\"maestro\":{\"songs\":1832,\"extra\":1377,\"files\":2401,\"tags\":2594,\"cols\":5,\"sync\":7},\"gestor\":{\"songs\":1832,\"extra\":1377,\"files\":2401,\"tags\":2594,\"cols\":5,\"sync\":7}}",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 4994
+  },
+  {
+   "id": "DB-RLS-07",
+   "title": "Escrita por perfil (em rollback): coleções só Maestro+; letra/emails/registos nunca pelo browser",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 29004
+  },
+  {
+   "id": "DB-RLS-08",
+   "title": "Preferidos: cada pessoa só lê / apaga os seus (outro user_id invisível)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 675
+  },
+  {
+   "id": "DB-RLS-09",
+   "title": "Coleções: Coro não vê coleção expirada; Cancioneiro não vê coleção do Coro; Cancioneiro vê cântico de coleção ativa para o Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 2041
+  },
+  {
+   "id": "DB-RLS-11",
+   "title": "Folhas por publicar (published=false): invisíveis a Coro e Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro/Gestor; novas começam por publicar",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "ms": 2764
+  },
+  {
+   "id": "DB-RLS-13",
+   "title": "collection_lyrics (v204): RLS ligada; anon sem nada; authenticated só SELECT de collection_id, song_slug, edited_at (nunca lyrics nem edited_by), sem escrita; ler lyrics como Coro/Maestro é recusado; Coro/Cancioneiro só veem linhas de folhas que veem",
+   "status": "pass",
+   "detail": "0 versões de folha; visíveis {\"cancioneiro\":0,\"coro\":0,\"maestro\":0}",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/folhas-letras.sql",
+   "ms": 9676
+  },
+  {
+   "id": "DB-RLS-14",
+   "title": "collection_songs.no_chords / no_scores (v206): authenticated tem SELECT, INSERT e UPDATE nessas colunas; Coro não as muda (em rollback), Maestro sim",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "ms": 2068
+  },
+  {
+   "id": "DB-RLS-15",
+   "title": "Grupos (v209): RLS nas 3 tabelas; anon sem nada; Coro só lê os seus user_groups e não escreve em collection_groups; Maestro lê os de todos; group_save/group_remove só Gestor; set_user_groups só Maestro+; set_my_groups recusa quem não tem acesso (tudo em rollback)",
+   "status": "pass",
+   "detail": "Coro vê 5 grupos seus; Maestro vê grupos de 11 pessoas",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/grupos.sql",
+   "ms": 10698
+  },
+  {
+   "id": "DB-RLS-16",
+   "title": "Folhas por grupo (v209, em rollback): Coro sem grupo não vê folhas; folha só de um grupo que o Coro não tem → invisível ao Coro e ao Maestro (v210), visível ao Gestor; com um grupo do Coro → visível; folha sem grupos → visível a quem tem grupo",
+   "status": "pass",
+   "detail": "{\"semGrupos\":1,\"coroSemGrupo\":0,\"outroGrupo\":0,\"outroGrupoMaestro\":0,\"outroGrupoGestor\":1,\"grupoDoCoro\":1}",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/grupos.sql (col_group_ok, «colecoes ler»)",
+   "ms": 4365
+  },
+  {
+   "id": "DB-RLS-10",
+   "title": "Coleções: máximo de 10 cânticos por folha (gatilho)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "baixa",
+   "ms": 681
+  },
+  {
+   "id": "DB-FN-01",
+   "title": "Funções SECURITY DEFINER com search_path fixo e sem EXECUTE para anon",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 783
+  },
+  {
+   "id": "DB-FN-02",
+   "title": "my_rank()/my_role(): sem acesso → 0/null; cada perfil → o seu nível",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 3466
+  },
+  {
+   "id": "DB-FN-04",
+   "title": "can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → o valor de allowed_emails.can_listen; SECURITY DEFINER com search_path (v201)",
+   "status": "pass",
+   "detail": "6/11 contas com reconhecimento; {\"stranger\":false,\"cancioneiro\":true,\"coro\":true,\"maestro\":true,\"gestor\":true}",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "média",
+   "where": "supabase/reconhecimento.sql",
+   "ms": 7475
+  },
+  {
+   "id": "DB-FN-03",
+   "title": "Funções de backup e gatilhos não executáveis por authenticated",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 659
+  },
+  {
+   "id": "DB-ST-01",
+   "title": "Bucket «coro» privado, com tipos e tamanho limitados e sem políticas de leitura direta",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 2635
+  },
+  {
+   "id": "DB-ST-02",
+   "title": "Partilhas: tokens com ≥ 16 caracteres (≥ 96 bits) e validade ≤ 24 h (cânticos)",
+   "status": "pass",
+   "detail": "0 partilhas",
+   "dim": "Segurança — funções SQL e armazenamento",
+   "sev": "alta",
+   "ms": 723
+  },
+  {
+   "id": "INT-01",
+   "title": "Ficheiros dos cânticos existem no armazenamento (song_files → storage.objects)",
+   "status": "pass",
+   "detail": "2401 ficheiros; livros por página: livros/songbook.pdf, livros/canti2024.pdf",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1488
+  },
+  {
+   "id": "INT-02",
+   "title": "Partituras antigas (songs.pdf_url internas) existem no armazenamento",
+   "status": "pass",
+   "detail": "34 internas; 12 ligações externas (ver INT-12)",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 662
+  },
+  {
+   "id": "INT-12",
+   "title": "Partituras externas (pdf_url http/https) ainda respondem",
+   "status": "pass",
+   "detail": "12 ligações",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 12529
+  },
+  {
+   "id": "INT-03",
+   "title": "Objetos órfãos no armazenamento (sem cântico nem livro)",
+   "status": "pass",
+   "detail": "1427 objetos",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 790
+  },
+  {
+   "id": "INT-04",
+   "title": "Cânticos: número único, título e letra presentes, fontes válidas",
+   "status": "pass",
+   "detail": "1832 cânticos",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 824
+  },
+  {
+   "id": "INT-13",
+   "title": "Cânticos novos aprovados estão todos no Coro (song_sources coro_clu) (v174)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 724
+  },
+  {
+   "id": "INT-14",
+   "title": "«Todos os cânticos»: nenhum cântico sem categoria (consulta de docs/sessoes/webapp.md; tarefa contínua da sessão principal) (v190)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 703
+  },
+  {
+   "id": "INT-15",
+   "title": "Etiquetas «Tema» só com os nomes das categorias de «Todos os cânticos» (v191: sem «Infantis e de gestos»)",
+   "status": "pass",
+   "detail": "Cânticos do Movimento 19, Espirituais e gospel 17, Gestos 2, Infantis 7, Liturgia e Missa 144, Pop, rock e canções de autor 191, Populares e tradicionais 132",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 659
+  },
+  {
+   "id": "INT-16",
+   "title": "os_crocodilos / dos_cocodrilos: dos_cocodrilos é versão (es, songbook, fora do Cancioneiro, com a página do Songbook) de os_crocodilos, que só tem a fonte original e não tem tradução (v196)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 688
+  },
+  {
+   "id": "INT-17",
+   "title": "Versões (songs.version_of): apontam para um principal que existe e não é ele próprio versão; os cânticos juntados já não existem (v193)",
+   "status": "pass",
+   "detail": "36 versões",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 712
+  },
+  {
+   "id": "INT-18",
+   "title": "Versões de folha (collection_lyrics, v204): cada uma pertence a um cântico que está na folha; letra é uma lista não vazia de estrofes {type, lines[]}; diferente do original",
+   "status": "pass",
+   "detail": "0 versões de folha",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 703
+  },
+  {
+   "id": "INT-19",
+   "title": "Grupos (v209): nomes únicos sem distinguir maiúsculas; collection_groups e user_groups apontam para grupos e folhas que existem; contas abaixo de Maestro sem grupo (não recebem folhas) assinaladas",
+   "status": "pass",
+   "detail": "5 grupos; undefined contas ainda por escolher",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 668
+  },
+  {
+   "id": "DB-RLS-17",
+   "title": "Maestro e grupos (v210, em rollback, Maestro só no 1.º grupo G1): folha só de G2 → 0 visíveis e update 0; G1+G2 → visível, apagar o link G2 = 0 linhas, apagar G1 = 1; o Maestro sem todos os grupos não deixa uma folha publicada sem grupos (col_groups_guard, v211, com set constraints all immediate): nem tirando o último link, nem criando publicada sem grupos; rascunho sem grupos e Maestro em todos os grupos continuam a poder; set_collection_groups (v213) security invoker, só authenticated, [G1] aceite, {} recusado pela guarda, [G2] e Coro recusados; v217: editar uma publicada sem grupos passa, publicar sem grupos recusado; save_collection invoker, atómica, Coro recusado",
+   "status": "pass",
+   "detail": "{\"soG2_ver\":0,\"soG2_update\":0,\"g1g2_ver\":1,\"g1g2_apagaG2\":0,\"g1g2_apagaG1\":1,\"soG1_tiraUltimo\":\"recusado\",\"novaSemGrupos\":\"recusado\",\"rascunho\":\"aceite\",\"maestroTodos\":\"aceite\",\"editaPublicadaTodos\":\"aceite\",\"publicaSemGrupos\":\"recusado\",\"atomica\":{\"title\":\"Teste grupos Maestro\",\"n\":1},\"saveTitulo\":\"Título novo\",\"saveCoro\":\"recusado\",\"scg_mesmo\":\"aceite\",\"scg_vazio\":\"guarda\",\"scg_outro\":\"RLS\",\"scg_coro\":\"RLS\"}",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "where": "supabase/grupos-maestro.sql (políticas «colecoes gerir» e «grupos folha gerir»)",
+   "ms": 13968
+  },
+  {
+   "id": "INT-20",
+   "title": "Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)",
+   "status": "fail",
+   "detail": "1 pastas de missa/ ou gestos/ sem mapeamento que nunca apareceram em newFolders",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "evidence": "{\"sem_song_file\":0,\"sem_cantico\":0,\"mapa_orfao\":0,\"removidos\":0,\"song_files_de_removidos\":0,\"dup_drive\":0,\"dup_path\":0}",
+   "where": "supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files",
+   "ms": 1941,
+   "rerun": true
+  },
+  {
+   "id": "INT-05",
+   "title": "Cancioneiro: cânticos do site original estão todos no Cancioneiro",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 688
+  },
+  {
+   "id": "INT-06",
+   "title": "Coleções: cânticos e secções apontam para coleções e cânticos existentes; posições sem repetição",
+   "status": "pass",
+   "detail": "5 folhas",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 691
+  },
+  {
+   "id": "INT-07",
+   "title": "Limpezas automáticas a funcionar (partilhas, coleções, convites, pedidos antigos)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 664
+  },
+  {
+   "id": "INT-08",
+   "title": "Agendamentos pg_cron presentes e ativos (7 tarefas) e sem falhas recentes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1387
+  },
+  {
+   "id": "INT-09",
+   "title": "Verificações semanais recentes: site original (sync_log), Drive do Coro (drive_sync_log), saúde (health_log) — ≤ 8 dias e sem erro",
+   "status": "pass",
+   "detail": "sync 2026-10-26, drive 2026-10-26, saúde 2026-10-26",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 702
+  },
+  {
+   "id": "INT-10",
+   "title": "Cópia de segurança semanal (GitHub Action «Cópia de segurança») concluída com sucesso há ≤ 8 dias",
+   "status": "pass",
+   "detail": "última boa 2026-10-26",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 629
+  },
+  {
+   "id": "INT-11",
+   "title": "Verificação semanal e conversão de gravações (GitHub Actions) sem falhas recentes",
+   "status": "pass",
+   "detail": "verificacao-semanal.yml 2026-10-19, converter-gravacoes.yml 2026-10-25",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "ms": 754
+  },
+  {
+   "id": "ESC-01",
+   "title": "Índices nas chaves estrangeiras usadas pela app (song_files.song_slug, collection_sections.collection_id, song_shares.collection_id, access_log)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "baixa",
+   "ms": 685
+  },
+  {
+   "id": "ESC-02",
+   "title": "Plano da lista de cânticos (perfil Coro, como a app pede) abaixo de 300 ms",
+   "status": "pass",
+   "detail": "52 ms",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 717
+  },
+  {
+   "id": "ESC-03",
+   "title": "Limites do plano Supabase: base de dados < 400 MB, armazenamento < 800 MB, access_log < 200 mil linhas",
+   "status": "pass",
+   "detail": "BD 23 MB, armazenamento 475 MB, access_log 757",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 677
+  },
+  {
+   "id": "ESC-04",
+   "title": "access_log: consulta de limites por pessoa usa o índice (user_id, kind, at)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Escalabilidade — base de dados",
+   "sev": "média",
+   "ms": 717
   }
  ]
 }

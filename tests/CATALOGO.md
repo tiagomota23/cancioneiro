@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v222, 2026-10-26** — 217 ok · 3 falhas (DB-FN-01 col_groups_guard executável por anon; INT-09 drive-sync com erro PGRST102; FUN-64 folha nova no ?demo sem os grupos do Maestro) · 3 avisos (USA-04 decisão; DES-01 app.js 268 KB; USA-10 .adm-groups 16 px) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-26-v222-full.md` (DB-RLS-15, DB-RLS-17, FUN-26, FUN-38, FUN-42, FUN-61, FUN-69 falharam por erro do teste; corrigidos e corridos de novo na mesma execução).
+Última execução completa: **v223, 2026-10-26 (semanal)** — 221 ok · 2 falhas (FUN-64 folha nova no ?demo ainda sem os grupos do Maestro; INT-20 pasta gestos/Hinos laudes com ficheiros reported sem mapeamento e nunca em newFolders) · 1 aviso (USA-04, decisão) · 1 não corrido (WebKit). Relatório `tests/reports/2026-10-26-v223-full.md` (parte DB corrida depois da drive-sync das 10:13 UTC; INT-20 corrigido no teste para aceitar drive_folders com song_slug null).
 
 ---
 
@@ -162,7 +162,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 | ID | O que se verifica | Como | Grav. | Freq. | Estado |
 |---|---|---|---|---|---|
-| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento (app.js 300 KB desde 2026-10-26, decisão do Tiago) | live | média | V | ☐ por correr |
+| DES-01 | Tamanho de app.js / styles.css / theme.css / index.html dentro do orçamento (app.js 300 KB desde 2026-10-26, decisão do Tiago) | live | média | V | ✓ |
 | DES-02 | Tempos de resposta (site, auth, função) — mediana de 3 | live | média | V | ✓ |
 | DES-03 | Arranque a frio da função conteudo < 5 s | live | média | S | ✓ |
 | ESC-01 | Chaves estrangeiras com índice (supabase/indices.sql, v156) | db | baixa | V | ✓ |
@@ -190,7 +190,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
 | USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
-| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ! |
+| USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
 | USA-13 | Teclado: Tab com foco visível; Escape fecha diálogos | ui | média | V | ✓ |
@@ -252,7 +252,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | DB-RLS-09 | Coleções: expiradas, público, cântico visível ao Cancioneiro por coleção | db | alta | V | ✓ |
 | DB-RLS-11 | Folhas por publicar invisíveis a Coro/Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro+; novas começam por publicar (v159) | db | crítica | V | ✓ |
 | DB-RLS-10 | Máximo 10 cânticos por folha | db | baixa | V | ✓ |
-| DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✗ |
+| DB-FN-01 | SECURITY DEFINER com search_path e sem EXECUTE para anon | db | alta | V | ✓ |
 | DB-FN-02 | my_rank()/my_role() por perfil | db | alta | V | ✓ |
 | DB-FN-03 | Funções de backup e gatilhos fora do alcance de authenticated | db | alta | V | ✓ |
 | DB-FN-04 | can_listen(): anon sem EXECUTE; sem acesso → false; cada perfil → allowed_emails.can_listen; SECURITY DEFINER com search_path (v201) | db | média | S | ✓ |
@@ -281,12 +281,12 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
 | INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ✓ |
-| INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ☐ por correr |
+| INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ✗ |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
 | INT-08 | 7 agendamentos pg_cron ativos e sem falhas | db | alta | V | ✓ |
-| INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✗ |
+| INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✓ |
 | INT-10 | Cópia de segurança semanal com sucesso ≤ 8 dias | db | alta | V | ✓ |
 | INT-11 | Verificação semanal e conversão de gravações sem falhas | db | média | V | ✓ |
 | INT-12 | Partituras externas (pdf_url http) respondem | db | baixa | S | ✓ |
