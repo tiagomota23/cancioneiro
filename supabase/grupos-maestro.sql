@@ -66,3 +66,5 @@ begin
 end $$;
 revoke execute on function public.set_collection_groups(uuid, uuid[]) from public, anon;
 grant execute on function public.set_collection_groups(uuid, uuid[]) to authenticated;
+-- função de gatilho: ninguém a chama diretamente (higiene, como as outras)
+revoke execute on function public.col_groups_guard() from public, anon, authenticated;

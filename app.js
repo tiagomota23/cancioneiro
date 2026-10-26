@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-25 v222';
+  const APP_VERSION = '2026-10-26 v223';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3568,7 +3568,7 @@
         const { data, error } = await sb.from('collections').insert(row).select('id,title,audience,duration,expires_at,created_by,published').single(); if (error) throw error;
         c = { ...data, songs: [], sections: [], groups: [] }; cols.push(c);
         // Maestro que não está em todos os grupos: a folha nova fica logo só dos seus grupos (não a veem os outros grupos)
-        if (lvl() < 4 && myGroupIds && myGroupIds.size && ownGroups().length < groups.length) c.groups = (await G.setCol(c, [...myGroupIds])) || [];
+        if (lvl() < 4 && myGroupIds && myGroupIds.size && ownGroups().length < groups.length) c.groups = (await G.setCol(c, [...myGroupIds])) || [...myGroupIds].map(group_id => ({ group_id })); // no demo, setCol não devolve
       }
       colStore();
       $('col-dlg').close();

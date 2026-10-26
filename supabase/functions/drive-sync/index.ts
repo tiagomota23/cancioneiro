@@ -126,7 +126,12 @@ Deno.serve(async () => {
       }
       for (const [id, k] of known) if (!seen.has(id) && k.status !== 'removed') { sum.removed.push(k.path); upserts.push({ id, path: k.path, status: 'removed', last_seen: now }); }
     }
-    for (let i = 0; i < upserts.length; i += 500) await rest('drive_files?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(upserts.slice(i, i + 500)) });
+    // o PostgREST exige as mesmas chaves em todas as linhas de um lote: agrupa pelos campos enviados (as «removidas» têm
+    // menos campos, e os sem valor, como o md5 dos Google Docs, não vão no JSON)
+    const shapes = new Map();
+    for (const u of upserts) { const k = Object.keys(u).filter(x => u[x] !== undefined).sort().join(','); if (!shapes.has(k)) shapes.set(k, []); shapes.get(k).push(u); }
+    for (const list of shapes.values())
+      for (let i = 0; i < list.length; i += 500) await rest('drive_files?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(list.slice(i, i + 500)) });
   } catch (e) { error = String(e.message || e); }
   await rest('drive_sync_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ summary: sum, error }) }).catch(() => {});
   const any = sum.imported.length + sum.newFolders.length + sum.changed.length + sum.removed.length + sum.skipped.length;
