@@ -1,0 +1,27 @@
+{
+ "version": "224",
+ "level": "quick",
+ "date": "2026-10-30",
+ "secs": 16,
+ "results": [
+  {
+   "id": "INT-20",
+   "title": "Drive do Coro (regras de 26 out): nada se apaga quando um ficheiro desaparece do Drive — cada drive_files importado/removido com cântico ainda tem o seu song_file (drive_id) e o cântico existe; drive_folders (pasta ou ficheiro) aponta para cânticos que existem; cada pasta nova de missa/ ou gestos/ sem mapeamento já apareceu em newFolders ou em skipped («sem cântico associado») de alguma verificação; nenhum song_file duplicado (mesmo drive_id, ou mesmo cântico + caminho)",
+   "status": "pass",
+   "detail": "0 removidos no Drive; 0 song_files mantidos de ficheiros removidos",
+   "dim": "Integridade dos dados",
+   "sev": "média",
+   "where": "supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files",
+   "ms": 2261
+  },
+  {
+   "id": "FUN-64",
+   "title": "Maestro só com os seus grupos (v210, mygroups g2+g3): Publicar mostra só Liceus e CLU, sem «Todos», OK desativado até escolher; #ce-groups igual; folha nova nasce com g2+g3",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 12187
+  }
+ ]
+}
