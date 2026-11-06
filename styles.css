@@ -481,9 +481,9 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .col-dlg { width: min(420px, calc(100vw - 32px)); }
 .col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
 
-/* Sem zoom nas páginas da app (o iPhone faz zoom sozinho em campos com letra < 16 px; o gesto de pinça fica só para as partituras) */
+/* Campos com letra ≥ 16 px: o iPhone não amplia sozinho ao tocar neles. O zoom com dois dedos fica livre em toda a app
+   (acessibilidade); no visor de partituras o gesto é o zoom da própria app */
 input, select, textarea { font-size: max(16px, 1em); }
-html, body { touch-action: pan-x pan-y; }
 .pdfview, .pdfview * { touch-action: auto; }
 
 .fav-toggle.book svg { fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linejoin: round; }
