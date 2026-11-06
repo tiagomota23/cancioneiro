@@ -104,7 +104,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-10-26 v224';
+  const APP_VERSION = '2026-11-06 v225';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3803,8 +3803,8 @@
     } catch (e) {}
   });
 
-  // Sem zoom com dois dedos nas páginas da app (só nas partituras); o iPhone ignora user-scalable, por isso trava-se o gesto
-  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false }); // no visor de partituras há o zoom da app
-  document.addEventListener('touchmove', e => { if (e.touches.length > 1 && $('pdfview').hidden) e.preventDefault(); }, { passive: false });
+  // Zoom com dois dedos em toda a app (acessibilidade). Só no visor de partituras o gesto é da app (o zoom das
+  // partituras), por isso aí o iPhone não amplia a página
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => { if (!$('pdfview').hidden) e.preventDefault(); }, { passive: false });
 
 })();
