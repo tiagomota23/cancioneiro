@@ -2203,7 +2203,24 @@ async function suites(full) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'baixa' });
   if (full) {
-    await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
+    await t('USA-26', 'Zoom com os dedos (v225): html touch-action auto e body manipulation; gesturestart não é bloqueado na lista nem no cântico e é bloqueado com o visor de partituras aberto; campos de texto com letra ≥ 16 px (sem zoom automático no iPhone)', () => withApp({ perfil: 'maestro', hash: '#/cantico/adoro_te_devote' }, async ({ page }) => {
+    const bad = [];
+    const ta = await page.evaluate(() => ({ html: getComputedStyle(document.documentElement).touchAction, body: getComputedStyle(document.body).touchAction }));
+    if (ta.html !== 'auto') bad.push('html touch-action ' + ta.html);
+    if (ta.body !== 'manipulation') bad.push('body touch-action ' + ta.body);
+    const blocked = () => page.evaluate(() => { const e = new Event('gesturestart', { cancelable: true, bubbles: true }); document.body.dispatchEvent(e); return e.defaultPrevented; });
+    if (await blocked()) bad.push('gesturestart bloqueado no cântico');
+    await page.evaluate(() => { location.hash = '#/cantico/adoro_te_devote/partitura'; });
+    await page.waitForSelector('#pdfpages canvas', { timeout: 12000 }).catch(() => {});
+    if (!(await blocked())) bad.push('gesturestart não bloqueado com o visor aberto (o visor tem pinch próprio)');
+    await page.click('#pdf-back').catch(() => {}); await sleep(600);
+    if (await blocked()) bad.push('gesturestart bloqueado depois de fechar o visor');
+    // campos de texto: letra ≥ 16 px (pesquisa e janelas com campos)
+    const small = await page.evaluate(() => [...document.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select')].filter(e => parseFloat(getComputedStyle(e).fontSize) < 16).map(e => (e.id || e.name || e.tagName) + ' ' + getComputedStyle(e).fontSize));
+    if (small.length) bad.push('campos com letra < 16 px: ' + small.slice(0, 6).join(', '));
+    return bad.length ? bad.join('; ') : true;
+  }), { sev: 'média' });
+  await t('USA-16', 'Componentes seguem o padrão (design/tokens.json): botões principais usam as cores dos tokens', () => withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const tok = JSON.parse(fs.readFileSync(path.join(ROOT, 'design/tokens.json'), 'utf8'));
       // desde v203 as cores dependem do perfil (design/tokens.json → perfis); o perfil Maestro tem o seu accent
       const pm = (tok.perfis?.tokens || []).find(x => x.id === 'maestro')?.values?.accent;
