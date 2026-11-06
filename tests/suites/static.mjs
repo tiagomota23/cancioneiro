@@ -244,8 +244,20 @@ export default async function (level) {
     const bad = [...h.matchAll(/<button([^>]*)>\s*<svg[\s\S]*?<\/button>/g)].filter(m => !/aria-label=/.test(m[1]) && !m[0].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]+>/g, '').trim()).map(m => (m[1].match(/id="([^"]+)"/) || [])[1] || '?');
     return bad.length ? 'sem aria-label: ' + bad.join(', ') : true;
   });
-  await t('USA-04', 'viewport não bloqueia o zoom (maximum-scale=1 / user-scalable=no)', () => {
+  await t('USA-04', 'O zoom com os dedos não está bloqueado (v225, decisão do Tiago): viewport sem maximum-scale nem user-scalable=no; html/body sem touch-action que impeça o zoom; gesturestart/gesturechange só bloqueados com o visor de partituras aberto; nenhum touchmove bloqueado fora do visor (#pdfpages)', () => {
+    const bad = [];
     const v = (read('index.html').match(/name="viewport" content="([^"]+)"/) || [])[1] || '';
-    return /maximum-scale=1\b|user-scalable=no/.test(v) ? { warn: `viewport «${v}» impede ampliar com os dedos (WCAG 1.4.4); A−/A+ compensa só na letra` } : true;
-  });
+    if (/maximum-scale|user-scalable=no/.test(v)) bad.push(`viewport «${v}» impede ampliar com os dedos (WCAG 1.4.4)`);
+    const css = read('styles.css');
+    for (const m of css.matchAll(/(^|\})\s*([^{}]*\b(?:html|body)\b[^{}]*)\{([^}]*)\}/g)) {
+      const sel = m[2].trim(), body = m[3];
+      if (/^(html|body)(\s*,\s*(html|body))*$/.test(sel) && /touch-action\s*:\s*(none|pan-x\s+pan-y|pan-y\s+pan-x|pan-x|pan-y)\b/.test(body)) bad.push(`styles.css: «${sel}» com ${body.match(/touch-action\s*:[^;]+/)[0].trim()}`);
+    }
+    const js = read('app.js');
+    const gest = [...js.matchAll(/\['gesturestart', 'gesturechange'\][^\n]*/g)].map(m => m[0]);
+    if (gest.some(g => /preventDefault/.test(g) && !/pdfview'\)\.hidden\) e\.preventDefault/.test(g))) bad.push('gesturestart/gesturechange com preventDefault fora do visor');
+    const tm = [...js.matchAll(/(\w+)\.addEventListener\('touchmove'/g)].map(m => m[1]);
+    if (tm.some(x => x !== 'pp')) bad.push('touchmove com listener fora de #pdfpages: ' + tm.join(', '));
+    return bad.length ? bad.join('; ') : { pass: `viewport «${v}»` };
+  }, { sev: 'média', where: 'index.html (viewport), styles.css (touch-action), app.js (gesture*/touchmove)' });
 }
