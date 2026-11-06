@@ -180,7 +180,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-01 | `node tools/theme/build.mjs --check` passa (theme.css = design/tokens.json) | static | média | V | ✓ |
 | USA-02 | styles.css sem cores fixas (só variáveis do tema) | static | baixa | V | ✓ |
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
-| USA-04 | Viewport não bloqueia zoom (WCAG 1.4.4) — `maximum-scale=1` é decisão (zoom só nas partituras; A−/A+ na letra): fica como aviso | static | baixa | V | ! |
+| USA-04 | Zoom com os dedos não bloqueado (v225, decisão do Tiago): viewport sem maximum-scale/user-scalable=no; html/body sem touch-action que impeça o zoom; gesture* só bloqueados com o visor aberto; touchmove só em #pdfpages | static | média | V | ☐ por correr |
 | USA-05 | Tokens: on-brand sobre brand/brand-deep; accent e chord sobre paper (claro e escuro); danger sobre surface; ≥ 4.5:1 na base e nos 4 perfis (v203) | static | média | V | ✓ |
 | USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ✓ |
 | USA-18 | Texto e ícones sobre a cor da marca (texto ≥ 4.5:1 opaco, ícones ≥ 3:1): índice e gaveta nos 4 perfis, folha, edição (v203) | ui | média | V | ✓ |
@@ -190,6 +190,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
 | USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
+| USA-26 | Zoom com os dedos (v225, UI): html auto / body manipulation; gesturestart livre na lista e no cântico, bloqueado com o visor aberto; campos ≥ 16 px | ui | média | V | ☐ por correr |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
