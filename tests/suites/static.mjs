@@ -195,6 +195,25 @@ export default async function (level) {
     if (!/if \(lvl < 4 && !groupOk\(await myGroups\(user\), cs\.collections\?\.collection_groups\)\) return denied\(\);/.test(c)) bad.push('collyrics: Maestro não é recusado fora dos seus grupos (v210)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
+  await t('SEG-17', 'sync-cc (v226): a 1.ª coisa que faz é exigir e consumir um pedido em job_requests (claimJob, últimos 10 min) e responder 403 sem ele', () => {
+    const c = read('supabase/functions/sync-cc/index.ts');
+    const bad = [];
+    if (!/Deno\.serve\(async \(\) => \{\s*if \(!\(await claimJob\('sync-cc'\)\.catch\(\(\) => false\)\)\) return json\(\{[^}]*\}, 403\);/.test(c)) bad.push('Deno.serve não começa por claimJob → 403');
+    if (!/job_requests\?job=eq\.\$\{job\}&requested_at=gte\.\$\{since\}`, \{ method: 'DELETE'/.test(c)) bad.push('claimJob não consome o pedido (DELETE em job_requests)');
+    if (!/Date\.now\(\) - 10 \* 60e3/.test(c)) bad.push('janela do pedido diferente de 10 min (rever)');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/sync-cc/index.ts' });
+  await t('SEG-18', 'cc-transcribe (v227): valida slug e drive_id (400), depois exige e consome um pedido em job_requests (claimJob → 403) antes de qualquer outra leitura ou chamada; só transcreve gravações ligadas ao cântico como kind other', () => {
+    const c = read('supabase/functions/cc-transcribe/index.ts'), bad = [];
+    const body = (c.match(/Deno\.serve\(async \(req\) => \{([\s\S]*)$/) || [])[1] || '';
+    const iClaim = body.indexOf("claimJob('cc-transcribe')"), iRest = body.indexOf('rest(`'), iFetch = body.search(/\bfetch\(/);
+    if (iClaim < 0) bad.push('sem claimJob');
+    if (!/return json\(\{ error: 'pedido inválido' \}, 400\)/.test(body)) bad.push('sem validação 400 de slug/drive_id');
+    if (iClaim >= 0 && ((iRest >= 0 && iRest < iClaim) || (iFetch >= 0 && iFetch < iClaim))) bad.push('há leituras ou chamadas antes do claimJob');
+    if (!/song_files\?song_slug=eq\.\$\{slug\}&kind=eq\.other/.test(body)) bad.push('não confirma a gravação ligada ao cântico (kind other)');
+    if (!/Date\.now\(\) - 10 \* 60e3/.test(c)) bad.push('janela do pedido diferente de 10 min (rever)');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/cc-transcribe/index.ts' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];
