@@ -195,6 +195,14 @@ export default async function (level) {
     if (!/if \(lvl < 4 && !groupOk\(await myGroups\(user\), cs\.collections\?\.collection_groups\)\) return denied\(\);/.test(c)) bad.push('collyrics: Maestro não é recusado fora dos seus grupos (v210)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
+  await t('SEG-17', 'sync-cc (v226): a 1.ª coisa que faz é exigir e consumir um pedido em job_requests (claimJob, últimos 10 min) e responder 403 sem ele', () => {
+    const c = read('supabase/functions/sync-cc/index.ts');
+    const bad = [];
+    if (!/Deno\.serve\(async \(\) => \{\s*if \(!\(await claimJob\('sync-cc'\)\.catch\(\(\) => false\)\)\) return json\(\{[^}]*\}, 403\);/.test(c)) bad.push('Deno.serve não começa por claimJob → 403');
+    if (!/job_requests\?job=eq\.\$\{job\}&requested_at=gte\.\$\{since\}`, \{ method: 'DELETE'/.test(c)) bad.push('claimJob não consome o pedido (DELETE em job_requests)');
+    if (!/Date\.now\(\) - 10 \* 60e3/.test(c)) bad.push('janela do pedido diferente de 10 min (rever)');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/sync-cc/index.ts' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];

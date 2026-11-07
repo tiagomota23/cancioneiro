@@ -469,6 +469,24 @@ export default async function (level) {
     if (unreported[0].n) bad.push(`${unreported[0].n} pastas de missa/ ou gestos/ sem mapeamento que nunca apareceram em newFolders`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.removidos} removidos no Drive; ${r.song_files_de_removidos} song_files mantidos de ficheiros removidos` };
   }, { sev: 'média', where: 'supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files' });
+  await t('INT-21', 'Coros & Companhia (v226): cada ref de song_sources coros_companhia é único; song_files kind other só com endereços https; cc_sync_log com uma atualização nos últimos 8 dias e sem erro; cc_sync_log com RLS e sem grants a anon/authenticated', async () => {
+    const [r] = await sql(`select
+      (select count(*) from (select ref from public.song_sources where source = 'coros_companhia' group by ref having count(*) > 1) x)::int dup_ref,
+      (select count(*) from public.song_sources where source = 'coros_companhia')::int cc,
+      (select count(*) from public.song_files where kind = 'other' and path !~ '^https://')::int other_nao_https,
+      (select count(*) from public.song_files where kind = 'other')::int other,
+      (select count(*) from public.cc_sync_log where run_at > now() - interval '8 days')::int runs,
+      (select count(*) from public.cc_sync_log where run_at > now() - interval '8 days' and error is not null)::int erros,
+      (select relrowsecurity from pg_class where oid = 'public.cc_sync_log'::regclass) rls,
+      (select count(*) from information_schema.role_table_grants where table_schema='public' and table_name='cc_sync_log' and grantee in ('anon','authenticated','PUBLIC'))::int grants`);
+    const bad = [];
+    if (r.dup_ref) bad.push(`${r.dup_ref} refs de coros_companhia repetidos`);
+    if (r.other_nao_https) bad.push(`${r.other_nao_https} song_files kind other sem https`);
+    if (!r.runs) bad.push('sem atualização de Coros & Companhia nos últimos 8 dias');
+    if (r.erros) bad.push(`${r.erros} atualizações com erro nos últimos 8 dias`);
+    if (!r.rls) bad.push('cc_sync_log sem RLS'); if (r.grants) bad.push('cc_sync_log com grants a anon/authenticated');
+    return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.cc} cânticos da fonte, ${r.other} ligações, ${r.runs} atualizações` };
+  }, { sev: 'média', where: 'supabase/coros-companhia.sql, supabase/functions/sync-cc' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;
@@ -482,8 +500,8 @@ export default async function (level) {
     const bad = Object.entries(r).filter(([, v]) => v);
     return bad.length ? 'por limpar: ' + bad.map(([k, v]) => `${k} ${v}`).join(', ') : true;
   });
-  await t('INT-08', 'Agendamentos pg_cron presentes e ativos (7 tarefas) e sem falhas recentes', async () => {
-    const want = ['cancioneiro-colecoes-limpeza', 'cancioneiro-convites-limpeza', 'cancioneiro-drive-semanal', 'cancioneiro-partilhas-limpeza', 'cancioneiro-pedidos-limpeza', 'cancioneiro-saude-semanal', 'cancioneiro-verificacao-semanal'];
+  await t('INT-08', 'Agendamentos pg_cron presentes e ativos (8 tarefas, com cancioneiro-coros-companhia-semanal desde v226) e sem falhas recentes', async () => {
+    const want = ['cancioneiro-colecoes-limpeza', 'cancioneiro-convites-limpeza', 'cancioneiro-drive-semanal', 'cancioneiro-partilhas-limpeza', 'cancioneiro-pedidos-limpeza', 'cancioneiro-saude-semanal', 'cancioneiro-verificacao-semanal', 'cancioneiro-coros-companhia-semanal'];
     const r = await sql(`select jobname, active from cron.job`);
     const miss = want.filter(w => !r.some(x => x.jobname === w && x.active));
     let fails = [];
