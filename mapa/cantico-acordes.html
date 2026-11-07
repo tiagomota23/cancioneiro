@@ -3,7 +3,7 @@
   <meta charset="utf-8">
   
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#10835c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -562,6 +562,9 @@ body.pdf-open { overflow: hidden; }
 .recs button.rec svg { width: var(--icon-sm); height: var(--icon-sm); fill: currentColor; }
 .recs button.rec.on, .recs button.rec.busy { background: var(--accent); color: var(--paper); }
 .recs audio { width: 100%; height: 40px; }
+/* gravações por ligação (abrem fora da app): linha inteira tocável, com o símbolo de ligação externa */
+.rec-out .rec-link { display: flex; align-items: center; gap: 12px; min-height: var(--hit); color: var(--accent); text-decoration: none; }
+.rec-out .rec-link svg { flex: none; width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .rec-err { font-size: var(--fs-small); color: var(--danger); width: 100%; }
 .srcs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 1.6em 0 0; }
 .score-img { display: block; width: 100%; max-width: none; margin: 8px auto; background: var(--surface); }
@@ -657,9 +660,9 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 .col-dlg { width: min(420px, calc(100vw - 32px)); }
 .col-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
 
-/* Sem zoom nas páginas da app (o iPhone faz zoom sozinho em campos com letra < 16 px; o gesto de pinça fica só para as partituras) */
+/* Campos com letra ≥ 16 px: o iPhone não amplia sozinho ao tocar neles. O zoom com dois dedos fica livre em toda a app
+   (acessibilidade); no visor de partituras o gesto é o zoom da própria app */
 input, select, textarea { font-size: max(16px, 1em); }
-html, body { touch-action: pan-x pan-y; }
 .pdfview, .pdfview * { touch-action: auto; }
 
 .fav-toggle.book svg { fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linejoin: round; }
@@ -1123,7 +1126,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v224</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v226</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1191,6 +1194,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <div class="stanza verse has-ch"><div class="line">A<span class="ch" data-c="G"></span>mazing grace, how <span class="ch" data-c="C"></span>sweet the <span class="ch" data-c="G"></span>sound</div><div class="line">That saved a wretch like <span class="ch" data-c="D"></span>me.</div><div class="line">I <span class="ch" data-c="G"></span>once was lost, but <span class="ch" data-c="C"></span>now am <span class="ch" data-c="G"></span>found,</div><div class="line">Was <span class="ch" data-c="Em"></span>blind, but <span class="ch" data-c="D"></span>now I <span class="ch" data-c="G"></span>see.</div></div><div class="stanza verse has-ch"><div class="line">’Twas <span class="ch" data-c="G"></span>grace that taught my <span class="ch" data-c="C"></span>heart to <span class="ch" data-c="G"></span>fear,</div><div class="line">And grace my fears re<span class="ch" data-c="D"></span>lieved;</div><div class="line">How <span class="ch" data-c="G"></span>precious did that <span class="ch" data-c="C"></span>grace ap<span class="ch" data-c="G"></span>pear</div><div class="line">The <span class="ch" data-c="Em"></span>hour I <span class="ch" data-c="D"></span>first be<span class="ch" data-c="G"></span>lieved.</div></div>
       
       <p class="edit-bar"><button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar cântico</button></p>
+      
       
       
       
@@ -1274,10 +1278,10 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
     <p class="maestro-only">Como <b>Maestro</b>: no fim de cada cântico pode <b>Editar letra</b> (a letra original fica guardada e pode ser reposta) e <b>Promover ao Cancioneiro</b> um cântico do Coro ou dos livros (ou retirá-lo, se foi promovido). Em <b>Gestão de utilizadores</b> (no menu do perfil) pode mudar perfis entre Cancioneiro, Coro e Maestro.</p>
     <p class="gestor-only">Como <b>Gestor</b>: em <b>Gestão de utilizadores</b> acrescenta ou retira pessoas, muda perfis e decide os pedidos de acesso, que também chegam por email.</p>
     <label class="src-row coro-only">Mostrar cânticos de:
-      <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="novos">Novos Cânticos (1)</option></select>
+      <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-10-26 v224</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-11-07 v226</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

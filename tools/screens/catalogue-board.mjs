@@ -14,8 +14,8 @@ const bf = path.join(DIR, 'blobs.json');
 const blobs = fs.existsSync(bf) ? JSON.parse(fs.readFileSync(bf, 'utf8')) : null;
 const W = 2400;
 const PARTS = [
-  { file: 'Catalogo.dc.html', title: 'Catálogo — controlos', groups: ['botões', 'botões de ícone', 'ligações e botões de texto', 'campos', 'escolhas', 'linhas de lista', 'etiquetas'] },
-  { file: 'CatalogoCaixas.dc.html', title: 'Catálogo — barras e caixas', groups: ['barras', 'caixas'] },
+  { file: 'Catalogo.dc.html', title: 'Catálogo — controlos', groups: ['botões', 'botões de ícone', 'ligações e botões de texto', 'campos', 'escolhas', 'linhas de lista'] },
+  { file: 'CatalogoCaixas.dc.html', title: 'Catálogo — etiquetas, barras e caixas', groups: ['etiquetas', 'barras', 'caixas'] },
   { file: 'CatalogoTexto.dc.html', title: 'Catálogo — texto, ícones e cores', groups: ['texto', 'ícones'], cores: true },
 ];
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

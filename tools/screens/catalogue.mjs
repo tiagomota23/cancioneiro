@@ -35,6 +35,7 @@ const EXTRA = [
   { id: 'x-retirar-grupo', title: 'Retirar um grupo', hash: '#/gestao', act: async p => { await sleep(500); await click(p, '.grp-del'); await sleep(500); } },
   { id: 'x-seccao-folha', title: 'Secção escolhida na edição da folha', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows .sec-line'); await sleep(400); } },
   { id: 'x-seccao-nome', title: 'Mudar o nome da secção', hash: '#/lista/colecao-demo1', act: async p => { await click(p, '#col-mode'); await sleep(600); await click(p, '#ce-rows .sec-line'); await sleep(400); await click(p, '.ce-name'); await sleep(500); } },
+  { id: 'x-ouvir', title: 'Cântico com «Ouvir» (ligações externas, Coros & Companhia)', hash: '#/cantico/ave_verum_corpus', act: async p => { await sleep(600); } },
 ];
 
 // corre dentro da página: devolve as peças visíveis ainda não vistas, com categoria e assinatura de estilo
