@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-07 v226';
+  const APP_VERSION = '2026-11-07 v227';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3471,16 +3471,25 @@
     $('sa-q').value = ''; $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.';
     const pool = allSongs.filter(s => s.approved !== false && !folded(s) && (lvl() >= 2 || inCancioneiro(s)));
     // secção com o nome de um momento da Missa (ex.: template «Missa»): mostra logo os cânticos desse momento
-    const momentOf = name => name ? MOMENTS.find(m => norm(m) === norm(name)) : null;
+    // pré-seleção pelo nome da secção: o momento do Coro e o do livro Coros & Companhia (o do Coro primeiro).
+    // «Cordeiro de Deus» também encontra «Cordeiro de Deus / Paz»
+    const CC_MOMENTS = BOOKS.find(b => b.id === 'cc').secs;
+    const sameMoment = (m, name) => { const a = norm(m), b = norm(name); return a === b || a.split(' / ')[0] === b || b.split(' / ')[0] === a; };
+    const momentOf = name => name ? MOMENTS.find(m => sameMoment(m, name)) : null;
+    const ccMomentOf = name => name ? CC_MOMENTS.find(m => sameMoment(m, name)) : null;
     const render = () => {
       const q = norm($('sa-q').value).trim();
       const inCol = new Set((c.songs || []).map(x => x.song_slug));
       let hits;
       if (q.length < 2) {
-        const m = momentOf(secName());
-        if (!m) { $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.'; return; }
-        hits = pool.filter(s => hasTag(s, 'Coro CLU — momento', m)).sort((a, b) => a.title.localeCompare(b.title, 'pt'));
-        $('sa-msg').textContent = hits.length ? `Cânticos de «${m}» (Momentos da Missa). Escreva para procurar outros.` : 'Escreva parte do título, do autor ou o número.';
+        const m = momentOf(secName()), cm = ccMomentOf(secName());
+        if (!m && !cm) { $('sa-list').innerHTML = ''; $('sa-msg').textContent = 'Escreva parte do título, do autor ou o número.'; return; }
+        const byTitle = (a, b) => a.title.localeCompare(b.title, 'pt');
+        const coro = m ? pool.filter(s => hasTag(s, 'Coro CLU — momento', m)).sort(byTitle) : [];
+        const cc = cm ? pool.filter(s => hasTag(s, 'Coros & Companhia', cm) && !coro.includes(s)).sort(byTitle) : [];
+        hits = [...coro, ...cc];
+        const from = [coro.length ? 'Coro' : '', cc.length ? 'Coros & Companhia' : ''].filter(Boolean).join(' e ');
+        $('sa-msg').textContent = hits.length ? `Sugestões para «${secName()}» (${from}). Escreva para procurar outros.` : 'Escreva parte do título, do autor ou o número.';
       } else {
         hits = pool.filter(s => s._t.includes(q) || (s._a || '').includes(q) || String(s.number) === q)
           .sort((a, b) => (a._t.startsWith(q) ? 0 : 1) - (b._t.startsWith(q) ? 0 : 1) || a.title.localeCompare(b.title, 'pt')).slice(0, 40);
