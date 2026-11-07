@@ -469,7 +469,7 @@ export default async function (level) {
     if (unreported[0].n) bad.push(`${unreported[0].n} pastas de missa/ ou gestos/ sem mapeamento que nunca apareceram em newFolders`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.removidos} removidos no Drive; ${r.song_files_de_removidos} song_files mantidos de ficheiros removidos` };
   }, { sev: 'média', where: 'supabase/functions/drive-sync/index.ts; tabelas drive_files, drive_folders, song_files' });
-  await t('INT-21', 'Coros & Companhia (v226): cada ref de song_sources coros_companhia é único; song_files kind other só com endereços https; cc_sync_log com uma atualização nos últimos 8 dias e sem erro; cc_sync_log com RLS e sem grants a anon/authenticated', async () => {
+  await t('INT-21', 'Coros & Companhia (v226): cada ref de song_sources coros_companhia é único; song_files kind other só com endereços https; cc_sync_log com uma atualização nos últimos 8 dias e sem erro; cc_sync_log e cc_transcripts (v227) com RLS e sem grants a anon/authenticated', async () => {
     const [r] = await sql(`select
       (select count(*) from (select ref from public.song_sources where source = 'coros_companhia' group by ref having count(*) > 1) x)::int dup_ref,
       (select count(*) from public.song_sources where source = 'coros_companhia')::int cc,
@@ -478,13 +478,14 @@ export default async function (level) {
       (select count(*) from public.cc_sync_log where run_at > now() - interval '8 days')::int runs,
       (select count(*) from public.cc_sync_log where run_at > now() - interval '8 days' and error is not null)::int erros,
       (select relrowsecurity from pg_class where oid = 'public.cc_sync_log'::regclass) rls,
-      (select count(*) from information_schema.role_table_grants where table_schema='public' and table_name='cc_sync_log' and grantee in ('anon','authenticated','PUBLIC'))::int grants`);
+      (select count(*) from information_schema.role_table_grants where table_schema='public' and table_name in ('cc_sync_log','cc_transcripts') and grantee in ('anon','authenticated','PUBLIC'))::int grants,
+      (select relrowsecurity from pg_class where oid = 'public.cc_transcripts'::regclass) rls_tr`);
     const bad = [];
     if (r.dup_ref) bad.push(`${r.dup_ref} refs de coros_companhia repetidos`);
     if (r.other_nao_https) bad.push(`${r.other_nao_https} song_files kind other sem https`);
     if (!r.runs) bad.push('sem atualização de Coros & Companhia nos últimos 8 dias');
     if (r.erros) bad.push(`${r.erros} atualizações com erro nos últimos 8 dias`);
-    if (!r.rls) bad.push('cc_sync_log sem RLS'); if (r.grants) bad.push('cc_sync_log com grants a anon/authenticated');
+    if (!r.rls) bad.push('cc_sync_log sem RLS'); if (!r.rls_tr) bad.push('cc_transcripts sem RLS'); if (r.grants) bad.push('cc_sync_log/cc_transcripts com grants a anon/authenticated');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.cc} cânticos da fonte, ${r.other} ligações, ${r.runs} atualizações` };
   }, { sev: 'média', where: 'supabase/coros-companhia.sql, supabase/functions/sync-cc' });
   await t('INT-22', 'Templates de folha (v227): existem Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com pelo menos uma secção', async () => {
