@@ -878,7 +878,7 @@ async function suites(full) {
     await page.click(`#ce-rows li[data-key="${sec}"] .sec-line`); await sleep(300);
     return (await count(page, `#ce-rows li[data-key="${sec}"] .ce-name`)) ? true : 'secção escolhida sem .ce-name';
   }));
-  await t('FUN-40', 'Edição: «+ Adicionar cântico» por secção — Comunhão traz os cânticos do momento, Saída vem vazia; «+ Adicionar secção» no fim', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+  await t('FUN-40', 'Edição: «+ Adicionar cântico» por secção — Comunhão traz as sugestões do momento (v227: Coro + Coros & Companhia, sem duplicados, «Sugestões para «Comunhão» (…)»), Saída vem vazia; «+ Adicionar secção» no fim', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
     await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(600);
     const secs = await page.evaluate(() => [...document.querySelectorAll('#ce-rows li.col-add button[data-sec]')].map(b => b.dataset.sec));
     if (!secs.includes('e2') || !secs.includes('e3')) return 'linhas «+ Adicionar cântico»: ' + secs.join(',');
@@ -886,6 +886,11 @@ async function suites(full) {
     await page.click('#ce-rows li.col-add button[data-sec="e2"]'); await sleep(500);
     const com = await page.evaluate(() => ({ n: document.querySelectorAll('#sa-list li').length, msg: document.querySelector('#sa-msg').textContent }));
     if (!com.n || !/Comunhão/.test(com.msg)) return 'Comunhão sem pré-preenchimento: ' + JSON.stringify(com);
+    // v227: sugestões do Coro e de Coros & Companhia, sem duplicados, Coro primeiro
+    const sug = await page.evaluate(() => [...document.querySelectorAll('#sa-list li b')].map(b => b.textContent.trim()));
+    if (!/^Sugestões para «Comunhão» \(.+\)\. Escreva para procurar outros\.$/.test(com.msg.trim())) return '#sa-msg (v227): «' + com.msg.trim() + '»';
+    if (new Set(sug).size !== sug.length) return 'sugestões repetidas: ' + sug.join(' | ');
+    if (!sug.includes('Adoro te devote') || !sug.includes('Ave verum corpus')) return 'sugestões de Comunhão: ' + sug.join(' | ');
     await page.click('#sa-close'); await sleep(300);
     await page.click('#ce-rows li.col-add button[data-sec="e3"]'); await sleep(500);
     const sai = await page.evaluate(() => document.querySelectorAll('#sa-list li').length);
@@ -1535,6 +1540,24 @@ async function suites(full) {
     if (k3.map(x => x.k).join() !== k0.map(x => x.k).join()) return 'Repor não repôs a ordem: ' + k3.map(x => x.k).join(',');
     return true;
   }), { sev: 'média' });
+  await t('FUN-70', 'Coros & Companhia (v226, ?demo): ave_verum_corpus tem a secção «Ouvir» (.rec-out a.rec-link target=_blank rel=noopener, https) e o chip da fonte; o livro (#/lista/livro-cc) está na gaveta do Coro e não na do Cancioneiro', async () => {
+    const bad = [];
+    await withApp({ perfil: 'coro', hash: '#/cantico/ave_verum_corpus' }, async ({ page }) => {
+      await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {});
+      const r = await page.evaluate(() => { const a = [...document.querySelectorAll('#song .rec-out a.rec-link')]; return { h2: document.querySelector('#song .rec-out h2')?.textContent.trim(), links: a.map(x => ({ href: x.getAttribute('href'), t: x.target, rel: x.rel })), chip: [...document.querySelectorAll('#song .src-chip')].map(x => x.textContent.trim()) }; });
+      if (r.h2 !== 'Ouvir') bad.push('sem secção «Ouvir»');
+      if (!r.links.length) bad.push('sem a.rec-link');
+      for (const l of r.links) { if (!/^https:\/\//.test(l.href || '')) bad.push('ligação sem https: ' + l.href); if (l.t !== '_blank' || !/noopener/.test(l.rel)) bad.push('ligação sem target=_blank/rel=noopener'); }
+      if (!r.chip.includes('Coros & Companhia')) bad.push('chip da fonte: ' + r.chip.join(', '));
+      await page.click('#btn-menu'); await sleep(500);
+      if (!(await count(page, 'a[href="#/lista/livro-cc"]'))) bad.push('Coro: o livro não está na gaveta');
+    });
+    await withApp({ perfil: 'cancioneiro' }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(500);
+      if (await count(page, 'a[href="#/lista/livro-cc"]')) bad.push('Cancioneiro: o livro aparece na gaveta');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-63', 'Gestão e grupos (v209, Gestor): .adm-groups por utilizador; secção «Grupos» com li[data-group] (g1..g5), .grp-ren e .grp-del; #grp-add com nome obrigatório e único sem distinguir maiúsculas; Retirar pede os grupos destino', () => withApp({ perfil: 'gestor', hash: '#/gestao' }, async ({ page }) => {
     await page.waitForSelector('li[data-group]', { timeout: 10000 }).catch(() => {});
     const r = await page.evaluate(() => ({ users: document.querySelectorAll('.adm-groups').length, groups: [...document.querySelectorAll('li[data-group]')].map(l => l.dataset.group + (l.querySelector('.grp-ren') && l.querySelector('.grp-del') ? '' : '!')) }));

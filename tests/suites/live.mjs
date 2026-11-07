@@ -1,7 +1,7 @@
 // Produção, só leitura e poucos pedidos: site publicado (GitHub Pages), Supabase sem sessão, funções (sondas que
 // nunca chegam a fazer trabalho: sem token, token inválido ou tipo desconhecido). Nunca chama drive-sync, sync-songs,
 // notify health/access/sync (enviam emails ou correm tarefas) nem transcribe com sessão.
-import { t, dim, get, fn, SITE, SB, ANON, read, versions, sha384b64, needHost, reachable, npmFile } from '../lib.mjs';
+import { t, dim, get, fn, SITE, SB, ANON, read, versions, sha384b64, needHost, reachable, npmFile, sql, hasSql } from '../lib.mjs';
 
 export default async function (level) {
   const full = level === 'full';
@@ -81,7 +81,7 @@ export default async function (level) {
     return h === tag[2] ? { pass: from } : `${from} sha384-${h} ≠ index.html sha384-${tag[2]}`;
   }, { sev: 'crítica' });
   await t('SEG-21', 'Sem sessão: tabelas não se leem pela API REST (songs, allowed_emails, access_log, favorites, song_shares, invites…)', async () => {
-    const tables = ['songs', 'song_files', 'song_tags', 'song_sources', 'allowed_emails', 'access_log', 'access_requests', 'favorites', 'song_shares', 'invites', 'collections', 'collection_songs', 'collection_templates', 'drive_state', 'job_requests', 'song_edits', 'sync_log', 'health_log', 'drive_files'];
+    const tables = ['songs', 'song_files', 'song_tags', 'song_sources', 'allowed_emails', 'access_log', 'access_requests', 'favorites', 'song_shares', 'invites', 'collections', 'collection_songs', 'collection_templates', 'drive_state', 'job_requests', 'song_edits', 'sync_log', 'health_log', 'drive_files', 'cc_sync_log'];
     const bad = [];
     for (const tb of tables) {
       const r = await get(`${SB}/rest/v1/${tb}?select=*&limit=1`, { headers: { apikey: ANON, Authorization: 'Bearer ' + ANON } });
@@ -153,6 +153,13 @@ export default async function (level) {
     const r = await get(`${SB}/functions/v1/transcribe`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'audio/wav' }, body: new Uint8Array(2000) });
     return r.status === 403 || 'HTTP ' + r.status;
   }, { sev: 'alta' });
+  await t('SEG-35', 'sync-cc sem pedido do agendamento → 403 (v226); só se testa quando não há nenhum pedido sync-cc pendente, para nunca consumir um pedido verdadeiro (não corre a atualização nem envia emails)', async () => {
+    if (!hasSql()) return { skip: 'sem SUPABASE_ACCESS_TOKEN: não se confirma que não há pedido pendente, por isso não se chama a função' };
+    const [p] = await sql(`select count(*)::int n from public.job_requests where job = 'sync-cc' and requested_at > now() - interval '15 minutes'`);
+    if (p.n) return { skip: 'há um pedido sync-cc pendente: não se chama a função para não o consumir' };
+    const r = await get(`${SB}/functions/v1/sync-cc`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: '{}' });
+    return r.status === 403 || `sync-cc sem pedido: ${r.status} ${r.text().slice(0, 80)}`;
+  }, { sev: 'alta', where: 'supabase/functions/sync-cc/index.ts (claimJob)' });
   await t('SEG-31', 'backup e gravacoes: sem token OIDC / token forjado → 401', async () => {
     const forged = ['eyJhbGciOiJub25lIn0', Buffer.from(JSON.stringify({ iss: 'https://token.actions.githubusercontent.com', aud: 'cancioneiro-backup', repository: 'tiagomota23/cancioneiro', ref: 'refs/heads/main', exp: 9e9, nbf: 0 })).toString('base64url'), 'x'].join('.');
     const bad = [];
