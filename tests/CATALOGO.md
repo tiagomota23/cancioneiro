@@ -223,8 +223,9 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
 | SEG-16 | conteudo e grupos (v209/v210): colSet e song+collection com groupOk; bypass só Gestor (lvl ≥ 4); collyrics recusa Maestro fora dos grupos; email em minúsculas (who()), falha → vazio | static | alta | V | ✓ |
 | SEG-17 | sync-cc (v226): começa por claimJob (consome o pedido em job_requests) e responde 403 sem pedido | static | alta | V | ☐ por correr |
+| SEG-18 | cc-transcribe (v227): 400 sem slug/drive_id válidos; claimJob (consome o pedido) antes de qualquer leitura ou chamada → 403; só gravações kind other do cântico | static | alta | V | ☐ por correr |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
-| SEG-21 | Sem sessão: nenhuma tabela legível por REST (+ cc_sync_log desde v226) | live | crítica | V | ☐ por correr |
+| SEG-21 | Sem sessão: nenhuma tabela legível por REST (+ cc_sync_log desde v226) (+ cc_transcripts desde v227) | live | crítica | V | ☐ por correr |
 | SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
@@ -239,6 +240,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | SEG-33 | Erros das funções sem detalhes internos | live | baixa | V | ✓ |
 | SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
 | SEG-35 | sync-cc sem pedido → 403 (v226); só se chama sem pedido sync-cc pendente (nunca consome um verdadeiro) | live | alta | S | ☐ por correr |
+| SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
@@ -286,7 +288,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
 | INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ✓ |
 | INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders ou em skipped («sem cântico associado»); drive_folders com song_slug null = pasta conhecida sem cântico; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ✓ |
-| INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants | db | média | S | ☐ por correr |
+| INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants (+ cc_transcripts com RLS e sem grants, v227) | db | média | S | ☐ por correr |
 | INT-22 | Templates de folha (v227): Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com secções | db | baixa | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |

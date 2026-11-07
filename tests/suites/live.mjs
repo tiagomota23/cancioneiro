@@ -81,7 +81,7 @@ export default async function (level) {
     return h === tag[2] ? { pass: from } : `${from} sha384-${h} ≠ index.html sha384-${tag[2]}`;
   }, { sev: 'crítica' });
   await t('SEG-21', 'Sem sessão: tabelas não se leem pela API REST (songs, allowed_emails, access_log, favorites, song_shares, invites…)', async () => {
-    const tables = ['songs', 'song_files', 'song_tags', 'song_sources', 'allowed_emails', 'access_log', 'access_requests', 'favorites', 'song_shares', 'invites', 'collections', 'collection_songs', 'collection_templates', 'drive_state', 'job_requests', 'song_edits', 'sync_log', 'health_log', 'drive_files', 'cc_sync_log'];
+    const tables = ['songs', 'song_files', 'song_tags', 'song_sources', 'allowed_emails', 'access_log', 'access_requests', 'favorites', 'song_shares', 'invites', 'collections', 'collection_songs', 'collection_templates', 'drive_state', 'job_requests', 'song_edits', 'sync_log', 'health_log', 'drive_files', 'cc_sync_log', 'cc_transcripts'];
     const bad = [];
     for (const tb of tables) {
       const r = await get(`${SB}/rest/v1/${tb}?select=*&limit=1`, { headers: { apikey: ANON, Authorization: 'Bearer ' + ANON } });
@@ -160,6 +160,18 @@ export default async function (level) {
     const r = await get(`${SB}/functions/v1/sync-cc`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: '{}' });
     return r.status === 403 || `sync-cc sem pedido: ${r.status} ${r.text().slice(0, 80)}`;
   }, { sev: 'alta', where: 'supabase/functions/sync-cc/index.ts (claimJob)' });
+  await t('SEG-36', 'cc-transcribe (v227): pedido mal formado → 400 (antes de tocar em job_requests); pedido bem formado sem pedido do agendamento → 403, só quando não há nenhum pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama o serviço de transcrição)', async () => {
+    const bad = [];
+    const call = body => get(`${SB}/functions/v1/cc-transcribe`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r1 = await call({ slug: 'X!', drive_id: 'curto' });
+    if (r1.status !== 400) bad.push(`pedido mal formado: ${r1.status}`);
+    if (!hasSql()) return bad.length ? bad.join('; ') : { warn: 'só o 400 verificado: sem SUPABASE_ACCESS_TOKEN não se confirma que não há pedido pendente, por isso não se testa o 403' };
+    const [p] = await sql(`select count(*)::int n from public.job_requests where job = 'cc-transcribe' and requested_at > now() - interval '15 minutes'`);
+    if (p.n) return bad.length ? bad.join('; ') : { warn: 'há um pedido cc-transcribe pendente: o 403 não se testou para não o consumir' };
+    const r2 = await call({ slug: 'teste_inexistente', drive_id: 'teste_inexistente_0000' });
+    if (r2.status !== 403) bad.push(`sem pedido do agendamento: ${r2.status} ${r2.text().slice(0, 60)}`);
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/cc-transcribe/index.ts' });
   await t('SEG-31', 'backup e gravacoes: sem token OIDC / token forjado → 401', async () => {
     const forged = ['eyJhbGciOiJub25lIn0', Buffer.from(JSON.stringify({ iss: 'https://token.actions.githubusercontent.com', aud: 'cancioneiro-backup', repository: 'tiagomota23/cancioneiro', ref: 'refs/heads/main', exp: 9e9, nbf: 0 })).toString('base64url'), 'x'].join('.');
     const bad = [];
