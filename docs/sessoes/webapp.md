@@ -171,6 +171,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   semanal: função `sync-cc` (pg_cron segunda 06:30 UTC; log em cc_sync_log) acrescenta momentos e ligações dos já
   ligados e comunica por email os títulos novos (a webapp verifica correspondências antes de criar) e os que saíram (nunca
   se apagam). Rede do ambiente: listacorosecompanhia.netlify.app, docs.google.com, doc-0s-0s-sheets.googleusercontent.com.
+- Letras do Coros & Companhia (7 nov): 53 MP3 do Drive do grupo transcritos (função pontual `cc-transcribe`, Whisper
+  da Groq; texto em cc_transcripts). 37 ficaram com rascunho «(rascunho transcrito automaticamente da gravação — a
+  rever)» e 13 partes fixas da Missa (Santo/Sanctus, Cordeiro, Kyrie, Senhor tende piedade) com o texto litúrgico
+  oficial. 37 continuam «por transcrever» (só YouTube, ou transcrição fraca). A pesquisa na web não encontrou estas
+  letras (repertório de folhas de paróquia).
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.
