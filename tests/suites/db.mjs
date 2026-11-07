@@ -487,6 +487,12 @@ export default async function (level) {
     if (!r.rls) bad.push('cc_sync_log sem RLS'); if (r.grants) bad.push('cc_sync_log com grants a anon/authenticated');
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(r) } : { pass: `${r.cc} cânticos da fonte, ${r.other} ligações, ${r.runs} atualizações` };
   }, { sev: 'média', where: 'supabase/coros-companhia.sql, supabase/functions/sync-cc' });
+  await t('INT-22', 'Templates de folha (v227): existem Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com pelo menos uma secção', async () => {
+    const r = await sql(`select title, coalesce(cardinality(sections), 0)::int n from public.collection_templates`);
+    const want = ['Missa', 'Missa completa', 'Matrimónio', 'Baptismo', 'Funeral'];
+    const miss = want.filter(w => !r.some(x => x.title === w)), empty = r.filter(x => want.includes(x.title) && !x.n).map(x => x.title);
+    return miss.length || empty.length ? `em falta: ${miss.join(', ') || '—'}; sem secções: ${empty.join(', ') || '—'}` : { pass: r.map(x => `${x.title} (${x.n})`).join(', ') };
+  }, { sev: 'baixa' });
   await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

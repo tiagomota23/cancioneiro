@@ -878,7 +878,7 @@ async function suites(full) {
     await page.click(`#ce-rows li[data-key="${sec}"] .sec-line`); await sleep(300);
     return (await count(page, `#ce-rows li[data-key="${sec}"] .ce-name`)) ? true : 'secção escolhida sem .ce-name';
   }));
-  await t('FUN-40', 'Edição: «+ Adicionar cântico» por secção — Comunhão traz os cânticos do momento, Saída vem vazia; «+ Adicionar secção» no fim', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
+  await t('FUN-40', 'Edição: «+ Adicionar cântico» por secção — Comunhão traz as sugestões do momento (v227: Coro + Coros & Companhia, sem duplicados, «Sugestões para «Comunhão» (…)»), Saída vem vazia; «+ Adicionar secção» no fim', () => withApp({ perfil: 'maestro', hash: '#/lista/colecao-demoE' }, async ({ page }) => {
     await page.waitForSelector('#col-mode'); await page.click('#col-mode'); await sleep(600);
     const secs = await page.evaluate(() => [...document.querySelectorAll('#ce-rows li.col-add button[data-sec]')].map(b => b.dataset.sec));
     if (!secs.includes('e2') || !secs.includes('e3')) return 'linhas «+ Adicionar cântico»: ' + secs.join(',');
@@ -886,6 +886,11 @@ async function suites(full) {
     await page.click('#ce-rows li.col-add button[data-sec="e2"]'); await sleep(500);
     const com = await page.evaluate(() => ({ n: document.querySelectorAll('#sa-list li').length, msg: document.querySelector('#sa-msg').textContent }));
     if (!com.n || !/Comunhão/.test(com.msg)) return 'Comunhão sem pré-preenchimento: ' + JSON.stringify(com);
+    // v227: sugestões do Coro e de Coros & Companhia, sem duplicados, Coro primeiro
+    const sug = await page.evaluate(() => [...document.querySelectorAll('#sa-list li b')].map(b => b.textContent.trim()));
+    if (!/^Sugestões para «Comunhão» \(.+\)\. Escreva para procurar outros\.$/.test(com.msg.trim())) return '#sa-msg (v227): «' + com.msg.trim() + '»';
+    if (new Set(sug).size !== sug.length) return 'sugestões repetidas: ' + sug.join(' | ');
+    if (!sug.includes('Adoro te devote') || !sug.includes('Ave verum corpus')) return 'sugestões de Comunhão: ' + sug.join(' | ');
     await page.click('#sa-close'); await sleep(300);
     await page.click('#ce-rows li.col-add button[data-sec="e3"]'); await sleep(500);
     const sai = await page.evaluate(() => document.querySelectorAll('#sa-list li').length);
