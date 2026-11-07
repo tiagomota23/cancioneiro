@@ -164,6 +164,13 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
     A letra só vai para a base de dados (nunca para o repo). Se a partitura for digitalizada e não der para ler com
     certeza, fica «(letra por transcrever …)», sem inventar.
   - drive_folders aceita também o caminho de um ficheiro (pasta com vários cânticos, ex.: «Hinos laudes»).
+- Livro «Coros & Companhia» (v226, `supabase/coros-companhia.sql`): repertório do grupo (https://listacorosecompanhia.netlify.app/,
+  folha Google publicada em CSV). Fonte `coros_companhia` (song_sources.ref = título na lista), momentos em song_tags
+  (grp «Coros & Companhia»), gravações só por ligação em song_files kind 'other' (path = URL; secção «Ouvir» no cântico;
+  os MP3 deles não se copiam). Importados 104 (17 já existiam, 87 novos «por transcrever», 1873–1959). Atualização
+  semanal: função `sync-cc` (pg_cron segunda 06:30 UTC; log em cc_sync_log) acrescenta momentos e ligações dos já
+  ligados e comunica por email os títulos novos (a webapp verifica correspondências antes de criar) e os que saíram (nunca
+  se apagam). Rede do ambiente: listacorosecompanhia.netlify.app, docs.google.com, doc-0s-0s-sheets.googleusercontent.com.
 - Reconhecimento de cânticos (microfone): só para contas com `allowed_emails.can_listen` (a família do Tiago: tiago,
   catarina, beatriz, leonor, constança, teresa — `supabase/reconhecimento.sql`). A app pergunta `can_listen()` e esconde
   o botão e a ajuda (`body.can-listen`); a função `transcribe` recusa as outras contas.

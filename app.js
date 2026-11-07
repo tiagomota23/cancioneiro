@@ -8,7 +8,7 @@
     gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli', de: 'Alemão', xx: 'Outra língua',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
-  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos' };
+  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024', coros_companhia: 'Coros & Companhia', novos: 'Novos Cânticos' };
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
   // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior direito
@@ -48,6 +48,8 @@
   const BOOKS = [
     { id: 'sb', grp: 'Songbook', head: 'Songbook', secs: ['English songs', 'Spirituals', 'Rock – pop – folk', 'Songs', 'Hymns', 'Latin songs', 'Troubadour-songs', 'Italian songs', 'Italian folk songs', 'French songs', 'Spanish songs', 'Brasilian songs', 'German songs', 'African songs'] },
     { id: 'ct', grp: 'CANTI 2024', head: 'CANTI 2024', secs: ['Canti per la liturgia', 'Canti della nostra storia', 'Canti di montagna', 'Canti popolari regionali', 'Canti per bambini', 'Canzoni italiane', 'Canti stranieri'] },
+    // repertório do grupo Coros & Companhia (lista pública, atualizada todas as semanas pela função sync-cc)
+    { id: 'cc', grp: 'Coros & Companhia', head: 'Coros & Companhia', secs: ['Entrada', 'Perdão', 'Salmo', 'Aleluia', 'Ofertório', 'Santo', 'Cordeiro de Deus / Paz', 'Comunhão', 'Ação de Graças', 'Saída', 'Matrimónio', 'Baptismo', 'Funeral'] },
   ];
   // Categorias do índice (como na versão italiana, agrupadas por língua)
   const CATEGORIES = [
@@ -85,7 +87,7 @@
   // da etiqueta «Tema» (atribuída pela sessão webapp; ver docs/sessoes/webapp.md). Um cântico pode estar em várias.
   const tg = (s, grp, ...tags) => (s.tags || []).some(t => t.grp === grp && (!tags.length || tags.includes(t.tag)));
   const TEMAS = [
-    ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
+    ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'Coros & Companhia') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
     ['espirituais', 'Espirituais e gospel', s => tg(s, 'Songbook', 'Spirituals')],
     ['movimento', 'Cânticos do Movimento', s => tg(s, 'CANTI 2024', 'Canti della nostra storia')],
     ['infantis', 'Infantis', s => tg(s, 'CANTI 2024', 'Canti per bambini')],
@@ -104,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-06 v225';
+  const APP_VERSION = '2026-11-07 v226';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1060,6 +1062,10 @@
     const srcs = (extrasOn() ? srcOf(s) : []).map(k => `<span class="src-chip src-${esc(k)}">${esc(SOURCES[k] || k)}</span>`).join('');
     const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
     const recs = filesOf(s, 'recording').filter(f => shown(f));
+    // gravações por ligação (ex.: Coros & Companhia, no YouTube ou no Drive deles): abrem fora da app
+    const outs = filesOf(s, 'other').filter(f => /^https:\/\//.test(f.path || ''));
+    const outHtml = outs.length ? `<section class="recs rec-out"><h2>Ouvir</h2><ul>${outs.map(f =>
+      `<li><a class="rec-link" href="${esc(f.path)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><span class="rl">${esc(f.label)}</span></a></li>`).join('')}</ul></section>` : '';
     const recHtml = recs.length ? `<section class="recs"><h2>Gravações</h2><ul>${recs.map((f, i) =>
       `<li><button class="rec" data-i="${i}" data-path="${esc(f.path || '')}" aria-label="Ouvir ${esc(f.label)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span class="rl">${esc(f.label)}</span></li>`).join('')}</ul></section>` : '';
     // o perfil Cancioneiro não vê acordes
@@ -1107,6 +1113,7 @@
       ${verBtn}
       ${upHtml}
       ${recHtml}
+      ${outHtml}
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
@@ -3663,6 +3670,7 @@
     { id: 'livro-coro', label: 'Coro', coro: true, test: s => srcOf(s).includes('coro_clu') },
     { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
     { id: 'livro-canti', label: 'CANTI 2024', coro: true, book: 'canti2024', test: s => srcOf(s).includes('canti2024') },
+    { id: 'livro-cc', label: 'Coros & Companhia', coro: true, test: s => srcOf(s).includes('coros_companhia') },
   ];
   // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };

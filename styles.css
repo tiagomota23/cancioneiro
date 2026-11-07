@@ -386,6 +386,9 @@ body.pdf-open { overflow: hidden; }
 .recs button.rec svg { width: var(--icon-sm); height: var(--icon-sm); fill: currentColor; }
 .recs button.rec.on, .recs button.rec.busy { background: var(--accent); color: var(--paper); }
 .recs audio { width: 100%; height: 40px; }
+/* gravações por ligação (abrem fora da app): linha inteira tocável, com o símbolo de ligação externa */
+.rec-out .rec-link { display: flex; align-items: center; gap: 12px; min-height: var(--hit); color: var(--accent); text-decoration: none; }
+.rec-out .rec-link svg { flex: none; width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
 .rec-err { font-size: var(--fs-small); color: var(--danger); width: 100%; }
 .srcs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 1.6em 0 0; }
 .score-img { display: block; width: 100%; max-width: none; margin: 8px auto; background: var(--surface); }
