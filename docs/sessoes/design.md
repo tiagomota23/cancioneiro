@@ -67,7 +67,9 @@ O Tiago escreve em português ou inglês: responde na língua dele, em 2–3 lin
    envia à webapp antes → depois por token; o que não for só valor (token novo/retirado, componente, regra) vai ao Tiago.
 2. Vê comentários por responder nos dois artefactos.
 3. Se a versão da app (app.js) for mais recente do que a da capa do mapa, faz a sincronização.
-4. Sem mudanças: termina em silêncio. Com algo feito ou por decidir: 2–3 linhas ao Tiago.
+4. Procura valores soltos em `styles.css` (`grep -nE "#[0-9a-fA-F]{3,6}\b|font-size: *[0-9.]+px|border-radius: *[0-9]+px" styles.css`)
+   fora das exceções documentadas no README; novos → especificação à webapp.
+5. Sem mudanças: termina em silêncio. Com algo feito ou por decidir: 2–3 linhas ao Tiago.
 Para a recriar: create_trigger com esse nome, cron `CRON_TZ=Europe/Lisbon 52 6 * * *`, a ligar a esta sessão, e o texto acima.
 
 ## Sincronização a cada versão da app
@@ -105,9 +107,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 ## Onde está cada coisa (espelho dos artefactos)
 | Artefacto | Fonte no repositório | Como se gera |
 |---|---|---|
-| Mapa: `project/*.dc.html`, `canvas.json` | `design/artefactos/mapa/project/` | grupos e capa: à mão; Fluxo: `fluxo.py`; catálogo: `catalogue-board.mjs`; Padrão: `standard-board.mjs`; opções: HTML guardado + `opcoes-estado.py` |
+| Mapa: `project/*.dc.html`, `canvas.json` | `design/artefactos/mapa/project/` | grupos e capa: à mão; Fluxo: `fluxo.py`; catálogo: `catalogue-board.mjs`; Padrão: `standard-board.mjs`; opções em decisão (só enquanto não estão implementadas): `opcoes-*` |
 | Mapa: sistema de design instalado | `design/artefactos/mapa/project/ds/cancioneiro/tokens.json` | cópia de `project/tokens.json` do sistema de design |
-| Mapa: ids das imagens | `design/artefactos/mapa/blobs/{ecras,catalogo,opcoes}.json` | atualizados a cada carregamento |
+| Mapa: ids das imagens | `design/artefactos/mapa/blobs/{ecras,catalogo}.json` (+ `opcoes.json` enquanto houver opções) | atualizados a cada carregamento |
 | Mapa: imagens (~700) | não guardadas: regeneráveis | ecrãs `capture.mjs`; catálogo `catalogue.mjs`; opções `opcoes-*.mjs` (mostram a versão atual da app, não a da decisão) |
 | Sistema de design: README, componentes, `bundle.css`, `tokens.json` | `design/artefactos/sistema/project/` | `design-system.mjs` |
 | Sistema de design: índice | `design/artefactos/sistema/project/design-system.json` | à mão (lastChange, registo do logo) |
@@ -158,12 +160,18 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 - 7 nov 2026 (v226): livro «Coros & Companhia» (gaveta, página inicial com 13 momentos, chip de fonte) e secção «Ouvir»
   (`.recs.rec-out`, `a.rec-link`: ligação externa, `--accent`, altura `--hit`); estado `x-ouvir` no catálogo (v183).
   v227: sugestões de «Adicionar cântico» com momentos do Coro e de Coros & Companhia; 4 templates novos (sem mudança nas capturas).
-- Quadros de opções ficam no mapa depois de decididos, com a escolhida marcada (`python3 tools/screens/opcoes-estado.py`;
-  editar `ESTADO` quando a implementação sair).
+- 8 nov 2026 (Tiago): quadros de opções saem do mapa depois de a escolha estar implementada; a decisão fica só neste
+  registo. Retirados nesse dia os 5 quadros antigos (maiúsculas e contraste, títulos de secção, rodapé, cores por perfil,
+  botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
+  em `tools/screens/` servem de modelo para os próximos.
 
 ## Estado atual (8 nov 2026)
 - App v227; capa do mapa «versão 227 · 7 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 81, sistema de design versão 35; sem comentários por responder; main = perfis-tmp (8 nov: regra 9 acrescentada).
+- Mapa versão 82 (8 nov: sem quadros de opções), sistema de design versão 35; sem comentários por responder; main = perfis-tmp.
+- Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
+- Consistência (8 nov): `styles.css` sem cores soltas; 16 tamanhos de letra em px, a maioria iguais a tokens (11/13/15/16/19 →
+  fs-*) e os restantes exceções documentadas; raio do aviso flutuante 26px (devia ser `pill`). Enviado à webapp como
+  arrumação sem mudança visível; verificar na próxima versão.
 - Rotina ativa: trig_018JkNHGoJ2pJG2p3zT5LFzU («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
   continua a acordar esta sessão; não é preciso recriá-la.
 - Decisões de design por tomar: nenhuma. Fora do design, por fazer: as opções de partilha por email esperam pelo domínio de
