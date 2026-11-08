@@ -164,6 +164,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
     A letra só vai para a base de dados (nunca para o repo). Se a partitura for digitalizada e não der para ler com
     certeza, fica «(letra por transcrever …)», sem inventar.
   - drive_folders aceita também o caminho de um ficheiro (pasta com vários cânticos, ex.: «Hinos laudes»).
+  - **Só leitura, sempre** (Tiago, 8 nov): nada se escreve no Drive do Coro. **Seguir os atalhos**: o drive-sync trata um
+    atalho para pasta como pasta (caminho do atalho, conteúdo do destino) e um atalho para ficheiro como esse ficheiro
+    (descarregado do destino). Atalhos já registados («Sicut cervus - Palestrina», em missa/) são tratados como novos
+    na primeira vez que se seguem.
 - Livro «Coros & Companhia» (v226, `supabase/coros-companhia.sql`): repertório do grupo (https://listacorosecompanhia.netlify.app/,
   folha Google publicada em CSV). Fonte `coros_companhia` (song_sources.ref = título na lista), momentos em song_tags
   (grp «Coros & Companhia»), gravações só por ligação em song_files kind 'other' (path = URL; secção «Ouvir» no cântico;

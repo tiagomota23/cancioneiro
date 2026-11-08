@@ -102,7 +102,7 @@ Gravações: sempre MP3 ou AAC (.m4a); outros formatos são convertidos pela Act
 | `notify` | gatilhos / admin.html / app | emails aos Gestores (pedido de acesso, alterações do site original, saúde), decisões dos botões do email, convites |
 | `sync-songs` | agendamento | lê o site original e acrescenta/atualiza cânticos |
 | `drive-auth` | o dono, uma vez | autorizações Google: `/drive-auth` = Drive do Coro, só leitura; `/drive-auth?para=copia` = Drive de destino da cópia, só ficheiros criados pela app |
-| `drive-sync` | agendamento | lê a pasta do Coro CLU no Drive: importa gravações/partituras novas, avisa do resto |
+| `drive-sync` | agendamento | lê a pasta do Coro CLU no Drive (só leitura, `drive.readonly`; segue atalhos para pastas e ficheiros): importa gravações/partituras novas, avisa do resto |
 | `transcribe` | app (sessão) | transcrição do som (Groq), com limite por pessoa |
 | `gravacoes` | Action (OIDC) | lista e substitui gravações a converter |
 | `backup` | Action (OIDC) | dados, esquema, ficheiros e acesso ao Drive de destino para a cópia de segurança |
