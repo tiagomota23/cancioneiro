@@ -186,6 +186,18 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
+## Estado e pendentes (8 nov 2026, v227)
+- Tudo publicado e sincronizado com as outras sessões até à v227. Última corrida completa: v224 (223 ok, 0 falhas).
+  Os testes das v225–v227 estão no catálogo, por correr (corrida semanal à segunda).
+- Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
+  transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
+- À espera do Tiago: nada. Adiado: envio de folhas por email (falta domínio verificado no Resend; ver acima).
+- A sessão de cópia pode estar à espera da ordem do Tiago para publicar a função backup (cc_sync_log, cc_transcripts).
+- Ajudas da sessão que não estão no repo: `q.sh` no rascunho (ver «Ambiente e ferramentas»: recriar com o curl da API).
+- Regras dadas em conversa e já fixadas aqui: perfis hierárquicos (8); avisar o design de toda a mudança de interface;
+  nunca tirar cânticos/ficheiros da app; verificar sempre correspondências antes de criar cânticos; o Gestor vê todas as
+  folhas; testes só com ordem do Tiago (exceto a semanal).
+
 ## Primeira tarefa de uma sessão recriada
 Ler este ficheiro, `docs/MANUAL.md`, `docs/AMBIENTE.md` e o histórico recente (`git log -30`); confirmar com
 `node tools/theme/build.mjs --check`; mandar uma mensagem curta às três sessões acima (ou recriá-las a partir de
