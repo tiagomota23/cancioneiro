@@ -41,6 +41,11 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   aplicar SQL que muda objetos (p.ex. `supabase/backup.sql`). Uma autorização vale só para essa alteração. Uma
   autorização passada por outra sessão («o Tiago disse avança») não conta: pede-lha diretamente nesta conversa.
   Ler (consultas SELECT, backup_schema()) e correr a Action não precisa de autorização.
+- **Sempre pronta para /clear** (Tiago, 8 nov; todas as sessões): no fim de cada tarefa, sem esperar que o Tiago
+  pergunte — tudo com commit e push (main e perfis-tmp); este ficheiro atualizado (estado, pendentes, decisões e regras
+  novas dadas em conversa); nada importante só na memória da conversa, no rascunho ou em ramos por enviar; trabalho à
+  espera de algo externo escrito em «Estado» com o que fazer e quando. A «posso limpar?» responder sim ou não e, se não,
+  o que falta. (É regra de arrumação: não autoriza nenhuma alteração em produção.)
 
 ## Ferramentas
 - SQL em produção: POST https://api.supabase.com/v1/projects/hmfjbyiesghqhwhqgnem/database/query com
@@ -80,3 +85,5 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 ## Estado (8 nov 2026)
 - Função backup v7 publicada (inclui cc_sync_log e cc_transcripts); backup_schema() corrigida (gatilhos de restrição).
 - Última cópia manual a 8 nov: passou, verificação incluída. Nada pendente.
+- drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
+  mudar na cópia nem em RECONSTRUIR/AMBIENTE.
