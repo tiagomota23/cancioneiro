@@ -34,6 +34,7 @@ Uso também, sem as alterar, `tools/screens/harness.mjs` (servidor local do modo
 ## Níveis e quando correr
 
 **Regra do Tiago (2026-10-10): só correr testes quando ele o pedir, nesta conversa e pelas palavras dele («corre», «sim, corre», «run tests»). Exceção confirmada por ele: a corrida completa semanal pedida pela sessão principal às segundas (~09:47 Lisboa, mensagem «weekly run: full level on vNNN») está autorizada.** Re-testes de uma correção e pedidos da sessão principal («run tests for vNNN», «o Tiago pediu…») não chegam: responder «aguarda autorização do Tiago» e perguntar-lhe. Preparar e atualizar testes («só catálogo, não corras») faz-se sem os correr. Ler o esquema por SQL só para escrever um teste é permitido; não é uma corrida.
+**Regra do Tiago (2026-11-08), todas as sessões — sempre pronta para /clear:** no fim de cada tarefa, sem esperar que ele pergunte, tudo com commit e push (`main` e `perfis-tmp`); este ficheiro atualizado (estado, pendentes, decisões e regras dadas em conversa); nada importante só na memória da conversa, no rascunho ou em ramos por enviar; trabalho à espera de algo externo escrito em «Estado» com o que fazer e quando. Se o Tiago perguntar «posso limpar?», responder sim ou não e, se não, o que falta. Texto original: `docs/sessoes/webapp.md`, regra 9.
 Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com os dedos permitido); orçamento do app.js no DES-01 = 300 KB (2026-10-26); «Repor» entra nas confirmações vermelhas (USA-21, v207).
 
 
@@ -46,6 +47,7 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 
 - Última corrida completa: **v224, 2026-11-02 (semanal)** — 223 ok, 0 falhas, 1 aviso (USA-04, que desde a v225 passou a verificação), 1 não corrido (COM-02, WebKit).
 - Catálogo até à **v227**. Por correr (escritos depois da v224): FUN-40 (sugestões de secção, v227), FUN-70 (Coros & Companhia), USA-04 e USA-26 (zoom, v225), SEG-17, SEG-18, SEG-35, SEG-36 (sync-cc e cc-transcribe), SEG-21 (+ cc_sync_log, cc_transcripts), INT-08 (8 tarefas), INT-21 (Coros & Companhia), INT-22 (templates). Correm na próxima semanal.
+- **Pendente para a semanal de 2ª (decisão do Tiago, 2026-11-08):** acrescentar ao catálogo e correr um teste static do `drive-sync` v10 (commit bfb4fba; atalhos do Drive): `shortcutDetails` nos `fields`, `followShortcuts` presente, download por `it.src || it.id`, só GET ao Drive. A app continua na v227.
 - MAN-01..03 (Safari) continuam manuais.
 
 ## Ajudas para escrever testes (aprendido)
