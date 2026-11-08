@@ -39,6 +39,12 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
    salvo quando o Tiago disser o contrário. Exceção: ajustes de apresentação que só fazem sentido num perfil por ele ter
    menos conteúdo (ex.: sem o título «Livros» no Cancioneiro, onde só há um livro).
 7. Comentários e mensagens de commit em português; commits terminam com as linhas de atribuição pedidas pelo ambiente.
+9. **Sempre pronta para /clear** (Tiago, 8 nov; vale para todas as sessões): no fim de cada tarefa, sem esperar que o
+   Tiago pergunte — tudo com commit e push (main e perfis-tmp); este ficheiro atualizado (estado, pendentes, decisões e
+   regras novas dadas em conversa); nada importante só na memória da conversa, no rascunho ou em ramos por enviar
+   (ajudas do rascunho têm de se poder recriar a partir daqui); trabalho à espera de algo externo escrito em
+   «Estado e pendentes» com o que fazer e quando. Se o Tiago perguntar «posso limpar?», responder sim ou não e, se não,
+   o que falta.
 
 ## Coordenação com as outras sessões (send_message do Claude Code Remote)
 | Sessão | id | O que faz | Quando a avisar |
