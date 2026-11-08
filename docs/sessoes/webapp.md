@@ -45,6 +45,9 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
    (ajudas do rascunho têm de se poder recriar a partir daqui); trabalho à espera de algo externo escrito em
    «Estado e pendentes» com o que fazer e quando. Se o Tiago perguntar «posso limpar?», responder sim ou não e, se não,
    o que falta.
+10. **Tutorial sempre em dia** (Tiago, 8 nov): a cada versão que mude o que se vê ou o que se pode fazer, rever o
+   tutorial (`tourSteps` em app.js: textos, elementos destacados, passos por perfil) e atualizá-lo na mesma versão.
+   Verificar a volta completa nos quatro perfis no modo demo (cada passo com um elemento destacado tem de o encontrar).
 
 ## Coordenação com as outras sessões (send_message do Claude Code Remote)
 | Sessão | id | O que faz | Quando a avisar |
@@ -196,7 +199,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (8 nov 2026, v227)
+## Estado e pendentes (8 nov 2026, v228)
+- v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
+  Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
+  de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
 - Tudo publicado e sincronizado com as outras sessões até à v227. Última corrida completa: v224 (223 ok, 0 falhas).
   Os testes das v225–v227 estão no catálogo, por correr (corrida semanal à segunda).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por

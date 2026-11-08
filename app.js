@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-07 v227';
+  const APP_VERSION = '2026-11-08 v228';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -938,7 +938,7 @@
         // no perfil Cancioneiro só há esta secção: sem o título "Cancioneiro"
         const head = pending === 'Cancioneiro' && lvl() < 2 ? null : pending;
         pending = null;
-        return (head ? `<li class="cat-head">${esc(head)}</li>` : '') +
+        return (head ? `<li class="cat-head"${c.tema ? ' id="head-temas"' : ''}>${esc(head)}</li>` : '') +
           `<li><a href="#/lista/${c.id}"><span class="t">${esc(catName(c))}</span><span class="n">${n}</span>${chev}</a></li>`;
       }).join('');
       if (!songs.length) $('status').textContent = 'A carregar…';
@@ -2146,38 +2146,48 @@
     const st = [
       { go: goHome, msg: 'Bem-vindo ao Cancioneiro! Uma volta rápida pelo que pode fazer: vamos abrir as várias páginas da app.' },
       { go: goHome, el: '.search', msg: 'Na página inicial, procure qualquer cântico pelo título, autor, número ou por palavras da letra.' },
+      ...(L >= 2 ? [{ go: async () => { await goHome(); const h = await waitFor('#head-temas'); if (h) h.scrollIntoView({ block: 'start' }); }, el: '#head-temas',
+        msg: 'Por baixo, os cânticos estão arrumados por categorias. No fim, «Todos os cânticos» junta os cânticos de todos os livros por tema (Liturgia e Missa, Gestos, Infantis…).' }] : []),
       { go: goHome, el: '#btn-mic', msg: 'Toque no microfone e deixe o telemóvel ouvir uns segundos de um cântico: a app descobre qual é.' },
       { go: goHome, el: '#btn-menu', msg: 'Este botão, à esquerda da pesquisa, abre as coleções. Vamos abri-las…' },
       { go: async () => { closeAllDialogs(); openDrawer(); await new Promise(r => setTimeout(r, 450)); }, el: '.drawer-panel',
-        msg: L >= 2 ? 'As coleções: os seus Preferidos, o Cancioneiro, o Coro, o Songbook, o CANTI 2024, os Novos Cânticos e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
+        msg: L >= 2 ? 'As coleções: no topo, os seus Preferidos e os Novos Cânticos; depois os livros (Cancioneiro, Coro, Songbook, CANTI 2024, Coros & Companhia) e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
     ];
     if (song) {
-      st.push({ go: openSong, el: '#view-song .songbar', msg: `Toque num cântico de qualquer lista para o abrir — por exemplo, «${song.title}». No topo: ${L >= 3 ? 'o livro põe-no nos Preferidos, no Cancioneiro, no Coro ou numa folha' : '☆ guarda-o nos Preferidos'}; partilhar envia-o a alguém (o endereço vale 24 horas); ☾ alterna claro / escuro; A− / A+ muda o tamanho da letra.` });
+      st.push({ go: openSong, el: '#view-song .songbar', msg: `Toque num cântico de qualquer lista para o abrir — por exemplo, «${song.title}». No topo: ${L >= 3 ? 'o livro põe-no nos Preferidos, no Cancioneiro ou numa folha' : '☆ guarda-o nos Preferidos'}; partilhar envia-o a alguém (o endereço vale 24 horas); ☾ alterna claro / escuro; A− / A+ muda o tamanho da letra.` });
+      if (song.has_translation || (song._versions || []).some(v => bySlug.has(v.slug)))
+        st.push({ go: openSong, el: '#song .lang-switch', msg: 'Quando o cântico tem tradução ou versões noutras línguas, escolha aqui a língua.' });
       if (L >= 2) {
-        st.push({ go: openSong, el: '#btn-chords', msg: 'Mostra ou esconde os acordes por cima da letra.' });
-        st.push({ go: openSong, el: '#song .meta a.pdf', msg: 'As partituras (e as páginas dos livros) abrem aqui, por baixo do título; dentro, amplie com dois dedos.' });
+        if (song.has_chords) st.push({ go: openSong, el: '#btn-chords', msg: 'Mostra ou esconde os acordes por cima da letra.' });
+        if (scoresOf(song).length) st.push({ go: openSong, el: '#song a.pdf', msg: 'As partituras (e as páginas dos livros) abrem aqui, por baixo do título; dentro, amplie com dois dedos.' });
         st.push({ go: async () => { await openSong(); const r = await waitFor('#song .recs'); if (r) r.scrollIntoView({ block: 'center' }); }, el: '#song .recs', msg: 'As gravações de cada voz: toque para ouvir. Pode sair do cântico que a gravação continua, com um botão por cima da app para a parar.' });
       }
       if (L >= 3) st.push({ go: async () => { await openSong(); const e = await waitFor('#btn-edit'); if (e) e.scrollIntoView({ block: 'center' }); }, el: '#btn-edit', msg: 'No fim de cada cântico, «Editar cântico» muda a letra, o título, a categoria, as gravações e as partituras.' });
     }
     st.push({ go: goHome, el: '#btn-perfil', msg: solo ? 'Este símbolo, no canto superior direito, abre a ajuda («i»). Vamos abri-la…' : 'Este símbolo, no canto superior direito, abre o seu Perfil. Vamos abri-lo…' });
     if (solo) {
-      st.push({ go: async () => { await goHome(); $('btn-perfil').click(); await waitFor('#info-install'); }, el: '#info-install', msg: 'Aqui pode instalar a app no ecrã principal…' });
+      st.push({ go: async () => { await goHome(); $('btn-perfil').click(); await waitFor('#info-groups'); }, el: '#info-groups', msg: 'Os seus grupos: recebe as folhas dos grupos em que está. Sem nenhum grupo, não recebe folhas.' });
+      st.push({ go: async () => { if (!$('info').open) { await goHome(); $('btn-perfil').click(); } await waitFor('#info-install'); }, el: '#info-install', msg: 'Aqui pode instalar a app no ecrã principal…' });
       st.push({ go: async () => { if (!$('info').open) { await goHome(); $('btn-perfil').click(); } await waitFor('#info-share-app'); }, el: '#info-share-app', msg: '…partilhá-la com quem quiser, e rever este tutorial («Ver o tutorial»).' });
     } else {
       const openPerfil = async () => { if (!$('perfis').open) { await goHome(); $('btn-perfil').click(); } await waitFor('#perfis-list'); };
       st.push({ go: openPerfil, el: '#perfis-list', msg: 'No Perfil pode usar um perfil mais simples (por exemplo, ver só o Cancioneiro).' });
+      st.push({ go: async () => { await openPerfil(); const g = await waitFor('#perfis-groups h3'); if (g) g.scrollIntoView({ block: 'center' }); }, el: '#perfis-groups', msg: 'Os seus grupos: recebe as folhas dos grupos em que está. Sem nenhum grupo, não recebe folhas.' });
       st.push({ go: openPerfil, el: '#perfis-install', msg: 'Instalar a app no ecrã principal do telemóvel.' });
       if (L >= 2) st.push({ go: openPerfil, el: '#perfis-newsong', msg: 'Acrescentar um cântico que falta: escreva-o ou gere-o de uma página da internet ou de um PDF.' + (L >= 3 ? '' : ' Um Maestro aprova-o.') });
       if (L >= 3) st.push({ go: openPerfil, el: '.perfil-admin', msg: L >= 4 ? '«Gestão de utilizadores»: autorizar pedidos de acesso, mudar perfis e retirar acessos.' : '«Gestão de utilizadores»: mudar o perfil das pessoas entre Cancioneiro, Coro e Maestro.' });
       st.push({ go: openPerfil, el: '#perfil-info', msg: 'O «i» tem a ajuda, partilhar a app (com convite para um perfil) e «Ver o tutorial», para rever esta volta.' });
     }
-    if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe um template ao criá-la (ex.: Missa) e começa em edição (só os Maestros a veem), com «+ Adicionar cântico» em cada secção; «Publicar» mostra-a ao Coro, e depois pode partilhá-la e gerar o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
+    if (L >= 3) st.push({ go: async () => { closeAllDialogs(); openDrawer(); await waitFor('.col-new'); }, el: '.col-new', msg: 'Nas coleções, «+ Nova folha» cria a folha de uma Missa: escolhe um template ao criá-la (ex.: Missa) e abre logo a edição, com «+ Adicionar cântico» em cada secção (✎ num cântico muda a letra só nessa folha). A folha fica por publicar (só Maestros e Gestores a veem) até «Publicar», onde escolhe os grupos que a recebem; depois pode partilhá-la e gerar o PDF. Os cânticos novos esperam aqui pela sua aprovação, em «Novos Cânticos».' });
     st.push({ go: goHome, msg: 'Pronto! Pode rever este tutorial quando quiser no «i» → «Ver o tutorial».' });
-    return st.filter(x => x.el !== '#btn-mic' || document.body.classList.contains('can-listen'));
+    const hasGroups = !!(groups.length && myGroupIds);
+    return st.filter(x => (x.el !== '#btn-mic' || document.body.classList.contains('can-listen')) && (!/-groups$/.test(x.el || '') || hasGroups));
   }
-  function startTour(force) {
+  async function startTour(force) {
     if (!force && store.get(TOUR_KEY, 0)) { installCoach(); return; }
+    if (!force && ($('view-list').hidden || document.querySelector('dialog[open]'))) { installCoach(); return; }
+    // na 1.ª abertura a lista de cânticos pode ainda estar a chegar: sem ela, os passos do cântico ficavam de fora
+    for (let t = 0; !allSongs.length && t < 8000; t += 200) await new Promise(r => setTimeout(r, 200));
     if (!force && ($('view-list').hidden || document.querySelector('dialog[open]'))) { installCoach(); return; }
     const steps = tourSteps(); let i = 0, busy = false;
     // o tutorial é ele próprio uma janela (fica por cima das janelas que abre, como o Perfil)
@@ -3382,10 +3392,14 @@
   // ---------- Templates (conjuntos de secções pré-definidas; só Maestro / Gestor) ----------
   let tpls = null;
   async function loadTemplates() {
-    if (DEMO) { tpls = store.get('cancioneiro.demo.tpls', null) || [{ id: 'demo-missa', title: 'Missa', sections: ['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora'] }]; return; }
-    const { data, error } = await sb.from('collection_templates').select('id,title,sections').order('title');
-    if (error) throw error; tpls = data;
+    if (DEMO) tpls = store.get('cancioneiro.demo.tpls', null) || [{ id: 'demo-missa', title: 'Missa', sections: ['Entrada', 'Ofertório', 'Comunhão', 'Ação de Graças', 'Nossa Senhora'] }];
+    else { const { data, error } = await sb.from('collection_templates').select('id,title,sections'); if (error) throw error; tpls = data; }
+    tpls = sortTemplates(tpls);
   }
+  // ordem pedida pelo Tiago: Missa, Missa completa, depois os outros por ordem alfabética
+  const TPL_FIRST = ['missa', 'missa completa'];
+  const tplRank = t => { const i = TPL_FIRST.indexOf(norm(t.title).trim()); return i < 0 ? TPL_FIRST.length : i; };
+  const sortTemplates = list => [...list].sort((a, b) => tplRank(a) - tplRank(b) || a.title.localeCompare(b.title, 'pt'));
   async function openTemplates(c) {
     $('tpl-list').innerHTML = '<p class="small">A carregar…</p>';
     $('tpl-hint').textContent = c ? 'Toque num template para acrescentar as suas secções no fim da folha.' : 'Toque num template para o usar na nova folha.';
@@ -3806,7 +3820,7 @@
     Promise.allSettled([loadFavs(), loadCollections()]).then(() => setTimeout(prefetchCollections, 3000));
     loadSyncInfo();
     await loadGroups(); await askGroups(); // 1.ª vez: os grupos da pessoa
-    startTour(); // 1.ª vez: tutorial (no fim, a proposta de instalar)
+    startTour().catch(e => console.warn('tutorial', e)); // 1.ª vez: tutorial (no fim, a proposta de instalar)
     started = true;
   } catch (e) { console.error(e); rescue('Houve um problema ao abrir. Se a lista não aparecer, feche e volte a abrir a app.'); } })();
 
