@@ -192,7 +192,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
 - À espera do Tiago: nada. Adiado: envio de folhas por email (falta domínio verificado no Resend; ver acima).
-- A sessão de cópia pode estar à espera da ordem do Tiago para publicar a função backup (cc_sync_log, cc_transcripts).
+- A sessão de cópia só aceita autorizações do Tiago dadas diretamente a ela (as reencaminhadas daqui não contam).
 - Ajudas da sessão que não estão no repo: `q.sh` no rascunho (ver «Ambiente e ferramentas»: recriar com o curl da API).
 - Regras dadas em conversa e já fixadas aqui: perfis hierárquicos (8); avisar o design de toda a mudança de interface;
   nunca tirar cânticos/ficheiros da app; verificar sempre correspondências antes de criar cânticos; o Gestor vê todas as
