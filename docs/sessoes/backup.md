@@ -21,7 +21,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - `.github/workflows/backup.yml`: segundas 07:30 UTC e workflow_dispatch; precisa de `id-token: write`; só corre a partir de main.
 - `supabase/functions/backup/index.ts` (verify_jwt false): autentica a Action com o token OIDC do GitHub (aud
   cancioneiro-backup, repositório tiagomota23/cancioneiro, ref main, workflow backup.yml). Sem segredos no GitHub.
-  Operações: schema (rpc backup_schema), objects (rpc backup_objects, páginas de 1000), data (lista de tabelas), sign
+  Operações: schema (rpc backup_schema), objects (rpc backup_objects, páginas de 1000), data (lista de tabelas: ver a
+  constante T no código; cada tabela nova tem de entrar aí e na ORDEM de restaurar-dados.mjs), sign
   (endereços assinados do bucket privado `coro`), google (acesso ao Drive de destino).
   Tabelas excluídas de propósito: access_log, access_requests, invites, drive_files, drive_state, health_log, job_requests.
 - `supabase/backup.sql`: `backup_schema()` e `backup_objects()`, só para service_role.
@@ -36,6 +37,10 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - Não mexer na app (app.js, index.html, sw.js, outras funções): pede à sessão webapp. Se alguma vez mudares ficheiros da
   app, sobe a versão nos três sítios (APP_VERSION em app.js, ?v=N em index.html, CACHE em sw.js).
 - Push para main (a Action só corre de main) e também para perfis-tmp.
+- **Pedir autorização ao Tiago antes de cada alteração em produção**: publicar uma função (incluindo a `backup`) ou
+  aplicar SQL que muda objetos (p.ex. `supabase/backup.sql`). Uma autorização vale só para essa alteração. Uma
+  autorização passada por outra sessão («o Tiago disse avança») não conta: pede-lha diretamente nesta conversa.
+  Ler (consultas SELECT, backup_schema()) e correr a Action não precisa de autorização.
 
 ## Ferramentas
 - SQL em produção: POST https://api.supabase.com/v1/projects/hmfjbyiesghqhwhqgnem/database/query com
@@ -48,3 +53,30 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - Todas as segundas às 19:15 UTC (a cópia agendada para as 07:30 costuma arrancar 6–9 h depois): confirmar que a execução passou (verificação incluída); se falhou,
   ler os registos, corrigir, voltar a correr e avisar o Tiago. Confirmar também que docs/AMBIENTE.md continua certo
   (sessões, rotinas, artefactos) e atualizá-lo se algo mudou.
+
+## Como tratar um aviso de mudança da webapp
+1. Esquema: confirmar com uma consulta a `public.backup_schema()` (regexp/position) que a tabela, colunas, funções,
+   políticas, gatilhos e grants aparecem, e pela ordem certa (tabelas → funções → políticas → gatilhos). Não muda nada
+   quando é só esquema: backup_schema() lê tudo dinamicamente.
+2. Tabela nova com dados a guardar: acrescentar à constante T (com `?order=` pela chave primária) e à ORDEM em
+   restaurar-dados.mjs (depois das tabelas de que depende). Commit/push, **pedir autorização**, publicar a função
+   `backup`, correr a Action (`gh workflow run backup.yml --ref main`) e confirmar que passou.
+3. Responder à webapp numa mensagem curta com o que foi verificado.
+
+## Notas práticas
+- O agendamento do GitHub atrasa a cópia das 07:30 em 6–9 h; por isso a verificação semanal é às 19:15 UTC
+  (rotina «Verificação da cópia de segurança», trig_01FBwwebPgixp5Hpphrcdu5y, liga a esta sessão).
+- `gh` funciona neste ambiente para listar/correr/ver execuções; os registos completos às vezes dão 403 por `gh` e
+  lêem-se com mcp__github__get_job_logs.
+- O dados.json tem ~4,5 MB: não o abrir pelo conector do Drive (enche o contexto); confirmar pela função publicada e
+  pelo resultado da Action.
+- restaurar-dados.mjs insere só as colunas presentes na cópia (cópias antigas ficam com os valores por omissão) e cada
+  tabela numa única instrução (FKs para a mesma tabela, como songs.version_of, não precisam de ordem).
+- Os song_files do Coros & Companhia (kind 'other', path = URL externa) não têm objeto no Storage: ficam só em dados.json.
+- Testado no PG16 local (/usr/lib/postgresql/16/bin; initdb num diretório de /tmp com chown postgres). Por testar num
+  projeto Supabase real: login, funções, cron; e se os gatilhos col_groups_guard travam o restauro de dados (pelo código
+  não: com postgres/service_role my_rank() é nulo).
+
+## Estado (8 nov 2026)
+- Função backup v7 publicada (inclui cc_sync_log e cc_transcripts); backup_schema() corrigida (gatilhos de restrição).
+- Última cópia manual a 8 nov: passou, verificação incluída. Nada pendente.
