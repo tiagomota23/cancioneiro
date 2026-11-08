@@ -47,6 +47,12 @@ O Tiago escreve em português ou inglês: responde na língua dele, em 2–3 lin
 5. Commits com o rodapé de atribuição que o harness indicar. Nunca o nome do modelo em commits ou ficheiros.
 6. Antes de publicar um artefacto, ler a versão atual (o Tiago pode ter editado à mão); publicar só os ficheiros mudados;
    depois de publicar, fazer commit do espelho em `design/artefactos/`.
+9. **Sempre pronta para /clear** (Tiago, 8 nov; todas as sessões; texto de origem em docs/sessoes/webapp.md, regra 9): no
+   fim de cada tarefa, sem esperar que o Tiago pergunte — tudo com commit e push (main e perfis-tmp); este ficheiro
+   atualizado (estado, pendentes, decisões e regras novas dadas em conversa); nada importante só na memória da conversa,
+   no rascunho ou em ramos por enviar (ajudas do rascunho recriáveis a partir daqui); trabalho à espera de algo externo
+   escrito em «Estado atual» com o que fazer e quando. Se o Tiago perguntar «posso limpar?», responder sim ou não e, se
+   não, o que falta.
 
 ## Coordenação (send_message do Claude Code Remote, pelo id; ids em docs/AMBIENTE.md)
 - **webapp** manda-te uma mensagem a cada versão nova da app (vN, commit, o que mudou). Tu: sincronizas (abaixo) e
@@ -157,7 +163,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 
 ## Estado atual (8 nov 2026)
 - App v227; capa do mapa «versão 227 · 7 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 81, sistema de design versão 35; sem comentários por responder; último push 508262b (main = perfis-tmp).
+- Mapa versão 81, sistema de design versão 35; sem comentários por responder; main = perfis-tmp (8 nov: regra 9 acrescentada).
 - Rotina ativa: trig_018JkNHGoJ2pJG2p3zT5LFzU («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
   continua a acordar esta sessão; não é preciso recriá-la.
 - Decisões de design por tomar: nenhuma. Fora do design, por fazer: as opções de partilha por email esperam pelo domínio de
