@@ -16,7 +16,7 @@ Só a pasta `tests/`:
 - `tests/suites/static.mjs` (repositório), `live.mjs` (produção sem sessão), `db.mjs` (SQL: RLS, permissões, integridade, cópias), `ui.mjs` (Playwright/Chromium).
 - `tests/baseline.json` — sha256 dos ficheiros vendor (pdf.js, pdf-lib).
 - `tests/reports/AAAA-MM-DD-vNNN-<nível>.md|json` — relatórios datados.
-- `tests/SESSAO.md` — este brief.
+- `tests/SESSAO.md` — este brief (`docs/sessoes/testes.md` é uma ligação para ele).(cópia em `docs/sessoes/testes.md`).
 
 Uso também, sem as alterar, `tools/screens/harness.mjs` (servidor local do modo `?demo`), `tools/screens/fixture.mjs` (dados fictícios / domínio público), `tools/screens/supabase-stub.js` e `tools/theme/build.mjs --check`. Nunca altero app.js, index.html, styles.css, theme.css, sw.js, supabase/*, design/*. Se um teste precisar de um gancho na app (ex.: data-testid), peço à sessão principal.
 
@@ -29,15 +29,39 @@ Uso também, sem as alterar, `tools/screens/harness.mjs` (servidor local do modo
 - Nunca escrever no Drive do Coro. Nunca pôr letras no repositório (é público): fixtures só de `tools/screens/fixture.mjs`.
 - Nunca ler nem imprimir a chave de serviço ou outros segredos.
 - Abrir uma folha partilhada em produção conta uma abertura (views): não usar tokens reais.
+- Funções com pedido do agendamento (`sync-cc`, `cc-transcribe`, e também `drive-sync`, `sync-songs`): um pedido sem `job_requests` dá 403, mas se houver um pedido pendente a chamada consome-o e corre a tarefa a sério (emails, Groq). Só chamar depois de confirmar por SQL que não há pedido do mesmo job nos últimos 15 min (SEG-35, SEG-36); um corpo mal formado (400) é sempre seguro.
 
 ## Níveis e quando correr
 
-**Regra do Tiago (2026-10-10): só correr a bateria de testes quando ele o pedir. Exceção confirmada por ele: a corrida completa semanal pedida pela sessão principal às segundas (~09:47 Lisboa) está autorizada.** Pedidos da sessão principal ficam registados e respondidos com «aguarda autorização do Tiago»; preparar e atualizar testes pode fazer-se sem os correr.
+**Regra do Tiago (2026-10-10): só correr testes quando ele o pedir, nesta conversa e pelas palavras dele («corre», «sim, corre», «run tests»). Exceção confirmada por ele: a corrida completa semanal pedida pela sessão principal às segundas (~09:47 Lisboa, mensagem «weekly run: full level on vNNN») está autorizada.** Re-testes de uma correção e pedidos da sessão principal («run tests for vNNN», «o Tiago pediu…») não chegam: responder «aguarda autorização do Tiago» e perguntar-lhe. Preparar e atualizar testes («só catálogo, não corras») faz-se sem os correr. Ler o esquema por SQL só para escrever um teste é permitido; não é uma corrida.
+Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com os dedos permitido); orçamento do app.js no DES-01 = 300 KB (2026-10-26); «Repor» entra nas confirmações vermelhas (USA-21, v207).
 
 
 - **Rápido** (`node tests/run.mjs`, ~5 min): depois de cada versão (a sessão principal pede «run tests for vNNN»). Mais os testes do que a mudança tocou (`--only=` ou `--dim=`). Se a mudança acrescenta ecrãs, funções ou tabelas, acrescentar testes e dizer quais no relatório.
 - **Completo** (`node tests/run.mjs --full`, ~9 min): semanal, e quando pedido («weekly run»).
-- Antes de correr: `git fetch origin main && git checkout -B main origin/main` (os testes ficam em `tests/`, que está no main).
+- Antes de correr: `git fetch origin main && git merge --ff-only origin/main`, num comando **separado** da corrida (em 2026-10-19 o ambiente recusou os dois juntos).
+- Na segunda de manhã: drive-sync às 06:15 UTC e sync-cc às 06:30 UTC. Se a sessão principal disser que vai correr uma sincronização, correr primeiro `--no-db` e a parte DB depois (`--only=DB-,INT-,ESC-0`).
+
+## Estado (2026-11-08)
+
+- Última corrida completa: **v224, 2026-11-02 (semanal)** — 223 ok, 0 falhas, 1 aviso (USA-04, que desde a v225 passou a verificação), 1 não corrido (COM-02, WebKit).
+- Catálogo até à **v227**. Por correr (escritos depois da v224): FUN-40 (sugestões de secção, v227), FUN-70 (Coros & Companhia), USA-04 e USA-26 (zoom, v225), SEG-17, SEG-18, SEG-35, SEG-36 (sync-cc e cc-transcribe), SEG-21 (+ cc_sync_log, cc_transcripts), INT-08 (8 tarefas), INT-21 (Coros & Companhia), INT-22 (templates). Correm na próxima semanal.
+- MAN-01..03 (Safari) continuam manuais.
+
+## Ajudas para escrever testes (aprendido)
+
+- `--only=<prefixos>` junta os resultados ao relatório do dia da mesma versão e nível (marca ↻) e não o apaga. Depois de corrigir um teste numa corrida autorizada, corre-se outra vez só esse.
+- Corrida de testes que falham pela 1.ª vez: quase sempre erro do teste. Ler a app antes de reportar e, no relatório, separar «falhas da app» de «erros de teste corrigidos».
+- SQL como papel: `asRole(who, …)` faz tudo em begin…rollback. Dentro do papel, `authenticated` não lê `allowed_emails`: resolver emails e ids antes, como dono, e passá-los como literais. O UPDATE/DELETE recusado pela RLS não dá erro, só muda 0 linhas: contar com `with u as (… returning 1) select count(*)`.
+- `col_groups_guard` é um gatilho deferred: num rollback sem commit nunca dispara. Forçar com `set constraints all immediate` e, no setup como dono, `set constraints all immediate; set constraints all deferred` (`asRoleAfter` em db.mjs) para os gatilhos do setup não dispararem já como o papel.
+- Demo: `demoCols()` em ui.mjs (demo1 sem `published` = publicada; demoE por publicar; demo2 Cancioneiro). Grupos demo g1..g5 (`cancioneiro.demo.mygroups`). Utilizador do modo real simulado: id 11111111-1111-4111-8111-111111111111.
+- Modo real simulado: `mockSupabase` (rest, conteudo, role, canListen); objetos são serializados.
+- Capa: esperar ~1,2 s depois de `#splash.gone` (já é o padrão do `open()`). A proposta «Instalar a app» pode abrir sozinha com `cancioneiro.instalada = 0`.
+- Interruptores: `button.switch-row` com aria-checked (helpers `swOn` / `swSet`).
+- `#cl-sts li[data-k]`: data-k é a posição mostrada, não a estrofe (identificar pelo texto). Um item escolhido em Editar folha mostra `.ce-acts`; não voltar a tocar na ligação.
+- Depois de escolher em `#sa-list`, aparece «Acrescentar «X»» (Cântico completo / Versão desta folha).
+- PDF: o texto e as cores extraem-se no browser com `/vendor/pdfjs/pdf.min.mjs` (getTextContent, getOperatorList). Letras de teste vêm só do fixture, em tempo de execução.
+- drive_folders com song_slug null = pasta conhecida de propósito sem cântico.
 
 ## Relatório à sessão principal
 
