@@ -39,7 +39,11 @@ O Tiago escreve em português ou inglês: responde na língua dele, em 2–3 lin
    decisão do Tiago → especificação à webapp → verificação no catálogo.
 3. **Tokens primeiro.** Cores, tamanhos, raios, espaçamentos de maiúsculas e opacidades vivem em `design/tokens.json` e no
    sistema de design; nada de valores soltos.
-4. **main e perfis-tmp iguais:** cada push vai para os dois (`git push origin main` e `git push origin main:perfis-tmp`).
+4. **main e perfis-tmp iguais:** cada push vai para os dois. Os dois ramos mexem-se com outras sessões; usar:
+   `for i in 1 2 3; do git fetch origin main && git fetch origin perfis-tmp && git merge --no-edit origin/main && git merge --no-edit origin/perfis-tmp && git push origin HEAD:main HEAD:perfis-tmp && break; sleep 3; done`
+7. A rede da sessão bloqueia cdn.jsdelivr.net e *.github.io: é por isso que existe `supabase-stub.js`. Não contornar.
+8. Antes de publicar num artefacto, o tool exige ter lido (Artifact `read` com `paths`) cada ficheiro a substituir nesta sessão;
+   depois de um /clear, ler primeiro os ficheiros que se vão publicar.
 5. Commits com o rodapé de atribuição que o harness indicar. Nunca o nome do modelo em commits ou ficheiros.
 6. Antes de publicar um artefacto, ler a versão atual (o Tiago pode ter editado à mão); publicar só os ficheiros mudados;
    depois de publicar, fazer commit do espelho em `design/artefactos/`.
@@ -68,11 +72,25 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 ```
 1. Compara os PNG novos com os anteriores por hash e carrega só os que mudaram (Artifact publish `asset:true`,
    `file_paths`, 25 por chamada). Diferenças só de relógio (validade das folhas, tempo do áudio) não se carregam.
+   Antes de capturar, guarda o estado anterior no rascunho (`cp -r tools/screens/out/{png,catalogo}` e
+   `design/artefactos/mapa/blobs/*.json` para uma pasta `bNNN`): é a base da comparação e de onde se repõem as imagens não
+   carregadas (repor os ficheiros em `out/` para que imagens e ids batam certo). Mudam sempre, só por data ou relógio, e não se
+   carregam: `folha-adicionar`, `gestao` («Última entrada», validade), `folha`, `folha-edicao`, `partilhado`, `gravacao`, e no
+   catálogo v079, v083, v093, v095, v130, v145, v148, v158, v159 (ver a caixa de diferenças: altura ≤ 24 px = relógio).
+   O catálogo tem peças repetidas (o mesmo PNG com dois números, p. ex. v001 = v005): o `blobs.json` novo faz-se por hash
+   (vNNN novo → id do PNG antigo com o mesmo sha256; senão, o id carregado). `catalogue.mjs` apaga `out/catalogo/blobs.json`:
+   escreve-o de novo antes de `catalogue-board.mjs`. Os ids carregados vêm no resultado do Artifact (`→ "/_blob/<id>"`).
 2. Atualiza os mapas `design/artefactos/mapa/blobs/ecras.json` (ecrã → id) e `catalogo.json` (vNNN → id; também em
    `tools/screens/out/catalogo/blobs.json`), troca os ids nos quadros dos grupos e no Fluxo (`python3 tools/screens/fluxo.py`),
-   ajusta alturas de imagens que mudaram (índice e cântico com tradução são de página inteira).
+   ajusta alturas de imagens que mudaram (índice e cântico com tradução são de página inteira). Os quadros dos grupos são à
+   mão: `node tools/screens/religar-blobs.mjs <bNNN>/ecras.json design/artefactos/mapa/blobs/ecras.json` troca os ids; a altura
+   da imagem e do quadro (`height` no estilo e em `$preview`) acerta-se com sed, e `canvas.json` com os `y` por baixo (120 px).
 3. `NODE_PATH=$(npm root -g) node tools/screens/catalogue-board.mjs` e `… standard-board.mjs` (escrevem no espelho);
-   atualiza `y`/`h` em `canvas.json`; capa: «Mapa da app · versão N · data».
+   atualiza `y`/`h` em `canvas.json` (coluna x 3700: Padrão → Catálogo → CatalogoCaixas → CatalogoTexto, 120 px entre eles);
+   capa: «Mapa da app · versão N · data». Um quadro do canvas tem no máximo 8000 px: se `catalogue-board.mjs` avisar, passar
+   um grupo para o quadro seguinte em `PARTS` (v226: «etiquetas» passou para «Catálogo — etiquetas, barras e caixas»).
+   Peças novas que não aparecem em nenhum ecrã entram no catálogo por um estado em `EXTRA` de `catalogue.mjs`
+   (sempre no fim da lista, para não renumerar).
 4. Sistema de design: `node tools/screens/design-system.mjs <sha>` (regenera tokens, README, cartões e bundle.css no espelho);
    publica os ficheiros mudados e, no fim, o índice `project/design-system.json` com `lastChange` novo.
 5. Publica o mapa com `root=design/artefactos/mapa`; commit de `mapa/`, `design/artefactos/` e geradores; push para main e
@@ -120,8 +138,36 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   (texto escuro, botões cinzento-escuro); Apagar em âmbar (#9a5b00) em todos; títulos das janelas em `accent`. Família `perfis` em
   tokens.json, classe `perfil-<id>` no `<html>`; capa, ícone e theme-color ficam verdes (`app-brand`). Implementado na v203.
   Quadro «Opções — cores por perfil»: `opcoes-perfis.mjs` (maquetas) + `opcoes-perfis-board.py`. Os ecrãs do mapa são do Gestor (cinzento).
+- 21 out 2026: Gestor com destaque cinzento mais escuro (#454f56); «Partilhar» da folha é botão branco (`.edit-btn.col-share`).
+- Folhas (v205–v224): «Editar folha» e «Publicar» no topo da folha, por baixo do título (opção A, v208; quadro
+  «Opções — botões da folha», `opcoes-folha-topo.mjs` + `opcoes-folha-topo-board.py`). Publicar é amarelo e não há etiqueta
+  «Por publicar». Publicar: público em segmentado Cancioneiro | Coro, grupos sempre listados com «Todos» a escolher todos;
+  folha publicada mostra «Grupos: …» por baixo de «Coro · até …». Editar não despublica; só «Despublicar» (e mudar o público,
+  v220). Cânticos numa folha: «Editar nesta folha» (✎) com interruptores Acordes / Partituras, «Incluir» por estrofe e ↑ ↓;
+  ao acrescentar, escolher «Cântico completo» ou «Versão desta folha». Cântico aberto a partir da folha: sem edições do
+  original e só a nota «Na folha «X»».
+- Grupos (Cavaleiros, Liceus, CLU, Trabalhadores, Fraternidade): o Gestor acrescenta e retira grupos e, ao retirar, escolhe
+  para onde vão os utilizadores; um utilizador pode não ter grupo (não recebe folhas); os existentes ficaram em todos.
+- 6 nov 2026 (v225): regra 14 «Zoom» — zoom livre com dois dedos em toda a app; nas partituras, o zoom da app.
+- 7 nov 2026 (v226): livro «Coros & Companhia» (gaveta, página inicial com 13 momentos, chip de fonte) e secção «Ouvir»
+  (`.recs.rec-out`, `a.rec-link`: ligação externa, `--accent`, altura `--hit`); estado `x-ouvir` no catálogo (v183).
+  v227: sugestões de «Adicionar cântico» com momentos do Coro e de Coros & Companhia; 4 templates novos (sem mudança nas capturas).
 - Quadros de opções ficam no mapa depois de decididos, com a escolhida marcada (`python3 tools/screens/opcoes-estado.py`;
   editar `ESTADO` quando a implementação sair).
+
+## Estado atual (8 nov 2026)
+- App v227; capa do mapa «versão 227 · 7 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 81, sistema de design versão 35; sem comentários por responder; último push 508262b (main = perfis-tmp).
+- Rotina ativa: trig_018JkNHGoJ2pJG2p3zT5LFzU («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
+  continua a acordar esta sessão; não é preciso recriá-la.
+- Decisões de design por tomar: nenhuma. Fora do design, por fazer: as opções de partilha por email esperam pelo domínio de
+  envio no Resend (o alerta «verificação do Drive falhou» de 26 out ficou resolvido na v223).
+- Ajudas do rascunho (`$S` = pasta de rascunho da sessão; perdem-se com o contentor, não fazem falta): cópias `bNNN` do estado
+  anterior e imagens de comparação lado a lado. Tudo o que é preciso para refazer está em `tools/screens/` e neste ficheiro.
+
+## Como falar com o Tiago
+Respostas curtas (2–3 linhas), sem jargão; mostrar opções como maquetas no mapa (quadro «Opções — …») e marcar a escolhida.
+Ele decide cores e comportamento; a sessão escolhe valores exatos dentro das regras (contraste ≥ 4,5:1) e diz quais.
 
 ## Primeira tarefa de uma sessão recriada
 Ler este ficheiro e docs/AMBIENTE.md; confirmar que os dois artefactos abrem (`Artifact action:"read"`); se não, reconstruí-los
