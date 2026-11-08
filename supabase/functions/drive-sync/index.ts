@@ -35,7 +35,7 @@ async function accessToken() {
 async function children(tok, id) {
   const out = []; let page = '';
   do {
-    const q = new URLSearchParams({ q: `'${id}' in parents and trashed=false`, fields: 'nextPageToken,files(id,name,mimeType,size,md5Checksum,modifiedTime)', pageSize: '1000', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true' });
+    const q = new URLSearchParams({ q: `'${id}' in parents and trashed=false`, fields: 'nextPageToken,files(id,name,mimeType,size,md5Checksum,modifiedTime,shortcutDetails)', pageSize: '1000', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true' });
     if (page) q.set('pageToken', page);
     const r = await fetch('https://www.googleapis.com/drive/v3/files?' + q, { headers: { Authorization: `Bearer ${tok}` } });
     const d = await r.json();
@@ -44,12 +44,45 @@ async function children(tok, id) {
   } while (page);
   return out;
 }
-const isFolder = f => f.mimeType === 'application/vnd.google-apps.folder';
-async function walk(tok, id, prefix, items, depth) {
+const FOLDER = 'application/vnd.google-apps.folder'; const SHORTCUT = 'application/vnd.google-apps.shortcut';
+const isFolder = f => f.mimeType === FOLDER;
+// Percorre as pastas. Os atalhos ficam em `shortcuts` e são seguidos depois (followShortcuts), para que um ficheiro ou
+// pasta que também está no sítio verdadeiro fique registado com o caminho verdadeiro. Só leitura: o Drive do Coro nunca
+// é alterado (a autorização é drive.readonly).
+async function walk(tok, id, prefix, items, depth, shortcuts, visited) {
+  visited.add(id);
   for (const f of await children(tok, id)) {
     const path = prefix ? `${prefix}/${f.name.trim()}` : f.name.trim();
-    items.push({ id: f.id, path, name: f.name, mime: f.mimeType, size: f.size ? +f.size : null, md5: f.md5Checksum || null, modified: f.modifiedTime, folder: isFolder(f) });
-    if (isFolder(f) && depth > 0) await walk(tok, f.id, path, items, depth - 1);
+    const it = { id: f.id, path, name: f.name, mime: f.mimeType, size: f.size ? +f.size : null, md5: f.md5Checksum || null, modified: f.modifiedTime, folder: isFolder(f) };
+    items.push(it);
+    if (f.mimeType === SHORTCUT && f.shortcutDetails?.targetId) shortcuts.push({ it, target: f.shortcutDetails.targetId, targetMime: f.shortcutDetails.targetMimeType, depth });
+    else if (isFolder(f) && depth > 0 && !visited.has(f.id)) await walk(tok, f.id, path, items, depth - 1, shortcuts, visited);
+  }
+}
+// Um atalho para uma pasta conta como pasta (com o caminho do atalho) e o conteúdo do destino é percorrido; um atalho para
+// um ficheiro conta como esse ficheiro (descarrega-se do destino: `src`). Destinos já vistos não se repetem (sem ciclos).
+async function followShortcuts(tok, items, shortcuts, visited, sum) {
+  const ids = new Set(items.map(i => i.id));
+  while (shortcuts.length) {
+    const { it, target, targetMime, depth } = shortcuts.shift();
+    try {
+      if (targetMime === FOLDER) {
+        it.folder = true; it.src = target; it.mime = FOLDER;
+        if (depth > 0 && !visited.has(target)) {
+          const found = [];
+          await walk(tok, target, it.path, found, depth - 1, shortcuts, visited);
+          for (const f of found) if (!ids.has(f.id)) { ids.add(f.id); items.push(f); }
+        }
+      } else if (!ids.has(target)) {
+        const r = await fetch(`https://www.googleapis.com/drive/v3/files/${target}?fields=id,name,mimeType,size,md5Checksum,modifiedTime,trashed&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${tok}` } });
+        const f = await r.json();
+        if (!r.ok) throw new Error('Drive ' + r.status);
+        if (f.trashed) throw new Error('destino no lixo');
+        ids.add(target);
+        Object.assign(it, { src: target, mime: f.mimeType, size: f.size ? +f.size : null, md5: f.md5Checksum || null, modified: f.modifiedTime });
+        if (!/\.[a-z0-9]+$/i.test(it.name) && /\.[a-z0-9]+$/i.test(f.name)) it.name = it.name.trim() + f.name.match(/\.[a-z0-9]+$/i)[0];
+      }
+    } catch (e) { sum.skipped.push(`${it.path} (atalho que não se consegue seguir: ${String(e.message || e).slice(0, 80)})`); }
   }
 }
 const label = (name, folder) => {
@@ -78,9 +111,11 @@ Deno.serve(async () => {
     if (last && Date.now() - new Date(last.run_at).getTime() < 3600e3) return json({ skipped: 'executado há menos de 1 hora' });
     const tok = await accessToken();
     const items = [];
-    for (const [name, id] of ROOTS) await walk(tok, id, name, items, 3);
+    const shortcuts = [], visited = new Set([TOP]);
+    for (const [name, id] of ROOTS) await walk(tok, id, name, items, 3, shortcuts, visited);
+    await followShortcuts(tok, items, shortcuts, visited, sum);
     for (const f of await children(tok, TOP)) if (!ROOTS.some(([, id]) => id === f.id)) items.push({ id: f.id, path: 'raiz/' + f.name.trim(), name: f.name, mime: f.mimeType, size: f.size ? +f.size : null, md5: f.md5Checksum || null, modified: f.modifiedTime, folder: isFolder(f) });
-    const known = new Map((await all('drive_files?select=id,path,md5,modified,status')).map(k => [k.id, k]));
+    const known = new Map((await all('drive_files?select=id,path,md5,modified,status,mime')).map(k => [k.id, k]));
     const now = new Date().toISOString();
     const row = (it, status, song_slug = null) => ({ id: it.id, path: it.path, name: it.name, mime: it.mime, size: it.size, md5: it.md5, modified: it.modified, status, song_slug, last_seen: now });
     const upserts = [];
@@ -93,7 +128,8 @@ Deno.serve(async () => {
       for (const it of items) {
         seen.add(it.id);
         const k = known.get(it.id);
-        if (k) {
+        // um atalho já registado que agora se segue pela primeira vez é tratado como novo
+        if (k && !(it.src && k.mime === SHORTCUT)) {
           if (!it.folder && ((it.md5 && k.md5 && it.md5 !== k.md5) || (!it.md5 && k.modified && Date.parse(it.modified) !== Date.parse(k.modified)))) { sum.changed.push(it.path); upserts.push(row(it, 'changed')); }
           else if (k.status === 'removed') upserts.push(row(it, 'seen'));
           continue;
@@ -110,7 +146,7 @@ Deno.serve(async () => {
         if (!AUDIO[ext] && !SCORE[ext]) ext = BY_MIME[it.mime] || ext;
         const mime = AUDIO[ext] || SCORE[ext];
         if (slug && mime && it.size && it.size <= MAX) {
-          const r = await fetch(`https://www.googleapis.com/drive/v3/files/${it.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${tok}` } });
+          const r = await fetch(`https://www.googleapis.com/drive/v3/files/${it.src || it.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${tok}` } });
           if (!r.ok) { sum.skipped.push(`${it.path} (download ${r.status})`); upserts.push(row(it, 'reported')); continue; }
           const spath = `${slug}/drive_${it.id}.${ext}`;
           const up = await fetch(`${SB}/storage/v1/object/coro/${spath}`, { method: 'POST', headers: { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': mime, 'x-upsert': 'true' }, body: await r.arrayBuffer() });
