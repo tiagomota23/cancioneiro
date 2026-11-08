@@ -203,6 +203,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
+- Para a próxima versão (pedido do design, 8 nov, baixa prioridade, sem mudança visível): em styles.css trocar valores
+  escritos à mão pelos tokens — font-size 11px → var(--fs-caps) (l.177, 302, 481); 13px → var(--fs-small) (l.154, 379,
+  528, 536); 15px → var(--fs-ui) (l.279, 369, 382); 16px → var(--fs-field) (l.314); aviso flutuante (l.314)
+  border-radius 26px → var(--pill). Ficam: 19px do A−/A+ (l.175), «i» 24px, A+ 24px, etiqueta teste 9.5px, mark 2px,
+  pdfbar 22px. Linhas de 8 nov (confirmar antes). Comparar capturas antes/depois; avisar o design com a versão.
 - Tudo publicado e sincronizado com as outras sessões até à v227. Última corrida completa: v224 (223 ok, 0 falhas).
   Os testes das v225–v227 estão no catálogo, por correr (corrida semanal à segunda).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
