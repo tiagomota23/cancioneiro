@@ -806,14 +806,16 @@ async function suites(full) {
     return 'não chegou ao passo «Nova folha»';
   }), { sev: 'média' });
   // ---- v228: tutorial completo em cada perfil; ordem dos templates ----
-  await t('FUN-71', 'Tutorial completo em cada perfil (v228): com a lista de cânticos lenta (2,5 s) e grupos, percorre todos os passos até «Terminar»; cada passo com elemento fica destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ com temas e gravações; Maestro+ com «Editar cântico» e «Nova folha»', async () => {
+  await t('FUN-71', 'Tutorial completo em cada perfil (v228; v230 a 390×844, 375×667 e 360×640, caixa sempre no ecrã): com a lista de cânticos lenta (2,5 s) e grupos, percorre todos os passos até «Terminar»; cada passo com elemento fica destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ com temas e gravações; Maestro+ com «Editar cântico» e «Nova folha»', async () => {
     const bad = [], info = [];
     const L = { cancioneiro: 1, coro: 2, maestro: 3, gestor: 4 };
-    for (const perfil of Object.keys(L)) {
-      const r = await withApp({ perfil, tour: true, songsDelay: 2500, settle: 1500, storage: { 'cancioneiro.demo.mygroups': ['g1'], 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
+    // v230: também ecrãs mais baixos (na v229 a 375×667 a caixa saía pelo topo no passo 15/20)
+    for (const vp of [{ width: 390, height: 844 }, { width: 375, height: 667 }, { width: 360, height: 640 }]) for (const perfil of Object.keys(L)) {
+      const r = await withApp({ perfil, viewport: vp, tour: true, songsDelay: 2500, settle: 1500, storage: { 'cancioneiro.demo.mygroups': ['g1'], 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
         const st = () => page.evaluate(() => { const ov = document.querySelector('dialog.tour'); if (!ov || !ov.open) return null;
           const h = ov.querySelector('.tour-hole'), cs = getComputedStyle(h);
-          return { n: ov.querySelector('.tour-n')?.textContent || '', msg: ov.querySelector('.tour-msg')?.textContent || '', lit: cs.display !== 'none' && h.getBoundingClientRect().width > 0 && !ov.classList.contains('center') }; });
+          const b = ov.querySelector('.tour-box').getBoundingClientRect();
+          return { out: b.top < 0 || b.bottom > innerHeight, n: ov.querySelector('.tour-n')?.textContent || '', msg: ov.querySelector('.tour-msg')?.textContent || '', lit: cs.display !== 'none' && h.getBoundingClientRect().width > 0 && !ov.classList.contains('center') }; });
         const waitStep = async want => { for (let t = 0; t < 12000; t += 150) { const s = await st(); if (s && (!want || s.n.startsWith(want + ' /'))) return s; await sleep(150); } return null; };
         // a 1.ª abertura espera pela lista (até 8 s): o tutorial aparece depois de chegar
         let s = await waitStep(1); if (!s) return 'tutorial não apareceu';
@@ -824,6 +826,7 @@ async function suites(full) {
               return `parou no passo ${i - 1} / ${N} («${msgs.at(-1).slice(0, 40)}»): ${now}${ce}`; } }
           await sleep(250); s = await st() || s; // place() corre depois de showModal
           msgs.push(s.msg);
+          if (s.out) dark.push(`${i}/${N} caixa fora do ecrã`);
           if (i > 1 && i < N && !s.lit) dark.push(`${i}/${N} «${s.msg.slice(0, 45)}»`); // só o 1.º e o último não apontam para nada
         }
         if (!/Terminar/.test(await txt(page, '.tour-next'))) return 'último passo sem «Terminar»';
@@ -841,7 +844,7 @@ async function suites(full) {
         if (miss.length) out.push('faltam passos: ' + miss.join(', '));
         return out.length ? out.join('; ') : { pass: `${N} passos` + (has(/escolha aqui a língua/) ? ' (+língua)' : '') + (has(/acordes/) ? ' (+acordes)' : '') + (has(/partituras/) ? ' (+partituras)' : '') };
       });
-      if (r && r.pass) info.push(`${perfil} ${r.pass}`); else bad.push(`${perfil}: ${r && r.fail || r}`);
+      const k = `${perfil} ${vp.width}×${vp.height}`; if (r && r.pass) info.push(`${k} ${r.pass}`); else bad.push(`${k}: ${r && r.fail || r}`);
     }
     return bad.length ? bad.join(' | ') : { pass: info.join(' · ') };
   }, { sev: 'média' });
