@@ -214,6 +214,18 @@ export default async function (level) {
     if (!/Date\.now\(\) - 10 \* 60e3/.test(c)) bad.push('janela do pedido diferente de 10 min (rever)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/cc-transcribe/index.ts' });
+  await t('SEG-37', 'drive-sync v10 (atalhos do Drive): shortcutDetails nos fields da listagem, followShortcuts definido e chamado, download por it.src || it.id, e ao Drive só GET (nenhum fetch a googleapis.com/drive com method)', () => {
+    const c = read('supabase/functions/drive-sync/index.ts'), bad = [];
+    if (!/fields: '[^']*files\([^)]*shortcutDetails[^)]*\)/.test(c)) bad.push('listagem sem shortcutDetails nos fields');
+    if (!/async function followShortcuts\(/.test(c)) bad.push('followShortcuts não definido');
+    if (!/await followShortcuts\(/.test(c)) bad.push('followShortcuts não é chamado');
+    if (!/drive\/v3\/files\/\$\{it\.src \|\| it\.id\}\?alt=media/.test(c)) bad.push('download não usa it.src || it.id');
+    const drive = c.split('\n').filter(l => /fetch\([^\n]*googleapis\.com\/drive/.test(l));
+    if (!drive.length) bad.push('não encontrou chamadas ao Drive');
+    const w = drive.filter(l => /method:/.test(l));
+    if (w.length) bad.push('chamada ao Drive com method (não GET): ' + w[0].trim().slice(0, 80));
+    return bad.length ? bad.join('; ') : { pass: drive.length + ' chamadas ao Drive, todas GET' };
+  }, { sev: 'alta', where: 'supabase/functions/drive-sync/index.ts' });
   await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];

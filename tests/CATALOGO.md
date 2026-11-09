@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v224, 2026-11-02 (semanal)** — 223 ok · 0 falhas · 1 aviso (USA-04, que na v225 passou a verificação real) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-02-v224-full.md`.
 
-Catálogo atualizado até à **v228** (2026-11-09). Por correr (escritos depois da v224, ☐ na tabela): FUN-40, FUN-70, FUN-71, FUN-72, USA-04, USA-26, SEG-17, SEG-18, SEG-21, SEG-35, SEG-36, INT-08, INT-21, INT-22. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois da v224, ☐ na tabela): FUN-40, FUN-70, FUN-71, FUN-72, USA-04, USA-26, SEG-17, SEG-18, SEG-21, SEG-35, SEG-36, SEG-37, INT-08, INT-21, INT-22. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -245,6 +245,7 @@ Catálogo atualizado até à **v228** (2026-11-09). Por correr (escritos depois 
 | SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
 | SEG-35 | sync-cc sem pedido → 403 (v226); só se chama sem pedido sync-cc pendente (nunca consome um verdadeiro) | live | alta | S | ☐ por correr |
 | SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ☐ por correr |
+| SEG-37 | drive-sync v10 (atalhos do Drive, commit bfb4fba): shortcutDetails nos fields, followShortcuts definido e chamado, download por it.src \|\| it.id, só GET ao Drive | static | alta | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
