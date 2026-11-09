@@ -213,7 +213,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   por baixo do destaque, senão por cima, senão no fundo, sempre dentro do ecrã; se o elemento estiver fora do ecrã,
   é trazido ao centro primeiro. Verificado no ?demo a 390×844, 375×667 e 360×640, nos 4 perfis: todos os passos até
   «Terminar». O passo das coleções (destaque = painel inteiro) continua com a caixa por cima do painel, como antes.
-- Tudo publicado até à v230; design e testes avisados da v230 (testes: re-testar FUN-71). Última corrida completa:
+- Tudo publicado até à v230; design e testes avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
