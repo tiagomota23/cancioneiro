@@ -1,0 +1,17 @@
+{
+ "version": "230",
+ "level": "quick",
+ "date": "2026-11-09",
+ "secs": 144,
+ "results": [
+  {
+   "id": "FUN-71",
+   "title": "Tutorial completo em cada perfil (v228; v230 a 390×844, 375×667 e 360×640, caixa sempre no ecrã): com a lista de cânticos lenta (2,5 s) e grupos, percorre todos os passos até «Terminar»; cada passo com elemento fica destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ com temas e gravações; Maestro+ com «Editar cântico» e «Nova folha»",
+   "status": "pass",
+   "detail": "cancioneiro 390×844 12 passos (+língua) · coro 390×844 17 passos (+língua) (+partituras) · maestro 390×844 20 passos (+língua) (+partituras) · gestor 390×844 20 passos (+língua) (+partituras) · cancioneiro 375×667 12 passos (+língua) · coro 375×667 17 passos (+língua) (+partituras) · maestro 375×667 20 passos (+língua) (+partituras) · gestor 375×667 20 passos (+língua) (+partituras) · cancioneiro 360×640 12 passos (+língua) · coro 360×640 17 passos (+língua) (+partituras) · maestro 360×640 20 passos (+língua) (+partituras) · gestor 360×640 20 passos (+língua) (+partituras)",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 142609
+  }
+ ]
+}
