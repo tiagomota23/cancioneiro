@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v224, 2026-11-02 (semanal)** — 223 ok · 0 falhas · 1 aviso (USA-04, que na v225 passou a verificação real) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-02-v224-full.md`.
 
-Catálogo atualizado até à **v227** (2026-11-08). Por correr (escritos depois da v224, ☐ na tabela): FUN-40, FUN-70, USA-04, USA-26, SEG-17, SEG-18, SEG-21, SEG-35, SEG-36, INT-08, INT-21, INT-22. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v228** (2026-11-09). Por correr (escritos depois da v224, ☐ na tabela): FUN-40, FUN-70, FUN-71, FUN-72, USA-04, USA-26, SEG-17, SEG-18, SEG-21, SEG-35, SEG-36, INT-08, INT-21, INT-22. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -54,6 +54,8 @@ Catálogo atualizado até à **v227** (2026-11-08). Por correr (escritos depois 
 | FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ✓ |
 | FUN-69 | Ordem das estrofes em «Editar nesta folha» (v222): ↑/↓ (.cl-mv; extremos desativados; não mexem no checkbox); outra ordem = versão (.col-edited), gravada pela ordem; reabre pela ordem da versão; Repor repõe a ordem | ui | média | V | ✓ |
 | FUN-70 | Coros & Companhia (v226, ?demo): «Ouvir» com ligação https externa (target=_blank, noopener) e chip da fonte em ave_verum_corpus; livro-cc na gaveta do Coro, não na do Cancioneiro | ui | média | V | ☐ por correr |
+| FUN-71 | Tutorial completo em cada perfil (v228): lista de cânticos lenta (2,5 s) e grupos; percorre todos os passos até «Terminar»; cada passo com elemento destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ temas e gravações; Maestro+ «Editar cântico» e «Nova folha» | ui | média | V | ☐ por correr |
+| FUN-72 | Ordem dos templates (v228): Missa, Missa completa, depois alfabética (pt) em #col-tpl-sel e na lista «Criar ou mudar templates…» (?demo, cancioneiro.demo.tpls desordenados) | ui | baixa | V | ☐ por correr |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
