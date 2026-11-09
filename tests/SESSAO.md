@@ -45,9 +45,10 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 
 ## Estado (2026-11-09)
 
-- Última corrida completa: **v224, 2026-11-02 (semanal)** — 223 ok, 0 falhas, 1 aviso (USA-04, que desde a v225 passou a verificação), 1 não corrido (COM-02, WebKit).
-- Catálogo até à **v228**. Por correr (escritos depois da v224): FUN-40 (sugestões de secção, v227), FUN-70 (Coros & Companhia), FUN-71 (tutorial completo nos 4 perfis, com lista lenta; v228), FUN-72 (ordem dos templates; v228), USA-04 e USA-26 (zoom, v225), SEG-17, SEG-18, SEG-35, SEG-36 (sync-cc e cc-transcribe), SEG-21 (+ cc_sync_log, cc_transcripts), INT-08 (8 tarefas), INT-21 (Coros & Companhia), INT-22 (templates). Correm na próxima semanal.
-- **Pendente para a semanal de 2ª (decisão do Tiago, 2026-11-08):** acrescentar ao catálogo e correr um teste static do `drive-sync` v10 (commit bfb4fba; atalhos do Drive): `shortcutDetails` nos `fields`, `followShortcuts` presente, download por `it.src || it.id`, só GET ao Drive. A app está na v228 (main 0e7b617: templates ordenados, tutorial completo).
+- Última corrida completa: **v229, 2026-11-09 (semanal)** — 234 ok, 1 falha, 0 avisos, 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
+- **Falha da app reportada à webapp:** FUN-71 — no Maestro e no Gestor, a 390×844, a caixa do tutorial no passo 19/20 («+ Nova folha») fica de 653 a 931 px: «Seguinte» e «Saltar» fora do ecrã, não se avança. Causa provável: `place()` em app.js põe a caixa em `min(r.bottom + 14, innerHeight - 190)`, assumindo caixa ≤ 190 px; a mensagem desse passo dá ~280 px. Re-testar com `--only=FUN-71` quando o Tiago autorizar.
+- Erros de teste corrigidos nesta semanal: DB-RLS-07/09/11/14/16/17 (o 1.º Maestro por email ficou sem grupos → sem folhas, v210; agora `pinRoleEmails()` fixa por corrida a pessoa de cada perfil, preferindo quem tem grupo); INT-01 (ligações https externas kind other, v226, ficam fora; INT-21 cobre-as); FUN-70 (☰ só na página inicial). Testes novos: SEG-37 (drive-sync v10). Os detalhes dos resultados passam a ter emails tapados («email»).
+- Nota para o Tiago: há 1 Maestro (de 6) sem nenhum grupo: não vê nem cria folhas (regra da v210). Pode ser intencional.
 - MAN-01..03 (Safari) continuam manuais.
 
 ## Ajudas para escrever testes (aprendido)
@@ -56,6 +57,7 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Corrida de testes que falham pela 1.ª vez: quase sempre erro do teste. Ler a app antes de reportar e, no relatório, separar «falhas da app» de «erros de teste corrigidos».
 - SQL como papel: `asRole(who, …)` faz tudo em begin…rollback. Dentro do papel, `authenticated` não lê `allowed_emails`: resolver emails e ids antes, como dono, e passá-los como literais. O UPDATE/DELETE recusado pela RLS não dá erro, só muda 0 linhas: contar com `with u as (… returning 1) select count(*)`.
 - `col_groups_guard` é um gatilho deferred: num rollback sem commit nunca dispara. Forçar com `set constraints all immediate` e, no setup como dono, `set constraints all immediate; set constraints all deferred` (`asRoleAfter` em db.mjs) para os gatilhos do setup não dispararem já como o papel.
+- A corrida completa com os testes da v228+ demora mais de 25 min: usar `timeout` ≥ 3600000 em segundo plano (em 2026-11-09 parou aos 1500 s).
 - `open({ songsDelay: ms })` atrasa o songs.json (1.ª abertura com rede lenta; usado no FUN-71).
 - Demo: `demoCols()` em ui.mjs (demo1 sem `published` = publicada; demoE por publicar; demo2 Cancioneiro). Grupos demo g1..g5 (`cancioneiro.demo.mygroups`). Utilizador do modo real simulado: id 11111111-1111-4111-8111-111111111111.
 - Modo real simulado: `mockSupabase` (rest, conteudo, role, canListen); objetos são serializados.

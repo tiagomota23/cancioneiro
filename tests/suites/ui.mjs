@@ -819,7 +819,9 @@ async function suites(full) {
         let s = await waitStep(1); if (!s) return 'tutorial não apareceu';
         const N = +s.n.split('/')[1], msgs = [], dark = [];
         for (let i = 1; i <= N; i++) {
-          if (i > 1) { await page.locator('.tour-next').click().catch(() => {}); s = await waitStep(i); if (!s) return `parou no passo ${i - 1} / ${N} («${msgs.at(-1).slice(0, 40)}»)`; }
+          if (i > 1) { const ce = await page.locator('.tour-next').click({ timeout: 5000 }).then(() => '', e => ' clique: ' + e.message.split('\n')[0].slice(0, 120)); s = await waitStep(i);
+            if (!s) { const now = await page.evaluate(() => { const ov = document.querySelector('dialog.tour'); return ov ? `tour ${ov.open ? 'aberto' : 'fechado'} ${ov.querySelector('.tour-n')?.textContent}; janelas: ${[...document.querySelectorAll('dialog[open]')].map(d => d.id || d.className).join(',')}; caixa ${(r => `${Math.round(r.top)}–${Math.round(r.bottom)}`)(ov.querySelector('.tour-box').getBoundingClientRect())}, «Seguinte» ${(r => `${Math.round(r.top)}–${Math.round(r.bottom)}`)(ov.querySelector('.tour-next').getBoundingClientRect())}, ecrã ${innerHeight}; no ponto: ${(b => { const r = b.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return e ? (e.id || e.className || e.tagName) : 'nada'; })(ov.querySelector('.tour-next'))}` : 'sem tour'; });
+              return `parou no passo ${i - 1} / ${N} («${msgs.at(-1).slice(0, 40)}»): ${now}${ce}`; } }
           await sleep(250); s = await st() || s; // place() corre depois de showModal
           msgs.push(s.msg);
           if (i > 1 && i < N && !s.lit) dark.push(`${i}/${N} «${s.msg.slice(0, 45)}»`); // só o 1.º e o último não apontam para nada
@@ -1603,6 +1605,7 @@ async function suites(full) {
       if (!r.links.length) bad.push('sem a.rec-link');
       for (const l of r.links) { if (!/^https:\/\//.test(l.href || '')) bad.push('ligação sem https: ' + l.href); if (l.t !== '_blank' || !/noopener/.test(l.rel)) bad.push('ligação sem target=_blank/rel=noopener'); }
       if (!r.chip.includes('Coros & Companhia')) bad.push('chip da fonte: ' + r.chip.join(', '));
+      await page.evaluate(() => { location.hash = '#/'; }); await page.waitForSelector('#btn-menu', { state: 'visible', timeout: 5000 }).catch(() => {}); await sleep(300); // ☰ só na página inicial
       await page.click('#btn-menu'); await sleep(500);
       if (!(await count(page, 'a[href="#/lista/livro-cc"]'))) bad.push('Coro: o livro não está na gaveta');
     });
