@@ -43,11 +43,11 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Antes de correr: `git fetch origin main && git merge --ff-only origin/main`, num comando **separado** da corrida (em 2026-10-19 o ambiente recusou os dois juntos).
 - Na segunda de manhã: drive-sync às 06:15 UTC e sync-cc às 06:30 UTC. Se a sessão principal disser que vai correr uma sincronização, correr primeiro `--no-db` e a parte DB depois (`--only=DB-,INT-,ESC-0`).
 
-## Estado (2026-11-08)
+## Estado (2026-11-09)
 
 - Última corrida completa: **v224, 2026-11-02 (semanal)** — 223 ok, 0 falhas, 1 aviso (USA-04, que desde a v225 passou a verificação), 1 não corrido (COM-02, WebKit).
-- Catálogo até à **v227**. Por correr (escritos depois da v224): FUN-40 (sugestões de secção, v227), FUN-70 (Coros & Companhia), USA-04 e USA-26 (zoom, v225), SEG-17, SEG-18, SEG-35, SEG-36 (sync-cc e cc-transcribe), SEG-21 (+ cc_sync_log, cc_transcripts), INT-08 (8 tarefas), INT-21 (Coros & Companhia), INT-22 (templates). Correm na próxima semanal.
-- **Pendente para a semanal de 2ª (decisão do Tiago, 2026-11-08):** acrescentar ao catálogo e correr um teste static do `drive-sync` v10 (commit bfb4fba; atalhos do Drive): `shortcutDetails` nos `fields`, `followShortcuts` presente, download por `it.src || it.id`, só GET ao Drive. A app continua na v227.
+- Catálogo até à **v228**. Por correr (escritos depois da v224): FUN-40 (sugestões de secção, v227), FUN-70 (Coros & Companhia), FUN-71 (tutorial completo nos 4 perfis, com lista lenta; v228), FUN-72 (ordem dos templates; v228), USA-04 e USA-26 (zoom, v225), SEG-17, SEG-18, SEG-35, SEG-36 (sync-cc e cc-transcribe), SEG-21 (+ cc_sync_log, cc_transcripts), INT-08 (8 tarefas), INT-21 (Coros & Companhia), INT-22 (templates). Correm na próxima semanal.
+- **Pendente para a semanal de 2ª (decisão do Tiago, 2026-11-08):** acrescentar ao catálogo e correr um teste static do `drive-sync` v10 (commit bfb4fba; atalhos do Drive): `shortcutDetails` nos `fields`, `followShortcuts` presente, download por `it.src || it.id`, só GET ao Drive. A app está na v228 (main 0e7b617: templates ordenados, tutorial completo).
 - MAN-01..03 (Safari) continuam manuais.
 
 ## Ajudas para escrever testes (aprendido)
@@ -56,6 +56,7 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Corrida de testes que falham pela 1.ª vez: quase sempre erro do teste. Ler a app antes de reportar e, no relatório, separar «falhas da app» de «erros de teste corrigidos».
 - SQL como papel: `asRole(who, …)` faz tudo em begin…rollback. Dentro do papel, `authenticated` não lê `allowed_emails`: resolver emails e ids antes, como dono, e passá-los como literais. O UPDATE/DELETE recusado pela RLS não dá erro, só muda 0 linhas: contar com `with u as (… returning 1) select count(*)`.
 - `col_groups_guard` é um gatilho deferred: num rollback sem commit nunca dispara. Forçar com `set constraints all immediate` e, no setup como dono, `set constraints all immediate; set constraints all deferred` (`asRoleAfter` em db.mjs) para os gatilhos do setup não dispararem já como o papel.
+- `open({ songsDelay: ms })` atrasa o songs.json (1.ª abertura com rede lenta; usado no FUN-71).
 - Demo: `demoCols()` em ui.mjs (demo1 sem `published` = publicada; demoE por publicar; demo2 Cancioneiro). Grupos demo g1..g5 (`cancioneiro.demo.mygroups`). Utilizador do modo real simulado: id 11111111-1111-4111-8111-111111111111.
 - Modo real simulado: `mockSupabase` (rest, conteudo, role, canListen); objetos são serializados.
 - Capa: esperar ~1,2 s depois de `#splash.gone` (já é o padrão do `open()`). A proposta «Instalar a app» pode abrir sozinha com `cancioneiro.instalada = 0`.

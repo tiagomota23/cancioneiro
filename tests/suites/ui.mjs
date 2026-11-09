@@ -97,7 +97,10 @@ async function open(o = {}) {
   await ctx.route(/^https:\/\//, external);
   if (o.real) await ctx.route(/\.supabase\.co\//, mockSupabase(o.real, songs, calls));
   const page = await ctx.newPage();
-  if (o.songs) await page.route(/\/songs\.json$/, r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(o.songs) }));
+  if (o.songs || o.songsDelay) await page.route(/\/songs\.json$/, async r => { // songsDelay: lista lenta (1.ª abertura com rede fraca)
+    if (o.songsDelay) await sleep(o.songsDelay);
+    return o.songs ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(o.songs) }) : r.continue();
+  });
   if (o.real) await page.route(u => u.pathname === '/real.html', r => r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(ROOT, 'index.html')) }));
   const errs = [];
   page.on('pageerror', e => errs.push('pageerror: ' + e.message));
@@ -802,6 +805,57 @@ async function suites(full) {
     }
     return 'não chegou ao passo «Nova folha»';
   }), { sev: 'média' });
+  // ---- v228: tutorial completo em cada perfil; ordem dos templates ----
+  await t('FUN-71', 'Tutorial completo em cada perfil (v228): com a lista de cânticos lenta (2,5 s) e grupos, percorre todos os passos até «Terminar»; cada passo com elemento fica destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ com temas e gravações; Maestro+ com «Editar cântico» e «Nova folha»', async () => {
+    const bad = [], info = [];
+    const L = { cancioneiro: 1, coro: 2, maestro: 3, gestor: 4 };
+    for (const perfil of Object.keys(L)) {
+      const r = await withApp({ perfil, tour: true, songsDelay: 2500, settle: 1500, storage: { 'cancioneiro.demo.mygroups': ['g1'], 'cancioneiro.demo.groupsAsked': true } }, async ({ page }) => {
+        const st = () => page.evaluate(() => { const ov = document.querySelector('dialog.tour'); if (!ov || !ov.open) return null;
+          const h = ov.querySelector('.tour-hole'), cs = getComputedStyle(h);
+          return { n: ov.querySelector('.tour-n')?.textContent || '', msg: ov.querySelector('.tour-msg')?.textContent || '', lit: cs.display !== 'none' && h.getBoundingClientRect().width > 0 && !ov.classList.contains('center') }; });
+        const waitStep = async want => { for (let t = 0; t < 12000; t += 150) { const s = await st(); if (s && (!want || s.n.startsWith(want + ' /'))) return s; await sleep(150); } return null; };
+        // a 1.ª abertura espera pela lista (até 8 s): o tutorial aparece depois de chegar
+        let s = await waitStep(1); if (!s) return 'tutorial não apareceu';
+        const N = +s.n.split('/')[1], msgs = [], dark = [];
+        for (let i = 1; i <= N; i++) {
+          if (i > 1) { await page.locator('.tour-next').click().catch(() => {}); s = await waitStep(i); if (!s) return `parou no passo ${i - 1} / ${N} («${msgs.at(-1).slice(0, 40)}»)`; }
+          await sleep(250); s = await st() || s; // place() corre depois de showModal
+          msgs.push(s.msg);
+          if (i > 1 && i < N && !s.lit) dark.push(`${i}/${N} «${s.msg.slice(0, 45)}»`); // só o 1.º e o último não apontam para nada
+        }
+        if (!/Terminar/.test(await txt(page, '.tour-next'))) return 'último passo sem «Terminar»';
+        await page.locator('.tour-next').click(); await sleep(900);
+        if (await vis(page, '.tour-box')) return '«Terminar» não fechou o tutorial';
+        const has = re => msgs.some(m => re.test(m)), miss = [];
+        if (!has(/Toque num cântico/)) miss.push('cântico');
+        if (!has(/Os seus grupos/)) miss.push('grupos');
+        if (L[perfil] >= 2 && !has(/categorias/)) miss.push('temas');
+        if (L[perfil] >= 2 && !has(/gravações de cada voz/)) miss.push('gravações');
+        if (L[perfil] >= 3 && !has(/Editar cântico/)) miss.push('Editar cântico');
+        if (L[perfil] >= 3 && !has(/Nova folha/)) miss.push('Nova folha');
+        const out = [];
+        if (dark.length) out.push('sem destaque: ' + dark.join(', '));
+        if (miss.length) out.push('faltam passos: ' + miss.join(', '));
+        return out.length ? out.join('; ') : { pass: `${N} passos` + (has(/escolha aqui a língua/) ? ' (+língua)' : '') + (has(/acordes/) ? ' (+acordes)' : '') + (has(/partituras/) ? ' (+partituras)' : '') };
+      });
+      if (r && r.pass) info.push(`${perfil} ${r.pass}`); else bad.push(`${perfil}: ${r && r.fail || r}`);
+    }
+    return bad.length ? bad.join(' | ') : { pass: info.join(' · ') };
+  }, { sev: 'média' });
+  await t('FUN-72', 'Ordem dos templates (v228): Missa, Missa completa, depois os outros por ordem alfabética (pt), em #col-tpl-sel e na lista «Criar ou mudar templates…»', () => {
+    const mk = (id, title) => ({ id, title, sections: ['Entrada', 'Saída'] });
+    const tpls = [mk('t1', 'Matrimónio'), mk('t2', 'Missa completa'), mk('t3', 'Funeral'), mk('t4', 'Baptismo'), mk('t5', 'Missa'), mk('t6', 'Adoração')];
+    const want = ['Missa', 'Missa completa', 'Adoração', 'Baptismo', 'Funeral', 'Matrimónio'].join(' | ');
+    return withApp({ perfil: 'maestro', storage: { 'cancioneiro.demo.tpls': tpls } }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(400); await page.click('.col-new'); await sleep(700);
+      const sel = (await page.evaluate(() => [...document.querySelectorAll('#col-tpl-sel option')].filter(o => o.value && o.value !== 'gerir').map(o => o.textContent.split(' — ')[0]))).join(' | ');
+      if (sel !== want) return `#col-tpl-sel: ${sel} (esperado ${want})`;
+      await page.selectOption('#col-tpl-sel', 'gerir'); await sleep(700);
+      const lst = (await page.evaluate(() => [...document.querySelectorAll('#tpl-list .tpl-row b')].map(b => b.textContent))).join(' | ');
+      return lst === want || `lista de templates: ${lst} (esperado ${want})`;
+    });
+  }, { sev: 'baixa' });
   // ---- v159/v160: folhas em edição / publicadas ----
   await t('FUN-37', 'Folha por publicar: Coro e Cancioneiro não a veem; Maestro vê-a na gaveta com «não publicada»', async () => {
     const menu = perfil => withApp({ perfil }, async ({ page }) => { await page.click('#btn-menu'); await sleep(400); return { pass: await txt(page, '#az') }; }).then(r => r.pass || '');
