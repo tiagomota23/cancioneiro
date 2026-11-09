@@ -199,7 +199,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (9 nov 2026, v229)
+## Estado e pendentes (9 nov 2026, v230)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -208,8 +208,13 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   chamou-lhe «aviso flutuante») passou a var(--pill). Ficam como exceções: 19px e 24px do A−/A+, «i» 24px, etiqueta
   teste 9.5px, mark 2px, pdfbar 22px. Captura do botão antes/depois idêntica ao píxel (44 px de altura: 26px já era
   meio-círculo).
-- Tudo publicado até à v229; design avisado da v229. Última corrida completa: v224 (223 ok, 0 falhas).
-  Os testes das v225–v227 estão no catálogo, por correr (corrida semanal à segunda).
+- v230 (9 nov, semanal v229: 234 ok, 1 falha FUN-71): tutorial — a caixa usava 190 px fixos para a sua altura e, no
+  passo «+ Nova folha» (Maestro/Gestor), saía do ecrã e escondia «Seguinte»/«Saltar». place() mede agora a caixa:
+  por baixo do destaque, senão por cima, senão no fundo, sempre dentro do ecrã; se o elemento estiver fora do ecrã,
+  é trazido ao centro primeiro. Verificado no ?demo a 390×844, 375×667 e 360×640, nos 4 perfis: todos os passos até
+  «Terminar». O passo das coleções (destaque = painel inteiro) continua com a caixa por cima do painel, como antes.
+- Tudo publicado até à v230; design e testes avisados da v230 (testes: re-testar FUN-71). Última corrida completa:
+  v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
 - À espera do Tiago: nada. Adiado: envio de folhas por email (falta domínio verificado no Resend; ver acima).

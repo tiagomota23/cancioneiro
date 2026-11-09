@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-09 v229';
+  const APP_VERSION = '2026-11-09 v230';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2199,12 +2199,17 @@
     function place() {
       const st = steps[i], t = st.el && document.querySelector(st.el);
       if (t && t.offsetParent) {
-        const r = t.getBoundingClientRect(), pad = 6;
+        let r = t.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) { t.scrollIntoView({ block: 'center' }); r = t.getBoundingClientRect(); }
+        const pad = 6;
         Object.assign(hole.style, { display: 'block', left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
         ov.classList.remove('center');
-        const below = r.bottom + 200 < innerHeight;
-        box.style.top = below ? Math.min(r.bottom + 14, innerHeight - 190) + 'px' : ''; box.style.bottom = below ? '' : Math.max(innerHeight - r.top + 14, 12) + 'px';
-        if (!below && r.top < 200) { box.style.bottom = '16px'; }
+        // altura real da caixa (a mensagem pode ter 3 ou 4 linhas): por baixo do destaque, senão por cima, senão no fundo;
+        // sempre dentro do ecrã, para «Seguinte» e «Saltar» ficarem à mão
+        const h = box.offsetHeight, m = 12, ih = innerHeight;
+        let top = r.bottom + 14 + h + m <= ih ? r.bottom + 14 : r.top - 14 - h >= m ? r.top - 14 - h : ih - h - m;
+        top = Math.max(m, Math.min(top, ih - h - m));
+        box.style.top = top + 'px'; box.style.bottom = '';
       } else { hole.style.display = 'none'; ov.classList.add('center'); box.style.top = box.style.bottom = ''; }
     }
     async function show() {
