@@ -16,9 +16,9 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v224, 2026-11-02 (semanal)** — 223 ok · 0 falhas · 1 aviso (USA-04, que na v225 passou a verificação real) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-02-v224-full.md`.
+Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois da v224, ☐ na tabela): FUN-40, FUN-70, FUN-71, FUN-72, USA-04, USA-26, SEG-17, SEG-18, SEG-21, SEG-35, SEG-36, SEG-37, INT-08, INT-21, INT-22. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v229** (2026-11-09). Nada por correr. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -53,9 +53,9 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | FUN-67 | Cor do PDF da folha pelo público (v214): Coro #1f6aa8, Cancioneiro #0e7f58, em qualquer perfil que gera PDF (Maestro, Gestor, cores de perfil diferentes); a outra cor ausente (pdfjs getOperatorList) | ui | baixa | V | ✓ |
 | FUN-68 | Mudar o público de uma folha publicada (v220): grava logo, fecha a edição, #col-pub e meta «Cancioneiro · …»; sem alterações «Mudar»; com alterações «Guardar e mudar» / «Descartar e mudar»; Cancelar não muda nada; folha por publicar sem pergunta | ui | média | V | ✓ |
 | FUN-69 | Ordem das estrofes em «Editar nesta folha» (v222): ↑/↓ (.cl-mv; extremos desativados; não mexem no checkbox); outra ordem = versão (.col-edited), gravada pela ordem; reabre pela ordem da versão; Repor repõe a ordem | ui | média | V | ✓ |
-| FUN-70 | Coros & Companhia (v226, ?demo): «Ouvir» com ligação https externa (target=_blank, noopener) e chip da fonte em ave_verum_corpus; livro-cc na gaveta do Coro, não na do Cancioneiro | ui | média | V | ☐ por correr |
-| FUN-71 | Tutorial completo em cada perfil (v228): lista de cânticos lenta (2,5 s) e grupos; percorre todos os passos até «Terminar»; cada passo com elemento destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ temas e gravações; Maestro+ «Editar cântico» e «Nova folha» | ui | média | V | ☐ por correr |
-| FUN-72 | Ordem dos templates (v228): Missa, Missa completa, depois alfabética (pt) em #col-tpl-sel e na lista «Criar ou mudar templates…» (?demo, cancioneiro.demo.tpls desordenados) | ui | baixa | V | ☐ por correr |
+| FUN-70 | Coros & Companhia (v226, ?demo): «Ouvir» com ligação https externa (target=_blank, noopener) e chip da fonte em ave_verum_corpus; livro-cc na gaveta do Coro, não na do Cancioneiro | ui | média | V | ✓ |
+| FUN-71 | Tutorial completo em cada perfil (v228): lista de cânticos lenta (2,5 s) e grupos; percorre todos os passos até «Terminar»; cada passo com elemento destacado (.tour-hole visível, sem .center); passos do cântico presentes; Coro+ temas e gravações; Maestro+ «Editar cântico» e «Nova folha» | ui | média | V | ✗ (v229: Maestro/Gestor, passo 19 sem «Seguinte» no ecrã) |
+| FUN-72 | Ordem dos templates (v228): Missa, Missa completa, depois alfabética (pt) em #col-tpl-sel e na lista «Criar ou mudar templates…» (?demo, cancioneiro.demo.tpls desordenados) | ui | baixa | V | ✓ |
 | FUN-04 | A−/A+ (limites 12–40 px) e escolha guardada depois de recarregar | ui | alta | V | ✓ |
 | FUN-05 | Modo escuro: alterna e volta a seguir o sistema | ui | alta | V | ✓ |
 | FUN-06 | Acordes: Coro mostra/esconde; Cancioneiro nunca recebe acordes | ui | alta | V | ✓ |
@@ -107,7 +107,7 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | FUN-37 | Folha por publicar invisível a Coro e Cancioneiro (gaveta e endereço); Maestro vê com o ícone de rascunho (svg.book-ic role=img, aria-label «Não publicada»), sem texto (v162) | ui | alta | V | ✓ |
 | FUN-38 | Editar folha numa cópia: nada grava até «Guardar» (#ce-save → por publicar); «Cancelar» com alterações confirma e deita fora; #col-pub só em folhas por publicar; folha vazia não se publica (v165); «Publicar» pede confirmação, Cancelar não publica (v181) (v217: Guardar não muda published; despublicar com #ce-unpub) | ui | alta | V | ✓ |
 | FUN-39 | Edição: .ce-acts (up/down/del/ok); Descer muda a ordem; Apagar pede confirmação; secção escolhida tem .ce-name (v165) | ui | alta | V | ✓ |
-| FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) (v227: sugestões Coro + Coros & Companhia sem duplicados e nova mensagem) | ui | média | V | ☐ por correr |
+| FUN-40 | Edição: «+ Adicionar cântico» por secção (Comunhão pré-preenchida, Saída vazia); «+ Adicionar secção» no fim (v164) (v227: sugestões Coro + Coros & Companhia sem duplicados e nova mensagem) | ui | média | V | ✓ |
 | FUN-42 | Edição: várias mudanças só gravam com «Guardar» (antes, nada muda); recarregar mostra todas, incluindo a ordem (v165) | ui | alta | V | ✓ |
 | MAN-10 | Entrada real com Google (telemóvel e computador/janela), pedido de acesso, email ao Gestor, autorizar pelo link | manual | crítica | M | ☐ |
 | MAN-11 | Pesquisa por voz real (iPhone e Android): microfone, transcrição Groq, identifica o cântico | manual | alta | M | ☐ |
@@ -185,7 +185,7 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | USA-01 | `node tools/theme/build.mjs --check` passa (theme.css = design/tokens.json) | static | média | V | ✓ |
 | USA-02 | styles.css sem cores fixas (só variáveis do tema) | static | baixa | V | ✓ |
 | USA-03 | Botões só com ícone têm aria-label | static | média | V | ✓ |
-| USA-04 | Zoom com os dedos não bloqueado (v225, decisão do Tiago): viewport sem maximum-scale/user-scalable=no; html/body sem touch-action que impeça o zoom; gesture* só bloqueados com o visor aberto; touchmove só em #pdfpages | static | média | V | ☐ por correr |
+| USA-04 | Zoom com os dedos não bloqueado (v225, decisão do Tiago): viewport sem maximum-scale/user-scalable=no; html/body sem touch-action que impeça o zoom; gesture* só bloqueados com o visor aberto; touchmove só em #pdfpages | static | média | V | ✓ |
 | USA-05 | Tokens: on-brand sobre brand/brand-deep; accent e chord sobre paper (claro e escuro); danger sobre surface; ≥ 4.5:1 na base e nos 4 perfis (v203) | static | média | V | ✓ |
 | USA-17 | Livro no cântico: .col-pick[data-k] com aria-pressed/.on; original aria-disabled; retirar do Cancioneiro com confirmação; teclado (v165; sem a opção Coro desde a v174); svg.pick-ic antes do nome em cada opção (v186) | ui | média | V | ✓ |
 | USA-18 | Texto e ícones sobre a cor da marca (texto ≥ 4.5:1 opaco, ícones ≥ 3:1): índice e gaveta nos 4 perfis, folha, edição (v203) | ui | média | V | ✓ |
@@ -195,7 +195,7 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | USA-22 | Editar folha: rodapé em linha a 390/320 px (Apagar \| Cancelar \| Guardar) e .stack a ~260 px (Guardar, Cancelar, Apagar de cima para baixo) (v182/v185) | ui | baixa | V | ✓ |
 | USA-23 | Ação principal à direita em linha / em cima em coluna: OK, Fechar, Procurar, Publicar (também a 220 px), Aprovar (v185) | ui | baixa | V | ✓ |
 | USA-24 | Cores por perfil (v203): <html>/<body> só com .perfil-X ativo; mudar de perfil troca a classe e --brand; capa (.splash::before, v221) sempre com o gradiente --app-brand #10835c; dialog h2 em --accent ≥ 4.5:1 (4 perfis × claro/escuro) | ui | média | V | ✓ |
-| USA-26 | Zoom com os dedos (v225, UI): html auto / body manipulation; gesturestart livre na lista e no cântico, bloqueado com o visor aberto; campos ≥ 16 px | ui | média | V | ☐ por correr |
+| USA-26 | Zoom com os dedos (v225, UI): html auto / body manipulation; gesturestart livre na lista e no cântico, bloqueado com o visor aberto; campos ≥ 16 px | ui | média | V | ✓ |
 | USA-10 | Alvos de toque ≥ 44×44 px (conta a área alargada por `::after`; exceções decididas em `tests/baseline.json` → tapExceptions) | ui | média | V | ✓ |
 | USA-11 | 320 px e paisagem: sem deslocamento horizontal; diálogos cabem | ui | média | V | ✓ |
 | USA-12 | Contraste de texto (WCAG AA) no índice e no cântico nos 4 perfis, claro e escuro; folha e edição (v203: cores por perfil) | ui | média | V | ✓ |
@@ -226,10 +226,10 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | SEG-14 | transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa, 403 se não for true, sem is_allowed; reconhecimento.sql revoga EXECUTE a anon (v201) | static | média | V | ✓ |
 | SEG-15 | conteudo «Editar nesta folha» (v204): collyrics só Maestro+, valida coleção/letra, exige o cântico na folha, com limite; song+collection só a quem vê a folha e sem acordes no Cancioneiro; shared usa a versão da folha | static | alta | V | ✓ |
 | SEG-16 | conteudo e grupos (v209/v210): colSet e song+collection com groupOk; bypass só Gestor (lvl ≥ 4); collyrics recusa Maestro fora dos grupos; email em minúsculas (who()), falha → vazio | static | alta | V | ✓ |
-| SEG-17 | sync-cc (v226): começa por claimJob (consome o pedido em job_requests) e responde 403 sem pedido | static | alta | V | ☐ por correr |
-| SEG-18 | cc-transcribe (v227): 400 sem slug/drive_id válidos; claimJob (consome o pedido) antes de qualquer leitura ou chamada → 403; só gravações kind other do cântico | static | alta | V | ☐ por correr |
+| SEG-17 | sync-cc (v226): começa por claimJob (consome o pedido em job_requests) e responde 403 sem pedido | static | alta | V | ✓ |
+| SEG-18 | cc-transcribe (v227): 400 sem slug/drive_id válidos; claimJob (consome o pedido) antes de qualquer leitura ou chamada → 403; só gravações kind other do cântico | static | alta | V | ✓ |
 | SEG-20 | SRI do supabase-js = ficheiro publicado (CDN ou registo npm) | live | crítica | V | ✓ |
-| SEG-21 | Sem sessão: nenhuma tabela legível por REST (+ cc_sync_log desde v226) (+ cc_transcripts desde v227) | live | crítica | V | ☐ por correr |
+| SEG-21 | Sem sessão: nenhuma tabela legível por REST (+ cc_sync_log desde v226) (+ cc_transcripts desde v227) | live | crítica | V | ✓ |
 | SEG-22 | Sem sessão: RPC protegidas (inclui can_listen desde v201) (+ RPC de grupos desde v209) | live | crítica | V | ✓ |
 | SEG-23 | Bucket `coro` privado (público e lista recusados) | live | crítica | V | ✓ |
 | SEG-24 | Endereço assinado forjado recusado | live | alta | V | ✓ |
@@ -243,9 +243,9 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | SEG-32 | notify: tipos/ids inválidos → 400 (sem emails) | live | alta | V | ✓ |
 | SEG-33 | Erros das funções sem detalhes internos | live | baixa | V | ✓ |
 | SEG-34 | GitHub Pages: http→https, HSTS, content-type | live | baixa | V | ✓ |
-| SEG-35 | sync-cc sem pedido → 403 (v226); só se chama sem pedido sync-cc pendente (nunca consome um verdadeiro) | live | alta | S | ☐ por correr |
-| SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ☐ por correr |
-| SEG-37 | drive-sync v10 (atalhos do Drive, commit bfb4fba): shortcutDetails nos fields, followShortcuts definido e chamado, download por it.src \|\| it.id, só GET ao Drive | static | alta | V | ☐ por correr |
+| SEG-35 | sync-cc sem pedido → 403 (v226); só se chama sem pedido sync-cc pendente (nunca consome um verdadeiro) | live | alta | S | ✓ |
+| SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ✓ |
+| SEG-37 | drive-sync v10 (atalhos do Drive, commit bfb4fba): shortcutDetails nos fields, followShortcuts definido e chamado, download por it.src \|\| it.id, só GET ao Drive | static | alta | V | ✓ |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
@@ -281,7 +281,7 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 
 | ID | O que se verifica | Como | Grav. | Freq. | Estado |
 |---|---|---|---|---|---|
-| INT-01 | song_files → objeto no armazenamento | db | alta | V | ✓ |
+| INT-01 | song_files → objeto no armazenamento (sem as ligações https externas, kind other, v226; essas no INT-21) | db | alta | V | ✓ |
 | INT-02 | pdf_url internas → objeto no armazenamento | db | alta | V | ✓ |
 | INT-03 | Objetos órfãos no armazenamento | db | baixa | V | ✓ |
 | INT-04 | Número único, título, letra (ou partitura), fonte | db | alta | V | ✓ |
@@ -293,12 +293,12 @@ Catálogo atualizado até à **v229** (2026-11-09). Por correr (escritos depois 
 | INT-18 | Versões de folha (v204): cântico na folha, letra não vazia e bem formada, diferente do original | db | baixa | S | ✓ |
 | INT-19 | Grupos (v209): nomes únicos (maiúsculas); contas Coro/Cancioneiro sem grupo assinaladas (aviso) | db | baixa | S | ✓ |
 | INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders ou em skipped («sem cântico associado»); drive_folders com song_slug null = pasta conhecida sem cântico; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ✓ |
-| INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants (+ cc_transcripts com RLS e sem grants, v227) | db | média | S | ☐ por correr |
-| INT-22 | Templates de folha (v227): Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com secções | db | baixa | S | ☐ por correr |
+| INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants (+ cc_transcripts com RLS e sem grants, v227) | db | média | S | ✓ |
+| INT-22 | Templates de folha (v227): Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com secções | db | baixa | S | ✓ |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
-| INT-08 | 7 agendamentos pg_cron ativos e sem falhas (8 tarefas desde v226) | db | alta | V | ☐ por correr |
+| INT-08 | 7 agendamentos pg_cron ativos e sem falhas (8 tarefas desde v226) | db | alta | V | ✓ |
 | INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✓ |
 | INT-10 | Cópia de segurança semanal com sucesso ≤ 8 dias | db | alta | V | ✓ |
 | INT-11 | Verificação semanal e conversão de gravações sem falhas | db | média | V | ✓ |

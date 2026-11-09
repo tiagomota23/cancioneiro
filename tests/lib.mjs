@@ -21,7 +21,9 @@ export const sleep = ms => new Promise(r => setTimeout(r, ms));
 // status: pass | fail | warn (problema menor / a confirmar) | skip (não corre aqui: falta segredo, ferramenta…)
 export const results = [];
 let current = { dim: '?', sev: 'média' };
+const redact = v => v == null ? v : String(v).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '«email»');
 export function record(id, title, status, detail = '', extra = {}) {
+  detail = redact(detail || ''); if (extra.evidence !== undefined) extra = { ...extra, evidence: redact(extra.evidence) };
   results.push({ id, title, status, detail: String(detail || ''), dim: extra.dim || current.dim, sev: extra.sev || current.sev, evidence: extra.evidence, where: extra.where, ms: extra.ms });
   const icon = { pass: '✓', fail: '✗', warn: '!', skip: '–' }[status] || '?';
   console.log(`  ${icon} ${id.padEnd(9)} ${title}${detail && status !== 'pass' ? ' — ' + String(detail).split('\n')[0].slice(0, 160) : ''}`);
@@ -75,10 +77,19 @@ export async function sql(query) {
   return JSON.parse(txt);
 }
 // corre `body` como um papel (anon / authenticated com um email de allowed_emails de certo perfil / authenticated sem acesso), sempre com rollback
+// pessoa de cada perfil, fixada uma vez por corrida (pinRoleEmails): prefere quem tem grupo (sem grupo não vê folhas, v210)
+// e não muda quando um teste lhe tira os grupos dentro do rollback
+export const roleEmail = {};
+const pickSql = who => `(select email from public.allowed_emails a where role='${who}' order by not exists (select 1 from public.user_groups ug where ug.email = lower(a.email)), email limit 1)`;
+export async function pinRoleEmails() {
+  const [r] = await sql(`select ${['cancioneiro', 'coro', 'maestro', 'gestor'].map(w => `${pickSql(w)} as "${w}"`).join(', ')}`);
+  for (const [k, v] of Object.entries(r || {})) if (v) roleEmail[k] = v;
+}
+export const emailSql = who => roleEmail[who] ? `'${roleEmail[who].replace(/'/g, "''")}'` : pickSql(who);
 export function asRole(who, body) {
   const claims = who === 'anon' ? null
     : who === 'stranger' ? `json_build_object('email','teste-sem-acesso@example.invalid','role','authenticated','sub','00000000-0000-0000-0000-00000000dead')::text`
-    : `json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated','sub',coalesce((select id::text from auth.users u where lower(u.email)=(select email from public.allowed_emails where role='${who}' order by email limit 1)),'00000000-0000-0000-0000-00000000beef'))::text`;
+    : `json_build_object('email',${emailSql(who)},'role','authenticated','sub',coalesce((select id::text from auth.users u where lower(u.email)=${emailSql(who)}),'00000000-0000-0000-0000-00000000beef'))::text`;
   return `begin; ${claims ? `select set_config('request.jwt.claims', ${claims}, true);` : ''} set local role ${who === 'anon' ? 'anon' : 'authenticated'}; ${body} rollback;`;
 }
 

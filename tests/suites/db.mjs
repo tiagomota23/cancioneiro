@@ -2,7 +2,7 @@
 // Só leituras; as provas de escrita correm dentro de begin … rollback (nada fica gravado; pg_net só envia depois de commit).
 import fs from 'node:fs';
 import path from 'node:path';
-import { t, dim, sql, asRole, hasSql, get, reachable, ROOT } from '../lib.mjs';
+import { t, dim, sql, asRole, hasSql, get, reachable, ROOT, emailSql, pinRoleEmails } from '../lib.mjs';
 
 const ROLES = ['anon', 'stranger', 'cancioneiro', 'coro', 'maestro', 'gestor'];
 const TMP = 'zz_teste_rls_' + Date.now(); // slug fictício, só existe dentro da transação
@@ -21,6 +21,7 @@ export default async function (level) {
     return;
   }
 
+  await pinRoleEmails();
   dim('Segurança — base de dados', 'crítica');
   await t('DB-RLS-01', 'RLS ligada em todas as tabelas do esquema public', async () => {
     const r = await sql(`select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind in ('r','p') and not c.relrowsecurity`);
@@ -71,7 +72,7 @@ export default async function (level) {
   }, { sev: 'crítica', where: 'grants por coluna em public.* vs selects de app.js' });
   await t('DB-RLS-05', 'Política «leitura familia» esconde cânticos novos por aprovar a quem não os acrescentou (perfil Coro)', async () => {
     const stmt = `insert into public.songs (slug, number, title, language, lyrics, approved, added_by, cancioneiro) values ('${TMP}', 999999, 'Teste RLS (fictício)', 'pt', '[]', false, 'outra-pessoa@example.invalid', false);`;
-    const r = await sql(`begin; ${stmt} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='coro' order by email limit 1),'role','authenticated')::text, true); set local role authenticated; select count(*)::int n from public.songs where slug='${TMP}'; rollback;`);
+    const r = await sql(`begin; ${stmt} select set_config('request.jwt.claims', json_build_object('email',${emailSql('coro')},'role','authenticated')::text, true); set local role authenticated; select count(*)::int n from public.songs where slug='${TMP}'; rollback;`);
     const pol = await sql(`select qual from pg_policies where schemaname='public' and tablename='songs' and policyname='leitura familia'`);
     return r[0].n === 0 || { fail: 'um perfil Coro vê (título, autor, quem acrescentou) um cântico novo por aprovar de outra pessoa. A política em produção não tem o filtro «approved or my_rank() >= 3 or added_by = email» que está em supabase/novos.sql', evidence: pol[0]?.qual };
   }, { sev: 'média', where: 'Supabase: policy «leitura familia» em public.songs (comparar com supabase/novos.sql)' });
@@ -84,7 +85,7 @@ export default async function (level) {
       } catch (e) { out[who] = /permission denied/.test(e.message) ? 'negado' : e.message.slice(0, 80); }
     }
     // Coro só vê cânticos novos por aprovar que ele próprio acrescentou (DB-RLS-05); Maestro+ vê tudo
-    const [all] = await sql(`select count(*)::int songs, count(*) filter (where approved or lower(added_by) = lower((select email from public.allowed_emails where role='coro' order by email limit 1)))::int coro from public.songs`);
+    const [all] = await sql(`select count(*)::int songs, count(*) filter (where approved or lower(added_by) = lower(${emailSql('coro')}))::int coro from public.songs`);
     if (out.anon !== 'negado') bad.push('anon: ' + JSON.stringify(out.anon));
     const s = out.stranger; if (typeof s === 'object' && (s.songs || s.files || s.tags || s.sync)) bad.push('sem acesso vê dados: ' + JSON.stringify(s));
     const c = out.cancioneiro; if (typeof c === 'object' && (c.files || c.tags)) bad.push('Cancioneiro vê ficheiros/etiquetas: ' + JSON.stringify(c));
@@ -121,7 +122,7 @@ export default async function (level) {
     const setup = `insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0a1','t','coro','24h', now() - interval '1 hour'), ('00000000-0000-4000-8000-00000000c0a2','t','coro','24h', now() + interval '1 day'), ('00000000-0000-4000-8000-00000000c0a3','t','cancioneiro','24h', now() + interval '1 day');
       update public.collections set published = true where id in ('00000000-0000-4000-8000-00000000c0a1','00000000-0000-4000-8000-00000000c0a2','00000000-0000-4000-8000-00000000c0a3');
       insert into public.collection_songs (collection_id, song_slug) values ('00000000-0000-4000-8000-00000000c0a3', (select slug from public.songs where not cancioneiro and approved order by slug limit 1));`;
-    const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text, true); set local role authenticated;
+    const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',${emailSql(who)},'role','authenticated')::text, true); set local role authenticated;
       select (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a1')::int expirada, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a2')::int coro, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0a3')::int canc,
         (select count(*) from public.songs where slug=(select song_slug from public.collection_songs where collection_id='00000000-0000-4000-8000-00000000c0a3'))::int cantico; rollback;`;
     const [co] = await sql(q('coro')), [ca] = await sql(q('cancioneiro')), [ma] = await sql(q('maestro'));
@@ -134,7 +135,7 @@ export default async function (level) {
   await t('DB-RLS-11', 'Folhas por publicar (published=false): invisíveis a Coro e Cancioneiro (e os seus cânticos ao Cancioneiro); visíveis a Maestro/Gestor; novas começam por publicar', async () => {
     const setup = `insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0c1','t','cancioneiro','24h', now() + interval '1 day');
       insert into public.collection_songs (collection_id, song_slug) values ('00000000-0000-4000-8000-00000000c0c1', (select slug from public.songs where not cancioneiro and approved order by slug limit 1));`;
-    const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text, true); set local role authenticated;
+    const q = who => `begin; ${setup} select set_config('request.jwt.claims', json_build_object('email',${emailSql(who)},'role','authenticated')::text, true); set local role authenticated;
       select (select published from public.collections where id='00000000-0000-4000-8000-00000000c0c1') pub, (select count(*) from public.collections where id='00000000-0000-4000-8000-00000000c0c1')::int col,
         (select count(*) from public.collection_songs where collection_id='00000000-0000-4000-8000-00000000c0c1')::int cs,
         (select count(*) from public.songs where slug=(select song_slug from public.collection_songs where collection_id='00000000-0000-4000-8000-00000000c0c1'))::int cantico; rollback;`;
@@ -184,8 +185,8 @@ export default async function (level) {
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
   // ---- v209: grupos ----
-  const claimsOf = who => `json_build_object('email',(select email from public.allowed_emails where role='${who}' order by email limit 1),'role','authenticated')::text`;
-  const emailOf = who => `(select email from public.allowed_emails where role='${who}' order by email limit 1)`;
+  const claimsOf = who => `json_build_object('email',${emailSql(who)},'role','authenticated')::text`;
+  const emailOf = who => `${emailSql(who)}`;
   // corre «setup» como dono (em rollback) e depois «body» como o papel
   // os gatilhos deferred do setup (col_groups_guard) verificam-se ainda como dono, antes de passar ao papel
   const asRoleAfter = (who, setup, body) => `begin; ${setup} set constraints all immediate; set constraints all deferred; select set_config('request.jwt.claims', ${claimsOf(who)}, true); set local role authenticated; ${body} rollback;`;
@@ -203,7 +204,7 @@ export default async function (level) {
     if (m1.pessoas < 2) bad.push(`Maestro só vê grupos de ${m1.pessoas} pessoa(s)`);
     // escrita em collection_groups: Coro recusado (RLS)
     // valores literais (o Coro não vê as folhas nem allowed_emails): a RLS recusa antes da chave estrangeira
-    const [lit] = await sql(`select (select id from public.groups order by position limit 1) g, (select email from public.allowed_emails where role='cancioneiro' order by email limit 1) e`);
+    const [lit] = await sql(`select (select id from public.groups order by position limit 1) g, ${emailSql('cancioneiro')} e`);
     const ins = `insert into public.collection_groups (collection_id, group_id) values (gen_random_uuid(), '${lit.g}');`;
     if (await writes('coro', ins).catch(() => false) === true) bad.push('Coro escreve em collection_groups');
     // funções
@@ -264,7 +265,7 @@ export default async function (level) {
     for (const who of ['stranger', 'cancioneiro', 'coro', 'maestro', 'gestor']) {
       const [r] = await sql(asRole(who, `select public.can_listen() got;`));
       // o valor esperado lê-se fora do papel (authenticated não lê allowed_emails, e ainda bem)
-      const [w] = who === 'stranger' ? [{ want: false }] : await sql(`select coalesce(can_listen, false) want from public.allowed_emails where role='${who}' order by email limit 1`);
+      const [w] = who === 'stranger' ? [{ want: false }] : await sql(`select coalesce(can_listen, false) want from public.allowed_emails a where role='${who}' order by not exists (select 1 from public.user_groups ug where ug.email = lower(a.email)), email limit 1`);
       out[who] = r.got; if (r.got !== (w ? w.want : false)) bad.push(`${who}: ${r.got} (esperado ${w && w.want})`);
     }
     if (out.stranger !== false) bad.push('sem acesso: ' + out.stranger);
@@ -292,9 +293,9 @@ export default async function (level) {
 
   dim('Integridade dos dados', 'alta');
   await t('INT-01', 'Ficheiros dos cânticos existem no armazenamento (song_files → storage.objects)', async () => {
-    const r = await sql(`select count(*)::int n, count(*) filter (where f.path not like '%#%' and not exists (select 1 from storage.objects o where o.bucket_id='coro' and o.name=f.path))::int falta, (array_agg(f.song_slug || ' → ' || f.path) filter (where f.path not like '%#%' and not exists (select 1 from storage.objects o where o.bucket_id='coro' and o.name=f.path)))[1:5] exemplos from public.song_files f`);
+    const r = await sql(`select count(*)::int n, count(*) filter (where f.path not like '%#%' and f.path !~ '^https?:' and not exists (select 1 from storage.objects o where o.bucket_id='coro' and o.name=f.path))::int falta, (array_agg(f.song_slug || ' → ' || f.path) filter (where f.path not like '%#%' and f.path !~ '^https?:' and not exists (select 1 from storage.objects o where o.bucket_id='coro' and o.name=f.path)))[1:5] exemplos from public.song_files f`);
     const books = await sql(`select distinct split_part(path,'#',1) b from public.song_files where path like '%#%'`);
-    return r[0].falta ? { fail: `${r[0].falta}/${r[0].n} ficheiros sem objeto`, evidence: (r[0].exemplos || []).join('; ') } : { pass: `${r[0].n} ficheiros; livros por página: ${books.map(x => x.b).join(', ')}` };
+    return r[0].falta ? { fail: `${r[0].falta}/${r[0].n} ficheiros sem objeto`, evidence: (r[0].exemplos || []).join('; ') } : { pass: `${r[0].n} linhas (ligações https externas fora, ver INT-21); livros por página: ${books.map(x => x.b).join(', ')}` };
   });
   await t('INT-02', 'Partituras antigas (songs.pdf_url internas) existem no armazenamento', async () => {
     const [r] = await sql(`select count(*)::int n, count(*) filter (where not exists (select 1 from storage.objects o where o.bucket_id='coro' and o.name=s.pdf_url))::int falta, (select count(*) from public.songs where pdf_url ~ '^https?:')::int externas from public.songs s where pdf_url is not null and pdf_url !~ '^https?:'`);
