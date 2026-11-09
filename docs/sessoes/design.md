@@ -80,6 +80,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 ```
 1. Compara os PNG novos com os anteriores por hash e carrega só os que mudaram (Artifact publish `asset:true`,
    `file_paths`, 25 por chamada). Diferenças só de relógio (validade das folhas, tempo do áudio) não se carregam.
+   Contentor novo (sem `tools/screens/out/`): refazer a base com a versão anterior da app numa cópia à parte —
+   `git worktree add -f $S/base <commit da versão anterior>` e correr lá `capture.mjs` e `catalogue.mjs` (em paralelo com os
+   da versão nova; a porta é livre); as capturas são reprodutíveis, por isso batem com os ids já carregados.
    Antes de capturar, guarda o estado anterior no rascunho (`cp -r tools/screens/out/{png,catalogo}` e
    `design/artefactos/mapa/blobs/*.json` para uma pasta `bNNN`): é a base da comparação e de onde se repõem as imagens não
    carregadas (repor os ficheiros em `out/` para que imagens e ids batam certo). Mudam sempre, só por data ou relógio, e não se
@@ -165,13 +168,14 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (8 nov 2026)
-- App v227; capa do mapa «versão 227 · 7 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 82 (8 nov: sem quadros de opções), sistema de design versão 35; sem comentários por responder; main = perfis-tmp.
+## Estado atual (9 nov 2026)
+- App v228; capa do mapa «versão 228 · 8 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 84, sistema de design versão 36 (9 nov, v228: só o tutorial mudou, «1 / 13» → «1 / 20»); sem comentários por
+  responder; main = perfis-tmp.
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (8 nov): `styles.css` sem cores soltas; 16 tamanhos de letra em px, a maioria iguais a tokens (11/13/15/16/19 →
   fs-*) e os restantes exceções documentadas; raio do aviso flutuante 26px (devia ser `pill`). Enviado à webapp como
-  arrumação sem mudança visível; verificar na próxima versão.
+  arrumação sem mudança visível; a webapp deixou-a para a próxima versão (notas de 8 nov): verificar quando chegar.
 - Rotina ativa: trig_018JkNHGoJ2pJG2p3zT5LFzU («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
   continua a acordar esta sessão; não é preciso recriá-la.
 - Decisões de design por tomar: nenhuma. Fora do design, por fazer: as opções de partilha por email esperam pelo domínio de
