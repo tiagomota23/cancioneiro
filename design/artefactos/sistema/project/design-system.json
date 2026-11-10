@@ -36,8 +36,8 @@
  },
  "lastChange": {
   "by": "Tiago",
-  "at": "2026-11-09T07:10:00Z",
-  "via": "GitHub · tiagomota23/cancioneiro (v228)",
-  "note": "Sem mudanças de tokens nem componentes; referência da app atualizada para a v228."
+  "at": "2026-11-10T07:00:00Z",
+  "via": "GitHub · tiagomota23/cancioneiro (v230)",
+  "note": "Sem mudanças de tokens nem componentes; v229 trocou valores soltos em styles.css por tokens (sem mudança visível); referência da app atualizada para a v230."
  }
 }

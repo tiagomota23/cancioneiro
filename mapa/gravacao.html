@@ -327,7 +327,7 @@ body::before {
 .rows .n { font-size: var(--fs-small); font-variant-numeric: tabular-nums; text-align: right; }
 .rows .bp { display: block; font-size: var(--fs-small); letter-spacing: 0; text-transform: none; margin-top: 2px; white-space: nowrap; }
 .rows .chev { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: var(--stroke); opacity: .7; flex: none; }
-.status { text-align: center; font-size: 13px; padding: 16px; }
+.status { text-align: center; font-size: var(--fs-small); padding: 16px; }
 
 /* Cântico */
 .songbar {
@@ -350,7 +350,7 @@ body::before {
 .songbar .txt { font-family: var(--sans); line-height: 1; position: relative; }
 .songbar .txt .a { font-size: 19px; }
 .songbar .txt.big .a { font-size: 24px; }
-.songbar .txt .s { position: absolute; top: 9px; right: 7px; font-size: 11px; font-weight: 700; }
+.songbar .txt .s { position: absolute; top: 9px; right: 7px; font-size: var(--fs-caps); font-weight: 700; }
 .songbar .txt.big .s { top: 7px; right: 5px; }
 .songbar #btn-chords { opacity: .45; }
 .songbar #btn-chords.on { opacity: 1; }
@@ -452,7 +452,7 @@ dialog form { text-align: right; }
 .az .letter {
   position: sticky; top: 0; z-index: 1;
   margin: 6px 10px 2px; padding: 1px 12px; background: var(--chip-bg); color: var(--text); border-radius: var(--radius-sm);
-  font-size: 15px; letter-spacing: .04em;
+  font-size: var(--fs-ui); letter-spacing: .04em;
 }
 .az a {
   display: flex; align-items: baseline; gap: 10px; padding: 11px 14px 11px 22px;
@@ -475,7 +475,7 @@ dialog form { text-align: right; }
 .listen-progress div { height: 100%; width: 0; background: var(--brand); transition: width .5s linear; }
 .listen-hint { font-size: var(--fs-small); color: var(--text-faint); min-height: 1em; margin: -4px 0 14px; }
 .listen-eq { display: block; width: 280px; max-width: 100%; height: 60px; margin: 2px auto 4px; }
-.listen-diag { font-size: 11px; color: var(--text-faint); margin: -8px 0 12px; font-variant-numeric: tabular-nums; }
+.listen-diag { font-size: var(--fs-caps); color: var(--text-faint); margin: -8px 0 12px; font-variant-numeric: tabular-nums; }
 .listen .pulse { cursor: pointer; }
 .topbar-left-spacer { width: 44px; height: 44px; }
 .topbar #btn-back-list:not([hidden]) + .topbar-left-spacer { display: none; }
@@ -487,7 +487,7 @@ dialog form { text-align: right; }
   background: linear-gradient(180deg, var(--brand), var(--brand-deep)); padding: 24px; }
 .login-box h1 { font-family: var(--serif); font-weight: 400; font-size: var(--fs-display); letter-spacing: .14em; margin: 0 0 48px .14em; }
 .google-btn { display: inline-flex; align-items: center; gap: 12px; background: var(--surface); color: var(--text);
-  font-size: 16px; padding: 12px 22px; border-radius: 26px; box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow) 15%, transparent); }
+  font-size: var(--fs-field); padding: 12px 22px; border-radius: var(--pill); box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow) 15%, transparent); }
 .google-btn svg { width: 20px; height: 20px; }
 .login-msg { min-height: 1.4em; margin: 18px 0 0; font-size: var(--fs-ui); }
 .login-note { font-size: var(--fs-small); margin-top: 28px; }
@@ -542,7 +542,7 @@ dialog { max-height: 90dvh; overflow-y: auto; }
   padding: calc(4px + var(--top)) calc(8px + var(--safe-right)) 4px calc(4px + var(--safe-left)); box-shadow: 0 1px 6px color-mix(in srgb, var(--shadow) 12%, transparent); }
 .pdf-back { display: flex; align-items: center; gap: 2px; height: var(--hit); padding: 0 8px 0 2px; font-size: var(--fs-ui); color: var(--accent); flex: none; }
 .pdf-back svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.pdf-title { flex: 1; min-width: 0; text-align: center; font-weight: 700; color: var(--text); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pdf-title { flex: 1; min-width: 0; text-align: center; font-weight: 700; color: var(--text); font-size: var(--fs-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pdfbar .icon-btn { width: var(--hit); height: var(--hit); font-size: 22px; flex: none; }
 .pdfpages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 8px 8px calc(24px + var(--safe-bottom)); text-align: center; }
 .pdfpages canvas { display: block; margin: 0 auto 10px; background: var(--surface); box-shadow: 0 1px 4px color-mix(in srgb, var(--shadow) 15%, transparent); }
@@ -552,10 +552,10 @@ body.pdf-open { overflow: hidden; }
 .pdf-title { color: var(--pdf-title); }
 
 /* Fontes, Coro CLU, gravações */
-.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: 13px; border-bottom: 1px solid var(--on-brand-line); }
+.rows li.src-note { padding: 10px 14px; color: var(--on-brand); font-size: var(--fs-small); border-bottom: 1px solid var(--on-brand-line); }
 .rows li.src-note a { color: inherit; }
 .src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--fs-ui); margin: 10px 0; }
-.recs { margin: 1.6em 0 .6em; font-size: 15px; }
+.recs { margin: 1.6em 0 .6em; font-size: var(--fs-ui); }
 .recs ul { list-style: none; margin: 0; padding: 0; }
 .recs .rl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .recs button.rec { flex: none; width: var(--h-btn); height: var(--h-btn); border-radius: 50%; border: 1px solid var(--accent); display: grid; place-items: center; color: var(--accent); }
@@ -654,7 +654,7 @@ body.lvl-lt3 .maestro-only, body.lvl-lt4 .gestor-only { display: none; }
 /* Coleções */
 .books .col-new .t { flex: none; }
 .books .t s { text-decoration-thickness: 1.5px; }
-.books .t small { font-size: 11px; text-transform: none; }
+.books .t small { font-size: var(--fs-caps); text-transform: none; }
 .list-title .list-kicker { display: block; margin-bottom: 4px; font: 700 var(--fs-caps)/1.2 var(--sans); letter-spacing: var(--ls-caps); text-transform: uppercase; }
 .list-title .col-meta { display: block; font-size: var(--fs-small); font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; }
 .col-dlg { width: min(420px, calc(100vw - 32px)); }
@@ -701,7 +701,7 @@ button.armed, .edit-actions button.ghost.armed { background: var(--danger) !impo
 
 /* Endereço partilhado: só letra e tradução */
 body.shared-view #btn-fav, body.shared-view #btn-share, body.shared-view #btn-chords, body.no-session #btn-back { display: none; }
-.shared-foot { margin-top: 28px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.shared-foot { margin-top: 28px; font-size: var(--fs-small); color: var(--ink-soft); text-align: center; }
 .shared-foot + .shared-foot { margin-top: 6px; }
 body.no-session.shared-sub #btn-back { display: inline-flex; }
 body.shared-view .searchrow, body.shared-view #btn-perfil { visibility: hidden; }
@@ -709,7 +709,7 @@ body.shared-view .searchrow { height: 8px; overflow: hidden; }
 #view-list .shared-foot { color: var(--on-brand); }
 #view-list .shared-foot .revert-link { color: var(--on-brand); }
 #pdf-download svg { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; }
-.up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: 13px; color: var(--ink-soft); }
+.up-files { list-style: none; margin: -.6em 0 1.2em; padding: 0; font-size: var(--fs-small); color: var(--ink-soft); }
 .up-files li { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 2px 0; }
 .edit-bar .file-btns { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 10px; }
 .perfis-right { display: inline-flex; align-items: center; gap: 6px; }
@@ -1126,7 +1126,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
 </style></head>
 <body class="can-listen perfil-gestor has-mini">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v228</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v230</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1285,7 +1285,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-11-08 v228</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-11-09 v230</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
