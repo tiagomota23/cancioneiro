@@ -11,9 +11,19 @@ permissions:
 jobs:
   converter:
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # a falha de 11 nov (DNS do Ubuntu) ficou 1 h presa antes de falhar
     steps:
       - uses: actions/checkout@v4
       - name: Instalar ffmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        timeout-minutes: 10
+        # 3 tentativas, 30 s entre elas; o apt também repete cada ficheiro e desiste de cada pedido ao fim de 30 s
+        run: |
+          for n in 1 2 3; do
+            sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq \
+              && sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y -qq ffmpeg \
+              && exit 0
+            echo "Tentativa $n falhou; nova tentativa em 30 s"; sleep 30
+          done
+          exit 1
       - name: Converter
         run: node tools/audio/convert.mjs

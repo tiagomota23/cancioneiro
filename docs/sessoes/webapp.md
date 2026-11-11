@@ -213,6 +213,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   por baixo do destaque, senão por cima, senão no fundo, sempre dentro do ecrã; se o elemento estiver fora do ecrã,
   é trazido ao centro primeiro. Verificado no ?demo a 390×844, 375×667 e 360×640, nos 4 perfis: todos os passos até
   «Terminar». O passo das coleções (destaque = painel inteiro) continua com a caixa por cima do painel, como antes.
+- 11 nov: «Converter gravações» falhou (DNS de security.ubuntu.com no runner do GitHub, 1 h presa a instalar o ffmpeg;
+  não era código nosso). Re-corrida a pedido do Tiago. Workflow endurecido: job com limite de 30 min, instalação do
+  ffmpeg com limite de 10 min, 3 tentativas e Acquire::Retries/Timeout no apt.
 - Tudo publicado até à v230; design e testes avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
