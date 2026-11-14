@@ -43,10 +43,11 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Antes de correr: `git fetch origin main && git merge --ff-only origin/main`, num comando **separado** da corrida (em 2026-10-19 o ambiente recusou os dois juntos).
 - Na segunda de manhã: drive-sync às 06:15 UTC e sync-cc às 06:30 UTC. Se a sessão principal disser que vai correr uma sincronização, correr primeiro `--no-db` e a parte DB depois (`--only=DB-,INT-,ESC-0`).
 
-## Estado (2026-11-09)
+## Estado (2026-11-14)
 
 - Última corrida completa: **v229, 2026-11-09 (semanal)** — 234 ok, 1 falha, 0 avisos, 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
-- FUN-71 (tutorial, falha da v229) **corrigido na v230 e re-testado a 2026-11-09 com autorização do Tiago: ok** nos 4 perfis a 390×844, 375×667 e 360×640 (relatório `tests/reports/2026-11-09-v230-quick.md`). Nada pendente.
+- FUN-71 (tutorial, falha da v229) **corrigido na v230 e re-testado a 2026-11-09 com autorização do Tiago: ok** nos 4 perfis a 390×844, 375×667 e 360×640 (relatório `tests/reports/2026-11-09-v230-quick.md`).
+- **v231 (a829cc7, pesquisa por página com as vizinhas):** FUN-73 escrito, por correr — aguarda autorização do Tiago (`--only=FUN-73`, ~1 min); senão corre na semanal de 2ª.
 - Erros de teste corrigidos nesta semanal: DB-RLS-07/09/11/14/16/17 (o 1.º Maestro por email ficou sem grupos → sem folhas, v210; agora `pinRoleEmails()` fixa por corrida a pessoa de cada perfil, preferindo quem tem grupo); INT-01 (ligações https externas kind other, v226, ficam fora; INT-21 cobre-as); FUN-70 (☰ só na página inicial). Testes novos: SEG-37 (drive-sync v10). Os detalhes dos resultados passam a ter emails tapados («email»).
 - Nota para o Tiago: há 1 Maestro (de 6) sem nenhum grupo: não vê nem cria folhas (regra da v210). Pode ser intencional.
 - MAN-01..03 (Safari) continuam manuais.
