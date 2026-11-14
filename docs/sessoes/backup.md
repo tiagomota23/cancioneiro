@@ -82,8 +82,13 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   projeto Supabase real: login, funções, cron; e se os gatilhos col_groups_guard travam o restauro de dados (pelo código
   não: com postgres/service_role my_rank() é nulo).
 
-## Estado (8 nov 2026)
+## Estado (14 nov 2026)
 - Função backup v7 publicada (inclui cc_sync_log e cc_transcripts); backup_schema() corrigida (gatilhos de restrição).
-- Última cópia manual a 8 nov: passou, verificação incluída. Nada pendente.
+- Cópia agendada de 9 nov: passou, verificação incluída.
+- v233 (14 nov): tabela song_texts (texto dos PDF, tem letras: nunca no repo), função pdf-texto, Action texto-pdf.yml.
+  Esquema e grants já saem em backup_schema(). song_texts acrescentada à constante T e à ORDEM (commit 14 nov).
+  **Pendente:** autorização do Tiago para publicar a função backup com song_texts; depois correr backup.yml e confirmar.
+  Até lá, dados.json não leva song_texts (refaz-se com a Action «Texto dos PDF»).
+- conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.
