@@ -238,12 +238,17 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   música, acordes e letras soltas; sílabas com hífen guardadas também juntas. Pára aos 70 min e continua no dia
   seguinte. A `conteudo` junta este texto ao índice (linhas `pdf`, depois da letra; field 'pdf' nos resultados, a app
   mostra «Na partitura: …»; o perfil Cancioneiro não recebe trechos de partituras) e refaz o índice quando chega texto.
+  Verificação (14 nov): a camada de texto dos livros nem sempre coincide com a imagem (o recorte de «Non Nobis»
+  apanhava a Salve Regina): cada recorte é lido também por OCR e a camada de texto só vale se disser o mesmo. Alguns
+  recortes guardados em song_files estão mesmo errados (mostram outro cântico, ex.: «Father and Son» mostra
+  «Everybody needs somebody»): a `conteudo` só usa o texto a partir da linha com o título e, se o cântico tem letra,
+  só se coincidir com ela (≥30%); sem letra e sem título no recorte, não usa.
   Valor: 761 cânticos (sobretudo CANTI e Songbook) só tinham um marcador em vez da letra. Os livros têm camada de texto
   (rápido); as partituras soltas são mais ruidosas (vozes separadas por sílabas).
   Por fazer: C) texto ao vivo no som (o Tiago diz que só muito poucas pessoas têm o reconhecimento: os limites do Groq
   não preocupam). Envio a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à medida.
 - Publicar `conteudo`: enviar `index.ts` **e** `busca.js` (da raiz) no mesmo deploy (ver «Ambiente e ferramentas»).
-- Tudo publicado até à v233 (conteudo versão 34, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v233 (conteudo versão 35, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

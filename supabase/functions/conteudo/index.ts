@@ -122,12 +122,32 @@ async function songs() {
   }
   const pdf = new Map();
   for (const x of await all('song_texts?select=song_slug,text&chars=gt.0').catch(() => [])) {
-    const a = pdf.get(x.song_slug) || []; a.push(...x.text.split('\n')); pdf.set(x.song_slug, a);
+    const a = pdf.get(x.song_slug) || []; a.push(x.text); pdf.set(x.song_slug, a);
   }
-  for (const s of list) s.pdf = pdf.get(s.slug) || [];
+  for (const s of list) s.pdf = pdfLines(s, pdf.get(s.slug) || []);
   cache = { list, bySlug: new Map(list.map(s => [s.slug, s])), ix: null, results: new Map() };
   cacheStamp = stamp;
   return cache;
+}
+
+// texto das partituras de um cântico, só o que é dele. Os recortes dos livros às vezes apanham o fim do cântico de
+// cima ou outro cântico: fica só a partir da linha com o título; e, se o cântico tem letra, só se coincidir com ela
+// (≥30% das palavras). Sem letra e sem o título no recorte, não se usa (não se pode confirmar).
+const wset = (s, k) => new Set((norm(s).match(/[a-z]+/g) || []).filter(x => x.length >= k));
+function pdfLines(s, texts) {
+  const lyr = wset(s.lines.join(' '), 4), real = lyr.size >= 15;
+  const tw = wset(String(s.title).replace(/\(.*?\)/g, ''), 3);
+  const out = [];
+  for (const t of texts) {
+    let lines = t.split('\n');
+    if (tw.size) {
+      const i = lines.findIndex(l => { const lw = wset(l, 3); let c = 0; for (const x of tw) if (lw.has(x)) c++; return c / tw.size >= 0.5; });
+      if (i >= 0) lines = lines.slice(i); else if (!real) continue;
+    }
+    if (real) { const pw = wset(lines.join(' '), 4); let c = 0; for (const x of pw) if (lyr.has(x)) c++; if (!pw.size || c / pw.size < 0.3) continue; }
+    out.push(...lines);
+  }
+  return out;
 }
 
 // ---------- pesquisa e identificação pelo som (busca.js) ----------
