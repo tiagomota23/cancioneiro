@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v235** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, BUS-01, BUS-02, EST-05, SEG-38, SEG-39, SEG-40, SEG-41, INT-23 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v236** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, BUS-01, BUS-02, EST-05, SEG-38, SEG-39, SEG-40, SEG-41, INT-23 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -33,6 +33,7 @@ Catálogo atualizado até à **v235** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | FUN-75 | Pesquisa e servidor (v232, modo real simulado): números e < 3 letras nunca chamam op search; «grace» uma chamada e cache ao repetir; sem rede, aviso em #status | ui | média | V | ☐ por correr |
 | FUN-76 | Hit da partitura (v233, modo real simulado): field «pdf» → «Na partitura: …» com a palavra marcada; hit da letra sem o prefixo | ui | média | V | ☐ por correr |
 | FUN-77 | «A procurar…» (v235, modo real simulado, pesquisa no servidor com 2 s): título «A procurar…» com as linhas do telemóvel, depois «N resultados»; número logo para números, < 3 letras, cache e depois de erro (sem nova chamada) | ui | baixa | V | ☐ por correr |
+| FUN-78 | Som com texto ao vivo (v236, modo real simulado, microfone falso do Chromium): 1.º transcribe aos ~2 s, um de cada vez; texto logo em #listen-text; «parece «Amazing Grace»»; texto igual sem novo match; texto claro ≥ 6 palavras termina em #/ouvir; sem correspondência pára aos 15 s | ui | média | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ☐ por correr |
 | BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
