@@ -178,6 +178,26 @@ async function suites(full) {
     await page.click('#search-clear'); await sleep(400);
     return (await page.inputValue('#search')) === '' || 'limpar não esvaziou a pesquisa';
   }));
+  await t('FUN-73', 'Pesquisa por número com páginas vizinhas (v231): «12» → primeiro os da pág. 12 e o nº 12, depois pág. 11, depois pág. 13; pág. 10 e 14 fora; «99» sem nenhum destes', async () => {
+    // songs.json do fixture com book_page 10–14 em 5 cânticos (números altos, títulos sem algarismos) e um nº 12 sem página
+    const songs = fixture.map(x => ({ ...x, number: x.number === 12 ? 912 : x.number }));
+    const pg = songs.slice(-5), L = ['a', 'b', 'c', 'd', 'e'];
+    pg.forEach((x, k) => Object.assign(x, { book_page: 10 + k, number: 2000 + k, title: 'Teste página ' + L[k] }));
+    const n12 = songs.find(x => !pg.includes(x)); n12.number = 12; n12.book_page = null;
+    const P = Object.fromEntries(pg.map(x => [x.book_page, x.slug]));
+    return withApp({ perfil: 'coro', songs }, async ({ page }) => {
+      const rows = async q => { await page.fill('#search', q); await sleep(900); return page.evaluate(() => [...document.querySelectorAll('#rows li a')].map(a => decodeURIComponent((a.getAttribute('href') || '').replace('#/cantico/', '')))); };
+      const r = await rows('12'), bad = [];
+      const first = r.slice(0, 2).sort().join(','), want = [P[12], n12.slug].sort().join(',');
+      if (first !== want) bad.push(`«12»: primeiros ${r.slice(0, 2).join(', ')} (esperado pág. 12 e nº 12)`);
+      if (r[2] !== P[11]) bad.push(`«12»: 3.º ${r[2]} (esperado pág. 11)`);
+      if (r[3] !== P[13]) bad.push(`«12»: 4.º ${r[3]} (esperado pág. 13)`);
+      if (r.includes(P[10]) || r.includes(P[14])) bad.push('«12»: aparecem as págs. 10 ou 14');
+      const r99 = await rows('99');
+      if (r99.some(x => pg.some(p => p.slug === x) || x === n12.slug)) bad.push('«99»: aparecem cânticos de teste');
+      return bad.length ? bad.join('; ') : { pass: `«12»: ${r.slice(0, 4).length} primeiros na ordem; «99»: ${r99.length} resultados` };
+    });
+  }, { sev: 'média' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';
