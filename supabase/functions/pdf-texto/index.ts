@@ -74,6 +74,26 @@ Deno.serve(async req => {
       for (const it of items) { if (it.kind === 'crop') it.parts.forEach(p => { p.url = urls.get(p.file) || null; }); else it.url = urls.get(it.file) || null; }
       return json({ items, pending: files.filter(f => !done.has(f.path)).length, removed: gone.length });
     }
+    // localizar cânticos nas páginas dos livros (para corrigir recortes errados): para cada slug, os recortes atuais,
+    // as páginas à volta (p−1 … p+1, com endereços) e só a lista das palavras da letra (4+ letras, sem ordem)
+    if (op === 'locate' && req.method === 'POST') {
+      const b = await req.json().catch(() => ({}));
+      const slugs = (Array.isArray(b.slugs) ? b.slugs : []).map(String).filter(x => /^[a-z0-9_]+$/.test(x)).slice(0, 60);
+      if (!slugs.length) return json({ items: [] });
+      const files = await rest(`song_files?select=song_slug,path&kind=eq.score&song_slug=in.(${slugs.join(',')})&path=like.livros/*`);
+      const songs = await rest(`songs?select=slug,title,lyrics,lyrics_edit&slug=in.(${slugs.join(',')})`);
+      const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      const wordsOf = s => [...new Set((norm((s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines).join(' ').replace(/\[[^\]]*\]/g, '')).match(/[a-z]{4,}/g) || []))];
+      const items = files.map(f => {
+        const parts = cropParts(f.path), s = songs.find(x => x.slug === f.song_slug);
+        const dir = BOOKS[f.path.split('#')[0]];
+        const nums = [...new Set(parts.flatMap(p => [p.page - 1, p.page, p.page + 1]).filter(n => n >= 1))];
+        return { slug: f.song_slug, key: f.path, parts, title: s?.title || '', words: s ? wordsOf(s) : [], pages: nums.map(n => ({ page: n, file: pageFile(dir, n) })) };
+      });
+      const urls = await signMany([...new Set(items.flatMap(it => it.pages.map(p => p.file)))]);
+      for (const it of items) it.pages = it.pages.filter(p => urls.has(p.file)).map(p => ({ ...p, url: urls.get(p.file) }));
+      return json({ items });
+    }
     if (op === 'save' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));
       const key = String(b.key || ''), method = String(b.method || ''), text = String(b.text || '').slice(0, 30000);
