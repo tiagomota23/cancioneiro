@@ -237,7 +237,7 @@ export default async function (level) {
     if (!/search: \[200, 1000\]/.test(c)) bad.push('LIMITS.search diferente de [200, 1000]');
     if (!/const MAX_HITS = 40\b/.test(c)) bad.push('MAX_HITS ≠ 40');
     if (!/cached\(c, 's:' \+ nq, \(\) => Busca\.search\(index\(c\), q, null, \d+\)\)/.test(op)) bad.push('pesquisa sem cache partilhada por nq (ou com o perfil dentro da cache)');
-    if (!op.includes('all.filter(h => visible(c.bySlug.get(h.slug))).slice(0, MAX_HITS)')) bad.push('hits sem filtro visible() por pessoa');
+    if (!/all\.filter\(h => visible\(c\.bySlug\.get\(h\.slug\)\)[^\n]*\)\.slice\(0, MAX_HITS\)/.test(op)) bad.push('hits sem filtro visible() por pessoa'); // v233: + (lvl >= 2 || h.field !== 'pdf')
     if (!c.includes('Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug))))')) bad.push('match sem filtro visible()');
     if (!/Date\.now\(\) - r\.at < 60e3/.test(c)) bad.push('cache de resultados ≠ 60 s');
     if (!/^import '\.\/busca\.js';/m.test(c)) bad.push("sem import './busca.js'");
