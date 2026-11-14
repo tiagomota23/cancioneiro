@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-14 v232';
+  const APP_VERSION = '2026-11-14 v233';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -520,7 +520,7 @@
     const hits = lyricCache.get(searchKey(q));
     const out = [];
     for (const s of songs) {
-      let score = 0, snip = null, marks = null;
+      let score = 0, snip = null, marks = null, pdfSnip = false;
       if (num !== null && s.number === num) score += 100;
       if (num !== null && s.book_page === num) score += 100;
       // pela página: também os cânticos das páginas antes e depois (logo a seguir aos da página pedida; a anterior primeiro)
@@ -539,10 +539,14 @@
       // letra (e o resto que só o servidor tem): resultados do servidor, com o trecho encontrado
       const h = hits && (hits.get(s.slug) || s._versions.map(v => hits.get(v.slug)).find(Boolean));
       if (h) {
-        if (h.field === 'lyrics' || !h.field) { score += Math.round(10 + 20 * Math.min(h.score, 1.5)); if (!inTitle) { snip = h.snip; marks = h.marks; } }
+        if (h.field === 'lyrics' || h.field === 'pdf' || !h.field) {
+          score += Math.round(10 + 20 * Math.min(h.score, 1.5));
+          // trecho da partitura / página do livro (texto lido do PDF): indicado como tal
+          if (!inTitle) { snip = h.snip; marks = h.marks; if (h.field === 'pdf') pdfSnip = true; }
+        }
         else if (!score) score += 30; // título ou autor que só o servidor encontrou
       }
-      if (score) out.push({ s, score, snip, marks });
+      if (score) out.push({ s, score, snip, marks, pdfSnip });
     }
     return out.sort((a, b) => b.score - a.score || a.s.title.localeCompare(b.s.title, 'pt'));
   }
@@ -902,10 +906,10 @@
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
   }
 
-  function songRow(s, q, snip, marks) {
+  function songRow(s, q, snip, marks, pdfSnip) {
     const title = q ? highlight(s.title, q) : esc(s.title);
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
-    const sn = snip ? `<span class="snip">${highlight(snip, q, marks)}</span>` : '';
+    const sn = snip ? `<span class="snip">${pdfSnip ? 'Na partitura: ' : ''}${highlight(snip, q, marks)}</span>` : '';
     const pend = s.approved === false ? '<small class="pend">por aprovar</small>' : ''; // à direita, por cima do número
     return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${pend}${s.approved === false ? '' : s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
@@ -922,7 +926,7 @@
       const res = search(q);
       title.hidden = false;
       title.textContent = `${res.length} resultado${res.length === 1 ? '' : 's'}`;
-      rows.innerHTML = res.slice(0, 200).map(r => songRow(r.s, q, r.snip, r.marks)).join('');
+      rows.innerHTML = res.slice(0, 200).map(r => songRow(r.s, q, r.snip, r.marks, r.pdfSnip)).join('');
       // sem rede: só o que está no telemóvel (a letra é pesquisada no servidor)
       if (!navigator.onLine && !DEMO) $('status').textContent = 'Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas.';
       return;

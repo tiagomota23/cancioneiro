@@ -66,7 +66,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - **«Cancioneiro — testes semanais»** (`trig_01G6TrRGWA8xgvwm64Qrabbg`): segundas 09:47 (Europe/Lisbon), acorda esta
   sessão para pedir à sessão de testes uma corrida completa e tratar o relatório.
 - Agendamentos que não são rotinas do Claude: Actions «Cópia de segurança» (segundas 07:30 UTC), «Verificação semanal»
-  e conversão de gravações (diária); pg_cron no Supabase (ver `supabase/*.sql` e `cron.job`).
+  conversão de gravações (diária), «Texto dos PDF» (diária 07:20 UTC); pg_cron no Supabase (ver `supabase/*.sql` e `cron.job`).
 
 ## Ambiente e ferramentas
 - Variável de ambiente: `SUPABASE_ACCESS_TOKEN` (token de gestão, restrito a este projeto: não cria projetos novos).
@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (14 nov 2026, v232)
+## Estado e pendentes (14 nov 2026, v233)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -219,7 +219,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   ffmpeg com limite de 10 min, 3 tentativas e Acquire::Retries/Timeout no apt.
 - v231 (14 nov, pedido do Tiago): pesquisa por número de página mostra também os cânticos das páginas antes e depois
   (logo a seguir aos da página pedida; a anterior primeiro). Só em `search()` na app (book_page já vem na lista).
-- **Pesquisa nova (14 nov, pedido do Tiago; plano A feito na v232, B e C por fazer).** Dados: 1923 cânticos, 1,3 MB de
+- **Pesquisa nova (14 nov, pedido do Tiago; A na v232, B na v233, C por fazer).** Dados: 1923 cânticos, 1,3 MB de
   letras → índice em memória na função `conteudo` (não precisa de Postgres). Motor único em `busca.js` (raiz do repo),
   usado pela função (publicada com `busca.js` ao lado: `import './busca.js'`) e pela app (modo demo e funções de
   tolerância a erros). Camadas: palavra exata 1 · variante ortográfica PT/IT/LA/ES (ph/f, th/t, y/i, j/i, k/c, h mudo,
@@ -230,12 +230,20 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   no servidor, resultados partilhados 60 s por pesquisa (filtro do perfil depois), cache de sessão (60 s), grupos (60 s)
   e folhas ativas (30 s), registo do limite sem atrasar a resposta. Limite de pesquisa 200/h, 1000/dia; números e
   pesquisas < 3 letras não vão ao servidor. Sem rede: aviso «a pesquisa só procura nos títulos, autores, números e páginas».
-  Por fazer: B) texto dos PDF (1871 PDF de partituras/páginas): Action diária, pdftotext + OCR tesseract
-  (por/ita/lat/spa/eng/fra) nos digitalizados, sílabas reunidas, tabela só no servidor, entra no índice como linhas
-  «pdf». C) texto ao vivo no som: envio ao Groq a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à
-  medida (atenção aos limites da conta Groq com muitas pessoas ao mesmo tempo; o modelo do telemóvel é a alternativa).
+  B (v233): texto dos PDF em `song_texts` (`supabase/texto-pdf.sql`; RLS sem políticas, só a chave de serviço lê),
+  uma linha por song_files.path (nos livros, o recorte `#p=…&c=…`). Função `pdf-texto` (OIDC do GitHub, audiência
+  `cancioneiro-pdf`, só do workflow `texto-pdf.yml`; op list / save; retira textos de ficheiros que já não existem).
+  Action «Texto dos PDF» (`tools/pdf/texto.mjs`, diária 07:20 UTC e a pedido com «minutos»): livros primeiro;
+  pdftotext no recorte, OCR tesseract (por/ita/spa/eng/fra/lat) quando quase não há texto; limpeza de símbolos de
+  música, acordes e letras soltas; sílabas com hífen guardadas também juntas. Pára aos 70 min e continua no dia
+  seguinte. A `conteudo` junta este texto ao índice (linhas `pdf`, depois da letra; field 'pdf' nos resultados, a app
+  mostra «Na partitura: …»; o perfil Cancioneiro não recebe trechos de partituras) e refaz o índice quando chega texto.
+  Valor: 761 cânticos (sobretudo CANTI e Songbook) só tinham um marcador em vez da letra. Os livros têm camada de texto
+  (rápido); as partituras soltas são mais ruidosas (vozes separadas por sílabas).
+  Por fazer: C) texto ao vivo no som (o Tiago diz que só muito poucas pessoas têm o reconhecimento: os limites do Groq
+  não preocupam). Envio a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à medida.
 - Publicar `conteudo`: enviar `index.ts` **e** `busca.js` (da raiz) no mesmo deploy (ver «Ambiente e ferramentas»).
-- Tudo publicado até à v232 (função conteudo versão 33); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v233 (conteudo versão 34, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

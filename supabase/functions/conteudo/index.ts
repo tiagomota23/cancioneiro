@@ -108,7 +108,9 @@ async function songs() {
   // cânticos promovidos / retirados do Cancioneiro (mudam o número de cânticos do Cancioneiro)
   const r = await fetch(`${SB}/rest/v1/songs?select=slug&cancioneiro=eq.true`, { method: 'HEAD', headers: { ...HDR, Prefer: 'count=exact', Range: '0-0' } });
   const nc = (r.headers.get('content-range') || '').split('/')[1];
-  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}`;
+  // texto das partituras (song_texts, Action «Texto dos PDF»): quando chega texto novo, o índice é refeito
+  const [t] = await rest('song_texts?select=extracted_at&order=extracted_at.desc&limit=1').catch(() => []);
+  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}|${t?.extracted_at}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
   const list = await all('songs?select=slug,title,author,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');
@@ -118,6 +120,11 @@ async function songs() {
     s.lset = new Set(s.eff.flatMap(st => st.lines).map(cleanLine).filter(l => l.length >= 12));
     s.nt = cleanLine(s.title);
   }
+  const pdf = new Map();
+  for (const x of await all('song_texts?select=song_slug,text&chars=gt.0').catch(() => [])) {
+    const a = pdf.get(x.song_slug) || []; a.push(...x.text.split('\n')); pdf.set(x.song_slug, a);
+  }
+  for (const s of list) s.pdf = pdf.get(s.slug) || [];
   cache = { list, bySlug: new Map(list.map(s => [s.slug, s])), ix: null, results: new Map() };
   cacheStamp = stamp;
   return cache;
@@ -125,7 +132,7 @@ async function songs() {
 
 // ---------- pesquisa e identificação pelo som (busca.js) ----------
 // índice construído na primeira pesquisa depois de as letras mudarem; os resultados devolvem só trechos de ≤7 palavras
-const index = c => c.ix || (c.ix = Busca.build(c.list.map(s => ({ slug: s.slug, title: s.title, author: s.author, lines: s.lines }))));
+const index = c => c.ix || (c.ix = Busca.build(c.list.map(s => ({ slug: s.slug, title: s.title, author: s.author, lines: s.lines, pdf: s.pdf }))));
 // resultados partilhados entre pessoas: numa sala, muitas pessoas pesquisam o mesmo ao mesmo tempo. Guarda-se a lista
 // completa por ordem (sem o filtro do perfil, que se aplica depois a cada pessoa) durante 60 s.
 function cached(c, key, run) {
@@ -423,7 +430,8 @@ Deno.serve(async (req) => {
       if (!(await limit(user, 'search', nq))) return tooMany();
       const c = await songs();
       const all = cached(c, 's:' + nq, () => Busca.search(index(c), q, null, 400));
-      return out({ hits: all.filter(h => visible(c.bySlug.get(h.slug))).slice(0, MAX_HITS) });
+      // o perfil Cancioneiro não vê partituras: sem trechos delas
+      return out({ hits: all.filter(h => visible(c.bySlug.get(h.slug)) && (lvl >= 2 || h.field !== 'pdf')).slice(0, MAX_HITS) });
     }
     if (op === 'match') {
       const text = String(b.text || '').slice(0, 1000);
