@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-09 v230';
+  const APP_VERSION = '2026-11-14 v231';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -494,6 +494,8 @@
       let score = 0, snip = null;
       if (num !== null && s.number === num) score += 100;
       if (num !== null && s.book_page === num) score += 100;
+      // pela página: também os cânticos das páginas antes e depois (logo a seguir aos da página pedida; a anterior primeiro)
+      else if (num !== null && s.book_page && Math.abs(s.book_page - num) === 1) score += s.book_page < num ? 51 : 50;
       const inTitle = terms.every(t => s._t.includes(t));
       const inAuthor = terms.every(t => s._a.includes(t));
       if (s._t.startsWith(nq)) score += 60; else if (inTitle) score += 40;

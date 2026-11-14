@@ -199,7 +199,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (9 nov 2026, v230)
+## Estado e pendentes (14 nov 2026, v231)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -216,7 +216,20 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - 11 nov: «Converter gravações» falhou (DNS de security.ubuntu.com no runner do GitHub, 1 h presa a instalar o ffmpeg;
   não era código nosso). Re-corrida a pedido do Tiago. Workflow endurecido: job com limite de 30 min, instalação do
   ffmpeg com limite de 10 min, 3 tentativas e Acquire::Retries/Timeout no apt.
-- Tudo publicado até à v230; design e testes avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v231 (14 nov, pedido do Tiago): pesquisa por número de página mostra também os cânticos das páginas antes e depois
+  (logo a seguir aos da página pedida; a anterior primeiro). Só em `search()` na app (book_page já vem na lista).
+- **Proposta à espera do Tiago (14 nov): pesquisa nova.** Avaliação feita e enviada; aguarda «go» e acesso à Management
+  API (a 1.ª consulta SQL foi recusada pelo classificador de permissões desta sessão). Plano em 3 versões:
+  A) índice no Postgres (tabela de documentos por cântico: título, autor, nº, página, etiquetas, fontes, letra, tradução,
+  letra editada, texto dos PDF; unaccent + tsvector + pg_trgm; RPC chamada pela função conteudo, que mantém visibilidade
+  por perfil, trechos de ≤7 palavras e limites) + pesquisa difusa em camadas (frase, todas as palavras, prefixo,
+  trigramas, variantes ortográficas PT/IT/LA) + metadados com tolerância a erros no telemóvel (funciona offline) +
+  limite de pesquisa contado só ao parar de escrever (~200/h) + identificação pelo som no mesmo índice.
+  B) texto dos PDF (partituras e páginas dos livros): Action diária, camada de texto (pdftotext) e OCR (tesseract
+  por/ita/lat/spa/eng/fra) nos digitalizados, sílabas reunidas; só na base de dados, nunca mostrado inteiro.
+  C) texto ao vivo na identificação pelo som: enviar ao Groq a cada 2 s a partir dos 2 s (janela crescente), mostrar o
+  texto e os candidatos à medida; ~5 transcrições por audição (cabe no limite de 150/h).
+- Tudo publicado até à v231; design e testes avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
