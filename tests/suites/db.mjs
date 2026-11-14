@@ -236,7 +236,24 @@ export default async function (level) {
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
-  await t('DB-RLS-10', 'Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
+  await t('SEG-40', 'song_texts (v233): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; como anon, Cancioneiro, Coro, Maestro e Gestor a leitura é recusada (em rollback)', async () => {
+    const bad = [];
+    const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'song_texts')::int pols,
+      has_table_privilege('anon', 'public.song_texts', 'select,insert,update,delete') anon_priv,
+      has_table_privilege('authenticated', 'public.song_texts', 'select,insert,update,delete') auth_priv
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'song_texts'`);
+    if (!m) return 'song_texts não existe';
+    if (!m.rls) bad.push('RLS desligada');
+    if (m.pols) bad.push(`${m.pols} políticas`);
+    if (m.anon_priv) bad.push('anon com privilégios');
+    if (m.auth_priv) bad.push('authenticated com privilégios');
+    for (const who of ['anon', 'cancioneiro', 'coro', 'maestro', 'gestor']) {
+      try { const r = await sql(asRole(who, 'select count(*)::int n from public.song_texts;')); bad.push(`${who} leu song_texts (${r[0] && r[0].n} linhas)`); }
+      catch (e) { if (!/permission denied/i.test(e.message)) bad.push(`${who}: erro inesperado ${e.message.slice(0, 80)}`); }
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'crítica', where: 'supabase/texto-pdf.sql' });
+  await t('DB-RLS-10','Coleções: máximo de 10 cânticos por folha (gatilho)', async () => {
     try {
       await sql(`begin; insert into public.collections (id, title, audience, duration, expires_at) values ('00000000-0000-4000-8000-00000000c0b1','t','coro','24h', now() + interval '1 day'); insert into public.collection_songs (collection_id, song_slug) select '00000000-0000-4000-8000-00000000c0b1', slug from public.songs order by slug limit 11; rollback;`);
       return 'aceitou 11 cânticos';
@@ -495,7 +512,21 @@ export default async function (level) {
     const miss = want.filter(w => !r.some(x => x.title === w)), empty = r.filter(x => want.includes(x.title) && !x.n).map(x => x.title);
     return miss.length || empty.length ? `em falta: ${miss.join(', ') || '—'}; sem secções: ${empty.join(', ') || '—'}` : { pass: r.map(x => `${x.title} (${x.n})`).join(', ') };
   }, { sev: 'baixa' });
-  await t('INT-05', 'Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
+  await t('INT-23', 'Texto dos PDF (v233): song_texts só com file_key de song_files kind score e song_slug igual; method em text/ocr/none; chars = length(text); progresso da extração (informativo)', async () => {
+    const [r] = await sql(`select count(*)::int n,
+      count(*) filter (where not exists (select 1 from public.song_files f where f.kind = 'score' and f.path = t.file_key and f.song_slug = t.song_slug))::int orfaos,
+      count(*) filter (where chars <> length(text))::int chars_errados,
+      count(*) filter (where method = 'none')::int sem_texto,
+      (select count(*) from public.song_files f where f.kind = 'score' and f.path !~ '^https?:')::int partituras,
+      max(extracted_at)::text ultima
+      from public.song_texts t`);
+    const bad = [];
+    if (r.orfaos) bad.push(`${r.orfaos} textos sem a partitura correspondente`);
+    if (r.chars_errados) bad.push(`${r.chars_errados} com chars ≠ length(text)`);
+    const info = `${r.n}/${r.partituras} partituras com texto extraído (${r.sem_texto} sem texto legível); última ${r.ultima || '—'}`;
+    return bad.length ? { fail: bad.join('; ') + ' — ' + info } : { pass: info };
+  }, { sev: 'baixa', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts' });
+  await t('INT-05','Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;
   });

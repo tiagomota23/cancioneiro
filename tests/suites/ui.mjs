@@ -230,6 +230,15 @@ async function suites(full) {
     if (!/Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas\./.test(st)) bad.push('sem rede: #status «' + st.trim().slice(0, 80) + '»');
     return bad.length ? bad.join('; ') : true;
   }), { sev: 'média' });
+  await t('FUN-76', 'Hit da partitura (v233, modo real simulado): o servidor devolve field «pdf» → a linha do cântico mostra «Na partitura: …» com a palavra marcada; um hit da letra não leva o prefixo', () => withApp({ real: { role: 'coro', conteudo: (op, b) => op === 'search' ? { body: { hits: /quadrifolium/.test(b.q) ? [{ slug: 'amazing_grace', score: 1, field: 'pdf', snip: 'ramo quadrifolium sobre a mesa', marks: ['quadrifolium'] }] : /zeternalis/.test(b.q) ? [{ slug: 'salve_regina', score: 1, field: 'lyrics', snip: 'linha zeternalis de exemplo', marks: ['zeternalis'] }] : [] } } : null }, wait: '#rows li a', timeout: 20000 }, async ({ page }) => {
+    const row = async (q, slug) => { await page.fill('#search', q); await sleep(1500); return page.evaluate(s => { const a = document.querySelector(`#rows li a[href="#/cantico/${s}"]`); const sn = a && a.querySelector('.snip'); return sn ? { t: sn.textContent, m: [...sn.querySelectorAll('mark')].map(x => x.textContent) } : null; }, slug); };
+    const bad = [], p = await row('quadrifolium', 'amazing_grace');
+    if (!p) bad.push('hit pdf não aparece na lista');
+    else { if (!/^Na partitura: /.test(p.t)) bad.push('sem «Na partitura:» — ' + p.t); if (!p.m.includes('quadrifolium')) bad.push('palavra não marcada'); }
+    const l = await row('zeternalis', 'salve_regina');
+    if (!l) bad.push('hit da letra não aparece'); else if (/Na partitura/.test(l.t)) bad.push('hit da letra com «Na partitura:»');
+    return bad.length ? bad.join('; ') : true;
+  }), { sev: 'média' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';

@@ -183,6 +183,17 @@ export default async function (level) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'crítica' });
+  await t('SEG-41', 'pdf-texto (v233): sem token OIDC, com token forjado (alg none) ou com a chave anon → 401, em op=list e op=save (nada é lido nem gravado)', async () => {
+    const forged = ['eyJhbGciOiJub25lIn0', Buffer.from(JSON.stringify({ iss: 'https://token.actions.githubusercontent.com', aud: 'cancioneiro-pdf', repository: 'tiagomota23/cancioneiro', ref: 'refs/heads/main', workflow_ref: 'tiagomota23/cancioneiro/.github/workflows/texto-pdf.yml@refs/heads/main', exp: 9e9, nbf: 0 })).toString('base64url'), 'x'].join('.');
+    const bad = [];
+    for (const [q, method] of [['op=list&n=1', 'GET'], ['op=save', 'POST']]) {
+      for (const auth of [undefined, 'Bearer ' + forged, 'Bearer ' + ANON]) {
+        const r = await get(`${SB}/functions/v1/pdf-texto?${q}`, { method, headers: { apikey: ANON, 'Content-Type': 'application/json', ...(auth ? { Authorization: auth } : {}) }, body: method === 'POST' ? JSON.stringify({ key: 'teste_inexistente', method: 'none', text: '' }) : undefined });
+        if (r.status !== 401) bad.push(`${q} (${auth ? auth.slice(7, 20) : 'sem'}): ${r.status}`);
+      }
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'crítica', where: 'supabase/functions/pdf-texto/index.ts' });
   await t('SEG-32', 'notify: tipos inválidos / ids mal formados → 400 (sem enviar emails)', async () => {
     const bad = [];
     for (const b of [{ type: 'xyz' }, { type: 'access', id: 'nao-e-um-uuid' }, { type: 'sync', id: 'abc' }, { type: 'decide', id: 'x', token: 'y', action: 'autorizar' }, { type: 'claim', invite: '<x>' }]) {
