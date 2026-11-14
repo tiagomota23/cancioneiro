@@ -64,6 +64,7 @@ function mockSupabase(mode, songs, calls) {
     if (p === '/functions/v1/conteudo') {
       const b = JSON.parse(req.postData() || '{}');
       calls.push(`${b.op}:${b.slug || ''}`);
+      if (b.op === 'search' && mode.searchDelay) await sleep(mode.searchDelay); // servidor lento só na pesquisa (v235)
       const custom = mode.conteudo && mode.conteudo(b.op, b);
       if (custom) return json(custom.body, custom.status || 200);
       const s = songs.find(x => x.slug === b.slug);
@@ -239,6 +240,22 @@ async function suites(full) {
     if (!l) bad.push('hit da letra não aparece'); else if (/Na partitura/.test(l.t)) bad.push('hit da letra com «Na partitura:»');
     return bad.length ? bad.join('; ') : true;
   }), { sev: 'média' });
+  await t('FUN-77', '«A procurar…» (v235, modo real simulado, servidor da pesquisa com 2 s de atraso): «grace» → #list-title «A procurar…» com as linhas do telemóvel já na lista, depois «N resultados»; número logo para «12», «sw», «grace» repetido (cache) e depois de um erro do servidor na mesma pesquisa (sem nova chamada)', () => withApp({ real: { role: 'coro', searchDelay: 2000, conteudo: (op, b) => op === 'search' && /zzzerro/.test(b.q) ? { body: { error: 'erro simulado' }, status: 500 } : null }, wait: '#rows li a', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
+    const bad = [], NUM = /^\d+ resultados?$/;
+    const title = () => page.evaluate(() => document.querySelector('#list-title')?.textContent.trim() || '');
+    const at = async (q, ms) => { await page.fill('#search', q); await sleep(ms); return title(); };
+    const nCalls = () => calls.filter(c => c.startsWith('search:')).length;
+    let t1 = await at('grace', 300);
+    if (t1 !== 'A procurar…') bad.push(`«grace» à espera: «${t1}»`);
+    const rows = await slugsOf(page); if (!rows.includes('amazing_grace')) bad.push('«grace» à espera: lista sem o que o telemóvel encontrou');
+    await sleep(2800); t1 = await title(); if (!NUM.test(t1)) bad.push(`«grace» depois da resposta: «${t1}»`);
+    for (const q of ['12', 'sw']) { const x = await at(q, 300); if (!NUM.test(x)) bad.push(`«${q}»: «${x}» (esperado o número logo)`); }
+    const c0 = nCalls(), tc = await at('grace', 300); if (!NUM.test(tc)) bad.push(`«grace» em cache: «${tc}»`); if (nCalls() !== c0) bad.push('«grace» em cache voltou a chamar o servidor');
+    await at('zzzerro', 300); await sleep(2800); const te = await title(); if (!NUM.test(te)) bad.push(`depois do erro: «${te}»`);
+    await at('x', 300); const c1 = nCalls(), tr = await at('zzzerro', 300);
+    if (!NUM.test(tr)) bad.push(`«zzzerro» depois do erro: «${tr}» (esperado o número logo)`); await sleep(800); if (nCalls() !== c1) bad.push('«zzzerro» depois do erro voltou a chamar o servidor');
+    return bad.length ? bad.join('; ') : true;
+  }), { sev: 'baixa' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';
