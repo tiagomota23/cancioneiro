@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v231** (2026-11-14). Por correr: FUN-73 (aguarda autorização do Tiago). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v232** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, BUS-01, EST-05, SEG-38 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -29,6 +29,9 @@ Catálogo atualizado até à **v231** (2026-11-14). Por correr: FUN-73 (aguarda 
 | FUN-01.{gestor,maestro,coro,cancioneiro} | Arranque em cada perfil: índice com cânticos, sem erros JS | ui | alta | V | ✓ |
 | FUN-02 | Pesquisa por título, autor e palavra da letra; botão limpar | ui | alta | V | ✓ |
 | FUN-73 | Pesquisa por número com páginas vizinhas (v231): «12» → pág. 12 e nº 12, depois pág. 11, depois pág. 13; 10 e 14 fora; «99» sem os de teste (songs.json do fixture com book_page 10–14) | ui | média | V | ☐ por correr |
+| FUN-74 | Pesquisa com erros (v232, ?demo): «amazng» → Amazing Grace 1.º; «swet sound» → trecho com mark em sweet/sound; «pange lyngua» → Pange lingua; perfil Cancioneiro não vê Pange lingua (fora do Cancioneiro) por título nem por letra | ui | alta | V | ☐ por correr |
+| FUN-75 | Pesquisa e servidor (v232, modo real simulado): números e < 3 letras nunca chamam op search; «grace» uma chamada e cache ao repetir; sem rede, aviso em #status | ui | média | V | ☐ por correr |
+| BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
 | FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ✓ |
 | FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ✓ |
@@ -140,6 +143,7 @@ Catálogo atualizado até à **v231** (2026-11-14). Por correr: FUN-73 (aguarda 
 | EST-02 | Formato de APP_VERSION | static | alta | V | ✓ |
 | EST-03 | Ficheiros do SHELL do sw.js existem | static | alta | V | ✓ |
 | EST-04 | Versão do supabase-js igual no `<script>` e na CSP | static | alta | V | ✓ |
+| EST-05 | busca.js (v232): no index.html com ?v= da versão e antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js documentada | static | alta | V | ☐ por correr |
 | EST-10 | Sessão longa (60/150 navegações): sem erros, memória e nós DOM estáveis | ui | alta | V/S | ✓ |
 | EST-11 | Service worker ativo, abre sem rede | ui | alta | V | ✓ |
 | EST-12 | Ao mudar de versão o SW apaga caches antigas (mantém cancioneiro-media) | ui | alta | V | ✓ |
@@ -247,6 +251,7 @@ Catálogo atualizado até à **v231** (2026-11-14). Por correr: FUN-73 (aguarda 
 | SEG-35 | sync-cc sem pedido → 403 (v226); só se chama sem pedido sync-cc pendente (nunca consome um verdadeiro) | live | alta | S | ✓ |
 | SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ✓ |
 | SEG-37 | drive-sync v10 (atalhos do Drive, commit bfb4fba): shortcutDetails nos fields, followShortcuts definido e chamado, download por it.src \|\| it.id, só GET ao Drive | static | alta | V | ✓ |
+| SEG-38 | conteudo search (v232, versão 33): números/curtas → hits [] antes do limite e do índice; limite 200/h e 1000/dia; cache partilhada 60 s sem perfil e visible() por pessoa (também match); MAX_HITS 40 | static | alta | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |

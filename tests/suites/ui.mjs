@@ -198,6 +198,38 @@ async function suites(full) {
       return bad.length ? bad.join('; ') : { pass: `«12»: ${r.slice(0, 4).length} primeiros na ordem; «99»: ${r99.length} resultados` };
     });
   }, { sev: 'média' });
+  // ---- v232: pesquisa tolerante a erros (busca.js) ----
+  const slugsOf = page => page.evaluate(() => [...document.querySelectorAll('#rows li a')].map(a => decodeURIComponent((a.getAttribute('href') || '').replace('#/cantico/', ''))));
+  await t('FUN-74', 'Pesquisa com erros (v232, ?demo): «amazng» → Amazing Grace em 1.º; «swet sound» → Amazing Grace com trecho e <mark> em sweet/sound; perfil Cancioneiro não vê Pange lingua (fora do Cancioneiro) por título com erro nem pela letra, mas encontra Amazing Grace', async () => {
+    const bad = [];
+    const q = async (page, s) => { await page.fill('#search', s); await sleep(1600); return slugsOf(page); };
+    await withApp({ perfil: 'coro' }, async ({ page }) => {
+      const a = await q(page, 'amazng'); if (a[0] !== 'amazing_grace') bad.push('coro «amazng»: 1.º ' + (a[0] || 'nada'));
+      const b = await q(page, 'swet sound'); if (!b.includes('amazing_grace')) bad.push('coro «swet sound»: sem Amazing Grace');
+      const mk = await page.evaluate(() => { const a = document.querySelector('#rows li a[href="#/cantico/amazing_grace"]'); return a ? [...a.querySelectorAll('.snip mark')].map(m => m.textContent).join(' ') : null; });
+      if (mk === null || !/sweet/i.test(mk) || !/sound/i.test(mk)) bad.push('coro «swet sound»: marcas ' + JSON.stringify(mk));
+      const c = await q(page, 'pange lyngua'); if (c[0] !== 'pange_lingua') bad.push('coro «pange lyngua»: 1.º ' + (c[0] || 'nada'));
+    });
+    await withApp({ perfil: 'cancioneiro' }, async ({ page }) => {
+      for (const s of ['pange lyngua', 'sanguinisque pretiosi', 'generosi']) if ((await q(page, s)).includes('pange_lingua')) bad.push(`cancioneiro «${s}»: mostra Pange lingua`);
+      if (!(await q(page, 'swet sound')).includes('amazing_grace')) bad.push('cancioneiro «swet sound»: sem Amazing Grace');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta' });
+  await t('FUN-75', 'Pesquisa e servidor (v232, modo real simulado): números («12») e < 3 letras («ab») nunca chamam op search; «grace» chama uma vez e repetir a mesma pesquisa usa a cache; sem rede, #status «Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas.»', () => withApp({ real: { role: 'coro' }, wait: '#rows li a', timeout: 20000 }, async ({ page, calls, ctx }) => {
+    const n = () => calls.filter(c => c.startsWith('search:')).length, bad = [];
+    const typ = async s => { await page.fill('#search', s); await sleep(1300); };
+    await typ('12'); await typ('ab'); await typ('123');
+    if (n()) bad.push(`números/curtas chamaram search ${n()}×`);
+    await typ('grace'); const n1 = n();
+    if (n1 !== 1) bad.push(`«grace»: ${n1} chamadas (esperado 1)`);
+    await typ('x'); await typ('grace');
+    if (n() !== n1) bad.push('«grace» repetido voltou a chamar o servidor (sem cache)');
+    await ctx.setOffline(true); await typ('santa');
+    const st = await txt(page, '#status'); await ctx.setOffline(false);
+    if (!/Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas\./.test(st)) bad.push('sem rede: #status «' + st.trim().slice(0, 80) + '»');
+    return bad.length ? bad.join('; ') : true;
+  }), { sev: 'média' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';
