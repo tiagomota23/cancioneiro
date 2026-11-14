@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (14 nov 2026, v233)
+## Estado e pendentes (14 nov 2026, v234)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -265,7 +265,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Por fazer: C) texto ao vivo no som (o Tiago diz que só muito poucas pessoas têm o reconhecimento: os limites do Groq
   não preocupam). Envio a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à medida.
 - Publicar `conteudo`: enviar `index.ts` **e** `busca.js` (da raiz) no mesmo deploy (ver «Ambiente e ferramentas»).
-- Tudo publicado até à v233 (conteudo versão 35, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v234 (achado da sessão de testes, SEG-39): a identificação pelo som também não dá trechos de partituras ao perfil
+  Cancioneiro (busca.match devolve field 'pdf'|'lyrics'; a conteudo filtra como na pesquisa).
+- Tudo publicado até à v234 (conteudo versão 36, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

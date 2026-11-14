@@ -175,7 +175,8 @@
       // trecho: a linha da janela com mais palavras ouvidas
       let li = bestWin.i, lc = -1;
       for (let k = bestWin.i; k < bestWin.i + bestWin.n; k++) { const c = doc.lt[k].filter(w => qset.includes(w)).length; if (c > lc) { lc = c; li = k; } }
-      out.push({ slug: doc.slug, score: best / total, line: doc.lines[li] });
+      // field 'pdf': o trecho vem do texto de uma partitura (o perfil Cancioneiro não os recebe)
+      out.push({ slug: doc.slug, score: best / total, line: doc.lines[li], field: li >= doc.pdfFrom ? 'pdf' : 'lyrics' });
     });
     out.sort((a, b) => b.score - a.score);
     const isMark = w => toks(w).some(t => qset.includes(t));

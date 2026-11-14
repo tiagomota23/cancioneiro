@@ -458,7 +458,8 @@ Deno.serve(async (req) => {
       if (!(await limit(user, 'match', null))) return tooMany();
       const c = await songs();
       const all = cached(c, 'm:' + Busca.toks(text).join(' '), () => Busca.match(index(c), text, null, true));
-      return out({ matches: Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug)))) });
+      // como na pesquisa: o perfil Cancioneiro não recebe trechos de partituras
+      return out({ matches: Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug)) && (lvl >= 2 || h.field !== 'pdf'))) });
     }
     if (op === 'save') {
       if (lvl < 3) return denied();
