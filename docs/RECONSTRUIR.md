@@ -30,12 +30,14 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
    Site URL e a lista de redireccionamentos (só o endereço da app). Guia-me passo a passo no que tiver de ser eu.
 5. Funções: publica todas as de supabase/functions com o verify_jwt indicado no MANUAL.md (secção 3.4). A conteudo leva dois
    ficheiros no mesmo deploy: supabase/functions/conteudo/index.ts e busca.js (da raiz do repositório, enviado com o nome busca.js).
+   A tabela song_texts (texto extraído dos PDF, usado na pesquisa) vem em esquema.sql e dados.json; se faltar, corre a Action
+   «Texto dos PDF» (texto-pdf.yml, entrada «minutos») até dizer «0 por tratar».
 6. Armazenamento: se o bucket "coro" está vazio, recria-o (privado; tipos e tamanho do esquema) e envia os ficheiros da cópia
    para os caminhos de song_files/pdf_url (as pastas de canticos/ têm os nomes das gravações; livros/ tem as páginas pNNN.pdf).
    Faz um script que cruze song_files com os ficheiros da cópia e mostra-me o que não encontrar.
 7. Drive: dá-me as duas ligações para autorizar de novo: drive-auth (Drive do Coro, só leitura, conta tiago.mota@gmail.com) e
    drive-auth?para=copia (destino da cópia, outra conta, definida em drive_state → backup_target).
-8. Verifica: corre as Actions (verificação semanal, cópia de segurança), abre a app, entra com a minha conta e abre um cântico.
+8. Verifica: corre as Actions (verificação semanal, cópia de segurança, texto dos PDF), abre a app, entra com a minha conta e abre um cântico.
 9. Ambiente de desenvolvimento: no fim, segue docs/AMBIENTE.md para recriar as sessões webapp, design, testes e backup.
 Regras: nunca ponhas letras no repositório (é público); sobe a versão da app nos três sítios quando a mudares.
 ```
@@ -52,6 +54,8 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
    A `conteudo` importa `./busca.js`, que vive na raiz do repositório (também usado pela app): antes do deploy copiar `busca.js`
    para `supabase/functions/conteudo/` (sem fazer commit da cópia), ou, pela Management API, enviar no mesmo deploy
    `file=@supabase/functions/conteudo/index.ts` e `file=@busca.js`.
+   A `pdf-texto` só aceita a Action «Texto dos PDF» (token OIDC do GitHub, audiência `cancioneiro-pdf`, texto-pdf.yml em main).
+   O texto dos PDF (tabela `song_texts`) vem em dados.json; se faltar, correr essa Action até «0 por tratar».
 6. **Ficheiros:** recriar o bucket `coro` e enviar os ficheiros (ver o passo 6 do texto acima).
 7. **Drive:** abrir `https://<ref>.supabase.co/functions/v1/drive-auth` (Drive do Coro, só leitura, conta do dono) e
    `…/drive-auth?para=copia` (destino da cópia, outra conta; antes definir `drive_state` → `backup_target` = `{"email": "…"}`).
@@ -67,7 +71,7 @@ Registo do que está configurado à mão (outubro 2026). Os valores secretos nã
 - **Segredos das funções:** `GROQ_API_KEY`, `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth do Drive).
   Os SUPABASE_* são postos pelo próprio Supabase.
 - **Funções e verify_jwt:** transcribe false, sync-songs **true**, notify **true**, drive-auth false, drive-sync false,
-  conteudo false, gravacoes false, backup false, sync-cc false, cc-transcribe false (estas duas protegidas por pedido em job_requests, como o drive-sync). (Em 10/out/2026 as publicadas coincidiam com `supabase/functions/` em main.)
+  conteudo false, gravacoes false, backup false, pdf-texto false, sync-cc false, cc-transcribe false (estas duas protegidas por pedido em job_requests, como o drive-sync). (Em 10/out/2026 as publicadas coincidiam com `supabase/functions/` em main.)
 - **Google Cloud, dois clientes OAuth (Web):**
   (a) login: id `627200817574-ht0695cvjhn96rrogggk14u6fdktvs33.apps.googleusercontent.com`, redirect
   `https://<ref>.supabase.co/auth/v1/callback`, segredo guardado no Supabase (Auth → Google);

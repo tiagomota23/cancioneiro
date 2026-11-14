@@ -243,7 +243,23 @@ export default async function (level) {
     if (!/^import '\.\/busca\.js';/m.test(c)) bad.push("sem import './busca.js'");
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
-  await t('EST-05', 'busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
+  await t('SEG-39', 'Texto dos PDF (v233): song_texts com RLS e sem políticas, revoke a anon/authenticated (texto-pdf.sql); pdf-texto verifica o OIDC (RS256, aud cancioneiro-pdf, repositório, main, workflow texto-pdf.yml) antes de tudo e responde 401; save só para song_files kind score e texto ≤ 30000; conteudo: search sem hits «pdf» para o perfil Cancioneiro (lvl < 2) e match sem trechos do PDF para lvl < 2', () => {
+    const sqlf = read('supabase/texto-pdf.sql'), f = read('supabase/functions/pdf-texto/index.ts'), c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    if (!/alter table public\.song_texts enable row level security/.test(sqlf)) bad.push('song_texts sem RLS');
+    if (/create policy[^;]*song_texts/i.test(sqlf)) bad.push('song_texts com políticas');
+    if (!/revoke all on public\.song_texts from anon, authenticated/.test(sqlf)) bad.push('sem revoke a anon/authenticated');
+    const body = (f.match(/Deno\.serve\(async req => \{\s*try \{\s*([^\n]*)/) || [])[1] || '';
+    if (!/^if \(!\(await githubOk\(req\)\.catch\(\(\) => false\)\)\) return json\(\{[^}]*\}, 401\);/.test(body)) bad.push('pdf-texto não começa por githubOk → 401');
+    for (const [k, re] of [['RS256', /head\.alg !== 'RS256'/], ['aud', /claims\.aud === 'cancioneiro-pdf'/], ['repositório', /claims\.repository === 'tiagomota23\/cancioneiro'/], ['main', /claims\.ref === 'refs\/heads\/main'/], ['workflow', /workflow_ref[^\n]*startsWith\('tiagomota23\/cancioneiro\/\.github\/workflows\/texto-pdf\.yml@'\)/], ['exp', /claims\.exp > now/]])
+      if (!re.test(f)) bad.push('OIDC sem verificação de ' + k);
+    if (!/song_files\?select=song_slug&kind=eq\.score&path=eq\./.test(f)) bad.push('save não confirma song_files kind score');
+    if (!/\.slice\(0, 30000\)/.test(f)) bad.push('texto sem limite de 30000');
+    if (!c.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('search: Cancioneiro pode receber hits pdf');
+    const mt = (c.match(/if \(op === 'match'\) \{([\s\S]*?)\n    \}/) || [])[1] || '';
+    if (!/lvl/.test(mt)) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
+  await t('EST-05','busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
     const h = read('index.html'), sw = read('sw.js'), v = (read('app.js').match(/APP_VERSION = '[^']* v(\d+)'/) || [])[1], bad = [];
     const ib = h.indexOf(`<script src="busca.js?v=${v}"></script>`), ia = h.search(/<script[^>]*src="app\.js/);
     if (ib < 0) bad.push(`index.html sem busca.js?v=${v}`); else if (ia >= 0 && ib > ia) bad.push('busca.js depois do app.js');
@@ -342,4 +358,20 @@ export default async function (level) {
     if (!m.length || m[0].slug !== 'amazing_grace') bad.push('match → ' + (m[0] ? m[0].slug : 'nada'));
     return bad.length ? [...new Set(bad)].join('; ') : true;
   }, { sev: 'alta', where: 'busca.js' });
+  await t('BUS-02', 'busca.js com texto dos PDF (v233): palavras que só existem no texto da partitura → hit field «pdf» com trecho ≤ 7 palavras; a letra ganha à partitura quando a palavra está nas duas; match também encontra pelo texto da partitura', async () => {
+    const ctx = vm.createContext({}); vm.runInContext(read('busca.js'), ctx);
+    const B = ctx.Busca, bad = [];
+    const ix = B.build([
+      { slug: 'a', title: 'Primeiro', author: 'X', lines: ['luz do dia sobre o mar'], pdf: ['quadrifolium zeterna palavra rara do livro com muitas outras palavras depois desta'] },
+      { slug: 'b', title: 'Segundo', author: 'Y', lines: ['montanha alta e verde'], pdf: ['montanha alta e verde'] },
+    ]);
+    const r = B.search(ix, 'quadrifolium zeterna');
+    if (!r.length || r[0].slug !== 'a' || r[0].field !== 'pdf') bad.push('só no PDF → ' + (r[0] ? r[0].slug + '/' + r[0].field : 'nada'));
+    else if (r[0].snip.split(/\s+/).filter(w => w && w !== '…').length > 7) bad.push('trecho do PDF com mais de 7 palavras');
+    const r2 = B.search(ix, 'montanha alta');
+    if (!r2.length || r2[0].field !== 'lyrics') bad.push('na letra e no PDF → ' + (r2[0] ? r2[0].field : 'nada') + ' (esperado lyrics)');
+    const m = B.match(ix, 'quadrifolium zeterna palavra rara');
+    if (!m.length || m[0].slug !== 'a') bad.push('match pelo PDF → ' + (m[0] ? m[0].slug : 'nada'));
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média', where: 'busca.js' });
 }

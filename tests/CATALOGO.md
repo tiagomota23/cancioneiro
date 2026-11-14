@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v232** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, BUS-01, EST-05, SEG-38 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v233** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, BUS-01, BUS-02, EST-05, SEG-38, SEG-39, SEG-40, SEG-41, INT-23 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -31,7 +31,9 @@ Catálogo atualizado até à **v232** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | FUN-73 | Pesquisa por número com páginas vizinhas (v231): «12» → pág. 12 e nº 12, depois pág. 11, depois pág. 13; 10 e 14 fora; «99» sem os de teste (songs.json do fixture com book_page 10–14) | ui | média | V | ☐ por correr |
 | FUN-74 | Pesquisa com erros (v232, ?demo): «amazng» → Amazing Grace 1.º; «swet sound» → trecho com mark em sweet/sound; «pange lyngua» → Pange lingua; perfil Cancioneiro não vê Pange lingua (fora do Cancioneiro) por título nem por letra | ui | alta | V | ☐ por correr |
 | FUN-75 | Pesquisa e servidor (v232, modo real simulado): números e < 3 letras nunca chamam op search; «grace» uma chamada e cache ao repetir; sem rede, aviso em #status | ui | média | V | ☐ por correr |
+| FUN-76 | Hit da partitura (v233, modo real simulado): field «pdf» → «Na partitura: …» com a palavra marcada; hit da letra sem o prefixo | ui | média | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ☐ por correr |
+| BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
 | FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ✓ |
 | FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ✓ |
@@ -252,6 +254,9 @@ Catálogo atualizado até à **v232** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | SEG-36 | cc-transcribe (v227): mal formado → 400; bem formado sem pedido → 403, só sem pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama a transcrição) | live | alta | S | ✓ |
 | SEG-37 | drive-sync v10 (atalhos do Drive, commit bfb4fba): shortcutDetails nos fields, followShortcuts definido e chamado, download por it.src \|\| it.id, só GET ao Drive | static | alta | V | ✓ |
 | SEG-38 | conteudo search (v232, versão 33): números/curtas → hits [] antes do limite e do índice; limite 200/h e 1000/dia; cache partilhada 60 s sem perfil e visible() por pessoa (também match); MAX_HITS 40 | static | alta | V | ☐ por correr |
+| SEG-39 | Texto dos PDF (v233, código): song_texts com RLS, sem políticas, revoke anon/authenticated; pdf-texto exige OIDC (RS256, aud, repositório, main, texto-pdf.yml) → 401 antes de tudo; save só kind score e ≤ 30000; conteudo sem trechos pdf para o perfil Cancioneiro em search **e em match** | static | alta | V | ☐ por correr |
+| SEG-40 | song_texts (v233, SQL): RLS sem políticas; anon/authenticated sem privilégios; leitura recusada a anon e aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
+| SEG-41 | pdf-texto (v233, produção): sem token, token forjado ou chave anon → 401 em op=list e op=save | live | crítica | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
@@ -301,6 +306,7 @@ Catálogo atualizado até à **v232** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | INT-20 | Drive do Coro (26 out): ficheiros importados/removidos com cântico mantêm o song_file; cânticos e mapeamentos (pasta ou ficheiro) existem; pastas novas de missa/ e gestos/ sem mapeamento já apareceram em newFolders ou em skipped («sem cântico associado»); drive_folders com song_slug null = pasta conhecida sem cântico; nenhum song_file duplicado (drive_id; cântico + caminho) | db | média | S | ✓ |
 | INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants (+ cc_transcripts com RLS e sem grants, v227) | db | média | S | ✓ |
 | INT-22 | Templates de folha (v227): Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com secções | db | baixa | S | ✓ |
+| INT-23 | Texto dos PDF (v233): song_texts só de song_files kind score (mesmo cântico); chars = length(text); progresso da extração (informativo) | db | baixa | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
