@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import vm from 'node:vm';
 import { t, dim, read, exists, ROOT, versions, gitFiles, sha256 } from '../lib.mjs';
 
 export default async function (level) {
@@ -226,7 +227,31 @@ export default async function (level) {
     if (w.length) bad.push('chamada ao Drive com method (não GET): ' + w[0].trim().slice(0, 80));
     return bad.length ? bad.join('; ') : { pass: drive.length + ' chamadas ao Drive, todas GET' };
   }, { sev: 'alta', where: 'supabase/functions/drive-sync/index.ts' });
-  await t('SEG-14', 'transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
+  await t('SEG-38', 'conteudo «search» (v232, versão 33): números e pesquisas < 3 letras → hits [] antes do limite e do índice; limite search 200/h e 1000/dia; resultados partilhados em cache sem perfil e o filtro visible() aplicado depois a cada pessoa (também em match); no máximo 40 (MAX_HITS); cache 60 s; busca.js importado ao lado', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    const op = (c.match(/if \(op === 'search'\) \{([\s\S]*?)\n    \}/) || [])[1] || '';
+    if (!op) return 'op search não encontrada';
+    const iNum = op.indexOf('return out({ hits: [] })'), iLim = op.indexOf("limit(user, 'search'"), iSongs = op.indexOf('songs()');
+    if (!op.includes('/^[\\d ]+$/.test(nq)') || iNum < 0) bad.push('não recusa números (hits [])');
+    if (!(iNum >= 0 && iLim > iNum && iSongs > iLim)) bad.push('ordem recusa → limite → índice não se verifica');
+    if (!/search: \[200, 1000\]/.test(c)) bad.push('LIMITS.search diferente de [200, 1000]');
+    if (!/const MAX_HITS = 40\b/.test(c)) bad.push('MAX_HITS ≠ 40');
+    if (!/cached\(c, 's:' \+ nq, \(\) => Busca\.search\(index\(c\), q, null, \d+\)\)/.test(op)) bad.push('pesquisa sem cache partilhada por nq (ou com o perfil dentro da cache)');
+    if (!op.includes('all.filter(h => visible(c.bySlug.get(h.slug))).slice(0, MAX_HITS)')) bad.push('hits sem filtro visible() por pessoa');
+    if (!c.includes('Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug))))')) bad.push('match sem filtro visible()');
+    if (!/Date\.now\(\) - r\.at < 60e3/.test(c)) bad.push('cache de resultados ≠ 60 s');
+    if (!/^import '\.\/busca\.js';/m.test(c)) bad.push("sem import './busca.js'");
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
+  await t('EST-05', 'busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
+    const h = read('index.html'), sw = read('sw.js'), v = (read('app.js').match(/APP_VERSION = '[^']* v(\d+)'/) || [])[1], bad = [];
+    const ib = h.indexOf(`<script src="busca.js?v=${v}"></script>`), ia = h.search(/<script[^>]*src="app\.js/);
+    if (ib < 0) bad.push(`index.html sem busca.js?v=${v}`); else if (ia >= 0 && ib > ia) bad.push('busca.js depois do app.js');
+    if (!/SHELL = \[[^\]]*'busca\.js'/.test(sw)) bad.push('busca.js fora do SHELL do sw.js');
+    if (!/busca\.js/.test(read('docs/sessoes/webapp.md'))) bad.push('publicação com busca.js não documentada');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'index.html, sw.js' });
+  await t('SEG-14','transcribe só para contas com can_listen: chama rpc/can_listen com o token da pessoa e recusa (403) se não for true; já não usa is_allowed (v201)', () => {
     const c = read('supabase/functions/transcribe/index.ts');
     const bad = [];
     if (!/rpc\/can_listen/.test(c)) bad.push('não chama rpc/can_listen');
@@ -291,4 +316,30 @@ export default async function (level) {
     if (tm.some(x => x !== 'pp')) bad.push('touchmove com listener fora de #pdfpages: ' + tm.join(', '));
     return bad.length ? bad.join('; ') : { pass: `viewport «${v}»` };
   }, { sev: 'média', where: 'index.html (viewport), styles.css (touch-action), app.js (gesture*/touchmove)' });
+
+  dim('Funcionalidade — motor de pesquisa (busca.js)', 'alta');
+  await t('BUS-01', 'busca.js (v232) com o fixture: erro de letras no título («amazng»), variante ortográfica («pange lyngua»), início de palavra («misericord»), letra com erros («swet sound», marks), nada para lixo; trechos ≤ 7 palavras; hits só com slug/score/field/snip/marks; max respeitado; match corrige palavras mal ouvidas', async () => {
+    const ctx = vm.createContext({}); vm.runInContext(read('busca.js'), ctx);
+    const B = ctx.Busca; if (!B) return 'busca.js não define Busca';
+    const fx = (await import('../../tools/screens/fixture.mjs')).default;
+    const ix = B.build(fx.map(x => ({ slug: x.slug, title: x.title, author: x.author, lines: [...(x.lyrics || []), ...(x.translation || [])].flatMap(st => st.lines || []) })));
+    const bad = [], S = (q, max) => B.search(ix, q, null, max);
+    const first = (q, slug, field) => { const r = S(q); if (!r.length || r[0].slug !== slug || (field && r[0].field !== field)) bad.push(`«${q}» → ${r[0] ? r[0].slug + '/' + r[0].field : 'nada'} (esperado ${slug}${field ? '/' + field : ''})`); return r; };
+    first('amazng', 'amazing_grace', 'title');
+    first('pange lyngua', 'pange_lingua');
+    first('misericord', 'salve_regina', 'lyrics');
+    const sw = first('swet sound', 'amazing_grace', 'lyrics');
+    const mk = (sw[0] && sw[0].marks || []).join(' ');
+    if (sw[0] && !(/sweet/i.test(mk) && /sound/i.test(mk))) bad.push('«swet sound»: marks ' + JSON.stringify(sw[0].marks));
+    if (S('xyzzyq').length) bad.push('«xyzzyq» devolve resultados');
+    const keys = new Set(['slug', 'score', 'field', 'snip', 'marks']);
+    for (const q of ['de colores', 'santa lucia', 'grace', 'dormez', 'salve', 'sonnez les matines']) for (const h of S(q)) {
+      const extra = Object.keys(h).filter(k => !keys.has(k)); if (extra.length) bad.push(`«${q}»: campos a mais ${extra.join(',')}`);
+      if (h.snip && h.snip.split(/\s+/).filter(w => w && w !== '…').length > 7) bad.push(`«${q}»: trecho com mais de 7 palavras`);
+    }
+    if (S('de', 2).length > 2) bad.push('max não respeitado');
+    const m = B.match(ix, 'amazin grase how swet the sownd');
+    if (!m.length || m[0].slug !== 'amazing_grace') bad.push('match → ' + (m[0] ? m[0].slug : 'nada'));
+    return bad.length ? [...new Set(bad)].join('; ') : true;
+  }, { sev: 'alta', where: 'busca.js' });
 }

@@ -28,7 +28,8 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
 4. Segredos das funções: pede-me GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET (cliente OAuth do Drive), GROQ_API_KEY e RESEND_API_KEY
    e guarda-os no Supabase. Configura o login Google (Authentication → Providers → Google) com o cliente OAuth do login, o
    Site URL e a lista de redireccionamentos (só o endereço da app). Guia-me passo a passo no que tiver de ser eu.
-5. Funções: publica todas as de supabase/functions com o verify_jwt indicado no MANUAL.md (secção 3.4).
+5. Funções: publica todas as de supabase/functions com o verify_jwt indicado no MANUAL.md (secção 3.4). A conteudo leva dois
+   ficheiros no mesmo deploy: supabase/functions/conteudo/index.ts e busca.js (da raiz do repositório, enviado com o nome busca.js).
 6. Armazenamento: se o bucket "coro" está vazio, recria-o (privado; tipos e tamanho do esquema) e envia os ficheiros da cópia
    para os caminhos de song_files/pdf_url (as pastas de canticos/ têm os nomes das gravações; livros/ tem as páginas pNNN.pdf).
    Faz um script que cruze song_files com os ficheiros da cópia e mostra-me o que não encontrar.
@@ -48,6 +49,9 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
 4. **Segredos das funções:** Supabase → Edge Functions → Secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth do Drive,
    com redirect `https://<ref>.supabase.co/functions/v1/drive-auth`), `GROQ_API_KEY`, `RESEND_API_KEY`.
 5. **Funções:** `supabase functions deploy <nome>` para cada pasta de `supabase/functions` (`--no-verify-jwt` em todas menos `notify` e `sync-songs`).
+   A `conteudo` importa `./busca.js`, que vive na raiz do repositório (também usado pela app): antes do deploy copiar `busca.js`
+   para `supabase/functions/conteudo/` (sem fazer commit da cópia), ou, pela Management API, enviar no mesmo deploy
+   `file=@supabase/functions/conteudo/index.ts` e `file=@busca.js`.
 6. **Ficheiros:** recriar o bucket `coro` e enviar os ficheiros (ver o passo 6 do texto acima).
 7. **Drive:** abrir `https://<ref>.supabase.co/functions/v1/drive-auth` (Drive do Coro, só leitura, conta do dono) e
    `…/drive-auth?para=copia` (destino da cópia, outra conta; antes definir `drive_state` → `backup_target` = `{"email": "…"}`).
