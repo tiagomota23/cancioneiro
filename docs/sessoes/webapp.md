@@ -73,7 +73,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - SQL em produção: `POST https://api.supabase.com/v1/projects/hmfjbyiesghqhwhqgnem/database/query` com
   `{"query": "..."}` (um script `q.sh "sql"` / `q.sh -f ficheiro` no rascunho da sessão ajuda).
 - Publicar uma função: `POST /v1/projects/hmfjbyiesghqhwhqgnem/functions/deploy?slug=<nome>` (multipart: `metadata`
-  com `entrypoint_path`, `name`, `verify_jwt` + `file=@index.ts`). `verify_jwt`: true só em `notify` e `sync-songs`.
+  com `entrypoint_path`, `name`, `verify_jwt` + `file=@index.ts`; para `conteudo` também `file=@busca.js` da raiz).
+  `verify_jwt`: true só em `notify` e `sync-songs`.
 - Conectores usados: GitHub (MCP), Google Drive (ler a pasta da cópia), Gmail (verificar emails do Resend), Claude Code
   Remote (sessões, rotinas, send_message).
 - Capturas da app: `NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/capture.mjs [ids]` (modo `?demo`,
@@ -199,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (14 nov 2026, v231)
+## Estado e pendentes (14 nov 2026, v232)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -218,18 +219,23 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   ffmpeg com limite de 10 min, 3 tentativas e Acquire::Retries/Timeout no apt.
 - v231 (14 nov, pedido do Tiago): pesquisa por número de página mostra também os cânticos das páginas antes e depois
   (logo a seguir aos da página pedida; a anterior primeiro). Só em `search()` na app (book_page já vem na lista).
-- **Proposta à espera do Tiago (14 nov): pesquisa nova.** Avaliação feita e enviada; aguarda «go» e acesso à Management
-  API (a 1.ª consulta SQL foi recusada pelo classificador de permissões desta sessão). Plano em 3 versões:
-  A) índice no Postgres (tabela de documentos por cântico: título, autor, nº, página, etiquetas, fontes, letra, tradução,
-  letra editada, texto dos PDF; unaccent + tsvector + pg_trgm; RPC chamada pela função conteudo, que mantém visibilidade
-  por perfil, trechos de ≤7 palavras e limites) + pesquisa difusa em camadas (frase, todas as palavras, prefixo,
-  trigramas, variantes ortográficas PT/IT/LA) + metadados com tolerância a erros no telemóvel (funciona offline) +
-  limite de pesquisa contado só ao parar de escrever (~200/h) + identificação pelo som no mesmo índice.
-  B) texto dos PDF (partituras e páginas dos livros): Action diária, camada de texto (pdftotext) e OCR (tesseract
-  por/ita/lat/spa/eng/fra) nos digitalizados, sílabas reunidas; só na base de dados, nunca mostrado inteiro.
-  C) texto ao vivo na identificação pelo som: enviar ao Groq a cada 2 s a partir dos 2 s (janela crescente), mostrar o
-  texto e os candidatos à medida; ~5 transcrições por audição (cabe no limite de 150/h).
-- Tudo publicado até à v231; design e testes avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **Pesquisa nova (14 nov, pedido do Tiago; plano A feito na v232, B e C por fazer).** Dados: 1923 cânticos, 1,3 MB de
+  letras → índice em memória na função `conteudo` (não precisa de Postgres). Motor único em `busca.js` (raiz do repo),
+  usado pela função (publicada com `busca.js` ao lado: `import './busca.js'`) e pela app (modo demo e funções de
+  tolerância a erros). Camadas: palavra exata 1 · variante ortográfica PT/IT/LA/ES (ph/f, th/t, y/i, j/i, k/c, h mudo,
+  letras dobradas) 0,9 · início de palavra 0,75 · erro de 1–2 letras 0,6 (Levenshtein); frase exata +0,5; termos pesados
+  por raridade; trechos de ≤7 palavras com `marks` (palavras a realçar). Identificação pelo som: palavras ouvidas
+  corrigidas para as do índice antes da correspondência. Medido com os dados reais: índice 150 ms, pesquisa 3–19 ms.
+  Muitas pessoas ao mesmo tempo (pedido do Tiago): títulos, números e páginas resolvem-se no telemóvel (sem servidor);
+  no servidor, resultados partilhados 60 s por pesquisa (filtro do perfil depois), cache de sessão (60 s), grupos (60 s)
+  e folhas ativas (30 s), registo do limite sem atrasar a resposta. Limite de pesquisa 200/h, 1000/dia; números e
+  pesquisas < 3 letras não vão ao servidor. Sem rede: aviso «a pesquisa só procura nos títulos, autores, números e páginas».
+  Por fazer: B) texto dos PDF (1871 PDF de partituras/páginas): Action diária, pdftotext + OCR tesseract
+  (por/ita/lat/spa/eng/fra) nos digitalizados, sílabas reunidas, tabela só no servidor, entra no índice como linhas
+  «pdf». C) texto ao vivo no som: envio ao Groq a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à
+  medida (atenção aos limites da conta Groq com muitas pessoas ao mesmo tempo; o modelo do telemóvel é a alternativa).
+- Publicar `conteudo`: enviar `index.ts` **e** `busca.js` (da raiz) no mesmo deploy (ver «Ambiente e ferramentas»).
+- Tudo publicado até à v232 (função conteudo versão 33); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

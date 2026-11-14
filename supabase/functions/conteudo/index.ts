@@ -4,13 +4,16 @@
 // Perfis (hierárquicos): cancioneiro (só cânticos do Cancioneiro, sem acordes nem ficheiros) < coro (tudo, sem editar)
 // < maestro (edita e promove cânticos ao Cancioneiro) < gestor (gere os utilizadores). A app indica o perfil ativo
 // (pode ser inferior ao da pessoa); vale sempre o menor dos dois.
+// Motor de pesquisa partilhado com a app (busca.js na raiz do repositório; publicado ao lado deste ficheiro)
+import './busca.js';
+const Busca = (globalThis as any).Busca;
 const SB = Deno.env.get('SUPABASE_URL'); const SK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); const RESEND = Deno.env.get('RESEND_API_KEY');
 const ADMIN = 'tiago.mota@gmail.com';
 const ORIGINS = ['https://tiagomota23.github.io'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
-const LIMITS = { song: [80, 250], file: [80, 250], search: [60, 300], match: [30, 150], save: [60, 200], share: [30, 100] };
-const MAX_HITS = 20; // resultados por pesquisa na letra
+const LIMITS = { song: [80, 250], file: [80, 250], search: [200, 1000], match: [30, 150], save: [60, 200], share: [30, 100] };
+const MAX_HITS = 40; // resultados por pesquisa na letra (cada um só com um trecho curto)
 const SHARE_HOURS = 24, SHARE_VIEWS = 300, SHARE_COL_VIEWS = 3000; // endereços partilhados: validade e máximo de aberturas (coleções: lista e cânticos)
 const DISTINCT = new Set(['song', 'file']);
 const ROLES = ['cancioneiro', 'coro', 'maestro', 'gestor'];
@@ -30,9 +33,19 @@ async function rest(path, init = {}) {
 async function all(path) { const out = []; for (let i = 0; ; i += 1000) { const p = await rest(path, { headers: { Range: `${i}-${i + 999}` } }); out.push(...p); if (p.length < 1000) return out; } }
 
 // ---------- utilizador ----------
+// a mesma sessão durante 60 s (numa sala, muitos pedidos seguidos de cada pessoa)
+const whoCache = new Map();
 async function who(req) {
   const auth = req.headers.get('authorization') || '';
   if (!auth.startsWith('Bearer ')) return null;
+  const hit = whoCache.get(auth);
+  if (hit && Date.now() - hit.at < 60e3) return hit.user;
+  const user = await whoFresh(auth);
+  if (whoCache.size > 2000) whoCache.clear();
+  if (user) whoCache.set(auth, { user, at: Date.now() });
+  return user;
+}
+async function whoFresh(auth) {
   const r = await fetch(`${SB}/auth/v1/user`, { headers: { apikey: SK, Authorization: auth } });
   if (!r.ok) return null;
   const u = await r.json();
@@ -67,7 +80,10 @@ async function limit(user, kind, key) {
     const hour = rows.filter(r => Date.parse(r.at) > hourAgo).length;
     if (hour >= perHour || rows.length >= perDay) { await alert(user, kind, rows.length); return false; }
   }
-  await rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: user.id, email: user.email, kind, key }) });
+  // o registo não atrasa a resposta (termina depois dela, quando o ambiente o permite)
+  const w = rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: user.id, email: user.email, kind, key }) }).catch(e => console.error('access_log', e));
+  const er = (globalThis as any).EdgeRuntime;
+  if (er?.waitUntil) er.waitUntil(w); else await w;
   return true;
 }
 async function alert(user, kind, n) {
@@ -83,7 +99,6 @@ async function alert(user, kind, n) {
 // ---------- letras em memória (recarregadas quando há alterações) ----------
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[’'`´]/g, "'");
 const stripChords = l => l.replace(/\[[^\]]*\]/g, '');
-const tok = s => norm(s).split(/[^a-z0-9]+/).filter(w => w.length > 1);
 let cache = null, cacheStamp = '', checkedAt = 0;
 async function songs() {
   if (cache && Date.now() - checkedAt < 30e3) return cache;
@@ -100,24 +115,28 @@ async function songs() {
   for (const s of list) {
     s.eff = s.lyrics_edit || s.lyrics || [];
     s.lines = s.eff.flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
-    s.nl = s.lines.map(norm);
     s.lset = new Set(s.eff.flatMap(st => st.lines).map(cleanLine).filter(l => l.length >= 12));
     s.nt = cleanLine(s.title);
   }
-  cache = { list, bySlug: new Map(list.map(s => [s.slug, s])), idx: null };
+  cache = { list, bySlug: new Map(list.map(s => [s.slug, s])), ix: null, results: new Map() };
   cacheStamp = stamp;
   return cache;
 }
 
-// trecho curto à volta do que foi encontrado (no máximo ~7 palavras), para não dar linhas inteiras a quem pesquisa muito
-function shortSnip(line, terms) {
-  const words = String(line || '').split(/\s+/).filter(Boolean);
-  if (words.length <= 7) return words.join(' ');
-  const nw = words.map(norm);
-  let i = nw.findIndex(w => terms.some(t => w.includes(t))); if (i < 0) i = 0;
-  const a = Math.max(0, Math.min(i - 3, words.length - 7));
-  return (a > 0 ? '… ' : '') + words.slice(a, a + 7).join(' ') + (a + 7 < words.length ? ' …' : '');
+// ---------- pesquisa e identificação pelo som (busca.js) ----------
+// índice construído na primeira pesquisa depois de as letras mudarem; os resultados devolvem só trechos de ≤7 palavras
+const index = c => c.ix || (c.ix = Busca.build(c.list.map(s => ({ slug: s.slug, title: s.title, author: s.author, lines: s.lines }))));
+// resultados partilhados entre pessoas: numa sala, muitas pessoas pesquisam o mesmo ao mesmo tempo. Guarda-se a lista
+// completa por ordem (sem o filtro do perfil, que se aplica depois a cada pessoa) durante 60 s.
+function cached(c, key, run) {
+  const r = c.results.get(key);
+  if (r && Date.now() - r.at < 60e3) return r.v;
+  const v = run();
+  if (c.results.size >= 500) c.results.delete(c.results.keys().next().value);
+  c.results.set(key, { v, at: Date.now() });
+  return v;
 }
+
 // ---------- cânticos parecidos (para avisar antes de acrescentar um cântico novo) ----------
 const cleanLine = l => norm(stripChords(String(l || ''))).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const words = t => new Set(t.split(' ').filter(w => w.length > 2));
@@ -136,65 +155,6 @@ function findSimilar(c, title, lines, ok) {
   }
   return out.sort((a, b) => b.w - a.w).slice(0, 5).map(({ w, ...x }) => x);
 }
-// pesquisa na letra: frase exata numa linha, ou todos os termos na letra (só um trecho curto é devolvido)
-function searchLyrics(c, q, ok) {
-  const nq = norm(q).trim(); if (nq.length < 3) return [];
-  const terms = nq.split(/\s+/), out = [];
-  for (const s of c.list) {
-    if (!ok(s)) continue;
-    let li = s.nl.findIndex(l => l.includes(nq)), score = 20;
-    if (li < 0 && terms.every(t => s.nl.some(l => l.includes(t)))) { li = s.nl.findIndex(l => l.includes(terms[0])); score = 8; }
-    if (li >= 0) out.push({ slug: s.slug, score, snip: shortSnip(s.lines[li], terms) });
-  }
-  return out.sort((a, b) => b.score - a.score).slice(0, MAX_HITS);
-}
-
-// identificação pelo som: janelas de 3 linhas, palavras e pares de palavras pesados por raridade (como na app)
-function buildIndex(c) {
-  const df = new Map(), items = [];
-  for (const s of c.list) {
-    const sources = [s.eff.flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
-    const wins = [], seen = new Set();
-    for (const lines of sources) {
-      const lt = lines.map(tok);
-      lt.forEach(ws => ws.forEach(w => seen.add(w)));
-      for (let i = 0; i < lines.length; i++) {
-        const words = new Set(), bigrams = new Set();
-        for (let k = i; k < Math.min(i + 3, lines.length); k++) {
-          const ws = lt[k];
-          ws.forEach((w, j) => { words.add(w); if (j) bigrams.add(ws[j - 1] + ' ' + w); });
-          if (k > i && lt[k - 1].length && ws.length) bigrams.add(lt[k - 1][lt[k - 1].length - 1] + ' ' + ws[0]);
-        }
-        if (words.size) wins.push({ words, bigrams, line: lines[i] });
-      }
-    }
-    seen.forEach(w => df.set(w, (df.get(w) || 0) + 1));
-    items.push({ slug: s.slug, wins });
-  }
-  const N = c.list.length;
-  c.idx = { items, idf: w => Math.log((N + 1) / (1 + (df.get(w) || 0))) };
-}
-function match(c, text, ok) {
-  if (!c.idx) buildIndex(c);
-  const { items, idf } = c.idx;
-  const q = tok(text), qset = [...new Set(q)], qbi = new Set(q.slice(1).map((w, i) => q[i] + ' ' + w));
-  const total = qset.reduce((a, w) => a + idf(w), 0) + [...qbi].reduce((a, b) => a + 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0), 0);
-  if (!total) return [];
-  const out = [];
-  for (const { slug, wins } of items) {
-    if (!ok(c.bySlug.get(slug))) continue;
-    let best = 0, bestLine = null;
-    for (const win of wins) {
-      let sc = 0;
-      for (const w of qset) if (win.words.has(w)) sc += idf(w);
-      for (const b of qbi) if (win.bigrams.has(b)) sc += 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0);
-      if (sc > best) { best = sc; bestLine = win.line; }
-    }
-    if (best) out.push({ slug, score: best / total, snip: shortSnip(bestLine, qset) });
-  }
-  return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
-}
-
 // ---------- ficheiros ----------
 async function sign(path) {
   const r = await fetch(`${SB}/storage/v1/object/sign/coro/${path.split('/').map(encodeURIComponent).join('/')}`, { method: 'POST', headers: HDR, body: JSON.stringify({ expiresIn: 3600 }) });
@@ -303,8 +263,28 @@ const validEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(e);
 const validLyrics = v => Array.isArray(v) && v.length <= 80 && v.every(st => st && (st.type === 'verse' || st.type === 'chorus') && Array.isArray(st.lines) && st.lines.length <= 80 && st.lines.every(l => typeof l === 'string' && l.length <= 300));
 
 // grupos da pessoa e se uma folha é para ela (sem grupos na folha = todos os grupos; pessoa sem grupo = nenhuma)
-const myGroups = async user => new Set((await rest(`user_groups?email=eq.${encodeURIComponent(user.email)}&select=group_id`).catch(() => [])).map(x => x.group_id));
+const groupsCache = new Map();
+const myGroups = async user => {
+  const h = groupsCache.get(user.id);
+  if (h && Date.now() - h.at < 60e3) return h.v;
+  const v = await myGroupsFresh(user);
+  if (groupsCache.size > 2000) groupsCache.clear();
+  groupsCache.set(user.id, { v, at: Date.now() });
+  return v;
+};
+const myGroupsFresh = async user => new Set((await rest(`user_groups?email=eq.${encodeURIComponent(user.email)}&select=group_id`).catch(() => [])).map(x => x.group_id));
 const groupOk = (mine, cg) => !mine || (mine.size > 0 && (!(cg || []).length || cg.some(x => mine.has(x.group_id))));
+
+// cânticos das folhas ativas: 30 s de cache (mudam pouco e são precisos em cada pesquisa)
+const sheetsCache = new Map();
+async function activeSheets(aud) {
+  const h = sheetsCache.get(aud);
+  if (h && Date.now() - h.at < 30e3) return h.v;
+  const v = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published,collection_groups(group_id))${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => null);
+  if (!v) return h ? h.v : [];
+  sheetsCache.set(aud, { v, at: Date.now() });
+  return v;
+}
 
 Deno.serve(async (req) => {
   const H = { ...cors(req), 'Content-Type': 'application/json' };
@@ -359,7 +339,7 @@ Deno.serve(async (req) => {
     let colSet = new Set();
     if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
-      const rows = await rest(`collection_songs?select=song_slug,collections!inner(audience,expires_at,published,collection_groups(group_id))${aud}&collections.published=is.true&collections.expires_at=gt.${new Date().toISOString()}`).catch(() => []);
+      const rows = await activeSheets(aud);
       // grupos (abaixo de Gestor): só as folhas para todos os grupos ou de um dos seus; sem grupo, nenhuma
       const mine = lvl >= 4 ? null : await myGroups(user);
       colSet = new Set(rows.filter(r => groupOk(mine, r.collections.collection_groups)).map(r => r.song_slug));
@@ -437,15 +417,20 @@ Deno.serve(async (req) => {
       return out({ token, expires_at });
     }
     if (op === 'search') {
-      const q = String(b.q || '').slice(0, 120);
-      if (norm(q).trim().length < 3) return out({ hits: [] });
-      if (!(await limit(user, 'search', q))) return tooMany();
-      return out({ hits: searchLyrics(await songs(), q, visible) });
+      const q = String(b.q || '').slice(0, 120), nq = Busca.toks(q).join(' ');
+      // números (cântico, página) e pesquisas muito curtas resolvem-se na app
+      if (nq.replace(/ /g, '').length < 3 || /^[\d ]+$/.test(nq)) return out({ hits: [] });
+      if (!(await limit(user, 'search', nq))) return tooMany();
+      const c = await songs();
+      const all = cached(c, 's:' + nq, () => Busca.search(index(c), q, null, 400));
+      return out({ hits: all.filter(h => visible(c.bySlug.get(h.slug))).slice(0, MAX_HITS) });
     }
     if (op === 'match') {
       const text = String(b.text || '').slice(0, 1000);
       if (!(await limit(user, 'match', null))) return tooMany();
-      return out({ matches: match(await songs(), text, visible) });
+      const c = await songs();
+      const all = cached(c, 'm:' + Busca.toks(text).join(' '), () => Busca.match(index(c), text, null, true));
+      return out({ matches: Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug)))) });
     }
     if (op === 'save') {
       if (lvl < 3) return denied();

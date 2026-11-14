@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-14 v231';
+  const APP_VERSION = '2026-11-14 v232';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -320,7 +320,7 @@
       return { slug: s.slug, title: s.title, author: s.author, language: s.language, translation_language: s.translation_language, number: s.number,
         lyrics: (s.lyrics_edit || s.lyrics || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })), translation: s.translation || null, expires_at: new Date(Date.now() + 864e5).toISOString() };
     }
-    if (op === 'match') return { matches: matchLyrics(b.text) };
+    if (op === 'match') return { matches: Busca.match(demoIndex(), b.text) };
     if (op === 'file') {
       const [path, frag = ''] = b.path.split('#');
       const book = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' }[path];
@@ -355,16 +355,21 @@
     if (op === 'user' || op === 'reject') return { ok: true };
     throw new Error('op');
   }
-  function demoSearch(q) {
-    const nq = norm(q).trim(), terms = nq.split(/\s+/), out = [];
-    for (const s of demoFull.values()) {
-      const lines = (s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
-      const nl = lines.map(norm);
-      let li = nl.findIndex(l => l.includes(nq)), score = 20;
-      if (li < 0 && terms.every(t => nl.some(l => l.includes(t)))) { li = nl.findIndex(l => l.includes(terms[0])); score = 8; }
-      if (li >= 0) out.push({ slug: s.slug, score, snip: lines[li] });
+  // o mesmo motor da função conteudo (busca.js), sobre a cópia local; refeito quando a cópia muda
+  let demoIx = null, demoIxKey = '';
+  function demoIndex() {
+    const key = demoFull.size + ':' + [...demoFull.values()].map(s => (s.lyrics_edit ? 'e' : '') + s.title).join('|');
+    if (!demoIx || key !== demoIxKey) {
+      demoIx = Busca.build([...demoFull.values()].map(s => ({ slug: s.slug, title: s.title, author: s.author,
+        lines: (s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines)) })));
+      demoIxKey = key;
     }
-    return out.slice(0, 60);
+    return demoIx;
+  }
+  function demoSearch(q) {
+    const nq = Busca.toks(q).join(' ');
+    if (nq.replace(/ /g, '').length < 3 || /^[\d ]+$/.test(nq)) return [];
+    return Busca.search(demoIndex(), q, null, 40);
   }
 
   // ---------- Dados (Supabase) ----------
@@ -416,6 +421,11 @@
       p.files = [...(p.files || []), ...(v.files || []).filter(x => !(p.files || []).some(y => y.path === x.path)).map(x => ({ ...x, _v: v.slug }))];
       p._t += ' ' + v._t;
     }
+    // categorias (etiquetas) para a pesquisa; e as palavras são recalculadas
+    for (const s of allSongs) {
+      Object.defineProperty(s, '_g', { value: norm((s.tags || []).map(x => x.tag).join(' ')), configurable: true, writable: true, enumerable: false });
+      Object.defineProperty(s, '_w', { value: null, configurable: true, writable: true, enumerable: false });
+    }
     applySource();
   }
   // Filtro por fonte: "todas", ou só uma (ex.: só o Cancioneiro original, como era antes)
@@ -425,7 +435,7 @@
     const f = lvl() < 2 ? 'original' : prefs.src || 'todas';
     const ok = allSongs.filter(s => s.approved !== false && !folded(s)); // por aprovar: só em "Novos Cânticos"; versões: no principal
     songs = f === 'todas' ? ok : ok.filter(s => has(s, f));
-    lyrIndex = null;
+    demoIx = null;
     const extra = lvl() < 2 ? colExtra() : new Set();
     bySlug = new Map((lvl() < 2 ? allSongs.filter(s => inCancioneiro(s) || extra.has(s.slug)) : allSongs).map(s => [s.slug, s]));
     const present = new Set(allSongs.flatMap(srcOf));
@@ -484,14 +494,33 @@
   });
 
   // ---------- Pesquisa ----------
+  // No telemóvel (instantâneo e sem rede): número, página, título (com os das versões), autor e categorias, com tolerância
+  // a erros (busca.js). No servidor (função conteudo, o mesmo motor): letra, tradução e, depois, o texto dos PDF.
+  // Títulos e páginas anunciados numa sala resolvem-se aqui, sem pedidos ao servidor.
+  const wordsOf = s => s._w || (Object.defineProperty(s, '_w', { value: { t: Busca.toks(s._t), a: Busca.toks(s._a), g: Busca.toks(s._g) }, configurable: true, writable: true, enumerable: false }), s._w);
+  // um termo corresponde a uma das palavras: igual (1), variante ortográfica (0,9), início (0,75), erro de 1–2 letras (0,6)
+  function termHit(t, ws, prefix) {
+    let best = 0; const ft = Busca.fold(t), mx = Busca.fuzzyMax(t.length);
+    for (const w of ws) {
+      if (w === t) return 1;
+      const fw = Busca.fold(w);
+      if (fw === ft) best = Math.max(best, 0.9);
+      else if (prefix && w.startsWith(t)) best = Math.max(best, 0.75);
+      else if (mx && best < 0.6 && Math.abs(fw.length - ft.length) <= mx && Busca.lev(fw, ft, mx) <= mx) best = 0.6;
+    }
+    return best;
+  }
+  const allHit = (terms, ws) => { const h = terms.map((t, i) => termHit(t, ws, i === terms.length - 1 || t.length >= 3)); return h.every(Boolean) ? Math.min(...h) : 0; };
+  const searchKey = q => Busca.toks(q).join(' ');
   function search(q) {
     const nq = norm(q).trim();
     if (!nq) return [];
-    const terms = nq.split(/\s+/);
+    const terms = nq.split(/\s+/), words = Busca.toks(q);
     const num = /^\d+$/.test(nq) ? +nq : null;
+    const hits = lyricCache.get(searchKey(q));
     const out = [];
     for (const s of songs) {
-      let score = 0, snip = null;
+      let score = 0, snip = null, marks = null;
       if (num !== null && s.number === num) score += 100;
       if (num !== null && s.book_page === num) score += 100;
       // pela página: também os cânticos das páginas antes e depois (logo a seguir aos da página pedida; a anterior primeiro)
@@ -500,32 +529,45 @@
       const inAuthor = terms.every(t => s._a.includes(t));
       if (s._t.startsWith(nq)) score += 60; else if (inTitle) score += 40;
       if (inAuthor) score += 25;
-      // palavras da letra: resultados do servidor (lyricHits), com o trecho da linha encontrada
-      const h = lyricHits.q === nq && (lyricHits.map.get(s.slug) || s._versions.map(v => lyricHits.map.get(v.slug)).find(Boolean));
-      if (h) { score += h.score; if (!inTitle) snip = h.snip; }
-      if (score) out.push({ s, score, snip });
+      // com erros ou variantes (ex.: «salve regna», «aleluia» / «alleluia»): título, senão autor, senão categoria
+      if (!inTitle && !inAuthor && num === null && words.length) {
+        const w = wordsOf(s), t = allHit(words, w.t);
+        if (t) score += Math.round(20 + 10 * t);
+        else if (allHit(words, w.a)) score += 15;
+        else if (allHit(words, w.g)) score += 12;
+      }
+      // letra (e o resto que só o servidor tem): resultados do servidor, com o trecho encontrado
+      const h = hits && (hits.get(s.slug) || s._versions.map(v => hits.get(v.slug)).find(Boolean));
+      if (h) {
+        if (h.field === 'lyrics' || !h.field) { score += Math.round(10 + 20 * Math.min(h.score, 1.5)); if (!inTitle) { snip = h.snip; marks = h.marks; } }
+        else if (!score) score += 30; // título ou autor que só o servidor encontrou
+      }
+      if (score) out.push({ s, score, snip, marks });
     }
     return out.sort((a, b) => b.score - a.score || a.s.title.localeCompare(b.s.title, 'pt'));
   }
-  let lyricHits = { q: '', map: new Map() };
+  // resultados do servidor das últimas 50 pesquisas (voltar atrás ao escrever não pede de novo); limpos ao mudar de perfil
+  const lyricCache = new Map();
   let lyricTimer = null;
   function searchLyricsRemote(q) {
-    const nq = norm(q).trim();
+    const nq = searchKey(q);
     clearTimeout(lyricTimer);
-    if (nq.length < 3 || lyricHits.q === nq) return;
+    // números (cântico, página) e pesquisas muito curtas: só no telemóvel
+    if (nq.replace(/ /g, '').length < 3 || /^[\d ]+$/.test(nq) || lyricCache.has(nq)) return;
     lyricTimer = setTimeout(async () => {
       try {
         const d = await api('search', { q });
-        lyricHits = { q: nq, map: new Map(d.hits.map(h => [h.slug, h])) };
-        if (norm($('search').value).trim() === nq && !$('view-list').hidden) showList((lastListHash.match(/^#\/lista\/(.+)$/) || [])[1]);
+        if (lyricCache.size >= 50) lyricCache.delete(lyricCache.keys().next().value);
+        lyricCache.set(nq, new Map(d.hits.map(h => [h.slug, h])));
+        if (searchKey($('search').value) === nq && !$('view-list').hidden) showList((lastListHash.match(/^#\/lista\/(.+)$/) || [])[1]);
       } catch (e) {
         if (e instanceof Limit) $('status').textContent = e.message;
       }
-    }, 350);
+    }, 400);
   }
 
-  function highlight(text, q) {
-    const nt = norm(text), terms = norm(q).trim().split(/\s+/).filter(Boolean);
+  function highlight(text, q, extra) {
+    const nt = norm(text), terms = [...norm(q).trim().split(/\s+/), ...(extra || []).map(norm)].filter(Boolean);
     const marks = new Array(text.length).fill(false);
     for (const t of terms) {
       let i = nt.indexOf(t);
@@ -543,53 +585,7 @@
 
   // ---------- Identificar pela letra ouvida ----------
   const tok = s => norm(s).split(/[^a-z0-9]+/).filter(w => w.length > 1);
-  // (no modo de teste local; em produção a correspondência é feita no servidor, ver matchRemote)
-  let lyrIndex = null; // [{s, wins:[{words:Set, bigrams:Set, line}]}], idf
-  function buildLyricIndex() {
-    const df = new Map(), items = [];
-    for (const s of demoFull.values()) {
-      const sources = [(s.lyrics_edit || s.lyrics || []).flatMap(st => st.lines.map(stripChords)), (s.translation || []).flatMap(st => st.lines)];
-      const wins = [], seen = new Set();
-      for (const lines of sources) {
-        const lt = lines.map(tok);
-        lt.forEach(ws => ws.forEach(w => seen.add(w)));
-        for (let i = 0; i < lines.length; i++) {
-          const words = new Set(), bigrams = new Set();
-          for (let k = i; k < Math.min(i + 3, lines.length); k++) {
-            const ws = lt[k];
-            ws.forEach((w, j) => { words.add(w); if (j) bigrams.add(ws[j - 1] + ' ' + w); });
-            if (k > i && lt[k - 1].length && ws.length) bigrams.add(lt[k - 1][lt[k - 1].length - 1] + ' ' + ws[0]);
-          }
-          if (words.size) wins.push({ words, bigrams, line: lines[i] });
-        }
-      }
-      seen.forEach(w => df.set(w, (df.get(w) || 0) + 1));
-      items.push({ s, wins });
-    }
-    const N = demoFull.size;
-    lyrIndex = { items, idf: w => Math.log((N + 1) / (1 + (df.get(w) || 0))) };
-  }
-  function matchLyrics(text) {
-    if (!lyrIndex) buildLyricIndex();
-    const { items, idf } = lyrIndex;
-    const q = tok(text);
-    const qset = [...new Set(q)];
-    const qbi = new Set(q.slice(1).map((w, i) => q[i] + ' ' + w));
-    const total = qset.reduce((a, w) => a + idf(w), 0) + [...qbi].reduce((a, b) => a + 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0), 0);
-    if (!total) return [];
-    const out = [];
-    for (const { s, wins } of items) {
-      let best = 0, bestLine = null;
-      for (const win of wins) {
-        let sc = 0;
-        for (const w of qset) if (win.words.has(w)) sc += idf(w);
-        for (const b of qbi) if (win.bigrams.has(b)) sc += 0.75 * b.split(' ').reduce((x, w) => x + idf(w), 0);
-        if (sc > best) { best = sc; bestLine = win.line; }
-      }
-      if (best) out.push({ slug: s.slug, score: best / total, snip: bestLine });
-    }
-    return out.sort((a, b) => b.score - a.score).slice(0, 8).filter((r, i) => i === 0 ? r.score > 0.12 : r.score > 0.2);
-  }
+  // (a correspondência é feita no servidor com busca.js; no modo de teste, sobre a cópia local: demoApi)
   async function matchRemote(text) {
     const d = await api('match', { text });
     return (d.matches || []).map(m => ({ s: bySlug.get(m.slug), score: m.score, snip: m.snip })).filter(m => m.s);
@@ -906,10 +902,10 @@
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
   }
 
-  function songRow(s, q, snip) {
+  function songRow(s, q, snip, marks) {
     const title = q ? highlight(s.title, q) : esc(s.title);
     const author = s.author ? `<span class="a">${q ? highlight(s.author, q) : esc(s.author)}</span>` : '';
-    const sn = snip ? `<span class="snip">${highlight(snip, q)}</span>` : '';
+    const sn = snip ? `<span class="snip">${highlight(snip, q, marks)}</span>` : '';
     const pend = s.approved === false ? '<small class="pend">por aprovar</small>' : ''; // à direita, por cima do número
     return `<li><a href="#/cantico/${encodeURIComponent(s.slug)}"><span class="t">${title}${author}${sn}</span><span class="n">${pend}${s.approved === false ? '' : s.number}${s.book_page ? `<span class="bp">pág. ${s.book_page}</span>` : ''}</span></a></li>`;
   }
@@ -926,7 +922,9 @@
       const res = search(q);
       title.hidden = false;
       title.textContent = `${res.length} resultado${res.length === 1 ? '' : 's'}`;
-      rows.innerHTML = res.slice(0, 200).map(r => songRow(r.s, q, r.snip)).join('');
+      rows.innerHTML = res.slice(0, 200).map(r => songRow(r.s, q, r.snip, r.marks)).join('');
+      // sem rede: só o que está no telemóvel (a letra é pesquisada no servidor)
+      if (!navigator.onLine && !DEMO) $('status').textContent = 'Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas.';
       return;
     }
     if (!catId) {
@@ -1698,7 +1696,7 @@
       if (text !== $('sn-text').dataset.orig.trim()) {
         if (!text) throw new Error('A letra não pode ficar vazia (use "Repor original" para voltar à original).');
         await api('save', { slug: s.slug, lyrics_edit: fromText(text) });
-        lyr.delete(s.slug); saveLyrCache(); lyrIndex = null;
+        lyr.delete(s.slug); saveLyrCache(); demoIx = null;
       }
       $('song-new').close(); toast('Cântico guardado');
       await load();
@@ -1938,7 +1936,7 @@
       Object.assign(s, { edited_by: d.edited_by, edited_at: d.edited_at, is_edited: !!d.is_edited });
       store.set(CACHE_KEY, allSongs.map(({ _t, _a, ...x }) => x));
       lyr.delete(editSlug); saveLyrCache(); // volta a pedir a letra (editada ou original)
-      lyrIndex = null;
+      demoIx = null;
       $('editor').close();
       showSong(editSlug);
     } catch (e) {
@@ -2058,7 +2056,7 @@
     // informação: só os perfis que esta pessoa pode usar
     $('perfil-list').innerHTML = rankOf(maxRole) > 1 ? ' (' + PERFIS.slice(0, rankOf(maxRole)).map(x =>
       `<span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg>&nbsp;${esc(x.label)}</span>`).join(', ') + ')' : '';
-    lyricHits = { q: '', map: new Map() };
+    lyricCache.clear();
     if (allSongs.length) applySource();
   }
   function setPerfil(id, save) {
