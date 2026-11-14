@@ -168,10 +168,10 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (14 nov 2026, v233)
-- App v233; capa do mapa «versão 233 · 14 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 88, sistema de design versão 40 (v231–v233: só pesquisa — por página, tolerante a erros com `busca.js`,
-  trecho «Na partitura:»; sem imagens novas). Sem comentários por responder; main = perfis-tmp.
+## Estado atual (14 nov 2026, v234)
+- App v234; capa do mapa «versão 234 · 14 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 89, sistema de design versão 41 (v231–v234: só pesquisa e servidor — por página, tolerante a erros com
+  `busca.js`, trecho «Na partitura:»; sem imagens novas). Sem comentários por responder; main = perfis-tmp.
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,
   etiqueta teste 9.5, mark 2px, pdfbar 22). Arrumação de 8 nov (fs-* e `pill` no botão Google) feita na v229.
