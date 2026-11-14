@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v229** (2026-11-09). Nada por correr. Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v231** (2026-11-14). Por correr: FUN-73 (aguarda autorização do Tiago). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -28,6 +28,7 @@ Catálogo atualizado até à **v229** (2026-11-09). Nada por correr. Regras de c
 |---|---|---|---|---|---|
 | FUN-01.{gestor,maestro,coro,cancioneiro} | Arranque em cada perfil: índice com cânticos, sem erros JS | ui | alta | V | ✓ |
 | FUN-02 | Pesquisa por título, autor e palavra da letra; botão limpar | ui | alta | V | ✓ |
+| FUN-73 | Pesquisa por número com páginas vizinhas (v231): «12» → pág. 12 e nº 12, depois pág. 11, depois pág. 13; 10 e 14 fora; «99» sem os de teste (songs.json do fixture com book_page 10–14) | ui | média | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
 | FUN-03b | Versão noutra língua: botão «Espanhol» (sem «Tradução ·») e nota «Versão em espanhol»; pt mantém «Tradução · Português» (v192) | ui | média | V | ✓ |
 | FUN-47 | Versões do mesmo cântico: fora de listas/pesquisa, botões v:<slug> no principal, nota «Versão em …», redireção da versão, perfil Cancioneiro só vê as suas (v193) | ui | alta | V | ✓ |
