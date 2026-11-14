@@ -61,6 +61,7 @@ function mockSupabase(mode, songs, calls) {
       if (req.method() === 'GET') return json([]);
       return json('', 201);
     }
+    if (p === '/functions/v1/transcribe' && mode.transcribe) { calls.push('transcribe'); return json(await mode.transcribe(req)); } // v236: texto ao vivo simulado
     if (p === '/functions/v1/conteudo') {
       const b = JSON.parse(req.postData() || '{}');
       calls.push(`${b.op}:${b.slug || ''}`);
@@ -256,6 +257,60 @@ async function suites(full) {
     if (!NUM.test(tr)) bad.push(`«zzzerro» depois do erro: «${tr}» (esperado o número logo)`); await sleep(800); if (nCalls() !== c1) bad.push('«zzzerro» depois do erro voltou a chamar o servidor');
     return bad.length ? bad.join('; ') : true;
   }), { sev: 'baixa' });
+  await t('FUN-78', 'Som com texto ao vivo (v236, modo real simulado, microfone falso do Chromium, transcribe e match simulados): 1.º pedido ao transcribe aos ~2 s, um de cada vez; #listen-text mostra logo o texto; «A ouvir… parece «Amazing Grace»» com score ≥ 0,2; texto igual → sem novo match; texto claro com ≥ 6 palavras termina em #/ouvir com Amazing Grace; sem correspondência pára aos 15 s', async () => {
+    const fb = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] });
+    const bad = [];
+    try {
+      const T = ['amazing grace', 'amazing grace', 'amazing grace how sweet the sound that saved a wretch like me'];
+      const run = async (texts, matchFor) => {
+        const st = { t0: 0, times: [], inflight: 0, overlap: 0 };
+        const mode = { role: 'coro', canListen: true,
+          transcribe: async () => { st.inflight++; if (st.inflight > 1) st.overlap++; st.times.push((Date.now() - st.t0) / 1000); await sleep(400); st.inflight--; return { text: texts[Math.min(st.times.length - 1, texts.length - 1)] }; },
+          conteudo: (op, b) => op === 'match' ? { body: { matches: matchFor(b.text) } } : null };
+        const app = await open({ engine: fb, real: mode, permissions: ['microphone'], wait: '#rows li a', timeout: 20000 });
+        try {
+          await app.page.waitForSelector('#btn-mic', { state: 'visible', timeout: 8000 });
+          st.t0 = Date.now(); await app.page.click('#btn-mic');
+          return { st, app };
+        } catch (e) { await app.close(); throw e; }
+      };
+      // 1) texto que cresce até ser claro
+      {
+        const { st, app } = await run(T, text => /wretch/.test(text) ? [{ slug: 'amazing_grace', score: 0.9, snip: 'that saved a wretch like me' }] : [{ slug: 'amazing_grace', score: 0.25, snip: 'amazing grace' }]);
+        const { page, calls } = app;
+        try {
+          for (let i = 0; i < 40 && !st.times.length; i++) await sleep(100);
+          await sleep(700);
+          const lt = await txt(page, '#listen-text'), ls = await txt(page, '#listen-status');
+          if (!/amazing grace/.test(lt)) bad.push('texto ao vivo: #listen-text «' + lt.trim().slice(0, 60) + '»');
+          if (!/A ouvir… parece «Amazing Grace»/.test(ls)) bad.push('estado: «' + ls.trim().slice(0, 60) + '»');
+          for (let i = 0; i < 120 && !/#\/ouvir/.test(page.url()); i++) await sleep(100);
+          await sleep(1500);
+          const tr = calls.filter(c => c === 'transcribe').length, mt = calls.filter(c => c.startsWith('match:')).length;
+          if (!st.times.length) bad.push('nenhum pedido ao transcribe'); else if (st.times[0] < 1.8 || st.times[0] > 3.6) bad.push(`1.º pedido aos ${st.times[0].toFixed(1)} s (esperado ~2 s)`);
+          if (st.overlap) bad.push(`${st.overlap} pedidos ao transcribe em simultâneo`);
+          if (tr !== 3) bad.push(`${tr} pedidos ao transcribe (esperado 3: termina no texto claro)`);
+          if (mt !== 2) bad.push(`${mt} pedidos de match (esperado 2: o texto repetido não pede de novo)`);
+          if (!/#\/ouvir/.test(page.url())) bad.push('não terminou em #/ouvir');
+          else if (!(await slugsOf(page)).includes('amazing_grace')) bad.push('resultado sem Amazing Grace');
+        } finally { await app.close(); }
+      }
+      // 2) sem correspondência: pára aos 15 s
+      {
+        const { st, app } = await run(['texto sem correspondencia nenhuma'], () => []);
+        const { page } = app;
+        try {
+          for (let i = 0; i < 230 && !(await page.evaluate(() => document.querySelector('#listen').hidden)); i++) await sleep(100);
+          const end = (Date.now() - st.t0) / 1000, last = st.times[st.times.length - 1] || 0;
+          if (!(await page.evaluate(() => document.querySelector('#listen').hidden)) && end >= 22.9) bad.push('sem correspondência: ainda a ouvir aos 23 s');
+          if (last > 16) bad.push(`sem correspondência: pedido aos ${last.toFixed(1)} s (máximo 15 s)`);
+          if (st.times.length < 4 || st.times.length > 8) bad.push(`sem correspondência: ${st.times.length} pedidos (esperado 4–8 em 15 s)`);
+          if (st.overlap) bad.push(`sem correspondência: ${st.overlap} pedidos em simultâneo`);
+        } finally { await app.close(); }
+      }
+    } finally { await fb.close(); }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';
