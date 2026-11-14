@@ -66,7 +66,9 @@ Deno.serve(async req => {
       const paths = new Set(files.map(f => f.path));
       const gone = [...done].filter(k => !paths.has(k));
       for (const k of gone) await rest(`song_texts?file_key=eq.${encodeURIComponent(k)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
-      const todo = files.filter(f => !done.has(f.path) && !/^https?:/.test(f.path)).slice(0, n);
+      // primeiro as páginas dos livros (muitos destes cânticos só têm a letra no livro), depois as partituras
+      const todo = files.filter(f => !done.has(f.path) && !/^https?:/.test(f.path))
+        .sort((a, b) => (BOOKS[b.path.split('#')[0]] ? 1 : 0) - (BOOKS[a.path.split('#')[0]] ? 1 : 0)).slice(0, n);
       const items = todo.map(f => { const parts = cropParts(f.path); return parts ? { key: f.path, slug: f.song_slug, kind: 'crop', parts } : { key: f.path, slug: f.song_slug, kind: 'file', mime: f.mime, file: f.path }; });
       const urls = await signMany([...new Set(items.flatMap(it => it.kind === 'crop' ? it.parts.map(p => p.file) : [it.file]))]);
       for (const it of items) { if (it.kind === 'crop') it.parts.forEach(p => { p.url = urls.get(p.file) || null; }); else it.url = urls.get(it.file) || null; }

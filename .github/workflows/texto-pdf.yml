@@ -5,7 +5,11 @@ name: Texto dos PDF
 on:
   schedule:
     - cron: '20 7 * * *'   # todos os dias, 07:20 UTC (depois da conversão das gravações)
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: 'Minutos de extração nesta corrida (máximo 70)'
+        default: '70'
 permissions:
   contents: read
   id-token: write
@@ -31,4 +35,6 @@ jobs:
           done
           exit 1
       - name: Extrair texto
+        env:
+          MINUTOS: ${{ inputs.minutos || '70' }}
         run: node tools/pdf/texto.mjs

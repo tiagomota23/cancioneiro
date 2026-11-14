@@ -29,14 +29,26 @@ const run = (cmd, args) => execFileSync(cmd, args, { maxBuffer: 64e6, stdio: ['i
 // ---------- limpeza do texto ----------
 const CHORD = /^\(?(?:[A-G](?:#|b|♯|♭)?|Do|Dó|Re|Ré|Mi|Fa|Fá|Sol|La|Lá|Si)(?:m|maj|min|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?[-+°]?\)?$/;
 const letters = s => (s.match(/\p{L}/gu) || []).length;
+// palavras de uma letra que existem (a, e, o, é, y…); as outras letras soltas são restos das notas ou das pautas
+const ONE = new Set([...'aeiouyàáâãéèêíóòôõúAEIOUYÀÁÉÈÍÓÚ']);
+// símbolos das fontes de música (œ, Œ, ™, ∑…) e tokens sem letras
+const NOISE = /^[^\p{L}]*$|[œŒ™∑ßð¢¶§»«]|^[bjnJV&]+$/u;
 function clean(t) {
-  return String(t || '').replace(/\r/g, '').replace(/\f/g, '\n').split('\n')
-    .map(l => l.replace(/[\t ]+/g, ' ').trim())
-    // sílabas separadas por hífens com espaços: «Glo - ri - a», «Glo -ri -a», «san__ to» → «Gloria», «santo»
-    .map(l => { let p; do { p = l; l = l.replace(/(\p{L})(?: +[-–—_~]+ *| *[-–—_~]+ +|_{2,})(?=\p{L})/gu, '$1'); } while (l !== p); return l; })
-    .filter(l => l && !l.split(' ').every(w => CHORD.test(w)))       // linhas só de acordes
-    .filter(l => letters(l) >= 3 && letters(l) / l.length >= 0.55)     // lixo do OCR (notas, pautas, números)
-    .join('\n').slice(0, 30000);
+  const out = [];
+  for (let l of String(t || '').replace(/\r/g, '').replace(/\f/g, '\n').split('\n')) {
+    l = l.replace(/_+/g, ' ').replace(/[\t ]+/g, ' ').trim();
+    // sílabas separadas por hífens com espaços: «Glo - ri - a», «Glo -ri -a» → «Gloria»
+    let p; do { p = l; l = l.replace(/(\p{L})(?: +[-–—~]+ *| *[-–—~]+ +)(?=\p{L})/gu, '$1'); } while (l !== p);
+    // tokens que não são palavras (símbolos de música, letras soltas que não são palavras)
+    l = l.split(' ').filter(w => w && !NOISE.test(w) && !(letters(w) === 1 && w.replace(/[^\p{L}]/gu, '').length === 1 && !ONE.has(w.replace(/[^\p{L}]/gu, '')))).join(' ');
+    if (!l || l.split(' ').every(w => CHORD.test(w))) continue;          // linhas só de acordes
+    if (letters(l) < 3 || letters(l) / l.length < 0.6) continue;         // lixo do OCR (notas, pautas, números)
+    out.push(l);
+    // sílabas com hífen sem espaços («Ale-gra-te, Jeru-salém»): também a linha com as sílabas juntas, para se
+    // encontrar «alegrate» e «jerusalém» (fica a original, por causa das palavras com hífen: «tende-nos»)
+    if (/\p{L}-\p{L}/u.test(l)) out.push(l.replace(/(\p{L})-(?=\p{L})/gu, '$1'));
+  }
+  return out.join('\n').slice(0, 30000);
 }
 
 // ---------- extração ----------
