@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-14 v235';
+  const APP_VERSION = '2026-11-14 v236';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -604,10 +604,12 @@
     return (d.matches || []).map(m => ({ s: bySlug.get(m.slug), score: m.score, snip: m.snip })).filter(m => m.s);
   }
 
-  // Gravação: microfone -> PCM 16 kHz -> Whisper (worker) a cada ~2,5 s -> correspondência.
-  // Pára sozinho quando um cântico se destaca claramente (ou aos 15 s).
-  // Captura: primeira tentativa aos 8 s (texto suficiente), última aos 10 s; guarda até 15 s de áudio
+  // Gravação: microfone -> PCM 16 kHz -> transcrição -> correspondência. Pára sozinho quando um cântico se destaca.
+  // Na nuvem (Groq, rápido): texto ao vivo — o áudio ouvido até ao momento vai a cada 2 s a partir dos 2 s, e o texto e o
+  // cântico mais provável aparecem e crescem à medida; até 15 s. No telemóvel (modelo local, lento): uma tentativa aos
+  // 8 s e a última aos 10 s. Guarda até 15 s de áudio.
   const FIRST_SECONDS = 8, MAX_SECONDS = 10, BUFFER_SECONDS = 15, TARGET_RATE = 16000;
+  const LIVE_FIRST = 2, LIVE_EVERY = 2, LIVE_MAX = 15;
   // Línguas a experimentar (null = deteção automática do Whisper); a última que resultou vai à frente
   const LANG_ORDER = ['portuguese', null, 'italian', 'latin', 'spanish', 'english', 'french'];
   function langQueue() {
@@ -810,14 +812,19 @@
     if (!rec || !rec.stream) return;
     if (rec.ctx.state !== 'running') resumeAudio();
     const secs = (performance.now() - rec.started) / 1000;
-    $('listen-bar').style.width = Math.min(100, Math.round(100 * secs / MAX_SECONDS)) + '%';
-    // termina depois da tentativa final (aos 10 s); limite de segurança se a rede demorar
-    if (!busy && (secs >= MAX_SECONDS && rec.lastSent >= MAX_SECONDS - 0.01 || secs >= MAX_SECONDS + 6)) { finish(); return; }
-    const useCloud = !cloudFailed;
+    const useCloud = !cloudFailed, maxS = useCloud ? LIVE_MAX : MAX_SECONDS;
+    $('listen-bar').style.width = Math.min(100, Math.round(100 * secs / maxS)) + '%';
+    // termina depois da tentativa final; limite de segurança se a rede demorar
+    if (!busy && (secs >= maxS && rec.lastSent >= maxS - 0.01 || secs >= maxS + 6)) { finish(); return; }
     if (!useCloud && !modelReady) return;
-    if (busy || secs < FIRST_SECONDS) return;
-    if (rec.lastSent && secs < MAX_SECONDS) return; // entre os 8 s e os 10 s só uma tentativa
-    if (!busy && secs < FIRST_SECONDS + 0.5 && !heard) listenMsg('A transcrever…', true);
+    if (busy) return;
+    if (useCloud) { // ao vivo: aos 2 s e depois a cada 2 s (uma de cada vez), com todo o áudio ouvido até ao momento
+      if (secs < LIVE_FIRST || (rec.lastSent && secs - rec.lastSent < LIVE_EVERY && secs < maxS)) return;
+    } else {
+      if (secs < FIRST_SECONDS) return;
+      if (rec.lastSent && secs < MAX_SECONDS) return; // entre os 8 s e os 10 s só uma tentativa
+      if (secs < FIRST_SECONDS + 0.5 && !heard) listenMsg('A transcrever…', true);
+    }
     const pcm = rec.chunks.length ? downsample(rec.chunks, rec.ctx.sampleRate).slice(-TARGET_RATE * BUFFER_SECONDS) : null;
     const pcmLevel = pcm ? rms(pcm.subarray(-TARGET_RATE * 3)) : 0;
     const hasMr = rec.mr && rec.mrChunks.length > 0;
@@ -825,7 +832,7 @@
       listenMsg(pcm ? 'Não oiço nada — aproxime o telemóvel' : 'Não está a chegar som do microfone', true);
       return;
     }
-    rec.lastSent = Math.max(secs, rec.lastSent ? MAX_SECONDS : 0); busy = true;
+    rec.lastSent = useCloud ? Math.min(secs, maxS) : Math.max(secs, rec.lastSent ? MAX_SECONDS : 0); busy = true;
     if (!heard) listenMsg('A ouvir e a transcrever…', true);
     if (useCloud) {
       const blob = pcm && pcmLevel >= 0.0015 ? encodeWav(pcm) : new Blob(rec.mrChunks, { type: rec.mr.mimeType || 'audio/mp4' });
@@ -840,8 +847,12 @@
   async function onTranscript(raw, language) {
     const t = cleanText(raw || '');
     if (!t || HALLUCINATIONS.test(t)) return;
+    // ao vivo: o texto aparece logo (antes da correspondência); cada transcrição tem todo o áudio até ao momento
+    if (rec) $('listen-text').textContent = `“${t}”`;
     let res = [];
-    try { res = await matchRemote(t); }
+    // texto igual ao anterior: a correspondência é a mesma
+    if (rec && rec.prev && rec.prev.text === t) res = rec.prev.res;
+    else try { res = await matchRemote(t); if (rec) rec.prev = { text: t, res }; }
     catch (e) { if (e instanceof Limit) { listenMsg(e.message); stopRecording(); return; } }
     if (!rec) { if (!heard || (res[0] && res[0].score >= (lastMatch.score || 0))) { heard = t; lastMatch = { text: t, res, score: res[0] ? res[0].score : 0 }; } return; }
     const words = tok(t).length;
@@ -850,12 +861,11 @@
     if (!rec.best || score >= rec.best.score) { rec.best = { text: t, score, language }; lastMatch = { text: t, res, score }; }
     if (score >= 0.3 && rec.lang === undefined) rec.lang = language; // esta língua funciona: fica
     heard = rec.best.text;
-    $('listen-text').textContent = `“${heard}”`;
     const clear = top && score >= 0.45 && (!second || score - second.score >= 0.12);
     if ((clear && words >= 6) || (words >= 20 && score >= 0.3)) {
       if (language) { prefs.lastLang = language; applyFont(); }
       finish();
-    } else listenMsg(top ? 'A ouvir… (a confirmar)' : 'A ouvir…', true);
+    } else listenMsg(top && score >= 0.2 ? `A ouvir… parece «${top.s.title}»` : 'A ouvir…', true);
   }
   function stopRecording() {
     if (!rec) return;

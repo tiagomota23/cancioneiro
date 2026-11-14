@@ -12,7 +12,7 @@ const ADMIN = 'tiago.mota@gmail.com';
 const ORIGINS = ['https://tiagomota23.github.io'];
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 // limites por pessoa: cânticos/ficheiros diferentes por hora e por dia; pesquisas e identificações por hora e por dia
-const LIMITS = { song: [80, 250], file: [80, 250], search: [200, 1000], match: [30, 150], save: [60, 200], share: [30, 100] };
+const LIMITS = { song: [80, 250], file: [80, 250], search: [200, 1000], match: [200, 1000], save: [60, 200], share: [30, 100] };
 const MAX_HITS = 40; // resultados por pesquisa na letra (cada um só com um trecho curto)
 const SHARE_HOURS = 24, SHARE_VIEWS = 300, SHARE_COL_VIEWS = 3000; // endereços partilhados: validade e máximo de aberturas (coleções: lista e cânticos)
 const DISTINCT = new Set(['song', 'file']);

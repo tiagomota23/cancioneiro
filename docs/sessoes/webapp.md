@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (14 nov 2026, v235)
+## Estado e pendentes (14 nov 2026, v236)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -219,7 +219,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   ffmpeg com limite de 10 min, 3 tentativas e Acquire::Retries/Timeout no apt.
 - v231 (14 nov, pedido do Tiago): pesquisa por número de página mostra também os cânticos das páginas antes e depois
   (logo a seguir aos da página pedida; a anterior primeiro). Só em `search()` na app (book_page já vem na lista).
-- **Pesquisa nova (14 nov, pedido do Tiago; A na v232, B na v233, C por fazer).** Dados: 1923 cânticos, 1,3 MB de
+- **Pesquisa nova (14 nov, pedido do Tiago; A na v232, B na v233, C na v236).** Dados: 1923 cânticos, 1,3 MB de
   letras → índice em memória na função `conteudo` (não precisa de Postgres). Motor único em `busca.js` (raiz do repo),
   usado pela função (publicada com `busca.js` ao lado: `import './busca.js'`) e pela app (modo demo e funções de
   tolerância a erros). Camadas: palavra exata 1 · variante ortográfica PT/IT/LA/ES (ph/f, th/t, y/i, j/i, k/c, h mudo,
@@ -262,8 +262,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
     an_austrian_went_yodeling (songbook p.85); father_and_son (songbook p.102); gs_cha_cha_cha (songbook p.216);
     miserere (canti2024 p.48); adios_con_el_corazon (songbook p.266); la_smortina (canti2024 p.100) Os livros têm camada de texto
   (rápido); as partituras soltas são mais ruidosas (vozes separadas por sílabas).
-  Por fazer: C) texto ao vivo no som (o Tiago diz que só muito poucas pessoas têm o reconhecimento: os limites do Groq
-  não preocupam). Envio a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à medida.
+  C (v236): texto ao vivo na identificação pelo som (só na nuvem; poucas pessoas têm o reconhecimento, os limites do
+  Groq não preocupam): o áudio ouvido até ao momento vai ao Groq aos 2 s e depois a cada 2 s (um pedido de cada vez),
+  até 15 s; o texto aparece logo em #listen-text (antes da correspondência) e o estado diz «A ouvir… parece «Título»»
+  (score ≥ 0,2); pára quando um cântico se destaca (regra de antes). Com o modelo do telemóvel fica o ritmo antigo
+  (8 s e 10 s). Limite da op match na conteudo: 200/h, 1000/dia (eram 30/150; cada audição faz até ~7).
 - Publicar `conteudo`: enviar `index.ts` **e** `busca.js` (da raiz) no mesmo deploy (ver «Ambiente e ferramentas»).
 - v234 (achado da sessão de testes, SEG-39): a identificação pelo som também não dá trechos de partituras ao perfil
   Cancioneiro (busca.match devolve field 'pdf'|'lyrics'; a conteudo filtra como na pesquisa).
@@ -271,7 +274,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   de resultados (a lista mostra já o que o telemóvel encontrou); o número aparece quando o servidor responde. Números,
   pesquisas curtas, sem rede ou com o servidor em erro: o número aparece logo (`searchLyricsRemote` devolve se espera;
   `lyricFailed` guarda as que falharam, limpo ao voltar a rede e ao mudar de perfil).
-- Tudo publicado até à v235 (conteudo versão 36, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v236 (conteudo versão 37, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
