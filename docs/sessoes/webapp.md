@@ -243,7 +243,24 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   recortes guardados em song_files estão mesmo errados (mostram outro cântico, ex.: «Father and Son» mostra
   «Everybody needs somebody»): a `conteudo` só usa o texto a partir da linha com o título e, se o cântico tem letra,
   só se coincidir com ela (≥30%); sem letra e sem título no recorte, não usa.
-  Valor: 761 cânticos (sobretudo CANTI e Songbook) só tinham um marcador em vez da letra. Os livros têm camada de texto
+  Valor: 761 cânticos (sobretudo CANTI e Songbook) só tinham um marcador em vez da letra.
+  Primeira extração completa (14 nov, 25 min): 1882 ficheiros — 1709 recortes com camada de texto, 41 por OCR
+  (camada desalinhada), 10 sem texto legível; 122 partituras soltas. 779 dos 784 cânticos sem letra passaram a ter
+  texto pesquisável. Índice com PDF: 273 ms a construir, 36 mil palavras; pesquisas 2–90 ms.
+  **Pendente (dados, por decidir com o Tiago): 26 recortes de livros que não coincidem com a letra do cântico** —
+  alguns são outra versão/língua (legítimos), outros mostram mesmo outro cântico (ex.: father_and_son). A app mostra
+  esses recortes como «Partitura». Lista (slug, livro, página):
+    ave_regina_coelorum_gregoriano (songbook p.196); gloria (canti2024 p.68); lauda_sion_salvatorem_gregoriano
+    (songbook p.191); magnificat_monjas_trapistas_vitorchiano_silva (canti2024 p.43);
+    minha_luz_maria_teresa_noronha (canti2024 p.399); o_sanctissima_canto_siciliano (canti2024 p.38);
+    padre_claudio_chieffo (canti2024 p.80); rock_my_soul_espiritual_negro (songbook p.48);
+    sigh_no_more_mumford_sons (canti2024 p.343); timoneiro_paulinho_viola (canti2024 p.331);
+    vent_fin_musica_tradicional_francesa (songbook p.265); vero_amor_e_gesu (songbook p.203); viva_la_compani
+    (songbook p.238); viva_la_compani (canti2024 p.163); vorrei_francesco_guccini (canti2024 p.88);
+    vorrei_francesco_guccini (canti2024 p.277); vuestra_soy_teresa_avila_canto_venezuelano (songbook p.285);
+    old_time_religion (songbook p.47); alecrim_popular_portuguesa (canti2024 p.52); all_of_me (songbook p.82);
+    an_austrian_went_yodeling (songbook p.85); father_and_son (songbook p.102); gs_cha_cha_cha (songbook p.216);
+    miserere (canti2024 p.48); adios_con_el_corazon (songbook p.266); la_smortina (canti2024 p.100) Os livros têm camada de texto
   (rápido); as partituras soltas são mais ruidosas (vozes separadas por sílabas).
   Por fazer: C) texto ao vivo no som (o Tiago diz que só muito poucas pessoas têm o reconhecimento: os limites do Groq
   não preocupam). Envio a cada 2 s a partir dos 2 s (janela crescente), texto e candidatos à medida.
