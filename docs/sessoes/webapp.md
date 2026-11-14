@@ -247,6 +247,14 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Primeira extração completa (14 nov, 25 min): 1882 ficheiros — 1709 recortes com camada de texto, 41 por OCR
   (camada desalinhada), 10 sem texto legível; 122 partituras soltas. 779 dos 784 cânticos sem letra passaram a ter
   texto pesquisável. Índice com PDF: 273 ms a construir, 36 mil palavras; pesquisas 2–90 ms.
+  Ferramenta (14 nov): Action «Texto dos PDF» com a entrada «localizar» = slugs → `tools/pdf/localizar.mjs` (op
+  `locate` da pdf-texto) lê por OCR as páginas p−1…p+1 e regista só coordenadas dos grupos de linhas com palavras da
+  letra (e do título). Corrida de 14 nov (run 43649599980): erros claros — padre_claudio_chieffo (p80: coluna errada,
+  letra em col1 0,076–0,670, título 0,036), minha_luz (p399: título 0,218, letra 0,257–0,554; o recorte começa em
+  0,299 e vai a 0,954), la_smortina (p100: letra 0,277–0,347, recorte 0,382–0,570), vero_amor_e_gesu (p35 CANTI:
+  letra 0,471–0,552, recorte 0,659–0,787); vários parecem bem (a letra está dentro do recorte: outra língua/versão);
+  os de inglês com palavras comuns (father_and_son, all_of_me) são ambíguos só com coordenadas. Não se corrigiu nada às
+  cegas: à espera do Tiago (revisão visual — ex.: ecrã de Maestro com a página, o recorte atual e o proposto).
   **Pendente (dados, por decidir com o Tiago): 26 recortes de livros que não coincidem com a letra do cântico** —
   alguns são outra versão/língua (legítimos), outros mostram mesmo outro cântico (ex.: father_and_son). A app mostra
   esses recortes como «Partitura». Lista (slug, livro, página):
