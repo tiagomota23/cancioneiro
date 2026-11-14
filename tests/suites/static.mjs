@@ -256,7 +256,7 @@ export default async function (level) {
     if (!/\.slice\(0, 30000\)/.test(f)) bad.push('texto sem limite de 30000');
     if (!c.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('search: Cancioneiro pode receber hits pdf');
     const mt = (c.match(/if \(op === 'match'\) \{([\s\S]*?)\n    \}/) || [])[1] || '';
-    if (!/lvl/.test(mt)) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
+    if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
   await t('EST-05','busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
@@ -372,6 +372,9 @@ export default async function (level) {
     if (!r2.length || r2[0].field !== 'lyrics') bad.push('na letra e no PDF → ' + (r2[0] ? r2[0].field : 'nada') + ' (esperado lyrics)');
     const m = B.match(ix, 'quadrifolium zeterna palavra rara');
     if (!m.length || m[0].slug !== 'a') bad.push('match pelo PDF → ' + (m[0] ? m[0].slug : 'nada'));
+    else if (m[0].field !== 'pdf') bad.push('match pelo PDF sem field «pdf» (v234): ' + m[0].field);
+    const ml = B.match(ix, 'luz do dia sobre o mar');
+    if (!ml.length || ml[0].slug !== 'a' || ml[0].field !== 'lyrics') bad.push('match pela letra → ' + (ml[0] ? ml[0].slug + '/' + ml[0].field : 'nada') + ' (esperado a/lyrics)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média', where: 'busca.js' });
 }
