@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-14 v234';
+  const APP_VERSION = '2026-11-14 v235';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -552,22 +552,31 @@
   }
   // resultados do servidor das últimas 50 pesquisas (voltar atrás ao escrever não pede de novo); limpos ao mudar de perfil
   const lyricCache = new Map();
+  // pesquisas em que o servidor falhou (sem rede, limite): mostra-se só o que o telemóvel encontrou
+  const lyricFailed = new Set();
+  addEventListener('online', () => lyricFailed.clear());
   let lyricTimer = null;
+  // devolve true enquanto se espera pelo servidor: a lista mostra já o que o telemóvel encontrou, mas o título diz
+  // «A procurar…» em vez do número de resultados (para não mostrar «0 resultados» e depois mudar)
   function searchLyricsRemote(q) {
     const nq = searchKey(q);
     clearTimeout(lyricTimer);
     // números (cântico, página) e pesquisas muito curtas: só no telemóvel
-    if (nq.replace(/ /g, '').length < 3 || /^[\d ]+$/.test(nq) || lyricCache.has(nq)) return;
+    if (nq.replace(/ /g, '').length < 3 || /^[\d ]+$/.test(nq) || lyricCache.has(nq) || lyricFailed.has(nq)) return false;
+    if (!navigator.onLine && !DEMO) return false;
     lyricTimer = setTimeout(async () => {
+      const again = () => { if (searchKey($('search').value) === nq && !$('view-list').hidden) showList((lastListHash.match(/^#\/lista\/(.+)$/) || [])[1]); };
       try {
         const d = await api('search', { q });
         if (lyricCache.size >= 50) lyricCache.delete(lyricCache.keys().next().value);
         lyricCache.set(nq, new Map(d.hits.map(h => [h.slug, h])));
-        if (searchKey($('search').value) === nq && !$('view-list').hidden) showList((lastListHash.match(/^#\/lista\/(.+)$/) || [])[1]);
+        again();
       } catch (e) {
+        lyricFailed.add(nq); again();
         if (e instanceof Limit) $('status').textContent = e.message;
       }
     }, 400);
+    return true;
   }
 
   function highlight(text, q, extra) {
@@ -922,10 +931,10 @@
     $('status').textContent = '';
     $('btn-back-list').hidden = !catId && !q;
     if (q.trim()) {
-      searchLyricsRemote(q);
+      const waiting = searchLyricsRemote(q);
       const res = search(q);
       title.hidden = false;
-      title.textContent = `${res.length} resultado${res.length === 1 ? '' : 's'}`;
+      title.textContent = waiting ? 'A procurar…' : `${res.length} resultado${res.length === 1 ? '' : 's'}`;
       rows.innerHTML = res.slice(0, 200).map(r => songRow(r.s, q, r.snip, r.marks, r.pdfSnip)).join('');
       // sem rede: só o que está no telemóvel (a letra é pesquisada no servidor)
       if (!navigator.onLine && !DEMO) $('status').textContent = 'Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas.';
@@ -2060,7 +2069,7 @@
     // informação: só os perfis que esta pessoa pode usar
     $('perfil-list').innerHTML = rankOf(maxRole) > 1 ? ' (' + PERFIS.slice(0, rankOf(maxRole)).map(x =>
       `<span class="nw"><svg class="ic perfil-ic" viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg>&nbsp;${esc(x.label)}</span>`).join(', ') + ')' : '';
-    lyricCache.clear();
+    lyricCache.clear(); lyricFailed.clear();
     if (allSongs.length) applySource();
   }
   function setPerfil(id, save) {
