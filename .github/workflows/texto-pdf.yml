@@ -10,6 +10,9 @@ on:
       minutos:
         description: 'Minutos de extração nesta corrida (máximo 70)'
         default: '70'
+      localizar:
+        description: 'Slugs a localizar nas páginas dos livros (corrigir recortes); vazio = extração normal'
+        default: ''
 permissions:
   contents: read
   id-token: write
@@ -35,6 +38,12 @@ jobs:
           done
           exit 1
       - name: Extrair texto
+        if: ${{ !inputs.localizar }}
         env:
           MINUTOS: ${{ inputs.minutos || '70' }}
         run: node tools/pdf/texto.mjs
+      - name: Localizar cânticos nas páginas (só coordenadas no registo)
+        if: ${{ inputs.localizar }}
+        env:
+          SLUGS: ${{ inputs.localizar }}
+        run: node tools/pdf/localizar.mjs
