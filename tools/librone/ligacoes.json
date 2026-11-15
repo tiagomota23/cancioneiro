@@ -1,0 +1,2962 @@
+[
+{
+"slug": "col_pie_di_porco",
+"librone": "col-pie-di-porco"
+},
+{
+"slug": "el_magnan",
+"librone": "el-magnan"
+},
+{
+"slug": "non_potho_reposare",
+"librone": "non-potho-reposare"
+},
+{
+"slug": "avo",
+"librone": "avo"
+},
+{
+"slug": "diu_vi_sarvi",
+"librone": "diu-vi-sarvi"
+},
+{
+"slug": "eh_cumpari",
+"librone": "eh-cumpari"
+},
+{
+"slug": "lu_suli_se_ne_va",
+"librone": "lu-suli-se-ne-va"
+},
+{
+"slug": "gli_alberi",
+"librone": "gli-alberi"
+},
+{
+"slug": "guendalina",
+"librone": "guendalina"
+},
+{
+"slug": "i_due_liocorni",
+"librone": "i-due-liocorni"
+},
+{
+"slug": "il_ballo_del_cowboy",
+"librone": "il-ballo-del-cowboy"
+},
+{
+"slug": "il_becco_dell_anatra",
+"librone": "il-becco-dellanatra"
+},
+{
+"slug": "il_caffe_della_peppina",
+"librone": "il-caffe-della-peppina"
+},
+{
+"slug": "il_cammello",
+"librone": "il-cammello"
+},
+{
+"slug": "renato_inadeguato",
+"librone": "renato-inadeguato"
+},
+{
+"slug": "cantagallo_urca_urca_tirulero",
+"librone": "cantagallo-urca-urca-tirulero"
+},
+{
+"slug": "giovanni_re_fasullo_d_inghilterra166_hakuna_matata",
+"librone": "giovanni-re-fasullo-dinghilterra"
+},
+{
+"slug": "il_cerchio_della_vita",
+"librone": "il-cerchio-della-vita"
+},
+{
+"slug": "il_cielo_tocchero",
+"librone": "il-cielo-tocchero"
+},
+{
+"slug": "in_fondo_al_mar",
+"librone": "in-fondo-al-mar"
+},
+{
+"slug": "la_canzone_dell_arrivederci",
+"librone": "la-canzone-dellarrivederci"
+},
+{
+"slug": "l_amore_e_nell_aria_stasera",
+"librone": "lamore-e-nellaria-stasera"
+},
+{
+"slug": "la_strada_di_casa",
+"librone": "la-strada-di-casa"
+},
+{
+"slug": "lava",
+"librone": "lava"
+},
+{
+"slug": "non_mi_avrai",
+"librone": "non-mi-avrai"
+},
+{
+"slug": "alice",
+"librone": "alice"
+},
+{
+"slug": "almeno_tu_nell_universo",
+"librone": "almeno-tu-nelluniverso"
+},
+{
+"slug": "altrove",
+"librone": "altrove"
+},
+{
+"slug": "andavo_a_cento_all_ora",
+"librone": "andavo-a-cento-allora"
+},
+{
+"slug": "certe_notti",
+"librone": "certe-notti"
+},
+{
+"slug": "chiama_piano",
+"librone": "chiama-piano"
+},
+{
+"slug": "chiara",
+"librone": "chiara"
+},
+{
+"slug": "come_mai",
+"librone": "come-mai"
+},
+{
+"slug": "come_prima",
+"librone": "come-prima"
+},
+{
+"slug": "cosi_sbagliato",
+"librone": "cosi-sbagliato"
+},
+{
+"slug": "frosinone",
+"librone": "frosinone"
+},
+{
+"slug": "gaetano",
+"librone": "gaetano"
+},
+{
+"slug": "generale",
+"librone": "generale"
+},
+{
+"slug": "gente_di_mare",
+"librone": "gente-di-mare"
+},
+{
+"slug": "guasto_d_amore",
+"librone": "guasto-damore"
+},
+{
+"slug": "io_come_faro",
+"librone": "io-come-faro"
+},
+{
+"slug": "io_vagabondo",
+"librone": "io-vagabondo"
+},
+{
+"slug": "ipocondria",
+"librone": "ipocondria"
+},
+{
+"slug": "irene",
+"librone": "irene"
+},
+{
+"slug": "la_sua_figura",
+"librone": "la-sua-figura"
+},
+{
+"slug": "la_tana_del_re",
+"librone": "la-tana-del-re"
+},
+{
+"slug": "l_emozione_non_ha_voce",
+"librone": "lemozione-non-ha-voce"
+},
+{
+"slug": "le_rane",
+"librone": "le-rane"
+},
+{
+"slug": "le_stelle",
+"librone": "le-stelle"
+},
+{
+"slug": "luna",
+"librone": "luna"
+},
+{
+"slug": "marylou",
+"librone": "marylou"
+},
+{
+"slug": "meraviglioso",
+"librone": "meraviglioso"
+},
+{
+"slug": "me_so_mbriacato",
+"librone": "me-so-mbriacato"
+},
+{
+"slug": "nel_blu_dipinto_di_blu",
+"librone": "nel-blu-dipinto-di-blu"
+},
+{
+"slug": "beer_beer_beer",
+"librone": "beer-beer-beer"
+},
+{
+"slug": "cavan_girl",
+"librone": "cavan-girl"
+},
+{
+"slug": "falling_slowly",
+"librone": "falling-slowly"
+},
+{
+"slug": "temnaja_noc",
+"librone": "temnaja-noc"
+},
+{
+"slug": "ziemljanka",
+"librone": "ziemljanka"
+},
+{
+"slug": "kansas_city",
+"librone": "kansas-city"
+},
+{
+"slug": "volver",
+"librone": "volver"
+},
+{
+"slug": "ainda_bem",
+"librone": "ainda-bem"
+},
+{
+"slug": "nessun_rimpianto",
+"librone": "nessun-rimpianto"
+},
+{
+"slug": "niente_di_speciale",
+"librone": "niente-di-speciale"
+},
+{
+"slug": "estrada_branca",
+"librone": "estrada-branca"
+},
+{
+"slug": "pedro_pedreiro",
+"librone": "pedro-pedreiro"
+},
+{
+"slug": "porta_estandarte",
+"librone": "porta-estandarte"
+},
+{
+"slug": "roda_viva",
+"librone": "roda-viva"
+},
+{
+"slug": "quanti_anni_ho",
+"librone": "quanti-anni-ho"
+},
+{
+"slug": "tristeza",
+"librone": "tristeza"
+},
+{
+"slug": "valsinha",
+"librone": "valsinha"
+},
+{
+"slug": "fake_plastic_trees",
+"librone": "fake-plastic-trees"
+},
+{
+"slug": "green_eyes",
+"librone": "green-eyes"
+},
+{
+"slug": "hopeless_wanderer",
+"librone": "hopeless-wanderer"
+},
+{
+"slug": "little_giant",
+"librone": "little-giant"
+},
+{
+"slug": "missing_piece",
+"librone": "missing-piece"
+},
+{
+"slug": "ophelia",
+"librone": "ophelia"
+},
+{
+"slug": "riptide",
+"librone": "riptide"
+},
+{
+"slug": "til_kingdom_come",
+"librone": "til-kingdom-come"
+},
+{
+"slug": "whispers",
+"librone": "whispers"
+},
+{
+"slug": "white_blank_page",
+"librone": "white-blank-page"
+},
+{
+"slug": "winter_winds",
+"librone": "winter-winds"
+},
+{
+"slug": "wonderwall",
+"librone": "wonderwall"
+},
+{
+"slug": "yellow",
+"librone": "yellow"
+},
+{
+"slug": "our_hero",
+"librone": "our-hero"
+},
+{
+"slug": "quello_che_non_c_e",
+"librone": "quello-che-non-ce"
+},
+{
+"slug": "questo_piccolo_grande_amore",
+"librone": "questo-piccolo-grande-amore"
+},
+{
+"slug": "ridera",
+"librone": "ridera"
+},
+{
+"slug": "annie_s_song",
+"librone": "annies-song"
+},
+{
+"slug": "behold_that_star",
+"librone": "behold-that-star"
+},
+{
+"slug": "hurt",
+"librone": "hurt"
+},
+{
+"slug": "dear_someone",
+"librone": "dear-someone"
+},
+{
+"slug": "delta_dawn",
+"librone": "delta-dawn"
+},
+{
+"slug": "downpour",
+"librone": "downpour"
+},
+{
+"slug": "hard_way_home",
+"librone": "hard-way-home"
+},
+{
+"slug": "ridere",
+"librone": "ridere"
+},
+{
+"slug": "rose_rosse",
+"librone": "rose-rosse"
+},
+{
+"slug": "sally",
+"librone": "sally"
+},
+{
+"slug": "jesus_knows",
+"librone": "jesus-knows"
+},
+{
+"slug": "hello_mary_lou",
+"librone": "hello-mary-lou"
+},
+{
+"slug": "home",
+"librone": "home"
+},
+{
+"slug": "looking_out",
+"librone": "looking-out"
+},
+{
+"slug": "sapore_di_sale",
+"librone": "sapore-di-sale"
+},
+{
+"slug": "scende_la_pioggia",
+"librone": "scende-la-pioggia"
+},
+{
+"slug": "scendi_giu",
+"librone": "scendi-giu"
+},
+{
+"slug": "scetate_vajo",
+"librone": "scetate-vajo"
+},
+{
+"slug": "scrivile_scemo",
+"librone": "scrivile-scemo"
+},
+{
+"slug": "se_bruciasse_la_citta",
+"librone": "se-bruciasse-la-citta"
+},
+{
+"slug": "sei_nell_anima",
+"librone": "sei-nellanima"
+},
+{
+"slug": "se_io_non_avessi_te",
+"librone": "se-io-non-avessi-te"
+},
+{
+"slug": "million_reasons",
+"librone": "million-reasons"
+},
+{
+"slug": "roll_jordan_roll",
+"librone": "roll-jordan-roll"
+},
+{
+"slug": "shallow",
+"librone": "shallow"
+},
+{
+"slug": "simple_song",
+"librone": "simple-song"
+},
+{
+"slug": "some_nights",
+"librone": "some-nights"
+},
+{
+"slug": "sweet_caroline",
+"librone": "sweet-caroline"
+},
+{
+"slug": "swing_down_chariot",
+"librone": "swing-down-chariot"
+},
+{
+"slug": "time_after_time",
+"librone": "time-after-time"
+},
+{
+"slug": "turpentine",
+"librone": "turpentine"
+},
+{
+"slug": "wagon_wheel",
+"librone": "wagon-wheel"
+},
+{
+"slug": "libre",
+"librone": "libre"
+},
+{
+"slug": "ti_dedico_il_silenzio",
+"librone": "ti-dedico-il-silenzio"
+},
+{
+"slug": "ti_vorrei_sollevare",
+"librone": "ti-vorrei-sollevare"
+},
+{
+"slug": "tommaso",
+"librone": "tommaso"
+},
+{
+"slug": "tornano",
+"librone": "tornano"
+},
+{
+"slug": "tutta_mia_la_citta",
+"librone": "tutta-mia-la-citta"
+},
+{
+"slug": "tutto_il_bello_che_c_e",
+"librone": "tutto-il-bello-che-ce"
+},
+{
+"slug": "tutto_questo_sei_tu",
+"librone": "tutto-questo-sei-tu"
+},
+{
+"slug": "un_estate",
+"librone": "unestate"
+},
+{
+"slug": "un_estate_italiana",
+"librone": "unestate-italiana"
+},
+{
+"slug": "vattene_amore_trottolino_amoroso",
+"librone": "vattene-amore-trottolino-amoroso"
+},
+{
+"slug": "vedi_cara",
+"librone": "vedi-cara"
+},
+{
+"slug": "vedrai_vedrai",
+"librone": "vedrai-vedrai"
+},
+{
+"slug": "vent_anni",
+"librone": "ventanni"
+},
+{
+"slug": "verdura",
+"librone": "verdura"
+},
+{
+"slug": "via_del_conservatorio",
+"librone": "via-del-conservatorio"
+},
+{
+"slug": "acqua_azzurra_acqua_chiara",
+"librone": "acqua-azzurra-acqua-chiara"
+},
+{
+"slug": "anche_per_te",
+"librone": "anche-per-te"
+},
+{
+"slug": "mi_ritorni_in_mente",
+"librone": "mi-ritorni-in-mente"
+},
+{
+"slug": "non_e_francesca",
+"librone": "non-e-francesca"
+},
+{
+"slug": "prigioniero_del_mondo",
+"librone": "prigioniero-del-mondo"
+},
+{
+"slug": "uno_in_piu",
+"librone": "uno-in-piu"
+},
+{
+"slug": "brace",
+"librone": "brace"
+},
+{
+"slug": "baricentro",
+"librone": "baricentro"
+},
+{
+"slug": "biglia",
+"librone": "biglia"
+},
+{
+"slug": "bio",
+"librone": "bio"
+},
+{
+"slug": "braccia",
+"librone": "braccia"
+},
+{
+"slug": "buongiorno",
+"librone": "buongiorno"
+},
+{
+"slug": "capisco_poco",
+"librone": "capisco-poco"
+},
+{
+"slug": "casa_vuota",
+"librone": "casa-vuota"
+},
+{
+"slug": "igloo",
+"librone": "igloo"
+},
+{
+"slug": "ieri",
+"librone": "ieri"
+},
+{
+"slug": "olio_per_cervella",
+"librone": "olio-per-cervella"
+},
+{
+"slug": "ossa",
+"librone": "ossa"
+},
+{
+"slug": "passeggiando",
+"librone": "passeggiando"
+},
+{
+"slug": "colpo_di_pistola",
+"librone": "colpo-di-pistola"
+},
+{
+"slug": "come_neve",
+"librone": "come-neve"
+},
+{
+"slug": "come_stai",
+"librone": "come-stai"
+},
+{
+"slug": "costume_da_torero",
+"librone": "costume-da-torero"
+},
+{
+"slug": "di_cosi",
+"librone": "di-cosi"
+},
+{
+"slug": "diego_e_io",
+"librone": "diego-e-io"
+},
+{
+"slug": "figli_della_borghesia",
+"librone": "figli-della-borghesia"
+},
+{
+"slug": "fra_milioni_di_stelle",
+"librone": "fra-milioni-di-stelle"
+},
+{
+"slug": "guardia_82",
+"librone": "guardia-82"
+},
+{
+"slug": "il_giovane_mario",
+"librone": "il-giovane-mario"
+},
+{
+"slug": "il_mondo_si_divide",
+"librone": "il-mondo-si-divide"
+},
+{
+"slug": "il_pugile",
+"librone": "il-pugile"
+},
+{
+"slug": "all_my_days",
+"librone": "all-my-days"
+},
+{
+"slug": "know_me_well",
+"librone": "know-me-well"
+},
+{
+"slug": "in_this_heart",
+"librone": "in-this-heart"
+},
+{
+"slug": "nothing_compares_to_you",
+"librone": "nothing-compares-to-you"
+},
+{
+"slug": "something_stupid",
+"librone": "something-stupid"
+},
+{
+"slug": "well_well_well",
+"librone": "well-well-well"
+},
+{
+"slug": "what_s_up",
+"librone": "whats-up"
+},
+{
+"slug": "what_wondrous_love_is_this",
+"librone": "what-wondrous-love-is-this"
+},
+{
+"slug": "adios",
+"librone": "adios"
+},
+{
+"slug": "la_bela_giardiniera",
+"librone": "la-bela-giardiniera"
+},
+{
+"slug": "la_bergera",
+"librone": "la-bergera"
+},
+{
+"slug": "la_blonde",
+"librone": "la-blonde"
+},
+{
+"slug": "la_bomba_imbriaga",
+"librone": "la-bomba-imbriaga"
+},
+{
+"slug": "la_domenica_andando_a_la_messa",
+"librone": "la-domenica-andando-a-la-messa"
+},
+{
+"slug": "canto_de_carneval",
+"librone": "canto-de-carneval"
+},
+{
+"slug": "cuando_la_noche_tiende_su_manto",
+"librone": "cuando-la-noche-tiende-su-manto"
+},
+{
+"slug": "le_lampare",
+"librone": "le-lampare"
+},
+{
+"slug": "nun_si_cchiu_tu",
+"librone": "nun-si-cchiu-tu"
+},
+{
+"slug": "passione",
+"librone": "passione"
+},
+{
+"slug": "sient_o_core",
+"librone": "siento-core"
+},
+{
+"slug": "te_voglio_bene_assaje",
+"librone": "te-vojo-bene-assaje"
+},
+{
+"slug": "tu_vuo_fa_ll_americano",
+"librone": "tu-vuo-fa-llammericano"
+},
+{
+"slug": "voce_e_notte",
+"librone": "voce-e-notte"
+},
+{
+"slug": "l_uva_fogarina",
+"librone": "luva-fogarina"
+},
+{
+"slug": "romagna_e_sangiovese",
+"librone": "romagna-e-sangiovese"
+},
+{
+"slug": "un_ciodo",
+"librone": "un-ciodo"
+},
+{
+"slug": "nuttate_de_lune",
+"librone": "nuttate-de-lune"
+},
+{
+"slug": "deus_ti_salvet_maria",
+"librone": "deus-ti-salvet-maria"
+},
+{
+"slug": "matinata_siciliana",
+"librone": "matinata-siciliana"
+},
+{
+"slug": "faceva_il_palo",
+"librone": "faceva-il-palo"
+},
+{
+"slug": "il_giro_del_vino",
+"librone": "il-giro-del-vino"
+},
+{
+"slug": "l_armando",
+"librone": "larmando"
+},
+{
+"slug": "ninna_nanna_del_contrabbandiere",
+"librone": "ninna-nanna-del-contrabbandiere"
+},
+{
+"slug": "o_mia_bela_madunina",
+"librone": "o-mia-bela-madunina"
+},
+{
+"slug": "pellegrin_che_vien_da_roma",
+"librone": "pellegrin-che-vien-da-roma"
+},
+{
+"slug": "sei_minuti_all_alba",
+"librone": "sei-minuti-allalba"
+},
+{
+"slug": "serafino_aveva_un_siffolo",
+"librone": "serafino-aveva-un-siffolo"
+},
+{
+"slug": "mi_votu_e_mi_rivotu",
+"librone": "mi-votu-e-mi-rivotu"
+},
+{
+"slug": "stidda_mattutina",
+"librone": "stidda-mattutina"
+},
+{
+"slug": "vinni_la_primavera",
+"librone": "vinni-la-primavera"
+},
+{
+"slug": "balconcin_fiorito",
+"librone": "balconcin-fiorito"
+},
+{
+"slug": "l_amore_e_come_l_ellera",
+"librone": "lamore-e-come-lellera"
+},
+{
+"slug": "un_signore_di_scandicci",
+"librone": "un-signore-di-scandicci"
+},
+{
+"slug": "avrei_voluto_essere_una_banda",
+"librone": "avrei-voluto-essere-una-banda"
+},
+{
+"slug": "bambino_nella_culla",
+"librone": "bambino-nella-culla"
+},
+{
+"slug": "banana_cocco_baobab",
+"librone": "banana-cocco-baobab"
+},
+{
+"slug": "canzone_del_piccolo_seme",
+"librone": "canzone-del-piccolo-seme"
+},
+{
+"slug": "c_era_una_volta_un_re",
+"librone": "cera-una-volta-un-re"
+},
+{
+"slug": "che_mi_dica",
+"librone": "che-mi-dica"
+},
+{
+"slug": "ci_vuole_un_fiore",
+"librone": "ci-vuole-un-fiore"
+},
+{
+"slug": "festa_nella_foresta",
+"librone": "festa-nella-foresta"
+},
+{
+"slug": "il_cowboy_arturo",
+"librone": "il-cowboy-arturo"
+},
+{
+"slug": "moonwalk",
+"librone": "moonwalk"
+},
+{
+"slug": "nessuno_vuole_essere_robin",
+"librone": "nessuno-vuole-essere-robin"
+},
+{
+"slug": "padremadre",
+"librone": "padremadre"
+},
+{
+"slug": "samba_per_gli_animali",
+"librone": "samba-per-gli-animali"
+},
+{
+"slug": "tetris",
+"librone": "tetris"
+},
+{
+"slug": "sinfonia_sull_hararat",
+"librone": "sinfonia-sullhararat"
+},
+{
+"slug": "singing_ja_ja",
+"librone": "singing-ja-ja"
+},
+{
+"slug": "this_is_the_music_concert",
+"librone": "this-is-the-music-concert"
+},
+{
+"slug": "tim_tim",
+"librone": "tim-tim"
+},
+{
+"slug": "torero_camomillo",
+"librone": "torero-camomillo"
+},
+{
+"slug": "vedi_mamma",
+"librone": "vedi-mamma"
+},
+{
+"slug": "viaggiatori",
+"librone": "viaggiatori"
+},
+{
+"slug": "zim_bum_bum",
+"librone": "zim-bum-bum"
+},
+{
+"slug": "ci_sono_anch_io",
+"librone": "ci-sono-anchio"
+},
+{
+"slug": "dragon_ball",
+"librone": "dragon-ball"
+},
+{
+"slug": "e_nata_una_star",
+"librone": "e-nata-una-star"
+},
+{
+"slug": "faro_di_te_un_uomo",
+"librone": "faro-di-te-un-uomo"
+},
+{
+"slug": "posso_farcela",
+"librone": "posso-farcela"
+},
+{
+"slug": "romeo_er_mejo_del_colosseo",
+"librone": "romeos-swing-romeo-er-mejo-der-colosseo"
+},
+{
+"slug": "sempre_e_per_sempre",
+"librone": "sempre-e-per-sempre"
+},
+{
+"slug": "ti_vada_o_no",
+"librone": "ti-vada-o-no"
+},
+{
+"slug": "tra_vento_ed_aria",
+"librone": "tra-vento-ed-aria"
+},
+{
+"slug": "voglio_diventar_presto_un_re",
+"librone": "voglio-diventar-presto-un-re"
+},
+{
+"slug": "2minuti",
+"librone": "2minuti"
+},
+{
+"slug": "albachiara",
+"librone": "albachiara"
+},
+{
+"slug": "antartide",
+"librone": "antartide"
+},
+{
+"slug": "assurdo",
+"librone": "assurdo"
+},
+{
+"slug": "bandiera_gialla",
+"librone": "bandiera-gialla"
+},
+{
+"slug": "bella_come_roma",
+"librone": "bella-come-roma"
+},
+{
+"slug": "bergamo",
+"librone": "bergamo"
+},
+{
+"slug": "blue_jeans",
+"librone": "blue-jeans"
+},
+{
+"slug": "briciole",
+"librone": "briciole"
+},
+{
+"slug": "buonanotte_fiorellino",
+"librone": "buonanotte-fiorellino"
+},
+{
+"slug": "camilla",
+"librone": "camilla"
+},
+{
+"slug": "cantare",
+"librone": "cantare"
+},
+{
+"slug": "centro_di_gravita_permanente",
+"librone": "centro-di-gravita-permanente"
+},
+{
+"slug": "c_era_un_ragazzo",
+"librone": "cera-un-ragazzo-che-come-me-amava-i-beatles-e-i-rolling-stones"
+},
+{
+"slug": "come_un_pittore",
+"librone": "come-un-pittore"
+},
+{
+"slug": "coprifuoco",
+"librone": "coprifuoco"
+},
+{
+"slug": "cotto_di_te",
+"librone": "cotto-di-te"
+},
+{
+"slug": "cosa_mi_manchi_a_fare",
+"librone": "cosa-mi-manchi-a-fare"
+},
+{
+"slug": "cuccurucucu",
+"librone": "cuccurucucu"
+},
+{
+"slug": "cuore_matto",
+"librone": "cuore-matto"
+},
+{
+"slug": "del_verde",
+"librone": "del-verde"
+},
+{
+"slug": "domani_21_04_09",
+"librone": "domani-21-04-09"
+},
+{
+"slug": "eccoti",
+"librone": "eccoti"
+},
+{
+"slug": "e_delicato",
+"librone": "e-delicato"
+},
+{
+"slug": "erba_di_casa_mia",
+"librone": "erba-di-casa-mia"
+},
+{
+"slug": "e_ti_vengo_a_cercare",
+"librone": "e-ti-vengo-a-cercare"
+},
+{
+"slug": "facile",
+"librone": "facile"
+},
+{
+"slug": "farewell",
+"librone": "farewell"
+},
+{
+"slug": "fatti_mandare_dalla_mamma",
+"librone": "fatti-mandare-dalla-mamma"
+},
+{
+"slug": "fiamme_negli_occhi",
+"librone": "fiamme-negli-occhi"
+},
+{
+"slug": "fiume_sand_creek",
+"librone": "fiume-sand-creek"
+},
+{
+"slug": "ho_in_mente_te",
+"librone": "ho-in-mente-te"
+},
+{
+"slug": "hotel_supramonte",
+"librone": "hotel-supramonte"
+},
+{
+"slug": "il_capolavoro",
+"librone": "il-capolavoro"
+},
+{
+"slug": "il_cielo_d_irlanda",
+"librone": "il-cielo-dirlanda"
+},
+{
+"slug": "il_gatto_e_la_volpe",
+"librone": "il-gatto-e-la-volpe"
+},
+{
+"slug": "il_mondo",
+"librone": "il-mondo"
+},
+{
+"slug": "il_pescatore",
+"librone": "il-pescatore"
+},
+{
+"slug": "in_ginocchio_da_te",
+"librone": "in-ginocchio-da-te"
+},
+{
+"slug": "in_un_giorno_di_pioggia",
+"librone": "in-un-giorno-di-pioggia"
+},
+{
+"slug": "i_tuoi_particolari",
+"librone": "i-tuoi-particolari"
+},
+{
+"slug": "la_ballata_dell_eroe",
+"librone": "la-ballata-delleroe"
+},
+{
+"slug": "la_canzone_dell_amore_perduto",
+"librone": "la-canzone-dellamore-perduto"
+},
+{
+"slug": "la_donna_cannone",
+"librone": "la-donna-cannone"
+},
+{
+"slug": "lake_washington_boulevard",
+"librone": "lake-washington-boulevard"
+},
+{
+"slug": "la_lontananza",
+"librone": "la-lontananza"
+},
+{
+"slug": "la_luna_e_la_gatta",
+"librone": "la-luna-e-la-gatta"
+},
+{
+"slug": "la_pelle_nera",
+"librone": "la-pelle-nera"
+},
+{
+"slug": "l_assenza",
+"librone": "lassenza"
+},
+{
+"slug": "l_isola_che_non_c_e",
+"librone": "lisola-che-non-ce"
+},
+{
+"slug": "ma_la_notte_no",
+"librone": "ma-la-notte-no"
+},
+{
+"slug": "maledetta_primavera",
+"librone": "maledetta-primavera"
+},
+{
+"slug": "non_e_per_sempre",
+"librone": "non-e-per-sempre"
+},
+{
+"slug": "non_l_hai_mica_capito",
+"librone": "non-lhai-mica-capito"
+},
+{
+"slug": "nord_sud_ovest_est",
+"librone": "nord-sud-ovest-est"
+},
+{
+"slug": "a_place_in_the_choir",
+"librone": "a-place-in-the-choir"
+},
+{
+"slug": "carolina_rua",
+"librone": "carolina-rua"
+},
+{
+"slug": "se_piovesse_il_tuo_nome",
+"librone": "se-piovesse-il-tuo-nome"
+},
+{
+"slug": "solo3min",
+"librone": "solo3min"
+},
+{
+"slug": "speedy_gonzales",
+"librone": "speedy-gonzales"
+},
+{
+"slug": "statte_zitta",
+"librone": "statte-zitta"
+},
+{
+"slug": "strada_facendo",
+"librone": "strada-facendo"
+},
+{
+"slug": "tazza_di_te",
+"librone": "tazza-di-te"
+},
+{
+"slug": "te_lo_leggo_negli_occhi",
+"librone": "te-lo-leggo-negli-occhi"
+},
+{
+"slug": "tema",
+"librone": "tema"
+},
+{
+"slug": "terra_promessa",
+"librone": "terra-promessa"
+},
+{
+"slug": "tutti_i_colori_della_mia_vita",
+"librone": "tutti-i-colori-della-mia-vita"
+},
+{
+"slug": "uffa",
+"librone": "uffa"
+},
+{
+"slug": "una_carezza_in_un_pugno",
+"librone": "una-carezza-in-un-pugno"
+},
+{
+"slug": "un_altra_vita",
+"librone": "unaltra-vita"
+},
+{
+"slug": "una_ragazza_in_due",
+"librone": "una-ragazza-in-due"
+},
+{
+"slug": "balla_linda",
+"librone": "balla-linda"
+},
+{
+"slug": "con_il_nastro_rosa",
+"librone": "con-il-nastro-rosa"
+},
+{
+"slug": "dieci_ragazze",
+"librone": "dieci-ragazze"
+},
+{
+"slug": "dolce_di_giorno",
+"librone": "dolce-di-giorno"
+},
+{
+"slug": "e_penso_a_te",
+"librone": "e-penso-a-te"
+},
+{
+"slug": "eppur_mi_son_scordato_di_te",
+"librone": "eppur-mi-son-scordato-di-te"
+},
+{
+"slug": "fiori_di_rosa_fiori_di_pesco",
+"librone": "fiori-di-rosa-fiori-di-pesco"
+},
+{
+"slug": "i_giardini_di_marzo",
+"librone": "i-giardini-di-marzo"
+},
+{
+"slug": "il_mio_canto_libero",
+"librone": "il-mio-canto-libero"
+},
+{
+"slug": "il_tempo_di_morire",
+"librone": "il-tempo-di-morire"
+},
+{
+"slug": "io_vivro_senza_te",
+"librone": "io-vivro-senza-te"
+},
+{
+"slug": "io_vorrei_non_vorrei",
+"librone": "io-vorrei-non-vorrei"
+},
+{
+"slug": "la_canzone_del_sole",
+"librone": "la-canzone-del-sole"
+},
+{
+"slug": "la_collina_dei_ciliegi",
+"librone": "la-collina-dei-ciliegi"
+},
+{
+"slug": "la_compagnia",
+"librone": "la-compagnia"
+},
+{
+"slug": "l_aquila",
+"librone": "laquila"
+},
+{
+"slug": "pigiamarmatura",
+"librone": "pigiamarmatura"
+},
+{
+"slug": "ruggine",
+"librone": "ruggine"
+},
+{
+"slug": "amore_con_riserva",
+"librone": "amore-con-riserva"
+},
+{
+"slug": "anche_senza_di_noi",
+"librone": "anche-senza-di-noi"
+},
+{
+"slug": "arrivederci_tristezza",
+"librone": "arrivederci-tristezza"
+},
+{
+"slug": "bello_appare_il_mondo",
+"librone": "bello-appare-il-mondo"
+},
+{
+"slug": "bruno_mio_dove_sei",
+"librone": "bruno-mio-dove-sei"
+},
+{
+"slug": "canzone_contro_la_paura",
+"librone": "canzone-contro-la-paura"
+},
+{
+"slug": "capita_cosi",
+"librone": "capita-cosi"
+},
+{
+"slug": "italian_dandy",
+"librone": "italian-dandy"
+},
+{
+"slug": "kurt_cobain",
+"librone": "kurt-cobain"
+},
+{
+"slug": "la_mosca",
+"librone": "la-mosca"
+},
+{
+"slug": "la_verita",
+"librone": "la-verita"
+},
+{
+"slug": "la_vita_com_e",
+"librone": "la-vita-come"
+},
+{
+"slug": "la_vita_pensata",
+"librone": "la-vita-pensata"
+},
+{
+"slug": "lei_lui_firenze",
+"librone": "lei-lui-firenze"
+},
+{
+"slug": "le_quattro_volte",
+"librone": "le-quattro-volte"
+},
+{
+"slug": "mio_fratello_alessandro",
+"librone": "mio-fratello-alessandro"
+},
+{
+"slug": "nessuno",
+"librone": "nessuno"
+},
+{
+"slug": "paolo",
+"librone": "paolo"
+},
+{
+"slug": "per_due_che_come_noi",
+"librone": "per-due-che-come-noi"
+},
+{
+"slug": "povero_cuore",
+"librone": "povero-cuore"
+},
+{
+"slug": "quelli_che_arriveranno",
+"librone": "quelli-che-arriveranno"
+},
+{
+"slug": "rosa",
+"librone": "rosa"
+},
+{
+"slug": "secondo_me",
+"librone": "secondo-me"
+},
+{
+"slug": "sol_come_sono_sol",
+"librone": "sol-come-sono-sol"
+},
+{
+"slug": "tre_capelli_sul_como",
+"librone": "tre-capelli-sul-como"
+},
+{
+"slug": "una_domenica_notte",
+"librone": "una-domenica-notte"
+},
+{
+"slug": "un_errore_di_distrazione",
+"librone": "un-errore-di-distrazione"
+},
+{
+"slug": "50_special",
+"librone": "50-special"
+},
+{
+"slug": "buon_viaggio_share_the_love",
+"librone": "buon-viaggio"
+},
+{
+"slug": "colibri",
+"librone": "colibri"
+},
+{
+"slug": "dev_essere_cosi",
+"librone": "devessere-cosi"
+},
+{
+"slug": "dicono_di_me",
+"librone": "dicono-di-me"
+},
+{
+"slug": "figlio_di_un_re",
+"librone": "figlio-di-un-re"
+},
+{
+"slug": "greygoose",
+"librone": "greygoose"
+},
+{
+"slug": "hello",
+"librone": "hello"
+},
+{
+"slug": "citta_vuota",
+"librone": "citta-vuota"
+},
+{
+"slug": "il_comico_sai_che_risate",
+"librone": "il-comico-sai-che-risate"
+},
+{
+"slug": "i_love_you",
+"librone": "i-love-you"
+},
+{
+"slug": "il_pagliaccio",
+"librone": "il-pagliaccio"
+},
+{
+"slug": "la_nuova_stella_di_broadway",
+"librone": "la-nuova-stella-di-broadway"
+},
+{
+"slug": "le_sei_e_ventisei",
+"librone": "le-sei-e-ventisei"
+},
+{
+"slug": "maggese",
+"librone": "maggese"
+},
+{
+"slug": "marmellata_25",
+"librone": "marmellata-25"
+},
+{
+"slug": "mondo",
+"librone": "mondo"
+},
+{
+"slug": "la_quete",
+"librone": "la-quete"
+},
+{
+"slug": "la_vie_en_rose",
+"librone": "la-vie-en-rose"
+},
+{
+"slug": "non_je_ne_regrette_rien",
+"librone": "non-je-ne-regrette-rien"
+},
+{
+"slug": "si_jamais_j_oublie",
+"librone": "si-jamais-joublie"
+},
+{
+"slug": "poetica",
+"librone": "poetica"
+},
+{
+"slug": "qualcosa_di_grande",
+"librone": "qualcosa-di-grande"
+},
+{
+"slug": "se_ci_sarai",
+"librone": "se-ci-sarai"
+},
+{
+"slug": "una_come_te",
+"librone": "una-come-te"
+},
+{
+"slug": "un_giorno_migliore",
+"librone": "un-giorno-migliore"
+},
+{
+"slug": "vieni_a_vedere_perche",
+"librone": "vieni-a-vedere-perche"
+},
+{
+"slug": "4_marzo_1943",
+"librone": "4-marzo-1943"
+},
+{
+"slug": "anna_e_marco",
+"librone": "anna-e-marco"
+},
+{
+"slug": "attenti_al_lupo",
+"librone": "attenti-al-lupo"
+},
+{
+"slug": "cara",
+"librone": "cara"
+},
+{
+"slug": "henna",
+"librone": "henna"
+},
+{
+"slug": "itaca",
+"librone": "itaca"
+},
+{
+"slug": "la_casa_in_riva_al_mare",
+"librone": "la-casa-in-riva-al-mare"
+},
+{
+"slug": "l_anno_che_verra",
+"librone": "lanno-che-verra"
+},
+{
+"slug": "piazza_grande",
+"librone": "piazza-grande"
+},
+{
+"slug": "sulla_rotta_di_cristoforo_colombo",
+"librone": "sulla-rotta-di-cristoforo-colombo"
+},
+{
+"slug": "sylvie",
+"librone": "sylvie"
+},
+{
+"slug": "tu_non_mi_basti_mai",
+"librone": "tu-non-mi-basti-mai"
+},
+{
+"slug": "barbera_e_champagne",
+"librone": "barbera-e-champagne"
+},
+{
+"slug": "canzone_dell_appartenenza",
+"librone": "canzone-dellappartenenza"
+},
+{
+"slug": "cerco_un_gesto_naturale",
+"librone": "cerco-un-gesto-naturale"
+},
+{
+"slug": "chiedo_scusa_se_parlo_di_maria",
+"librone": "chiedo-scusa-se-parlo-di-maria"
+},
+{
+"slug": "far_finta_di_essere_sani",
+"librone": "far-finta-di-essere-sani"
+},
+{
+"slug": "il_comportamento",
+"librone": "il-comportamento"
+},
+{
+"slug": "il_desiderio",
+"librone": "il-desiderio"
+},
+{
+"slug": "il_dilemma",
+"librone": "il-dilemma"
+},
+{
+"slug": "il_riccardo",
+"librone": "il-riccardo"
+},
+{
+"slug": "i_reduci",
+"librone": "i-reduci"
+},
+{
+"slug": "la_muralla",
+"librone": "la-muralla"
+},
+{
+"slug": "la_ballata_del_cerutti",
+"librone": "la-ballata-del-cerutti"
+},
+{
+"slug": "la_liberta",
+"librone": "la-liberta"
+},
+{
+"slug": "le_strade_di_notte",
+"librone": "le-strade-di-notte"
+},
+{
+"slug": "l_illogica_allegria",
+"librone": "lillogica-allegria"
+},
+{
+"slug": "l_impotenza",
+"librone": "limpotenza"
+},
+{
+"slug": "quando_saro_capace_di_amare",
+"librone": "quando-saro-capace-di-amare"
+},
+{
+"slug": "trani_a_gogo",
+"librone": "trani-a-gogo"
+},
+{
+"slug": "un_idea",
+"librone": "unidea"
+},
+{
+"slug": "a_te",
+"librone": "a-te"
+},
+{
+"slug": "fango",
+"librone": "fango"
+},
+{
+"slug": "gli_immortali",
+"librone": "gli-immortali"
+},
+{
+"slug": "l_astronauta",
+"librone": "lastronauta"
+},
+{
+"slug": "la_valigia",
+"librone": "la-valigia"
+},
+{
+"slug": "l_estate_addosso",
+"librone": "lestate-addosso"
+},
+{
+"slug": "le_tasche_piene_di_sassi",
+"librone": "le-tasche-piene-di-sassi"
+},
+{
+"slug": "mezzogiorno",
+"librone": "mezzogiorno"
+},
+{
+"slug": "mi_fido_di_te",
+"librone": "mi-fido-di-te"
+},
+{
+"slug": "paura_di_niente",
+"librone": "paura-di-niente"
+},
+{
+"slug": "ragazzini_per_strada",
+"librone": "ragazzini-per-strada"
+},
+{
+"slug": "ragazzo_fortunato",
+"librone": "ragazzo-fortunato"
+},
+{
+"slug": "sul_lungomare_del_mondo",
+"librone": "sul-lungomare-del-mondo"
+},
+{
+"slug": "tensione_evolutiva",
+"librone": "tensione-evolutiva"
+},
+{
+"slug": "terra_degli_uomini",
+"librone": "terra-degli-uomini"
+},
+{
+"slug": "ti_porto_via_con_me",
+"librone": "ti-porto-via-con-me"
+},
+{
+"slug": "un_illusione",
+"librone": "unillusione"
+},
+{
+"slug": "un_raggio_di_sole",
+"librone": "un-raggio-di-sole"
+},
+{
+"slug": "viva_la_liberta",
+"librone": "viva-la-liberta"
+},
+{
+"slug": "amor_mio",
+"librone": "amor-mio"
+},
+{
+"slug": "come_hai_fatto",
+"librone": "come-hai-fatto"
+},
+{
+"slug": "e_l_uomo_per_me",
+"librone": "e-luomo-per-me"
+},
+{
+"slug": "e_se_domani",
+"librone": "e-se-domani"
+},
+{
+"slug": "fa_qualcosa",
+"librone": "fa-qualcosa"
+},
+{
+"slug": "il_cielo_in_una_stanza",
+"librone": "il-cielo-in-una-stanza"
+},
+{
+"slug": "la_mente_torna",
+"librone": "la-mente-torna"
+},
+{
+"slug": "la_musica_e_finita",
+"librone": "la-musica-e-finita"
+},
+{
+"slug": "la_voce_del_silenzio",
+"librone": "la-voce-del-silenzio"
+},
+{
+"slug": "om_mani_peme_hum",
+"librone": "om-mani-peme-hum"
+},
+{
+"slug": "parole_parole",
+"librone": "parole-parole"
+},
+{
+"slug": "personalita",
+"librone": "personalita"
+},
+{
+"slug": "se_c_e_una_cosa_che_mi_fa_impazzire",
+"librone": "se-ce-una-cosa-che-mi-fa-impazzire"
+},
+{
+"slug": "se_telefonando",
+"librone": "se-telefonando"
+},
+{
+"slug": "se_tu_non_fossi_qui",
+"librone": "se-tu-non-fossi-qui"
+},
+{
+"slug": "sei_grande_grande_grande",
+"librone": "sei-grande-grande-grande"
+},
+{
+"slug": "tintarella_di_luna",
+"librone": "tintarella-di-luna"
+},
+{
+"slug": "un_anno_d_amore",
+"librone": "un-anno-damore"
+},
+{
+"slug": "un_ora",
+"librone": "unora"
+},
+{
+"slug": "vorrei_che_fosse_amore",
+"librone": "vorrei-che-fosse-amore"
+},
+{
+"slug": "a_donde_van",
+"librone": "a-donde-van"
+},
+{
+"slug": "como_llora_una_estrella",
+"librone": "como-llora-una-estrella"
+},
+{
+"slug": "corazon_maltido",
+"librone": "corazon-maltido"
+},
+{
+"slug": "dos_gardenias",
+"librone": "dos-gardenias"
+},
+{
+"slug": "la_fiesta_di_san_benito",
+"librone": "la-fiesta-de-san-benito"
+},
+{
+"slug": "la_banda",
+"librone": "la-banda"
+},
+{
+"slug": "la_peregrinacion",
+"librone": "la-peregrinacion"
+},
+{
+"slug": "los_reyes_magos",
+"librone": "los-reyes-magos"
+},
+{
+"slug": "ritualitos",
+"librone": "ritualitos"
+},
+{
+"slug": "virgencita_del_chapi",
+"librone": "virgencita-del-chapi"
+},
+{
+"slug": "y_tu_que_has_hecho",
+"librone": "y-tu-que-has-hecho"
+},
+{
+"slug": "zamba_de_mi_esperanza",
+"librone": "zamba-de-mi-esperanza"
+},
+{
+"slug": "chega_de_saudade",
+"librone": "chega-de-saudade"
+},
+{
+"slug": "danca_de_solidao",
+"librone": "danca-de-solidao"
+},
+{
+"slug": "desde_que_samba_e_o_samba",
+"librone": "desde-que-samba-e-o-samba"
+},
+{
+"slug": "escravo_de_alegria",
+"librone": "escravo-de-alegria"
+},
+{
+"slug": "samba_em_preludio",
+"librone": "samba-em-preludio"
+},
+{
+"slug": "sonho_meu",
+"librone": "sonho-meu"
+},
+{
+"slug": "vida",
+"librone": "vida"
+},
+{
+"slug": "agape",
+"librone": "agape"
+},
+{
+"slug": "dimming_of_the_day",
+"librone": "dimming-of-the-day"
+},
+{
+"slug": "fix_you",
+"librone": "fix-you"
+},
+{
+"slug": "piel_canela",
+"librone": "piel-canela"
+},
+{
+"slug": "samba_lando",
+"librone": "samba-lando"
+},
+{
+"slug": "i_m_gonna_be_500_miles",
+"librone": "im-gonna-be-500-miles"
+},
+{
+"slug": "i_will_wait",
+"librone": "i-will-wait"
+},
+{
+"slug": "no_surprises",
+"librone": "no-surprises"
+},
+{
+"slug": "ran_before_the_storm",
+"librone": "ran-before-the-storm"
+},
+{
+"slug": "runaway_heart",
+"librone": "runaway-heart"
+},
+{
+"slug": "sail_away_to_the_sea",
+"librone": "sail-away-to-the-sea"
+},
+{
+"slug": "simple_as_this",
+"librone": "simple-as-this"
+},
+{
+"slug": "the_banjolin_song",
+"librone": "the-banjolin-song"
+},
+{
+"slug": "then_i_met_you",
+"librone": "then-i-met-you"
+},
+{
+"slug": "the_scientist",
+"librone": "the-scientist"
+},
+{
+"slug": "viva_la_vida",
+"librone": "viva-la-vida"
+},
+{
+"slug": "shotgun",
+"librone": "shotgun"
+},
+{
+"slug": "something_just_like_this",
+"librone": "something-just-like-this"
+},
+{
+"slug": "red_is_the_rose",
+"librone": "red-is-the-rose"
+},
+{
+"slug": "the_hills_of_connemara",
+"librone": "the-hills-of-connemara"
+},
+{
+"slug": "the_old_triangle",
+"librone": "the-old-triangle"
+},
+{
+"slug": "there_s_wiskey_in_the_jar",
+"librone": "theres-wiskey-in-the-jar"
+},
+{
+"slug": "house_of_gold",
+"librone": "house-of-gold"
+},
+{
+"slug": "hungry_heart",
+"librone": "hungry-heart"
+},
+{
+"slug": "carried_me_with_you",
+"librone": "carried-me-with-you"
+},
+{
+"slug": "closer_to_you",
+"librone": "closer-to-you"
+},
+{
+"slug": "coming_back_to_you",
+"librone": "coming-back-to-you"
+},
+{
+"slug": "if_there_was_no_you",
+"librone": "if-there-was-no-you"
+},
+{
+"slug": "cannonball",
+"librone": "cannonball"
+},
+{
+"slug": "did_trouble_me",
+"librone": "did-trouble-me"
+},
+{
+"slug": "i_ll_still_be_there",
+"librone": "ill-still-be-there"
+},
+{
+"slug": "in_my_mind",
+"librone": "in-my-mind"
+},
+{
+"slug": "it_all_fades_away",
+"librone": "it-all-fades-away"
+},
+{
+"slug": "it_s_obvious",
+"librone": "its-obvious"
+},
+{
+"slug": "have_you_ever",
+"librone": "have-you-ever"
+},
+{
+"slug": "i_wonder_as_i_wander",
+"librone": "i-wonder-as-i-wander"
+},
+{
+"slug": "hello_my_old_heart",
+"librone": "hello-my-old-heart"
+},
+{
+"slug": "hiding_my_heart",
+"librone": "hiding-my-heart"
+},
+{
+"slug": "keep_your_lamps",
+"librone": "keep-your-lamps-trimmed-and-burnin"
+},
+{
+"slug": "leaning_on_the_everlasting_arms",
+"librone": "leaning-on-the-everlasting-arms"
+},
+{
+"slug": "mary_don_t_you_weep",
+"librone": "mary-dont-you-weep"
+},
+{
+"slug": "on_top_of_the_world",
+"librone": "on-top-of-the-world"
+},
+{
+"slug": "ride_on_moses",
+"librone": "ride-on-moses"
+},
+{
+"slug": "ring_of_fire",
+"librone": "ring-of-fire"
+},
+{
+"slug": "this_little_light_of_mine",
+"librone": "this-little-light-of-mine"
+},
+{
+"slug": "the_end",
+"librone": "the-end"
+},
+{
+"slug": "the_great_unknown",
+"librone": "the-great-unknown"
+},
+{
+"slug": "the_story",
+"librone": "the-story"
+},
+{
+"slug": "we_are_young",
+"librone": "we-are-young"
+},
+{
+"slug": "a_la_una_yo_naci",
+"librone": "a-la-una-yo-naci"
+},
+{
+"slug": "alma_corazon_y_vida",
+"librone": "alma-corazon-y-vida"
+},
+{
+"slug": "what_can_i_say",
+"librone": "what-can-i-say"
+},
+{
+"slug": "al_partir",
+"librone": "al-partir"
+},
+{
+"slug": "le_stoppie_aride",
+"librone": "le-stoppie-aride"
+},
+{
+"slug": "wherever_is_your_heart",
+"librone": "wherever-is-your-heart"
+},
+{
+"slug": "massimiliano_l_ortolano_messicano",
+"librone": "massimiliano-lortolano-messicano"
+},
+{
+"slug": "a_tempestade",
+"librone": "a-tempestade"
+},
+{
+"slug": "grao_de_arroz",
+"librone": "grao-de-arroz"
+},
+{
+"slug": "prece_ao_vento",
+"librone": "prece-ao-vento"
+},
+{
+"slug": "que_deus_me_perdoe",
+"librone": "que-deus-me-perdoe"
+},
+{
+"slug": "el_relicario",
+"librone": "el-relicario"
+},
+{
+"slug": "eso_que_tu_me_das",
+"librone": "eso-que-tu-me-das"
+},
+{
+"slug": "mavala",
+"librone": "mavala"
+},
+{
+"slug": "oca_la_foca",
+"librone": "oca-la-foca"
+},
+{
+"slug": "sempre_que_lisboa_canta",
+"librone": "sempre-que-lisboa-canta"
+},
+{
+"slug": "la_rosa_enflorece",
+"librone": "la-rosa-enflorece"
+},
+{
+"slug": "para_que_quiero_yo_mas_vivir",
+"librone": "para-que-quiero-yo-mas-vivir"
+},
+{
+"slug": "la_vien_giu_dalle_montagne",
+"librone": "la-vien-giu-dalle-montagne"
+},
+{
+"slug": "adio_querida",
+"librone": "adio-querida"
+},
+{
+"slug": "doman_l_e_festa",
+"librone": "doman-le-festa"
+},
+{
+"slug": "dormi_mia_bella_dormi",
+"librone": "dormi-mia-bella-dormi"
+},
+{
+"slug": "el_canto_della_sposa",
+"librone": "el-canto-della-sposa"
+},
+{
+"slug": "era_nato_poveretto",
+"librone": "era-nato-poveretto"
+},
+{
+"slug": "era_sera",
+"librone": "era-sera"
+},
+{
+"slug": "fila_fila_ortolanela",
+"librone": "fila-fila-ortolanela"
+},
+{
+"slug": "girolemin",
+"librone": "girolemin"
+},
+{
+"slug": "gli_aizinponeri",
+"librone": "gli-aizinponeri"
+},
+{
+"slug": "gran_dio_del_cielo",
+"librone": "gran-dio-del-cielo"
+},
+{
+"slug": "i_lamenti_di_una_fanciulla",
+"librone": "i-lamenti-di-una-fanciulla"
+},
+{
+"slug": "ij_dispiasi_de_noj_autri_alpin",
+"librone": "ij-dispiasi-de-noj-autri-alpin"
+},
+{
+"slug": "in_cil_e_je_une_stele",
+"librone": "in-cil-e-je-une-stele"
+},
+{
+"slug": "io_vorrei",
+"librone": "io-vorrei"
+},
+{
+"slug": "la_mia_bela_la_mi_aspeta",
+"librone": "la-mia-bela-la-mi-aspeta"
+},
+{
+"slug": "la_mula_de_parenzo",
+"librone": "la-mula-de-parenzo"
+},
+{
+"slug": "la_pastora",
+"librone": "la-pastora"
+},
+{
+"slug": "la_penna_dell_alpino",
+"librone": "la-penna-dellalpino"
+},
+{
+"slug": "l_artigliere",
+"librone": "lartigliere"
+},
+{
+"slug": "la_scelta_felice",
+"librone": "la-scelta-felice"
+},
+{
+"slug": "lauda_dell_epifania",
+"librone": "lauda-dellepifania"
+},
+{
+"slug": "a_virxen_de_guadalupe",
+"librone": "a-virxen-de-guadalupe"
+},
+{
+"slug": "campanas_de_belen",
+"librone": "campanas-de-belen"
+},
+{
+"slug": "el_noi_de_la_mare",
+"librone": "el-noi-de-la-mare"
+},
+{
+"slug": "el_alcalde_de_arrigorriaga",
+"librone": "el-alcalde-de-arrigorriaga"
+},
+{
+"slug": "la_morena_de_mi_copla",
+"librone": "la-morena-de-mi-copla"
+},
+{
+"slug": "la_otra_espana",
+"librone": "la-otra-espana"
+},
+{
+"slug": "il_cuculo",
+"librone": "il-cuculo"
+},
+{
+"slug": "il_drago_vecchio",
+"librone": "il-drago-vecchio"
+},
+{
+"slug": "il_freno_a_mano",
+"librone": "il-freno-a-mano"
+},
+{
+"slug": "il_lungo_il_corto_e_il_pacioccone",
+"librone": "il-lungo-il-corto-e-il-pacioccone"
+},
+{
+"slug": "il_pesce_rosso",
+"librone": "il-pesce-rosso"
+},
+{
+"slug": "il_pesciolino_del_mar",
+"librone": "il-pesciolino-del-mar"
+},
+{
+"slug": "il_piccolo_zaccheo",
+"librone": "il-piccolo-zaccheo"
+},
+{
+"slug": "il_re_e_il_soldato",
+"librone": "il-re-e-il-soldato"
+},
+{
+"slug": "il_secchio_la_corda_il_pozzo",
+"librone": "il-secchio-la-corda-il-pozzo"
+},
+{
+"slug": "il_vecchio_marinaio",
+"librone": "il-vecchio-marinaio"
+},
+{
+"slug": "jack_sta_in_cucina_con_tina",
+"librone": "jack-sta-in-cucina-con-tina"
+},
+{
+"slug": "john_brown",
+"librone": "john-brown"
+},
+{
+"slug": "la_baleniera",
+"librone": "la-baleniera"
+},
+{
+"slug": "la_canzone_che_dice_tutto",
+"librone": "la-canzone-che-dice-tutto"
+},
+{
+"slug": "la_carovana",
+"librone": "la-carovana"
+},
+{
+"slug": "la_gilera",
+"librone": "la-gilera"
+},
+{
+"slug": "la_grande_compagnia",
+"librone": "la-grande-compagnia"
+},
+{
+"slug": "la_mucca_camilla",
+"librone": "la-mucca-camilla"
+},
+{
+"slug": "la_nave_nera",
+"librone": "la-nave-nera"
+},
+{
+"slug": "la_playa",
+"librone": "la-playa"
+},
+{
+"slug": "la_preferenza",
+"librone": "la-preferenza"
+},
+{
+"slug": "la_rana_zoppa",
+"librone": "la-rana-zoppa"
+},
+{
+"slug": "pieni_di_forza",
+"librone": "pieni-di-forza"
+},
+{
+"slug": "placido",
+"librone": "placido"
+},
+{
+"slug": "popoff",
+"librone": "popoff"
+},
+{
+"slug": "preziosa_vita",
+"librone": "preziosa-vita"
+},
+{
+"slug": "quattro_infermieri",
+"librone": "quattro-infermieri"
+},
+{
+"slug": "quattro_pirati",
+"librone": "quattro-pirati"
+},
+{
+"slug": "una_oracion_rociera",
+"librone": "una-oracion-rociera"
+},
+{
+"slug": "yo_m_enamori",
+"librone": "yo-menamori"
+},
+{
+"slug": "santa_maria_de_la_esperanza",
+"librone": "santa-maria-de-la-esperanza"
+},
+{
+"slug": "se_esta_quedando_la_union",
+"librone": "se-esta-quedando-la-union"
+},
+{
+"slug": "andate_in_mezzo_a_loro",
+"librone": "andate-in-mezzo-a-loro"
+},
+{
+"slug": "cantico_dei_tre_fanciulli",
+"librone": "cantico-dei-tre-fanciulli"
+},
+{
+"slug": "cristo_risusciti",
+"librone": "cristo-risusciti"
+},
+{
+"slug": "dal_fondo_del_dolore",
+"librone": "dal-fondo-del-dolore"
+},
+{
+"slug": "dell_aurora_tu_sorgi_piu_bella",
+"librone": "dellaurora-tu-sorgi-piu-bella"
+},
+{
+"slug": "madonna_nera",
+"librone": "madonna-nera"
+},
+{
+"slug": "nome_dolcissimo",
+"librone": "nome-dolcissimo"
+},
+{
+"slug": "o_del_cielo_gran_regina",
+"librone": "o-del-cielo-gran-regina"
+},
+{
+"slug": "per_te_signore",
+"librone": "per-te-signore"
+},
+{
+"slug": "quant_e_dolce_o_re_del_cielo",
+"librone": "quante-dolce-o-re-del-cielo"
+},
+{
+"slug": "se_tu_m_accogli",
+"librone": "se-tu-maccogli"
+},
+{
+"slug": "tu_sei_venuto_dal_buio",
+"librone": "tu-sei-venuto-dal-buio"
+},
+{
+"slug": "vergin_santa",
+"librone": "vergin-santa"
+},
+{
+"slug": "gloria_n_cielo",
+"librone": "gloria-n-cielo"
+},
+{
+"slug": "nel_primo_chiarore_del_giorno",
+"librone": "nel-primo-chiarore-del-giorno"
+},
+{
+"slug": "andiam_verso_il_signor",
+"librone": "andiam-verso-il-signor"
+},
+{
+"slug": "beato_l_uomo",
+"librone": "beato-luomo"
+},
+{
+"slug": "cantate_al_signore_un_inno_nuovo",
+"librone": "cantate-al-signore-un-inno-nuovo"
+},
+{
+"slug": "chi_semina_nel_pianto",
+"librone": "chi-semina-nel-pianto"
+},
+{
+"slug": "e_chi_piangendo",
+"librone": "e-chi-piangendo"
+},
+{
+"slug": "l_anima_mia_ha_sete_del_dio_vivente",
+"librone": "lanima-mia-ha-sete-del-dio-vivente"
+},
+{
+"slug": "la_parola_del_signore_e_verita",
+"librone": "la-parola-del-signore-e-verita"
+},
+{
+"slug": "lodate_lodate",
+"librone": "lodate-lodate"
+},
+{
+"slug": "mio_dio_perche_mi_hai_abbandonato",
+"librone": "mio-dio-perche-mi-hai-abbandonato"
+},
+{
+"slug": "o_signore_mio_dio",
+"librone": "o-signore-mio-dio"
+},
+{
+"slug": "purificami_mio_signore",
+"librone": "purificami-mio-signore"
+},
+{
+"slug": "rallegrati_gerusalemme",
+"librone": "rallegrati-gerusalemme"
+},
+{
+"slug": "rivolti_i_nostri_occhi_son_lassu",
+"librone": "rivolti-i-nostri-occhi-son-lassu"
+},
+{
+"slug": "sollevo_gli_occhi",
+"librone": "sollevo-gli-occhi"
+},
+{
+"slug": "vengo_signore",
+"librone": "vengo-signore"
+},
+{
+"slug": "amica_del_mistero",
+"librone": "amica-del-mistero"
+},
+{
+"slug": "andare",
+"librone": "andare"
+},
+{
+"slug": "balla_con_me",
+"librone": "balla-con-me"
+},
+{
+"slug": "ballata_della_societa_l_opera",
+"librone": "ballata-della-societa-lopera"
+},
+{
+"slug": "ballata_di_g_l",
+"librone": "ballata-di-g-l"
+},
+{
+"slug": "basta_con_le_parole",
+"librone": "basta-con-le-parole"
+},
+{
+"slug": "campo_verde",
+"librone": "campo-verde"
+},
+{
+"slug": "canzone_del_destino",
+"librone": "canzone-del-destino"
+},
+{
+"slug": "canzone_della_tenerezza",
+"librone": "canzone-della-tenerezza"
+},
+{
+"slug": "canzone_del_ricordo",
+"librone": "canzone-del-ricordo"
+},
+{
+"slug": "canzone_di_maggio",
+"librone": "canzone-di-maggio"
+},
+{
+"slug": "canzone_per_francesco",
+"librone": "canzone-per-francesco"
+},
+{
+"slug": "canzone_per_te",
+"librone": "canzone-per-te"
+},
+{
+"slug": "chanson_de_l_ange",
+"librone": "chanson-de-lange"
+},
+{
+"slug": "che_cosa_ti_ha_lasciato",
+"librone": "che-cosa-ti-ha-lasciato"
+},
+{
+"slug": "chi_sei_tu",
+"librone": "chi-sei-tu"
+},
+{
+"slug": "desire",
+"librone": "desire"
+},
+{
+"slug": "e_poi_vieni_dietro_a_me",
+"librone": "e-poi-vieni-dietro-a-me"
+},
+{
+"slug": "faccia_a_faccia",
+"librone": "faccia-a-faccia"
+},
+{
+"slug": "figlio",
+"librone": "figlio"
+},
+{
+"slug": "il_dono",
+"librone": "il-dono"
+},
+{
+"slug": "il_fiume_e_il_cavaliere",
+"librone": "il-fiume-e-il-cavaliere"
+},
+{
+"slug": "il_vento",
+"librone": "il-vento"
+},
+{
+"slug": "la_nave",
+"librone": "la-nave"
+},
+{
+"slug": "la_notte_che_ho_visto_le_stelle",
+"librone": "la-notte-che-ho-visto-le-stelle"
+},
+{
+"slug": "la_ragazza_strana",
+"librone": "la-ragazza-strana"
+},
+{
+"slug": "lascia_che_il_mondo",
+"librone": "lascia-che-il-mondo"
+},
+{
+"slug": "le_rose_selvagge",
+"librone": "le-rose-selvagge"
+},
+{
+"slug": "lontano",
+"librone": "lontano"
+},
+{
+"slug": "maggiore",
+"librone": "maggiore"
+},
+{
+"slug": "pochi_passi",
+"librone": "pochi-passi"
+},
+{
+"slug": "pon_tus_manos",
+"librone": "pon-tu-manos"
+},
+{
+"slug": "quando_vedo_te",
+"librone": "quando-vedo-te"
+},
+{
+"slug": "ritorno",
+"librone": "ritorno"
+},
+{
+"slug": "sei_tu",
+"librone": "sei-tu"
+},
+{
+"slug": "strade",
+"librone": "strade"
+},
+{
+"slug": "terra_della_betulla",
+"librone": "terra-della-betulla"
+},
+{
+"slug": "tout_ca",
+"librone": "tout-ca"
+},
+{
+"slug": "tu_verrai",
+"librone": "tu-verrai"
+},
+{
+"slug": "una_vita",
+"librone": "una-vita"
+},
+{
+"slug": "vedemmo_nel_cielo_una_stella",
+"librone": "vedemmo-nel-cielo-una-stella"
+},
+{
+"slug": "who_stood_up_for_stephen",
+"librone": "who-stood-up-for-stephen"
+},
+{
+"slug": "ai_preat",
+"librone": "ai-preat"
+},
+{
+"slug": "belle_rose_du_printemps",
+"librone": "belle-rose-du-printemps"
+},
+{
+"slug": "benia_calastoria",
+"librone": "benia-calastoria"
+},
+{
+"slug": "cara_l_me_toni",
+"librone": "cara-l-me-toni"
+},
+{
+"slug": "che_cos_e",
+"librone": "che-cose"
+},
+{
+"slug": "che_fai_bella_pastora",
+"librone": "che-fai-bella-pastora"
+},
+{
+"slug": "come_porti_i_capelli",
+"librone": "come-porti-i-capelli"
+},
+{
+"slug": "occhiaie",
+"librone": "occhiaie"
+},
+{
+"slug": "ovunque_proteggi",
+"librone": "ovunque-proteggi"
+},
+{
+"slug": "paracetamolo",
+"librone": "paracetamolo"
+},
+{
+"slug": "perdere_l_amore",
+"librone": "perdere-lamore"
+},
+{
+"slug": "pesto",
+"librone": "pesto"
+},
+{
+"slug": "pianeti",
+"librone": "pianeti"
+},
+{
+"slug": "piccola_stella",
+"librone": "piccola-stella"
+},
+{
+"slug": "puzzle",
+"librone": "puzzle"
+},
+{
+"slug": "qualcosa_che_manca",
+"librone": "qualcosa-che-manca"
+},
+{
+"slug": "quando_quando_quando",
+"librone": "quando-quando-quando"
+},
+{
+"slug": "l_e_ben_ver",
+"librone": "le-ben-ver"
+},
+{
+"slug": "le_carrozze",
+"librone": "le-carrozze"
+},
+{
+"slug": "le_soir_a_la_montagne",
+"librone": "le-soir-a-la-montagne"
+},
+{
+"slug": "l_e_tre_di_che_l_piove_e_l_fioca",
+"librone": "le-tre-di-che-l-piove-e-l-fioca"
+},
+{
+"slug": "monte_pasubio",
+"librone": "monte-pasubio"
+},
+{
+"slug": "ninna_nanna",
+"librone": "ninna-nanna"
+},
+{
+"slug": "o_ce_biel_cjs_cjel_a_udin",
+"librone": "o-ce-biel-cjscjel-a-udin"
+},
+{
+"slug": "o_ninine",
+"librone": "quel-mazzolin-di-fiori"
+},
+{
+"slug": "san_matio",
+"librone": "san-matio"
+},
+{
+"slug": "se_jo_ves_di_maridami",
+"librone": "se-jo-ves-di-maridami"
+},
+{
+"slug": "serenata_a_castel_toblin",
+"librone": "serenata-a-castel-toblin"
+},
+{
+"slug": "siam_prigionieri",
+"librone": "siam-prigionieri"
+},
+{
+"slug": "sui_monti_fioccano",
+"librone": "sui-monti-fioccano"
+},
+{
+"slug": "sui_monti_scarpazi",
+"librone": "sui-monti-scarpazi"
+},
+{
+"slug": "sul_ciastel_de_mirabel",
+"librone": "sul-ciastel-de-mirabel"
+},
+{
+"slug": "vien_vien_bionda_d_amor",
+"librone": "vien-vien-bionda-damor"
+},
+{
+"slug": "vinassa_vinassa",
+"librone": "vinassa-vinassa"
+},
+{
+"slug": "inno_dei_sommergibilisti",
+"librone": "inno-dei-sommergibilisti"
+},
+{
+"slug": "lo_sciator_si_va_sulla_montagna",
+"librone": "lo-sciator-si-va-sulla-montagna"
+},
+{
+"slug": "voglio_vivere_cosi",
+"librone": "voglio-vivere-cosi"
+},
+{
+"slug": "lu_maritello",
+"librone": "lu-maritello"
+},
+{
+"slug": "vola_vola",
+"librone": "vola-vola"
+},
+{
+"slug": "zi_nicola",
+"librone": "zi-nicola"
+},
+{
+"slug": "a_citta_e_pulecenella",
+"librone": "a-citta-e-pulecenella"
+},
+{
+"slug": "anema_e_core",
+"librone": "anema-e-core"
+},
+{
+"slug": "brigante_se_more",
+"librone": "brigante-se-more"
+},
+{
+"slug": "canzone_appassiunata",
+"librone": "canzone-appassiunata"
+},
+{
+"slug": "carmela",
+"librone": "carmela"
+},
+{
+"slug": "core_ngrato",
+"librone": "core-ngrato"
+},
+{
+"slug": "i_te_vurria_vasa",
+"librone": "i-te-vurria-vasa"
+},
+{
+"slug": "jamm_a_vede",
+"librone": "jamma-vede"
+},
+{
+"slug": "a_tazza_e_cafe",
+"librone": "a-tazza-e-cafe"
+},
+{
+"slug": "la_santa_allegrezza",
+"librone": "la-santa-allegrezza"
+},
+{
+"slug": "na_bruna",
+"librone": "na-bruna"
+},
+{
+"slug": "napule_e",
+"librone": "napule-e"
+},
+{
+"slug": "tamurriata_nera",
+"librone": "tamurriata-nera"
+},
+{
+"slug": "tangando_scetate_e_guarda",
+"librone": "tangando-scetate-e-guarda"
+},
+{
+"slug": "terra_mia",
+"librone": "terra-mia"
+},
+{
+"slug": "tu_ca_nun_chiange",
+"librone": "tu-ca-nun-chiange"
+},
+{
+"slug": "tu_si_na_cosa_grande",
+"librone": "tu-si-na-cosa-grande"
+},
+{
+"slug": "da_font_de_me_anime",
+"librone": "da-font-de-me-anime"
+},
+{
+"slug": "arrivederci_roma",
+"librone": "arrivederci-roma"
+},
+{
+"slug": "chitarra_romana",
+"librone": "chitarra-romana"
+},
+{
+"slug": "fiori_trasteverini",
+"librone": "fiori-trasteverini"
+},
+{
+"slug": "la_societa_dei_magnaccioni",
+"librone": "la-societa-dei-magnaccioni"
+},
+{
+"slug": "na_gita_a_li_castelli",
+"librone": "na-gita-a-li-castelli"
+},
+{
+"slug": "roma_nun_fa_la_stupida_stasera",
+"librone": "roma-nun-fa-la-stupida-stasera"
+},
+{
+"slug": "tanto_pe_canta",
+"librone": "tanto-pe-canta"
+},
+{
+"slug": "andava_a_rogoredo",
+"librone": "andava-a-rogoredo"
+},
+{
+"slug": "caramba",
+"librone": "caramba"
+}
+]

@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v248';
+  const APP_VERSION = '2026-11-15 v249';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -266,7 +266,9 @@
   }
 
   // ---------- Conteúdo protegido (função "conteudo" no Supabase) ----------
-  const lyrKey = () => 'cancioneiro.letras.' + (session ? session.user.id : 'anon');
+  // «v2» (v249): as letras do CANTI passaram a vir do librone — a cópia guardada antes disso é deitada fora uma vez
+  const lyrKey = () => 'cancioneiro.letras.v2.' + (session ? session.user.id : 'anon');
+  try { for (const k of Object.keys(localStorage)) if (/^cancioneiro\.letras\.(?!v2\.)/.test(k)) localStorage.removeItem(k); } catch (e) {}
   const LYR_MAX = 150;
   function loadLyrCache() { lyr.clear(); for (const [k, v] of store.get(lyrKey(), [])) lyr.set(k, v); }
   function saveLyrCache() { store.set(lyrKey(), [...lyr.entries()].slice(-LYR_MAX)); }

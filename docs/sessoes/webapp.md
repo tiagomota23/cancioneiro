@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v248)
+## Estado e pendentes (15 nov 2026, v249)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -364,7 +364,21 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Por transcrever sem fonte possível aqui: 29 só com ligação do YouTube (descarregar o áudio do YouTube não é
   permitido), «No caminho encontrei-te» (gravação sem letra percetível), «Deixa a luz do Céu entrar» e «Aleluia
   (Chepponis)» (sem fonte), «Si los hombres» (identificada, gravação ilegível).
-- Tudo publicado até à v248 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v249 — letras do CANTI do librone (Tiago, 15 nov: opção «usar libronedeicanti.it» e publicar já).** O texto dos
+  PDF do CANTI não servia para mostrar (linhas cortadas a meio da página, primeiras linhas perdidas, ~25% de títulos
+  diferentes). O site https://www.libronedeicanti.it/ (rede do ambiente: www.libronedeicanti.it e libronedeicanti.it,
+  acrescentados a 15 nov) tem `indice.js` (1492 cânticos: id, título, autores) e `testi.js` (letra de cada um, sem
+  acordes nem estrofes). Ligados 740 dos 750 cânticos do CANTI que só tinham «letra no livro» (727 pelo título, com o
+  texto do PDF a confirmar ≥ 0,3; 13 só pelo texto ≥ 0,5); estrofes recuperadas das linhas em branco do texto do PDF
+  (436 com estrofes; 304 num só bloco quando o alinhamento não era seguro). Letra em songs.lyrics com 1.ª linha
+  «(letra do librone dei canti — libronedeicanti.it)». Ligações cântico → id do librone em
+  `tools/librone/ligacoes.json` (sem letras). Sem correspondência (10): sobretudo entradas que são títulos de secção
+  do CANTI importados como cânticos («Brunori Sas», «Cesare Cremonini», «Lucio Dalla», «Giorgio Gaber», «Jovanotti»,
+  «Mina») e That lonesome road, A questo punto, El Ebro, Dio a l’ommo. App: chave da cache de letras passa a
+  `cancioneiro.letras.v2.` (a antiga é apagada uma vez, para os telemóveis voltarem a pedir as letras).
+  Extração dos PDF dos livros: agora por linhas inteiras (pdftotext -bbox-layout) e com separação de estrofes.
+  **Por decidir com o Tiago:** o librone como fonte (como o Coros & Companhia) — avaliação enviada a 15 nov.
+- Tudo publicado até à v249 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
