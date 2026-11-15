@@ -314,6 +314,40 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-86', 'Rever recorte a partir da folha de revisão (v246, ?demo, Maestro): #/cantico/amazing_grace/folha/rev1 mostra .crop-bar; «Manter o atual» volta a #/lista/colecao-rev1 só com os outros cânticos; numa folha de revisão só com esse cântico, a folha é apagada e a app volta a #/ (ou à seguinte de revisão)', async () => {
+    const bad = [];
+    const rev = (id, title, slugs) => ({ id, title, audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), created_by: 'demo@localhost', published: false, sections: [], songs: slugs.map((s, i) => ({ song_slug: s, position: i })) });
+    const decide = async page => {
+      await page.waitForSelector('.crop-bar button.crop-rev', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '.crop-bar button.crop-rev'))) return 'sem .crop-bar no cântico aberto da folha';
+      await page.click('.crop-bar button.crop-rev');
+      await page.waitForSelector('dialog.crop-dlg[open] [data-a=keep]', { timeout: 15000 }).catch(() => {}); await sleep(800);
+      await page.click('dialog.crop-dlg [data-a=keep]'); await sleep(1800);
+      return null;
+    };
+    // 1) folha com dois cânticos: volta à folha, sem o decidido
+    await withApp({ perfil: 'maestro', cols: [...demoCols(), rev('rev1', 'Rever recortes dos livros (1/1)', ['amazing_grace', 'salve_regina'])], hash: '#/cantico/amazing_grace/folha/rev1' }, async ({ page }) => {
+      const e = await decide(page); if (e) { bad.push('2 cânticos: ' + e); return; }
+      if (!/#\/lista\/colecao-rev1$/.test(page.url())) bad.push('2 cânticos: depois de decidir ficou em ' + page.url().split('#')[1]);
+      const s = await slugsOf(page);
+      if (s.includes('amazing_grace')) bad.push('2 cânticos: o decidido continua na folha');
+      if (!s.includes('salve_regina')) bad.push('2 cânticos: o outro cântico saiu da folha');
+    });
+    // 2) folha só com o cântico decidido: a folha é apagada e a app sai dela
+    await withApp({ perfil: 'maestro', cols: [...demoCols(), rev('rev9', 'Rever recortes dos livros (9/9)', ['amazing_grace'])], hash: '#/cantico/amazing_grace/folha/rev9' }, async ({ page }) => {
+      const e = await decide(page); if (e) { bad.push('1 cântico: ' + e); return; }
+      if (/colecao-rev9/.test(page.url())) bad.push('1 cântico: ficou na folha apagada');
+      await page.click('#btn-menu').catch(() => {}); await sleep(500);
+      if (await count(page, 'a[href="#/lista/colecao-rev9"]')) bad.push('1 cântico: a folha vazia continua na gaveta');
+    });
+    // 3) uma folha comum com o mesmo cântico não é tocada
+    await withApp({ perfil: 'maestro', cols: [...demoCols(), rev('rev1', 'Rever recortes dos livros (1/1)', ['amazing_grace', 'salve_regina'])], hash: '#/cantico/amazing_grace/folha/rev1' }, async ({ page }) => {
+      const e = await decide(page); if (e) return;
+      const d2 = await page.evaluate(() => (JSON.parse(localStorage.getItem('cancioneiro.demo.cols') || '[]').find(c => c.id === 'demo2') || {}).songs || []);
+      if (!d2.some(x => x.song_slug === 'amazing_grace')) bad.push('a folha comum «Encontro de jovens» perdeu o cântico decidido');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-85', '«Rever recorte» no visor (v245, ?demo, Amazing Grace): Coro sem o botão no visor; Maestro com «Rever recorte» no recorte e na página inteira; abre dialog.crop-dlg; «Manter o atual» fecha o diálogo e o visor', async () => {
     const bad = [];
     const viewer = async page => { await page.waitForSelector('#song a.pdf', { timeout: 8000 }).catch(() => {}); await page.click('#song a.pdf'); for (let i = 0; i < 80 && !(await count(page, '#pdfpages .pdf-more button')); i++) await sleep(150); await sleep(300); };
