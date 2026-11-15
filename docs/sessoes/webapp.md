@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v240)
+## Estado e pendentes (15 nov 2026, v241)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -312,7 +312,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - v240 (Tiago, 15 nov: nada de esperas propositadas — num evento o coro já está a cantar): pré-descarga 1 s depois
   de carregar as folhas (sem espera ao acaso); ao abrir uma folha, as letras dos seus cânticos que faltam vêm logo num
   só pedido (`warmSheet`, op songs). **Regra: nunca atrasar de propósito o que a pessoa vê para poupar o servidor.**
-- Tudo publicado até à v240 (conteudo versão 40, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v241 (nota da sessão de testes): letras em lote só por `songsBatch` (pré-descarga e folha aberta), que não volta a
+  pedir cânticos que já estão a vir noutro lote (`batching`) ou num op song (`pending`).
+- Tudo publicado até à v241 (conteudo versão 40, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
