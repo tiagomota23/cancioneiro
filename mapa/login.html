@@ -1141,9 +1141,15 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .crop-box { position: absolute; box-sizing: border-box; border: 2px solid; }
 .crop-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: var(--pill); background: var(--accent); }
 .crop-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+/* zoom do diálogo de revisão: a zona das páginas desliza nos dois sentidos; os dois dedos fazem zoom nela (não na página) */
+.crop-dlg .crop-pages { max-height: 58dvh; overflow: auto; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; margin-bottom: 12px; }
+.crop-dlg .crop-canvas { width: 100%; }
+.crop-zoom { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 0 0 8px; }
+.crop-zoom button { width: var(--hit); height: var(--h-btn-sm); border-radius: var(--pill); border: 1px solid var(--accent); background: none; color: var(--accent); font: 700 var(--fs-ui)/1 var(--sans); }
+.crop-zoom-n { min-width: 4em; text-align: center; font-size: var(--fs-small); color: var(--text-soft); font-variant-numeric: tabular-nums; }
 </style></head>
 <body>
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v242</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v243</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login">

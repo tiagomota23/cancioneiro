@@ -168,11 +168,13 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v242)
-- App v242; capa do mapa «versão 242 · 15 nov 2026» (publicada). v238–v241 sem mudança visível; v242 contorno `--accent`
+## Estado atual (15 nov 2026, v243)
+- App v243; capa do mapa «versão 243 · 15 nov 2026». v243: zoom − / + e zona das páginas com deslize na janela de rever
+  recortes (não capturada); enviado à webapp: − / + passam ao botão de símbolo existente (.icon-btn, --hit, sem contorno),
+  como o A− / A+ — verificar na próxima versão. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14). v238–v241 sem mudança visível; v242 contorno `--accent`
   2,5 px à volta da letra nas páginas do livro (visor de partituras, desenhado no canvas) e `.pdf-more` na vista de um livro —
   não aparece no mapa (o ecrã `partitura` usa um PDF de exemplo). Sem imagens novas.
-- Mapa versão 96, sistema de design versão 48. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+- Mapa versão 97, sistema de design versão 49. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
 - **Por decidir (Tiago, 15 nov):** (1) a frase da caixa sai em maiúsculas por herdar `.pend-bar p:first-child` (feito para
