@@ -37,6 +37,7 @@ export default async function (level) {
       collection_sections: 'DELETE,INSERT,SELECT,UPDATE', collection_songs: 'DELETE,INSERT,SELECT,UPDATE', collection_templates: 'DELETE,INSERT,SELECT,UPDATE',
       collections: 'DELETE,INSERT,SELECT,UPDATE', favorites: 'DELETE,INSERT,SELECT', song_files: 'SELECT', song_sources: 'SELECT', song_tags: 'SELECT', sync_log: 'SELECT',
       groups: 'SELECT', user_groups: 'SELECT', collection_groups: 'DELETE,INSERT,SELECT', // v209: grupos
+      catalog_version: 'SELECT', // v238: versão do catálogo (só leitura)
     };
     const r = await sql(`select table_name, string_agg(privilege_type, ',' order by privilege_type) p from information_schema.role_table_grants where table_schema='public' and grantee='authenticated' group by 1`);
     const got = Object.fromEntries(r.map(x => [x.table_name, x.p]));
@@ -45,7 +46,7 @@ export default async function (level) {
   });
   await t('DB-RLS-04', 'songs: authenticated lê só colunas sem letra (lyrics, lyrics_edit, translation, source_hash nunca)', async () => {
     const r = await sql(`select column_name, privilege_type from information_schema.column_privileges where table_schema='public' and table_name='songs' and grantee='authenticated'`);
-    const bad = r.filter(x => x.privilege_type !== 'SELECT' || ['lyrics', 'lyrics_edit', 'translation', 'source_hash'].includes(x.column_name));
+    const bad = r.filter(x => x.privilege_type !== 'SELECT' || ['lyrics', 'lyrics_edit', 'translation', 'source_hash', 'lyrics_draft', 'draft_note', 'draft_at'].includes(x.column_name)); // v248: rascunhos
     return bad.length ? 'permissões a mais: ' + bad.map(x => x.column_name + ' ' + x.privilege_type).join(', ') : true;
   });
   await t('DB-RLS-12', 'Todas as colunas que a app pede pela API (fetchSongs e cada .from(…).select(…) em app.js) têm permissão SELECT para authenticated (v195: version_of sem grant partia a lista)', async () => {

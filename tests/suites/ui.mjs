@@ -204,7 +204,8 @@ async function suites(full) {
     });
   }, { sev: 'média' });
   // ---- v232: pesquisa tolerante a erros (busca.js) ----
-  const slugsOf = page => page.evaluate(() => [...document.querySelectorAll('#rows li a')].map(a => decodeURIComponent((a.getAttribute('href') || '').replace('#/cantico/', ''))));
+  // dentro de uma folha o endereço é #/cantico/<slug>/folha/<id>: fica só o slug
+  const slugsOf = page => page.evaluate(() => [...document.querySelectorAll('#rows li a')].map(a => decodeURIComponent((a.getAttribute('href') || '').replace('#/cantico/', '').split('/')[0])));
   await t('FUN-74', 'Pesquisa com erros (v232, ?demo): «amazng» → Amazing Grace em 1.º; «swet sound» → Amazing Grace com trecho e <mark> em sweet/sound; perfil Cancioneiro não vê Pange lingua (fora do Cancioneiro) por título com erro nem pela letra, mas encontra Amazing Grace', async () => {
     const bad = [];
     const q = async (page, s) => { await page.fill('#search', s); await sleep(1600); return slugsOf(page); };
@@ -372,7 +373,7 @@ async function suites(full) {
       const f = await page.evaluate(() => ({ open: document.querySelector('#song-new').open, text: document.querySelector('#sn-text').value, hint: document.querySelector('#sn-hint').textContent }));
       if (!f.open) { bad.push('«Editar cântico» não abriu'); return; }
       if (!/Primeira linha do rascunho/.test(f.text)) bad.push('a letra não vem preenchida com o rascunho: «' + f.text.slice(0, 50) + '»');
-      if (!/rascunho/i.test(f.hint) || !/públic/i.test(f.hint)) bad.push('sem aviso de rascunho/publicação: «' + f.hint.trim().slice(0, 80) + '»');
+      if (!/rascunho/i.test(f.hint) || !/public/i.test(f.hint)) bad.push('sem aviso de rascunho/publicação: «' + f.hint.trim().slice(0, 80) + '»');
       await page.click('#sn-save'); await sleep(1800);
       if (await page.evaluate(() => document.querySelector('#song-new').open)) { const m = await txt(page, '#sn-msg'); bad.push('«Guardar» não fechou: ' + m.slice(0, 60)); return; }
       if (await count(page, '.draft-bar')) bad.push('depois de guardar, a caixa do rascunho continua');
@@ -407,7 +408,7 @@ async function suites(full) {
       if (!ed.open) { bad.push('«Rever e publicar» não abriu o editor'); return; }
       if (!/Primeira linha do rascunho/.test(ed.text)) bad.push('editor sem o texto do rascunho');
       if (!ed.reset) bad.push('#edit-reset visível no rascunho');
-      if (!/públic/i.test(ed.msg)) bad.push('#edit-msg sem aviso de que fica pública: «' + ed.msg.trim().slice(0, 60) + '»');
+      if (!/public/i.test(ed.msg)) bad.push('#edit-msg sem aviso de que fica pública: «' + ed.msg.trim().slice(0, 60) + '»');
       await page.click('#edit-save'); await sleep(1500);
       if (await count(page, '.draft-bar')) bad.push('depois de publicar, a caixa continua');
       if (!/Primeira linha do rascunho/.test(await txt(page, '#song'))) bad.push('depois de publicar, a letra não aparece');
@@ -2195,7 +2196,8 @@ async function suites(full) {
     return ok || 'sem rede não abriu';
   }), { sev: 'média' });
   await t('SHR-06', 'Preferidos: letras descarregadas ao abrir, como as folhas (modo real simulado)', () => withApp({ real: { rest: tb => tb.startsWith('favorites') ? { body: [{ slug: 'de_colores' }, { slug: 'santa_lucia' }] } : null }, wait: '#rows li a', timeout: 20000, settle: 7000 }, async ({ calls }) => {
-    const got = calls.filter(c => c.startsWith('song:')).map(c => c.slice(5));
+    // v238+: as letras vêm em lote (op songs, calls «songs:a,b»), ou uma a uma (op song)
+    const got = [...calls.filter(c => c.startsWith('song:')).map(c => c.slice(5)), ...calls.filter(c => c.startsWith('songs:')).flatMap(c => c.slice(6).split(','))].filter(Boolean);
     const miss = ['de_colores', 'santa_lucia'].filter(x => !got.includes(x));
     return miss.length ? `letras não pedidas: ${miss.join(', ')} (pedidos: ${got.join(',') || 'nenhum'})` : { pass: 'pedidas: ' + got.join(', ') };
   }), { sev: 'média' });

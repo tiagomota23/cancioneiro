@@ -189,7 +189,9 @@ export default async function (level) {
   await t('SEG-16', 'conteudo e grupos (v209): colSet e song+collection filtram por grupos (groupOk); os grupos da pessoa vêm de user_groups pelo seu email (em minúsculas, de who()) e, se a leitura falhar, ficam vazios (não recebe folhas); Gestor sem filtro e Maestro pelos seus grupos (v210), também em collyrics', () => {
     const c = read('supabase/functions/conteudo/index.ts'), bad = [];
     if (!/const email = \(u\.email \|\| ''\)\.toLowerCase\(\);[\s\S]{0,200}return a \? \{ id: u\.id, email,/.test(c)) bad.push('who() já não devolve o email em minúsculas (user_groups guarda-o em minúsculas)');
-    if (!/const myGroups = async user => new Set\(\(await rest\(`user_groups\?email=eq\.\$\{encodeURIComponent\(user\.email\)\}&select=group_id`\)\.catch\(\(\) => \[\]\)\)/.test(c)) bad.push('myGroups mudou (rever: email da pessoa e falha → vazio)');
+    // v238: myGroups com cache de 60 s por pessoa; a leitura (myGroupsFresh) continua pelo email e falha → vazio
+    if (!/const myGroups(Fresh)? = async user => new Set\(\(await rest\(`user_groups\?email=eq\.\$\{encodeURIComponent\(user\.email\)\}&select=group_id`\)\.catch\(\(\) => \[\]\)\)/.test(c)) bad.push('myGroups mudou (rever: email da pessoa e falha → vazio)');
+    if (/const myGroups = async user => \{/.test(c) && !/Date\.now\(\) - h\.at < 60e3\) return h\.v;\s*const v = await myGroupsFresh\(user\)/.test(c)) bad.push('cache de myGroups diferente de 60 s (rever)');
     if (!/const groupOk = \(mine, cg\) => !mine \|\| \(mine\.size > 0 && \(!\(cg \|\| \[\]\)\.length \|\| cg\.some\(x => mine\.has\(x\.group_id\)\)\)\)/.test(c)) bad.push('groupOk mudou (rever)');
     if (!/const mine = lvl >= 4 \? null : await myGroups\(user\);\s*colSet = new Set\(rows\.filter\(r => groupOk\(mine, r\.collections\.collection_groups\)\)/.test(c)) bad.push('colSet: filtro de grupos sem bypass só para o Gestor (v210)');
     if (!/const gOk = async \(\) => groupOk\(await myGroups\(user\), c\.collection_groups\);/.test(c)) bad.push('song+collection sem filtro de grupos');
@@ -269,7 +271,10 @@ export default async function (level) {
     if (!site.length) bad.push('sem pedidos ao site'); else if (site.some(a => /method/.test(a))) bad.push('pedido ao site que não é GET');
     if (/(songs|song_sources|song_tags)\?[^`]*`, \{ method: 'DELETE'/.test(c)) bad.push('apaga cânticos, fontes ou etiquetas');
     if (!/songs\?slug=eq\.[^`]*&lyrics_edit=is\.null`, \{ method: 'PATCH'/.test(c)) bad.push('PATCH da letra sem lyrics_edit=is.null');
-    if (!/ly\[0\]\?\.lines\?\.\[0\] !== MARK/.test(c)) bad.push('muda letras sem confirmar a marca do librone');
+    // v251: a marca pode ter «· capotasto N» depois → startsWith('(letra do librone')
+    if (!/ly\[0\]\?\.lines\?\.\[0\] !== MARK/.test(c) && !/String\(ly\[0\]\?\.lines\?\.\[0\] \|\| ''\)\.startsWith\('\(letra do librone'\)/.test(c)) bad.push('muda letras sem confirmar a marca do librone');
+    // v251: também a página de cada cântico (pagina.js) — lida com JSON.parse, nunca executada
+    for (const f of ['pagina.js', 'strofe.js']) { if (!exists('supabase/functions/sync-librone/' + f)) continue; const x = read('supabase/functions/sync-librone/' + f); if (/\beval\s*\(|new Function|import\(/.test(x)) bad.push(f + ' executa código remoto'); }
     if (!/alter table public\.librone_sync_log enable row level security/.test(sq) || !/revoke all on public\.librone_sync_log from public, anon, authenticated/.test(sq)) bad.push('librone_sync_log sem RLS/revoke');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/functions/sync-librone/index.ts, supabase/librone.sql' });
@@ -433,7 +438,9 @@ export default async function (level) {
     const gest = [...js.matchAll(/\['gesturestart', 'gesturechange'\][^\n]*/g)].map(m => m[0]);
     if (gest.some(g => /preventDefault/.test(g) && !/pdfview'\)\.hidden\) e\.preventDefault/.test(g))) bad.push('gesturestart/gesturechange com preventDefault fora do visor');
     const tm = [...js.matchAll(/(\w+)\.addEventListener\('touchmove'/g)].map(m => m[1]);
-    if (tm.some(x => x !== 'pp')) bad.push('touchmove com listener fora de #pdfpages: ' + tm.join(', '));
+    // pp = #pdfpages (visor); wrap = .crop-pages do diálogo de revisão de recortes (v243, só bloqueia com dois dedos)
+    if (tm.some(x => !['pp', 'wrap'].includes(x))) bad.push('touchmove com listener fora de #pdfpages / .crop-pages: ' + tm.join(', '));
+    if (tm.includes('wrap') && !/wrap\.addEventListener\('touchmove', e => \{\s*if \(!pinch \|\| e\.touches\.length !== 2\) return;\s*e\.preventDefault\(\)/.test(js)) bad.push('touchmove da revisão de recortes bloqueia sem ser com dois dedos');
     return bad.length ? bad.join('; ') : { pass: `viewport «${v}»` };
   }, { sev: 'média', where: 'index.html (viewport), styles.css (touch-action), app.js (gesture*/touchmove)' });
 

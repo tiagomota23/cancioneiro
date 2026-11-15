@@ -1,0 +1,57 @@
+{
+ "version": "252",
+ "level": "full",
+ "date": "2026-11-15",
+ "secs": 9,
+ "results": [
+  {
+   "id": "SEG-55",
+   "title": "sync-librone sem pedido do agendamento → 403 (v250); só se testa quando não há nenhum pedido sync-librone pendente (nunca consome um verdadeiro: não corre a atualização nem envia emails)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "alta",
+   "where": "supabase/functions/sync-librone/index.ts (claimJob)",
+   "ms": 2906
+  },
+  {
+   "id": "INT-27",
+   "title": "Letras do librone (v249/v250): cânticos com 1.ª linha «(letra do librone dei canti…» são do CANTI 2024 ou do Librone (fonte librone); com acordes ([…], desde v251) → has_chords verdadeiro; quantos têm letra e quantos do CANTI continuam só «no livro» (informativo)",
+   "status": "pass",
+   "detail": "CANTI 1065: 1085 com letra do librone, 1 ainda só no livro",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "dados (songs.lyrics do CANTI)",
+   "ms": 1755
+  },
+  {
+   "id": "INT-28",
+   "title": "Librone dei canti (v250): song_sources librone com ref só [A-Za-z0-9_-] (vai para o endereço do site); cânticos só do librone fora do Cancioneiro e aprovados; librone_sync_log com RLS e sem privilégios para anon/authenticated; última atualização semanal ≤ 8 dias (aviso se ainda não correu)",
+   "status": "pass",
+   "detail": "1492 ligados ao librone, 355 só do librone; última atualização 2026-11-15 20:25:22.595711+00",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "supabase/librone.sql, dados",
+   "ms": 874
+  },
+  {
+   "id": "INT-26",
+   "title": "Rascunhos de letra (v248): nenhuma letra pública ainda com «(rascunho…» ou «(texto litúrgico…» na 1.ª linha (migração feita); quem tem rascunho tem draft_at; rascunhos por rever (informativo)",
+   "status": "pass",
+   "detail": "63 rascunhos por rever",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "supabase/rascunhos.sql",
+   "ms": 777
+  },
+  {
+   "id": "INT-08",
+   "title": "Agendamentos pg_cron presentes e ativos (9 tarefas, com cancioneiro-coros-companhia-semanal desde v226 e cancioneiro-librone-semanal desde v250) e sem falhas recentes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "alta",
+   "ms": 1462
+  }
+ ]
+}
