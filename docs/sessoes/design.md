@@ -168,9 +168,12 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v249)
-- App v249 (só dados e cache das letras; sem capturas, nada de interface); capa do mapa «versão 249 · 15 nov 2026»
-  (mapa versão 102, sistema de design versão 53).
+## Estado atual (15 nov 2026, v250)
+- App v250; capa do mapa «versão 250 · 15 nov 2026» (mapa versão 103, sistema de design versão 54). v250: livro «Librone dei
+  canti» (menu: ecrã `gaveta`, catálogo v039 e v042 carregados; chip `.src-librone`, ligação externa `.scores > a.pdf` e
+  categorias lc-0..6 não aparecem no mapa — o demo não tem cânticos do Librone; no menu mostra «0»). Pendente menor: juntar
+  um cântico de domínio público do Librone a `fixture.mjs` para o mapa mostrar o chip e a ligação (mexe em vários ecrãs).
+  v249 só dados.
   v248 (Maestro/Gestor): caixa `.pend-bar.draft-bar` «Rascunho de letra» (rótulo em maiúsculas, `.draft-note` fs-small
   itálico, `.draft-text` em `--surface`; já segue a regra 15 proposta) — não capturada (o rascunho do demo não está no cântico
   dos ecrãs); entrada «Rascunhos de letra (N)» no menu (ecrã `gaveta` e catálogo v039, v041, v042 carregados de novo).

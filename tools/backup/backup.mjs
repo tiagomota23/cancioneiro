@@ -190,7 +190,7 @@ console.log(`livros: ${Object.values(st.counts).reduce((a, b) => a + b, 0)} envi
 // 2) cânticos: uma pasta cada
 const by = (rows, k) => rows.reduce((m, r) => (m.get(r[k]) || m.set(r[k], []).get(r[k])).push(r) && m, new Map());
 const srcBy = by(data.song_sources, 'song_slug'), tagBy = by(data.song_tags, 'song_slug'), fileBy = by(data.song_files, 'song_slug');
-const SRC = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos' };
+const SRC = { original: 'Cancioneiro original', coro_clu: 'Coro CLU', songbook: 'Songbook', canti2024: 'CANTI 2024', novos: 'Novos Cânticos', coros_companhia: 'Coros & Companhia', librone: 'Librone dei canti' };
 const live = new Set(), missingExternal = [];
 await pool(data.songs, 3, async s => {
   live.add(s.slug);
