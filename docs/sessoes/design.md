@@ -168,8 +168,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v248)
-- App v248; capa do mapa «versão 248 · 15 nov 2026» (mapa versão 101, sistema de design versão 52; v247 publicada junto).
+## Estado atual (15 nov 2026, v249)
+- App v249 (só dados e cache das letras; sem capturas, nada de interface); capa do mapa «versão 249 · 15 nov 2026»
+  (mapa versão 102, sistema de design versão 53).
   v248 (Maestro/Gestor): caixa `.pend-bar.draft-bar` «Rascunho de letra» (rótulo em maiúsculas, `.draft-note` fs-small
   itálico, `.draft-text` em `--surface`; já segue a regra 15 proposta) — não capturada (o rascunho do demo não está no cântico
   dos ecrãs); entrada «Rascunhos de letra (N)» no menu (ecrã `gaveta` e catálogo v039, v041, v042 carregados de novo).
