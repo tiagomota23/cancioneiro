@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v246';
+  const APP_VERSION = '2026-11-15 v247';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -955,7 +955,7 @@
   // na página do cântico, uma caixa amarela «Recorte do livro a rever» abre a página do livro com o recorte atual
   // (laranja), o proposto (verde, se houver) e o que se desenhar (dois toques: canto de cima à esquerda e de baixo à
   // direita; até 4 partes). Manter, usar o proposto, repor o anterior ou usar o desenhado: op cropset da conteudo.
-  let cropRev = null, cropRevLoading = false; // slug -> [{ id, current, proposed, previous, note }]
+  let cropRev = null, cropRevLoading = false, autoRev = null; // slug -> [{ id, current, proposed, previous, note }]
   async function loadCropReviews() {
     if (cropRev || cropRevLoading || lvl() < 3) return;
     cropRevLoading = true;
@@ -968,7 +968,16 @@
   }
   const cropParts = path => { const m = String(path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : []; };
   const cropPath = (base, slug, parts) => `${base}#p=${parts[0][0]}&c=${parts.map(p => `${p[0]}:${p.slice(1).map(v => +v.toFixed(3)).join(',')}`).join('|')}&s=${slug}`;
+  // folha de revisão de onde o cântico foi aberto (as folhas «Rever recortes dos livros» criadas pela webapp)
+  const isRevCol = c => !!c && /^Rever recortes dos livros/.test(c.title || '') && c.published === false && !c.created_by;
+  const revSheetOf = () => songCol && cols.find(c => c.id === songCol && isRevCol(c));
+  // volta à folha de revisão (ou à seguinte, se esta já não existe; sem nenhuma, à página inicial)
+  function backToRevSheet(fromId) {
+    const next = cols.find(c => c.id === fromId) || cols.find(c => isRevCol(c) && colVisible(c));
+    location.hash = next ? '#/lista/colecao-' + next.id : '#/';
+  }
   async function openCropReview(slug, rv) {
+    const fromSheet = revSheetOf(); // aberto a partir de uma folha de revisão: no fim (decidir ou cancelar) volta à folha
     const base = String(rv.current || '').split('#')[0];
     const dlg = document.createElement('dialog');
     dlg.className = 'editor crop-dlg';
@@ -1060,7 +1069,7 @@
     } catch (e) { dlg.querySelector('.crop-pages').innerHTML = `<p class="pdf-msg">Não foi possível abrir as páginas. ${esc(e.message || '')}</p>`; }
     dlg.querySelector('.crop-actions').onclick = async e => {
       const a = e.target.closest('button')?.dataset.a; if (!a) return;
-      if (a === 'close') return close();
+      if (a === 'close') { close(); if (fromSheet) backToRevSheet(fromSheet.id); return; }
       if (a === 'clear') { drawn.length = 0; corner = null; return redraw(); }
       const path = a === 'prop' ? rv.proposed : a === 'prev' ? rv.previous : a === 'draw' ? cropPath(base, slug, drawn) : null;
       dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = true);
@@ -1075,18 +1084,13 @@
         // o cântico já não tem recortes por rever: sai das folhas de revisão (o servidor já o tirou; folha vazia apagada)
         // e, se veio de uma delas, volta-se à folha (ou à seguinte, se esta ficou vazia)
         const isRev = c => /^Rever recortes dos livros/.test(c.title || '');
-        const from = songCol && cols.find(c => c.id === songCol && isRev(c));
         if (r.songDone) {
           for (const c of cols) if ((r.removedFrom || []).includes(c.id)) c.songs = (c.songs || []).filter(x => x.song_slug !== slug);
           cols = cols.filter(c => !(r.deleted || []).includes(c.id)); store.set(colsKey(), cols);
-          if (from) {
-            const next = cols.find(c => c.id === from.id) || cols.find(c => isRev(c) && colVisible(c));
-            location.hash = next ? '#/lista/colecao-' + next.id : '#/';
-            loadCollections();
-            return;
-          }
           loadCollections();
         }
+        // vindo de uma folha de revisão: volta sempre à folha (se o cântico ainda tem outro recorte por rever, fica lá)
+        if (fromSheet) { backToRevSheet(fromSheet.id); return; }
         if (lastSongSlug === slug) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
       } catch (err) { toast(err.message || 'Não foi possível guardar.'); dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = false); redraw(); }
     };
@@ -1106,6 +1110,7 @@
   }
 
   function showList(catId) {
+    autoRev = null; // ao voltar a uma lista, o próximo cântico de uma folha de revisão abre de novo a revisão
     show('view-list');
     const q = $('search').value;
     const rows = $('rows');
@@ -1319,6 +1324,9 @@
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
     $('song').querySelectorAll('button.crop-rev').forEach(b => b.onclick = () => openCropReview(slug, revs[+b.dataset.i]));
+    // aberto a partir de uma folha «Rever recortes dos livros»: vai logo para a revisão (uma vez por abertura)
+    if (revs.length && revSheetOf() && autoRev !== location.hash && !document.querySelector('dialog.crop-dlg')) { autoRev = location.hash; openCropReview(slug, revs[0]); }
+    if (!revs.length || !revSheetOf()) autoRev = null;
     if (nowRec && nowRec.slug === slug) { const b = [...$('song').querySelectorAll('button.rec')].find(x => x.dataset.path === nowRec.path); if (b) b.closest('li').appendChild(nowRec.a); }
     miniUpdate();
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');
