@@ -314,6 +314,46 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-84', 'Zoom na revisão de recortes (v243, ?demo, Maestro): .crop-zoom-n 100%; «+» ×2 → 225% e .crop-canvas mais larga (redesenho até 2400 px); limites 100–400%; desenho a 225% com frações 0,10/0,20 → 0,40/0,50 dá caixa left 10% top 20% width 30% height 30%; beliscão (TouchEvent) aumenta o zoom e o toque logo a seguir não marca canto (.crop-dot)', async () => {
+    return withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace' }, async ({ page }) => {
+      const bad = [];
+      await page.waitForSelector('.crop-bar button.crop-rev', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '.crop-bar button.crop-rev'))) return 'Maestro sem a caixa de revisão';
+      await page.click('.crop-bar button.crop-rev');
+      await page.waitForSelector('dialog.crop-dlg[open] .crop-page[data-n="12"] canvas', { timeout: 15000 }).catch(() => {}); await sleep(1500);
+      const D = 'dialog.crop-dlg[open]', zn = () => txt(page, D + ' .crop-zoom-n').then(s => s.trim());
+      const z = async (sign, n = 1) => { for (let i = 0; i < n; i++) { await page.click(`${D} .crop-zoom [data-z="${sign}"]`); await sleep(120); } };
+      const cw = () => page.evaluate(d => { const e = document.querySelector(d + ' .crop-page[data-n="12"] .crop-canvas'); const c = e && e.querySelector('canvas'); return e ? { css: e.getBoundingClientRect().width, px: c.width } : null; }, D);
+      if (await zn() !== '100%') bad.push('zoom inicial ' + await zn());
+      const w0 = await cw(); await z('+', 2); await sleep(900); const w1 = await cw();
+      if (await zn() !== '225%') bad.push('«+» ×2 → ' + await zn() + ' (esperado 225%)');
+      if (!w0 || !w1 || w1.css < w0.css * 2) bad.push(`largura ${w0 && Math.round(w0.css)} → ${w1 && Math.round(w1.css)} px (esperado ×2,25)`);
+      else if (!(w1.px > w0.px) || w1.px > 2400) bad.push(`canvas ${w0.px} → ${w1.px} px (esperado mais nítido, ≤ 2400)`);
+      // desenho a 225%: cliques sintéticos nas frações (o ponto pode estar fora do ecrã; a app só usa clientX/Y e o retângulo)
+      const tap = (fx, fy) => page.evaluate(([d, fx, fy]) => { const e = document.querySelector(d + ' .crop-page[data-n="12"] .crop-canvas'), r = e.getBoundingClientRect(); e.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: r.left + fx * r.width, clientY: r.top + fy * r.height })); }, [D, fx, fy]);
+      await tap(0.10, 0.20); await sleep(150); await tap(0.40, 0.50); await sleep(300);
+      const box = await page.evaluate(d => { const b = document.querySelector(d + ' .crop-page[data-n="12"] .crop-box.draw'); return b ? ['left', 'top', 'width', 'height'].map(k => parseFloat(b.style[k])) : null; }, D);
+      if (!box) bad.push('sem caixa desenhada a 225%');
+      else if ([10, 20, 30, 30].some((v, i) => Math.abs(box[i] - v) > 1)) bad.push('caixa a 225%: ' + box.map(v => v.toFixed(1) + '%').join(' '));
+      await z('+', 6); if (await zn() !== '400%') bad.push('máximo: ' + await zn());
+      await z('-', 8); if (await zn() !== '100%') bad.push('mínimo: ' + await zn());
+      // beliscão com dois dedos (TouchEvent sintético) e um toque logo a seguir
+      const pinched = await page.evaluate(d => {
+        const w = document.querySelector(d + ' .crop-pages'), r = w.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + Math.min(r.height / 2, 200);
+        const T = (id, x, y) => new Touch({ identifier: id, target: w, clientX: x, clientY: y });
+        const ev = (type, ts) => w.dispatchEvent(new TouchEvent(type, { touches: ts, targetTouches: ts, changedTouches: ts, bubbles: true, cancelable: true }));
+        ev('touchstart', [T(1, cx - 40, cy), T(2, cx + 40, cy)]);
+        ev('touchmove', [T(1, cx - 80, cy), T(2, cx + 80, cy)]);
+        ev('touchend', []);
+        const e = w.querySelector('.crop-page[data-n="12"] .crop-canvas'), rr = e.getBoundingClientRect();
+        e.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: rr.left + rr.width * 0.7, clientY: rr.top + rr.height * 0.7 }));
+        return { z: document.querySelector(d + ' .crop-zoom-n').textContent.trim(), dot: !!w.querySelector('.crop-dot') };
+      }, D);
+      if (pinched.z === '100%') bad.push('o beliscão não mudou o zoom');
+      if (pinched.dot) bad.push('o toque logo a seguir ao beliscão marcou um canto');
+      return bad.length ? bad.join('; ') : { pass: `225% → canvas ${w0.px}→${w1.px} px; beliscão → ${pinched.z}` };
+    });
+  }, { sev: 'baixa' });
   await t('FUN-83', 'Página inteira do livro com contorno (v242, ?demo, Amazing Grace com recorte c=12:0.0,0.12,0.513,0.62): o visor mostra o recorte e «Ver a página inteira»; nesta, a página com um contorno na cor --accent à volta do recorte e «Ver só a letra do cântico», que volta ao recorte', async () => {
     const songs = fixture.map(x => x.slug !== 'amazing_grace' ? x : { ...x, files: (x.files || []).map(f => f.path === 'livros/songbook.pdf#p=12' ? { ...f, path: 'livros/songbook.pdf#p=12&c=12:0.0,0.12,0.513,0.62' } : f) });
     return withApp({ perfil: 'coro', songs, hash: '#/cantico/amazing_grace' }, async ({ page }) => {
