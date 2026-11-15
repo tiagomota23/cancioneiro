@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v243)
+## Estado e pendentes (15 nov 2026, v244)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -322,7 +322,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   mantém o ponto entre os dedos; redesenha as páginas com mais resolução 300 ms depois (máx. 2400 px de largura); os
   dedos a levantar no fim do gesto não contam como canto (400 ms). Testado no ?demo (botões, desenho a 225% com as
   frações certas, beliscão simulado com TouchEvent).
-- Tudo publicado até à v243 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v244 (desvio apontado pelo design): os − / + do zoom passam a ser o botão de símbolo existente (.icon-btn, --hit ×
+  --hit, sem contorno, --accent, fs-ui 700), como A− / A+. À espera do Tiago (pelo design): dois pontos da caixa
+  «Recorte do livro a rever» — texto em maiúsculas e o verde fixo do recorte proposto; não mexer até ele decidir.
+- Tudo publicado até à v244 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de

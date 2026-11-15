@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v243';
+  const APP_VERSION = '2026-11-15 v244';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -970,7 +970,7 @@
       <p class="small">${esc(rv.note || '')}</p>
       <p class="small crop-legend"><span class="crop-key cur"></span>atual${rv.proposed ? '<span class="crop-key prop"></span>proposto' : ''}${rv.previous ? '<span class="crop-key prev"></span>anterior' : ''}<span class="crop-key draw"></span>desenhado</p>
       <p class="small">Para desenhar: toque no canto de cima à esquerda e depois no canto de baixo à direita da letra do cântico (com o título). Se continuar noutra coluna ou página, desenhe outra parte (até 4). Para ampliar: dois dedos, ou − / +.</p>
-      <p class="crop-zoom"><button type="button" data-z="-" aria-label="Reduzir">−</button><span class="crop-zoom-n">100%</span><button type="button" data-z="+" aria-label="Ampliar">+</button></p>
+      <p class="crop-zoom"><button type="button" class="icon-btn" data-z="-" aria-label="Reduzir">−</button><span class="crop-zoom-n">100%</span><button type="button" class="icon-btn" data-z="+" aria-label="Ampliar">+</button></p>
       <div class="crop-pages"><p class="pdf-msg">A abrir as páginas…</p></div>
       <form method="dialog" class="edit-actions crop-actions">
         <button type="button" data-a="keep">Manter o atual</button>
