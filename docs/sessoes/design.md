@@ -168,22 +168,25 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v244)
-- App v244; capa do mapa «versão 244 · 15 nov 2026». v243–v244: zoom − / + na janela de rever recortes (não capturada);
-  v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. Sistema de design publicado = v243: a publicação
-  da v244 (design-system.json, tokens.json, bundle.css) foi recusada pelas permissões; o espelho está na v244 — publicar
-  na próxima sincronização. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14).
+## Estado atual (15 nov 2026, v245)
+- App v245; capa do mapa «versão 245 · 15 nov 2026». v243–v244: zoom − / + na janela de rever recortes (não capturada);
+  v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. v245: contorno da letra no visor de partituras
+  passa a `--app-brand` (verde fixo, todos os perfis com partituras; tracejado 8/6 entre partes) e `.pdf-more` «Rever recorte»
+  no visor (Maestro/Gestor); não aparece no mapa. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14).
   v242: contorno `--accent`
   2,5 px à volta da letra nas páginas do livro (visor de partituras, desenhado no canvas) e `.pdf-more` na vista de um livro —
   não aparece no mapa (o ecrã `partitura` usa um PDF de exemplo). Sem imagens novas.
-- Mapa versão 98, sistema de design versão 49. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+- Mapa versão 99, sistema de design versão 50. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
-- **Por decidir (Tiago, 15 nov):** (1) a frase da caixa sai em maiúsculas por herdar `.pend-bar p:first-child` (feito para
-  rótulos curtos) — proposta: rótulo curto «RECORTE A REVER» + frase em texto normal, ou a frase sem maiúsculas;
-  (2) a janela usa `--app-brand` (verde fixo) no contorno «proposto», fora da regra 13 (app-brand só capa/ícone/theme-color)
-  — aceitar como exceção documentada (ferramenta temporária) ou trocar por outro token. Depois da decisão: especificação à webapp
-  ou exceção no README.
+- **À espera de confirmação direta do Tiago (15 nov):** a webapp transmitiu que o Tiago (a) aprovou o verde fixo
+  (`--app-brand`) no recorte proposto e (b) deixou à sessão de design a regra das maiúsculas; a v245 alarga o verde fixo
+  ao contorno da letra no visor (pedido do Tiago, segundo a webapp). A mudança ao README foi recusada pelas permissões por a
+  decisão não vir diretamente do Tiago. Proposta feita ao Tiago: regra 15 «Caixas amarelas» (1.ª linha = rótulo curto em
+  maiúsculas, explicação em texto normal por baixo, botões à direita — opção B) + exceção documentada «app-brand no recorte
+  proposto e no contorno da letra do visor». Quando confirmar: editar `tools/screens/design-system.mjs` (Regras e Exceções),
+  regenerar e publicar o README; especificação à webapp: caixa crop-bar com `<p>Recorte a rever (N)</p><p>Confirme se a página
+  do livro mostra este cântico.</p><p>botões</p>` e a 2.ª linha sem maiúsculas.
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,
   etiqueta teste 9.5, mark 2px, pdfbar 22). Arrumação de 8 nov (fs-* e `pill` no botão Google) feita na v229.
