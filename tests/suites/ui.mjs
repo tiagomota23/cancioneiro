@@ -64,7 +64,8 @@ function mockSupabase(mode, songs, calls) {
     if (p === '/functions/v1/transcribe' && mode.transcribe) { calls.push('transcribe'); return json(await mode.transcribe(req)); } // v236: texto ao vivo simulado
     if (p === '/functions/v1/conteudo') {
       const b = JSON.parse(req.postData() || '{}');
-      calls.push(`${b.op}:${b.slug || ''}`);
+      calls.push(`${b.op}:${b.slug || (Array.isArray(b.slugs) ? b.slugs.join(',') : '')}`); // op songs (v238): os slugs pedidos
+      if (b.op === 'songs' && !mode.conteudo?.('songs', b)) { const res = {}; for (const sl of b.slugs || []) { const s = songs.find(x => x.slug === sl); if (s) res[sl] = { lyrics: s.lyrics, translation: s.translation || null, edited: false }; } return json({ songs: res, refused: [] }); }
       if (b.op === 'search' && mode.searchDelay) await sleep(mode.searchDelay); // servidor lento só na pesquisa (v235)
       const custom = mode.conteudo && mode.conteudo(b.op, b);
       if (custom) return json(custom.body, custom.status || 200);
@@ -310,6 +311,27 @@ async function suites(full) {
       }
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
+  await t('FUN-81', 'Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada — fora da pré-descarga): abrir a folha → um só op songs com os cânticos sem letra; abrir depois um deles → sem op song; abrir a folha outra vez → sem novo op songs', async () => {
+    const id = '00000000-0000-4000-8000-0000000000f1', slugs = ['salve_regina', 'amazing_grace', 'santa_lucia'];
+    const col = { id, title: 'Folha de teste expirada', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() - 864e5).toISOString(), created_by: null, published: true,
+      songs: slugs.map((s, i) => ({ song_slug: s, position: i, no_chords: false, no_scores: false, edit: [] })), sections: [], groups: [] };
+    return withApp({ real: { role: 'maestro', rest: tb => tb === 'collections' ? { body: [col] } : null }, wait: '#rows li a', timeout: 20000 }, async ({ page, calls }) => {
+      const bad = [], sc = () => calls.filter(c => c.startsWith('songs:'));
+      await sleep(2500); // pré-descarga (1 s depois das folhas): não inclui folhas expiradas
+      const before = sc().length;
+      await page.evaluate(h => { location.hash = h; }, '#/lista/colecao-' + id); await sleep(2000);
+      const mine = sc().slice(before);
+      if (mine.length !== 1) bad.push(`${mine.length} pedidos op songs ao abrir a folha (esperado 1)`);
+      else { const got = mine[0].slice(6).split(',').sort().join(','); if (got !== [...slugs].sort().join(',')) bad.push('op songs pediu ' + got); }
+      if (calls.some(c => /^song:/.test(c))) bad.push('pedidos op song durante a abertura da folha: ' + calls.filter(c => /^song:/.test(c)).join(', '));
+      await page.evaluate(() => { location.hash = '#/cantico/amazing_grace'; }); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(1200);
+      if (calls.includes('song:amazing_grace')) bad.push('abrir o cântico depois da folha voltou a pedir a letra (op song)');
+      if (!/grace/i.test(await txt(page, '#song'))) bad.push('o cântico abriu sem letra');
+      const n = sc().length; await page.evaluate(h => { location.hash = h; }, '#/lista/colecao-' + id); await sleep(1500);
+      if (sc().length !== n) bad.push('abrir a folha outra vez pediu de novo');
+      return bad.length ? bad.join('; ') : true;
+    });
   }, { sev: 'média' });
   await t('FUN-80', 'Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega a lista e guarda a versão; ao recarregar com a mesma versão não pede /rest/v1/songs; com versão nova descarrega de novo e guarda-a; sem versão (erro) descarrega como antes', async () => {
     const bad = [], st = { v: 7, fail: false };
