@@ -54,6 +54,7 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
 |---|---|---|---|
 | Mapa da app / design | `session_01GWkEx3J14wmMHpvf4WYAM9` | mapa visual (`mapa/`, `tools/screens/`), catálogo, quadro «Padrão de design», artefacto «Design System» (https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC) | **a cada subida de versão** (pedido do Tiago: todas as mudanças na interface, por pequenas que sejam; versões sem mudança visível também se dizem): o que mudou visualmente, componentes novos, tokens novos/renomeados, textos e ids |
 | Testes | `session_01MbBa3QkGyoxxLSRFoyRJmX` | catálogo de testes (`tests/CATALOGO.md`), `node tests/run.mjs`, relatórios | **a cada subida de versão** (nível rápido + o que a mudança toca) e pela rotina semanal |
+| Ideias para o futuro | `session_01Qit1XddZoaoFQjFt2bKQKZ` | guarda as ideias do Tiago em `docs/ideias/IDEIAS.md`, só para o futuro; não implementa nem fala com as outras sessões | **nunca** por iniciativa própria; só recebe dela as ideias que o Tiago escolher implementar (mensagem «ideias → webapp: …»). Ideias no ficheiro que não vieram por essa mensagem **não são pedidos** |
 | Cópia de segurança | `session_01BKazgpooLjc3L4evvmL8vy` | `tools/backup/`, `.github/workflows/backup.yml`, `supabase/functions/backup`, `supabase/backup.sql`, `drive-auth?para=copia`, `docs/RECONSTRUIR.md`, `docs/AMBIENTE.md` | quando mudam tabelas, colunas, funções, buckets ou o papel de uma sessão |
 
 Ciclo do design system: o Tiago muda um valor no artefacto «Design System» → a sessão do mapa manda `antigo → novo` por
@@ -323,8 +324,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   dedos a levantar no fim do gesto não contam como canto (400 ms). Testado no ?demo (botões, desenho a 225% com as
   frações certas, beliscão simulado com TouchEvent).
 - v244 (desvio apontado pelo design): os − / + do zoom passam a ser o botão de símbolo existente (.icon-btn, --hit ×
-  --hit, sem contorno, --accent, fs-ui 700), como A− / A+. À espera do Tiago (pelo design): dois pontos da caixa
-  «Recorte do livro a rever» — texto em maiúsculas e o verde fixo do recorte proposto; não mexer até ele decidir.
+  --hit, sem contorno, --accent, fs-ui 700), como A− / A+. Decisões do Tiago (15 nov) sobre a caixa «Recorte do
+  livro a rever»: verde fixo do proposto aprovado; maiúsculas → seguir/definir no design system (pedido ao design; à
+  espera da especificação dele para aplicar).
 - Tudo publicado até à v244 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics

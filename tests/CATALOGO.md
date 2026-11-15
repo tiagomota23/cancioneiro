@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v243** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v244** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
