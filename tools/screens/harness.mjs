@@ -102,6 +102,8 @@ export const SCREENS = [
   { id: 'gestao', group: 'Gestão', title: 'Gestão de utilizadores', hash: '#/gestao', full: true },
   { id: 'partilhado', group: 'Partilha', title: 'Cântico partilhado (sem conta)', q: 'semconta', hash: '#/p/demo_salve_regina', wait: '#song h1', full: true },
   { id: 'indice-escuro', group: 'Listas', title: 'Índice — modo escuro', scheme: 'dark' },
+  // sempre no fim da lista (o catálogo numera as peças pela ordem dos ecrãs)
+  { id: 'cantico-librone', group: 'Cântico', title: 'Cântico do Librone dei canti (chip e ligação externa)', hash: '#/cantico/dell_aurora', full: true },
 ];
 
 // o browser fica sem proxy (o servidor local é localhost); os pedidos externos (supabase-js, fontes) passam pelo Node, com cache

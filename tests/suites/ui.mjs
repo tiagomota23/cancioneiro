@@ -340,8 +340,10 @@ async function suites(full) {
     });
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('FUN-88', 'Cache de letras (v249 v2, v251 v3; modo real simulado): as cópias antigas (cancioneiro.letras.<id> e .v2.<id>) são apagadas ao abrir e a letra antiga não aparece; o cântico pede a letra e fica em cancioneiro.letras.v3.<id>; ao recarregar abre da cópia nova sem novo pedido', async () => {
-    const uid = '11111111-1111-4111-8111-111111111111', OLD = 'cancioneiro.letras.' + uid, OLD2 = 'cancioneiro.letras.v2.' + uid, NEW = 'cancioneiro.letras.v3.' + uid;
+  await t('FUN-88', 'Cache de letras (v249 v2, v251 v3, v252 v4…; modo real simulado; a versão atual lê-se do app.js): as cópias antigas (cancioneiro.letras.<id> e a versão anterior) são apagadas ao abrir e a letra antiga não aparece; o cântico pede a letra e fica na chave atual; ao recarregar abre da cópia nova sem novo pedido', async () => {
+    const cur = +((fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8').match(/'cancioneiro\.letras\.v(\d+)\.'/) || [])[1] || 0);
+    if (!cur) return 'não encontrei a chave da cópia de letras no app.js';
+    const uid = '11111111-1111-4111-8111-111111111111', OLD = 'cancioneiro.letras.' + uid, OLD2 = `cancioneiro.letras.v${cur - 1}.` + uid, NEW = `cancioneiro.letras.v${cur}.` + uid;
     const old = [['amazing_grace', { lyrics: [{ type: 'verse', lines: ['TEXTO ANTIGO DA CACHE'] }], translation: null, edited: false, nc: false }]];
     return withApp({ real: { role: 'coro' }, storage: { [OLD]: old, [OLD2]: old }, wait: '#rows li a', timeout: 20000 }, async ({ page, calls }) => {
       const bad = [];
