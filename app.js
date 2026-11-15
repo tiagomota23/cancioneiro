@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v240';
+  const APP_VERSION = '2026-11-15 v241';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -3074,17 +3074,25 @@
   // ao abrir uma folha: as letras dos seus cânticos que ainda não estão no telemóvel vêm logo, num só pedido (op songs),
   // para passar de cântico em cântico sem esperas (a descarga geral pode ainda não ter terminado)
   const warmed = new Set();
+  // cânticos cujas letras já estão a vir num pedido em lote (pré-descarga ou folha aberta): não se pedem duas vezes
+  const batching = new Set();
+  async function songsBatch(slugs) {
+    const want = slugs.filter(sl => !hasLyrics(sl) && !pending.has(sl) && !batching.has(sl));
+    if (!want.length) return { songs: {}, refused: [] };
+    want.forEach(sl => batching.add(sl));
+    try {
+      const d = await api('songs', { slugs: want });
+      for (const [sl, x] of Object.entries(d.songs || {})) if (!hasLyrics(sl)) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
+      saveLyrCache();
+      return d;
+    } finally { want.forEach(sl => batching.delete(sl)); }
+  }
   async function warmSheet(id) {
     if (DEMO || warmed.has(id) || !navigator.onLine) return;
     const c = cols.find(x => x.id === id); if (!c) return;
-    const miss = (c.songs || []).map(x => x.song_slug).filter(sl => bySlug.has(sl) && !hasLyrics(sl) && !pending.has(sl));
+    const miss = (c.songs || []).map(x => x.song_slug).filter(sl => bySlug.has(sl));
     warmed.add(id);
-    if (!miss.length) return;
-    try {
-      const d = await api('songs', { slugs: miss.slice(0, 60) });
-      for (const [sl, x] of Object.entries(d.songs || {})) if (!hasLyrics(sl)) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
-      saveLyrCache();
-    } catch (e) { warmed.delete(id); }
+    try { await songsBatch(miss.slice(0, 60)); } catch (e) { warmed.delete(id); }
   }
   async function prefetchCollections() {
     if (prefetching || DEMO || !navigator.onLine) return; prefetching = true;
@@ -3094,9 +3102,7 @@
       const miss = slugs.filter(sl => !hasLyrics(sl));
       for (let i = 0; i < miss.length; i += 40) {
         let d;
-        try { d = await api('songs', { slugs: miss.slice(i, i + 40) }); } catch (e) { if (e instanceof Limit) break; throw e; }
-        for (const [sl, x] of Object.entries(d.songs || {})) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
-        saveLyrCache();
+        try { d = await songsBatch(miss.slice(i, i + 40)); } catch (e) { if (e instanceof Limit) break; throw e; }
         if ((d.refused || []).length) break; // limite atingido
       }
       if (lvl() < 2) return;
