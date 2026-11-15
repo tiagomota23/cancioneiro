@@ -283,9 +283,17 @@ export default async function (level) {
   await t('EST-06', 'Versão do catálogo (v238): a lista guardada só se reaproveita se nada de que ela depende mudou — cânticos/fontes/etiquetas/ficheiros (gatilhos), mas também o perfil da pessoa (allowed_emails.role) e, no perfil Cancioneiro, as folhas ativas para o Cancioneiro (collections / collection_songs, e a expiração, que não escreve nada)', () => {
     const sq = read('supabase/catalogo-versao.sql'), js = read('app.js'), bad = [];
     for (const tb of ['songs', 'song_sources', 'song_tags', 'song_files']) if (!new RegExp(`'${tb}'`).test(sq)) bad.push(`sem gatilho em ${tb}`);
-    const verKey = (js.match(/const VER_KEY = ([^;\n]*)/) || [])[1] || '', cmp = (js.match(/if \(v && cached && cached\.length && ([^)]*)\) return;/) || [])[1] || '';
-    const coversRole = /allowed_emails/.test(sq) || /maxRole|role|rank/i.test(verKey + cmp);
-    const coversSheets = /collection_songs|collections/.test(sq) && /expir/i.test(sq) || /cols|colecc|collection|expir/i.test(verKey + cmp);
+    // v239: a chave guardada com a lista é listKey(v) = versão | conta | perfil da conta | folhas ativas do Cancioneiro (rank < 2)
+    const lk = (js.match(/function listKey\(v\) \{([\s\S]*?)\n  \}/) || [])[1] || '';
+    const skip = /if \(v && cached && cached\.length && store\.get\(VER_KEY, null\) === listKey\(v\)\) return;/.test(js);
+    if (!lk || !skip) bad.push('load() não compara a chave guardada com listKey(v)');
+    if (lk && !/session \? session\.user\.id/.test(lk)) bad.push('listKey sem a conta (session.user.id)');
+    const coversRole = /allowed_emails/.test(sq) || /maxRole/.test(lk);
+    const coversSheets = /collection_songs|collections/.test(sq) && /expir/i.test(sq) || (/c\.audience === 'cancioneiro'/.test(lk) && /!expired\(c\)/.test(lk) && /song_slug/.test(lk) && /c\.published !== false/.test(lk));
+    // e volta a verificar quando as folhas chegam (ao abrir e ao voltar à app) e quando o perfil da conta muda
+    const rc = (js.match(/loadCollections\(\)\.then\(recheckList\)/g) || []).length + (/Promise\.allSettled\(\[loadFavs\(\), loadCollections\(\)\]\)\.then\(\(\) => \{ recheckList\(\);/.test(js) ? 1 : 0);
+    if (rc < 2) bad.push(`recheckList depois de loadCollections em ${rc} sítios (esperado: ao abrir e ao voltar à app)`);
+    if (!/if \(roleChanged\) setTimeout\(recheckList, 0\)/.test(js)) bad.push('mudança de perfil da conta não chama recheckList');
     if (!coversRole) bad.push('mudança de perfil (ex.: Cancioneiro → Coro, Coro → Maestro) não invalida a lista guardada: fica a lista antiga até outro cântico mudar');
     if (!coversSheets) bad.push('perfil Cancioneiro: uma folha nova (ou que expira) para o Cancioneiro muda os cânticos que a pessoa vê (in_cancioneiro_collection na política «leitura familia»), mas não sobe a versão: a lista guardada não tem os cânticos da folha');
     return bad.length ? bad.join('; ') : true;
