@@ -314,6 +314,35 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-83', 'Página inteira do livro com contorno (v242, ?demo, Amazing Grace com recorte c=12:0.0,0.12,0.513,0.62): o visor mostra o recorte e «Ver a página inteira»; nesta, a página com um contorno na cor --accent à volta do recorte e «Ver só a letra do cântico», que volta ao recorte', async () => {
+    const songs = fixture.map(x => x.slug !== 'amazing_grace' ? x : { ...x, files: (x.files || []).map(f => f.path === 'livros/songbook.pdf#p=12' ? { ...f, path: 'livros/songbook.pdf#p=12&c=12:0.0,0.12,0.513,0.62' } : f) });
+    return withApp({ perfil: 'coro', songs, hash: '#/cantico/amazing_grace' }, async ({ page }) => {
+      const bad = [], btn = () => page.evaluate(() => document.querySelector('#pdfpages .pdf-more button')?.textContent.trim() || '');
+      const waitBtn = async re => { for (let i = 0; i < 80; i++) { if (re.test(await btn())) return true; await sleep(150); } return false; };
+      await page.waitForSelector('#song a.pdf', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '#song a.pdf'))) return 'sem ligação para a página do livro';
+      await page.click('#song a.pdf');
+      if (!(await waitBtn(/Ver a página inteira/))) return 'recorte sem «Ver a página inteira» (botão: «' + await btn() + '»)';
+      await page.click('#pdfpages .pdf-more button');
+      if (!(await waitBtn(/Ver só a letra do cântico/))) bad.push('página inteira sem «Ver só a letra do cântico» (botão: «' + await btn() + '»)');
+      else {
+        await sleep(400);
+        // o contorno: pixel no meio da aresta esquerda do recorte (x0 = 0, y entre 0,12 e 0,62) na cor --accent
+        const px = await page.evaluate(() => {
+          const c = document.querySelector('#pdfpages canvas'); if (!c) return null;
+          const r = c.width / parseFloat(c.style.width || c.width), lw = 2.5 * r, d = c.getContext('2d').getImageData(Math.round(lw / 2), Math.round(c.height * 0.37), 1, 1).data;
+          const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+          const t = document.createElement('canvas').getContext('2d'); t.fillStyle = acc || '#10835c'; t.fillRect(0, 0, 1, 1); const a = t.getImageData(0, 0, 1, 1).data;
+          return { px: [d[0], d[1], d[2]], acc: [a[0], a[1], a[2]] };
+        });
+        if (!px) bad.push('página inteira sem canvas');
+        else if (Math.hypot(px.px[0] - px.acc[0], px.px[1] - px.acc[1], px.px[2] - px.acc[2]) > 60) bad.push(`sem contorno na cor --accent: pixel ${px.px} vs ${px.acc}`);
+        await page.click('#pdfpages .pdf-more button');
+        if (!(await waitBtn(/Ver a página inteira/))) bad.push('«Ver só a letra do cântico» não voltou ao recorte');
+      }
+      return bad.length ? bad.join('; ') : true;
+    });
+  }, { sev: 'baixa' });
   await t('FUN-81', 'Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada — fora da pré-descarga): abrir a folha → um só op songs com os cânticos sem letra; abrir depois um deles → sem op song; abrir a folha outra vez → sem novo op songs', async () => {
     const id = '00000000-0000-4000-8000-0000000000f1', slugs = ['salve_regina', 'amazing_grace', 'santa_lucia'];
     const col = { id, title: 'Folha de teste expirada', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() - 864e5).toISOString(), created_by: null, published: true,
