@@ -2,13 +2,13 @@
 // O site publica o índice (indice.js: id, título, autores, secção) e as letras (testi.js: id → texto, sem estrofes).
 // Cânticos já ligados (song_sources librone, ref = id no site): acrescenta a secção (song_tags grp «Librone dei canti»)
 // e, se a letra no site mudou e a do Cancioneiro ainda é a do librone (1.ª linha MARK, sem edição de um Maestro),
-// atualiza-a (estrofes pelo divisor strofe.js). Cânticos novos no site: só são comunicados por email (a webapp
+// atualiza-a a partir da página do cântico (estrofes, refrão e acordes como no site: pagina.js; sem página, strofe.js). Cânticos novos no site: só são comunicados por email (a webapp
 // verifica se já existem com outro nome antes de criar). Nada se apaga: o que sai do site fica (só é comunicado).
 import { strofe } from './strofe.js';
+import { dadosDaPagina, fromPage, MARK } from './pagina.js';
 const SB = Deno.env.get('SUPABASE_URL'); const SK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); const RESEND = Deno.env.get('RESEND_API_KEY');
 const ADMIN = 'tiago.mota@gmail.com'; const APP = 'https://tiagomota23.github.io/cancioneiro/';
 const SITE = 'https://www.libronedeicanti.it/';
-const MARK = '(letra do librone dei canti — libronedeicanti.it)';
 const GRP = 'Librone dei canti';
 const HDR = { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json' } });
@@ -37,6 +37,8 @@ async function load(file) {
   const s = await r.text();
   return JSON.parse(s.slice(s.indexOf('{'), s.trimEnd().replace(/;$/, '').lastIndexOf('}') + 1));
 }
+// comparação só do texto: sem acordes nem linhas entre parênteses (títulos de secção, capotasto)
+const plain = s => String(s).split('\n').map(l => l.replace(/\[[^\]]*\]/g, '')).filter(l => !/^\s*\(.*\)\s*$/.test(l)).join('\n');
 const words = s => (String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().match(/[a-z0-9]+/g) || []).join(' ');
 const songUrl = id => `${SITE}canti/${encodeURIComponent(id)}.html`;
 
@@ -69,16 +71,19 @@ Deno.serve(async () => {
       }
     }
     // letras: só as que ainda são as do librone (1.ª linha MARK) e sem edição de um Maestro
-    const mine = await all(`songs?select=slug,title,lyrics&lyrics_edit=is.null&lyrics->0->lines->>0=eq.${encodeURIComponent(MARK)}&order=slug`);
+    const mine = await all(`songs?select=slug,title,lyrics&lyrics_edit=is.null&lyrics->0->lines->>0=like.${encodeURIComponent('(letra do librone*')}&order=slug`);
     const refOf = new Map(linked.map(x => [x.song_slug, x.ref]));
     for (const s of mine) {
       const ly = Array.isArray(s.lyrics) ? s.lyrics : [];
-      if (ly[0]?.lines?.[0] !== MARK || !refOf.has(s.slug)) continue;
+      if (!String(ly[0]?.lines?.[0] || '').startsWith('(letra do librone') || !refOf.has(s.slug)) continue;
       const site = txt[refOf.get(s.slug)];
       if (!site || !site.trim()) continue;
       const cur = ly.slice(1).map(st => (st.lines || []).join('\n')).join('\n');
-      if (words(cur) === words(site)) continue;
-      await rest(`songs?slug=eq.${encodeURIComponent(s.slug)}&lyrics_edit=is.null`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ lyrics: [{ type: 'verse', lines: [MARK] }, ...strofe(site)], updated_at: new Date().toISOString() }) });
+      if (words(plain(cur)) === words(plain(site))) continue;
+      // a página do cântico tem estrofes, refrão e acordes; sem ela, só o texto dividido pelo strofe.js
+      const d = await fetch(songUrl(refOf.get(s.slug))).then(r => r.ok ? r.text() : '').then(dadosDaPagina).catch(() => null);
+      const p = d ? fromPage(d) : { lyrics: [{ type: 'verse', lines: [MARK] }, ...strofe(site)], chords: false };
+      await rest(`songs?slug=eq.${encodeURIComponent(s.slug)}&lyrics_edit=is.null`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ lyrics: p.lyrics, has_chords: p.chords, updated_at: new Date().toISOString() }) });
       sum.lyrics.push(`<a href="${songUrl(refOf.get(s.slug))}">${esc(s.title)}</a>`);
     }
     for (const [ref] of byRef) if (!seen.has(ref)) sum.gone.push(esc(ref));

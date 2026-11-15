@@ -110,7 +110,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v250';
+  const APP_VERSION = '2026-11-15 v251';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -270,9 +270,9 @@
   }
 
   // ---------- Conteúdo protegido (função "conteudo" no Supabase) ----------
-  // «v2» (v249): as letras do CANTI passaram a vir do librone — a cópia guardada antes disso é deitada fora uma vez
-  const lyrKey = () => 'cancioneiro.letras.v2.' + (session ? session.user.id : 'anon');
-  try { for (const k of Object.keys(localStorage)) if (/^cancioneiro\.letras\.(?!v2\.)/.test(k)) localStorage.removeItem(k); } catch (e) {}
+  // «v3» (v251): letras do librone com estrofes, refrão e acordes do site — a cópia guardada antes disso é deitada fora uma vez
+  const lyrKey = () => 'cancioneiro.letras.v3.' + (session ? session.user.id : 'anon');
+  try { for (const k of Object.keys(localStorage)) if (/^cancioneiro\.letras\.(?!v3\.)/.test(k)) localStorage.removeItem(k); } catch (e) {}
   const LYR_MAX = 150;
   function loadLyrCache() { lyr.clear(); for (const [k, v] of store.get(lyrKey(), [])) lyr.set(k, v); }
   function saveLyrCache() { store.set(lyrKey(), [...lyr.entries()].slice(-LYR_MAX)); }
@@ -1910,9 +1910,15 @@
     $('sn-lang').innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
     $('sn-lang').value = s.language || 'pt';
     fillCats(currentCat(s)); $('sn-cat').dataset.orig = $('sn-cat').value;
-    $('sn-text').value = toText(lyricsOf(s)); $('sn-text').dataset.orig = $('sn-text').value;
+    // sem letra («por transcrever» / «no livro») mas com rascunho por rever: a letra vem já preenchida com o rascunho,
+    // e «Guardar» publica-o (como «Editar» na caixa do rascunho)
+    const dr = (lyr.get(slug) || {}).draft, cur = toText(lyricsOf(s));
+    const fromDraft = !s.is_edited && /letra (por transcrever|no livro)/i.test(cur) && dr && (dr.lyrics || []).length ? dr : null;
+    $('sn-text').value = fromDraft ? toText(fromDraft.lyrics) : cur; $('sn-text').dataset.orig = fromDraft ? '' : cur;
+    $('sn-text').dataset.draft = fromDraft ? '1' : '';
     $('sn-pdf-name').textContent = ''; $('sn-msg').textContent = '';
-    $('sn-hint').textContent = s.is_edited ? 'A letra já foi editada; a original pode ser reposta na página do cântico.' : '';
+    $('sn-hint').textContent = fromDraft ? 'Letra preenchida com o rascunho por rever. Ao guardar, a letra fica publicada e visível para todos.'
+      : s.is_edited ? 'A letra já foi editada; a original pode ser reposta na página do cântico.' : '';
     renderEditFiles();
     $('sn-text-req').hidden = true; snGate(); // a editar, a letra pode ficar vazia (cânticos só com partitura)
     $('song-new').showModal();
@@ -1934,7 +1940,8 @@
         removeTag: cat !== orig ? asTag(orig) : null, addTag: cat !== orig ? asTag(cat) : null });
       if (text !== $('sn-text').dataset.orig.trim()) {
         if (!text) throw new Error('A letra não pode ficar vazia (use "Repor original" para voltar à original).');
-        await api('save', { slug: s.slug, lyrics_edit: fromText(text) });
+        if ($('sn-text').dataset.draft) { await api('draft', { slug: s.slug, action: 'publish', lyrics: fromText(text) }); draftSlugs.delete(s.slug); }
+        else await api('save', { slug: s.slug, lyrics_edit: fromText(text) });
         lyr.delete(s.slug); saveLyrCache(); demoIx = null;
       }
       $('song-new').close(); toast('Cântico guardado');

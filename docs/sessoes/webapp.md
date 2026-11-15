@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v250)
+## Estado e pendentes (15 nov 2026, v251)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -394,7 +394,25 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   Lista de cânticos pede `song_sources(source,ref)`.
   As 6 entradas do CANTI que eram títulos de secção («Brunori Sas», «Cesare Cremonini», «Lucio Dalla», «Giorgio
   Gaber», «Jovanotti», «Mina») foram apagadas a 15 nov (Tiago: «yes, delete them»; não estavam em folhas nem favoritos).
-- Tudo publicado até à v250 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v251 (15 nov).** (1) Letras do librone a partir das páginas dos cânticos (canti/<id>.html: `window.PAGINA.dati.b` =
+  estrofes → linhas → [acorde, texto, refrão]; `capo`; `l` = língua, sem = italiano — falha em alguns cânticos não
+  italianos; `tr` = tradução italiana): 1085 letras refeitas como no site (982 com acordes, refrões marcados,
+  capotasto na 1.ª linha), 199 traduções italianas acrescentadas onde não havia. Divisor em
+  `supabase/functions/sync-librone/pagina.js` (a sync-librone usa-o quando o texto muda; o strofe.js fica de reserva).
+  Chave da cache de letras → `cancioneiro.letras.v3.`. (2) Verificação de consistência (Tiago: «verify and fix all
+  duplicates», «always preserve as much existing info in each song»): 20 duplicados fundidos (função pg_temp.fundir:
+  fica a letra mais rica — edição > com acordes > outra > librone > marcador; a outra vai para song_edits com
+  edited_by «fusão de duplicados (<slug>)»; fontes, etiquetas, ficheiros, folhas, favoritos, partilhas, histórico,
+  recortes, textos dos PDF, pastas do Drive e versões passam para o que fica; autor, tradução, página, partitura e
+  direitos copiados se faltarem). Inclui os 5 duplicados criados pela importação do librone (Kumbaya, My Bonnie,
+  Il campanello, O ninine, I' te voglio bene assaje) e El Ebro (CANTI) → El Ebro guarda silencio. «O ninine» (CANTI)
+  tinha a letra de «Quel mazzolin di fiori»: corrigido. Não são duplicados (texto partilhado, cânticos diferentes):
+  Desde toda a eternidade / Avé Maria (Decha); Tantum ergo / Veneremos adoremos; Magnificat (Vitorchiano) / Feliz és
+  Tu; Nel primo chiarore / Liberati dal giogo; Ave Maria Victoria / gregoriano; Luz terna / Luz terna (hino); I still
+  haven't found / I saw her standing there. Línguas corrigidas em ~45 cânticos; 9 marcados com acordes sem os terem.
+  (3) «Editar cântico»: sem letra («por transcrever» / «no livro») e com rascunho, a letra vem preenchida com o
+  rascunho e «Guardar» publica-o (op draft publish).
+- Tudo publicado até à v251 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
