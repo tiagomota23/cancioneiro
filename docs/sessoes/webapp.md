@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v253)
+## Estado e pendentes (15 nov 2026, v254)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -420,7 +420,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - **v253 (15 nov, decisões do Tiago via sessão design).** Caixa .crop-bar segue a regra 15 das caixas amarelas
   (rótulo «Recorte a rever» / explicação / botões); recorte proposto na janela «Rever recorte» e contorno da letra nas
   páginas inteiras passam à cor do perfil (--accent; deixam de usar --app-brand).
-- Tudo publicado até à v253 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v254 (15 nov, relatório de testes v252).** FUN-85: no visor de um livro sem recorte (página inteira, sem &c=),
+  o Maestro passa a ter «Rever recorte». INT-14: os 120 cânticos do librone em «Canti stranieri» sem categoria
+  receberam etiqueta Tema (Pop/autor 63, Populares 46, Espirituais 6, Movimento 4 — Cocagnac e In cammino —,
+  Liturgia 1 — Sovet prevecnyi); línguas: ru (4), cu (1), sw (1), de (1), xx (1). As secções do librone contam como
+  as do CANTI nas regras dos temas (app.js TEMAS).
+- Tudo publicado até à v254 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
