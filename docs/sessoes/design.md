@@ -168,8 +168,10 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v246)
-- App v246; capa do mapa «versão 246 · 15 nov 2026». v246: caixa «Recorte a rever» também no cântico dentro de uma folha
+## Estado atual (15 nov 2026, v247)
+- App v247 (sem componentes nem imagens novas). Publicados: mapa «versão 246», sistema de design v246; a publicação da v247
+  (Main, Padrao, ds/tokens no mapa; design-system.json e tokens.json no sistema) foi recusada pelas permissões — o espelho
+  já está na v247: publicar na próxima sincronização. v246: caixa «Recorte a rever» também no cântico dentro de uma folha
   (sem componentes novos, sem imagens novas). v243–v244: zoom − / + na janela de rever recortes (não capturada);
   v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. v245: contorno da letra no visor de partituras
   passa a `--app-brand` (verde fixo, todos os perfis com partituras; tracejado 8/6 entre partes) e `.pdf-more` «Rever recorte»
