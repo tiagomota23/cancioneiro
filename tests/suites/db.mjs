@@ -236,6 +236,21 @@ export default async function (level) {
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
+  await t('SEG-43', 'crop_reviews (v237): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; leitura e escrita recusadas a anon e aos 4 perfis (em rollback)', async () => {
+    const bad = [];
+    const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'crop_reviews')::int pols,
+      has_table_privilege('anon', 'public.crop_reviews', 'select,insert,update,delete') anon_priv,
+      has_table_privilege('authenticated', 'public.crop_reviews', 'select,insert,update,delete') auth_priv
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'crop_reviews'`);
+    if (!m) return 'crop_reviews não existe';
+    if (!m.rls) bad.push('RLS desligada'); if (m.pols) bad.push(`${m.pols} políticas`);
+    if (m.anon_priv) bad.push('anon com privilégios'); if (m.auth_priv) bad.push('authenticated com privilégios');
+    for (const who of ['anon', 'cancioneiro', 'coro', 'maestro', 'gestor']) for (const [k, q] of [['leu', 'select count(*)::int n from public.crop_reviews;'], ['mudou', "update public.crop_reviews set status = 'feito' where false;"]]) {
+      try { await sql(asRole(who, q)); bad.push(`${who} ${k} crop_reviews`); }
+      catch (e) { if (!/permission denied/i.test(e.message)) bad.push(`${who}: erro inesperado ${e.message.slice(0, 80)}`); }
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'crítica', where: 'supabase/recortes.sql' });
   await t('SEG-40', 'song_texts (v233): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; como anon, Cancioneiro, Coro, Maestro e Gestor a leitura é recusada (em rollback)', async () => {
     const bad = [];
     const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'song_texts')::int pols,
@@ -526,6 +541,21 @@ export default async function (level) {
     const info = `${r.n}/${r.partituras} partituras com texto extraído (${r.sem_texto} sem texto legível); última ${r.ultima || '—'}`;
     return bad.length ? { fail: bad.join('; ') + ' — ' + info } : { pass: info };
   }, { sev: 'baixa', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts' });
+  await t('INT-24', 'Revisão de recortes (v237): cada crop_review aponta para um song_files de livro (livros/songbook.pdf ou canti2024.pdf) do mesmo cântico; proposed/previous do mesmo livro e com &s= do cântico; feitas com decided_by e decided_at; pendentes (informativo)', async () => {
+    const [r] = await sql(`select count(*)::int n,
+      count(*) filter (where status = 'pendente')::int pendentes,
+      count(*) filter (where f.id is null or f.song_slug <> c.song_slug or f.path !~ '^livros/(songbook|canti2024)\\.pdf')::int ficheiro_errado,
+      count(*) filter (where (c.proposed is not null and (split_part(c.proposed, '#', 1) <> split_part(coalesce(f.path, ''), '#', 1) or c.proposed !~ ('&s=' || c.song_slug || '$')))
+                         or (c.previous is not null and split_part(c.previous, '#', 1) <> split_part(coalesce(f.path, ''), '#', 1)))::int caminho_errado,
+      count(*) filter (where status = 'feito' and (decided_by is null or decided_at is null))::int feito_sem_quem
+      from public.crop_reviews c left join public.song_files f on f.id = c.song_file_id`);
+    const bad = [];
+    if (r.ficheiro_errado) bad.push(`${r.ficheiro_errado} revisões sem o ficheiro de livro do mesmo cântico`);
+    if (r.caminho_errado) bad.push(`${r.caminho_errado} com proposto/anterior de outro livro ou sem &s= do cântico`);
+    if (r.feito_sem_quem) bad.push(`${r.feito_sem_quem} feitas sem decided_by/decided_at`);
+    const info = `${r.n} revisões, ${r.pendentes} pendentes`;
+    return bad.length ? { fail: bad.join('; ') + ' — ' + info } : { pass: info };
+  }, { sev: 'baixa', where: 'supabase/recortes.sql, conteudo op cropset' });
   await t('INT-05','Cancioneiro: cânticos do site original estão todos no Cancioneiro', async () => {
     const [r] = await sql(`select count(*)::int n from public.songs s where not cancioneiro and exists (select 1 from public.song_sources x where x.song_slug=s.slug and x.source='original')`);
     return r.n ? `${r.n} cânticos do original fora do Cancioneiro` : true;

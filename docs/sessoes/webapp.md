@@ -294,7 +294,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   de resultados (a lista mostra já o que o telemóvel encontrou); o número aparece quando o servidor responde. Números,
   pesquisas curtas, sem rede ou com o servidor em erro: o número aparece logo (`searchLyricsRemote` devolve se espera;
   `lyricFailed` guarda as que falharam, limpo ao voltar a rede e ao mudar de perfil).
-- Tudo publicado até à v237 (conteudo versão 38, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v237 (conteudo versão 39, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v236** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, BUS-01, BUS-02, EST-05, SEG-38, SEG-39, SEG-40, SEG-41, INT-23 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v237** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, FUN-79, BUS-01, BUS-02, EST-05, SEG-38, SEG-39, SEG-40, SEG-41, SEG-42, SEG-43, INT-23, INT-24 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -34,6 +34,7 @@ Catálogo atualizado até à **v236** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | FUN-76 | Hit da partitura (v233, modo real simulado): field «pdf» → «Na partitura: …» com a palavra marcada; hit da letra sem o prefixo | ui | média | V | ☐ por correr |
 | FUN-77 | «A procurar…» (v235, modo real simulado, pesquisa no servidor com 2 s): título «A procurar…» com as linhas do telemóvel, depois «N resultados»; número logo para números, < 3 letras, cache e depois de erro (sem nova chamada) | ui | baixa | V | ☐ por correr |
 | FUN-78 | Som com texto ao vivo (v236, modo real simulado, microfone falso do Chromium): 1.º transcribe aos ~2 s, um de cada vez; texto logo em #listen-text; «parece «Amazing Grace»»; texto igual sem novo match; texto claro ≥ 6 palavras termina em #/ouvir; sem correspondência pára aos 15 s | ui | média | V | ☐ por correr |
+| FUN-79 | Revisão de recortes (v237, ?demo): só Maestro+ vê .crop-bar; diálogo com páginas desenhadas e caixas atual/proposta; dois toques desenham; «Usar o desenhado» fecha e não volta; «Cancelar» não decide | ui | média | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ☐ por correr |
 | BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
@@ -259,6 +260,8 @@ Catálogo atualizado até à **v236** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | SEG-39 | Texto dos PDF (v233, código): song_texts com RLS, sem políticas, revoke anon/authenticated; pdf-texto exige OIDC (RS256, aud, repositório, main, texto-pdf.yml) → 401 antes de tudo; save só kind score e ≤ 30000; conteudo sem trechos pdf para o perfil Cancioneiro em search **e em match** | static | alta | V | ☐ por correr |
 | SEG-40 | song_texts (v233, SQL): RLS sem políticas; anon/authenticated sem privilégios; leitura recusada a anon e aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
 | SEG-41 | pdf-texto (v233, produção): sem token, token forjado ou chave anon → 401 em op=list e op=save | live | crítica | V | ☐ por correr |
+| SEG-42 | Revisão de recortes (v237, código): crop_reviews RLS/revoke; crops/croppages/cropset lvl < 3 → 403; limites file/save; cropset só pendente (404) e decisão condicionada a pendente antes de mudar o recorte (409, conteudo v39), mesmo livro, &s= do cântico, 1–4 partes, páginas ±1 do atual/anterior/proposto, frações e tamanhos mínimos → 400; pdf-texto locate depois do OIDC | static | alta | V | ☐ por correr |
+| SEG-43 | crop_reviews (v237, SQL): RLS sem políticas; sem privilégios; leitura e escrita recusadas a anon e aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
@@ -309,6 +312,7 @@ Catálogo atualizado até à **v236** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | INT-21 | Coros & Companhia (v226): refs únicos, kind other só https, cc_sync_log nos últimos 8 dias sem erro, cc_sync_log com RLS e sem grants (+ cc_transcripts com RLS e sem grants, v227) | db | média | S | ✓ |
 | INT-22 | Templates de folha (v227): Missa, Missa completa, Matrimónio, Baptismo e Funeral, cada um com secções | db | baixa | S | ✓ |
 | INT-23 | Texto dos PDF (v233): song_texts só de song_files kind score (mesmo cântico); chars = length(text); progresso da extração (informativo) | db | baixa | S | ☐ por correr |
+| INT-24 | Revisão de recortes (v237): revisões ligadas a ficheiros de livro do mesmo cântico; proposto/anterior do mesmo livro com &s=; feitas com quem e quando; pendentes (informativo) | db | baixa | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
