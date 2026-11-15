@@ -314,6 +314,26 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-88', 'Cache de letras v2 (v249, modo real simulado): a cópia antiga (cancioneiro.letras.<id>) é apagada ao abrir e a letra antiga não aparece; o cântico pede a letra (op song) e fica em cancioneiro.letras.v2.<id>; ao recarregar abre da cópia nova sem novo op song', async () => {
+    const uid = '11111111-1111-4111-8111-111111111111', OLD = 'cancioneiro.letras.' + uid, NEW = 'cancioneiro.letras.v2.' + uid;
+    const old = [['amazing_grace', { lyrics: [{ type: 'verse', lines: ['TEXTO ANTIGO DA CACHE'] }], translation: null, edited: false, nc: false }]];
+    return withApp({ real: { role: 'coro' }, storage: { [OLD]: old }, wait: '#rows li a', timeout: 20000 }, async ({ page, calls }) => {
+      const bad = [];
+      if (await page.evaluate(k => localStorage.getItem(k) !== null, OLD)) bad.push('a cópia antiga não foi apagada');
+      const songCalls = () => calls.filter(c => c === 'song:amazing_grace' || (c.startsWith('songs:') && c.split(/[:,]/).includes('amazing_grace'))).length;
+      await page.evaluate(() => { location.hash = '#/cantico/amazing_grace'; }); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(1500);
+      const t1 = await txt(page, '#song');
+      if (/TEXTO ANTIGO DA CACHE/.test(t1)) bad.push('mostrou a letra da cópia antiga');
+      if (!/grace/i.test(t1)) bad.push('o cântico abriu sem letra');
+      if (!songCalls()) bad.push('não pediu a letra ao servidor');
+      const has = await page.evaluate(k => { try { return JSON.parse(localStorage.getItem(k) || '[]').some(([s]) => s === 'amazing_grace'); } catch (e) { return false; } }, NEW);
+      if (!has) bad.push('letra não guardada em ' + NEW.replace(uid, '<id>'));
+      const n = songCalls(); await page.reload(); await page.waitForSelector('#song h1', { timeout: 15000 }).catch(() => {}); await sleep(1500);
+      if (!/grace/i.test(await txt(page, '#song'))) bad.push('depois de recarregar, sem letra');
+      if (songCalls() > n) bad.push('depois de recarregar, voltou a pedir a letra ao servidor');
+      return bad.length ? bad.join('; ') : true;
+    });
+  }, { sev: 'média' });
   await t('FUN-87', 'Rascunhos de letra (v248, ?demo): Coro sem .draft-bar no cantico_por_transcrever e sem «Rascunhos de letra» na gaveta; Maestro com a entrada (e o cântico na lista), .draft-bar com .draft-text; «Rever e publicar» abre #editor com o rascunho, #edit-reset escondido e aviso em #edit-msg; Guardar tira a caixa e mostra a letra; noutra abertura «Descartar» (dois toques) tira a caixa e a letra continua «por transcrever»', async () => {
     const bad = [], H = '#/cantico/cantico_por_transcrever';
     await withApp({ perfil: 'coro', hash: H }, async ({ page }) => {
