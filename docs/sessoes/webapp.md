@@ -392,8 +392,8 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   saem só por email. App: SOURCES.librone, livro «Librone dei canti» (gaveta), secções em BOOKS (id lc), temas de
   «Todos os cânticos» incluem as secções do librone, ligação «Librone dei canti» (↗) junto às partituras do cântico.
   Lista de cânticos pede `song_sources(source,ref)`.
-  **Por decidir com o Tiago:** as 6 entradas do CANTI que são títulos de secção («Brunori Sas», «Cesare Cremonini»,
-  «Lucio Dalla», «Giorgio Gaber», «Jovanotti», «Mina») — apagar?
+  As 6 entradas do CANTI que eram títulos de secção («Brunori Sas», «Cesare Cremonini», «Lucio Dalla», «Giorgio
+  Gaber», «Jovanotti», «Mina») foram apagadas a 15 nov (Tiago: «yes, delete them»; não estavam em folhas nem favoritos).
 - Tudo publicado até à v250 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
