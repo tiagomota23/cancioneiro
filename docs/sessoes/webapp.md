@@ -336,7 +336,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   cântico foi aberto de uma dessas folhas, volta a ela (ou à seguinte, se ficou vazia; sem nenhuma, à página inicial).
   A caixa «Recorte do livro a rever» aparece também com o cântico aberto dentro de uma folha. Os 2 já confirmados antes
   (adios_con_el_corazon, alecrim_popular_portuguesa) foram tirados das folhas por SQL.
-- Tudo publicado até à v246 (conteudo versão 42, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v246 (conteudo versão 43, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de

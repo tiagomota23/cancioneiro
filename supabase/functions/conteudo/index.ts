@@ -530,7 +530,9 @@ Deno.serve(async (req) => {
       const left = await rest(`crop_reviews?select=id&song_slug=eq.${encodeURIComponent(r.song_slug)}&status=eq.pendente`);
       const removedFrom = [], deleted = [];
       if (!left.length) {
-        const revCols = await rest(`collections?select=id&title=like.${encodeURIComponent('Rever recortes dos livros*')}`);
+        // só as folhas de revisão criadas pela webapp: por publicar e sem autor (uma folha de um Maestro com um título
+        // parecido nunca é tocada)
+        const revCols = await rest(`collections?select=id&title=like.${encodeURIComponent('Rever recortes dos livros*')}&published=is.false&created_by=is.null`);
         for (const c of revCols) {
           const del = await rest(`collection_songs?collection_id=eq.${c.id}&song_slug=eq.${encodeURIComponent(r.song_slug)}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
           if (!del.length) continue;
