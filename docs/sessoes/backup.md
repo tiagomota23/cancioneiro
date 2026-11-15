@@ -87,8 +87,10 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - Cópia agendada de 9 nov: passou, verificação incluída.
 - v233 (14 nov): tabela song_texts (texto dos PDF, tem letras: nunca no repo), função pdf-texto, Action texto-pdf.yml.
   Esquema e grants já saem em backup_schema(). song_texts acrescentada à constante T e à ORDEM (commit 14 nov).
-  **Pendente:** autorização do Tiago para publicar a função backup com song_texts; depois correr backup.yml e confirmar.
-  Até lá, dados.json não leva song_texts (refaz-se com a Action «Texto dos PDF»).
+- v237 (15 nov): tabela crop_reviews (revisão de recortes dos livros, 27 linhas, insubstituível); esquema e grants já em
+  backup_schema(); acrescentada à constante T e à ORDEM (depois de song_files e songs).
+  **Pendente:** autorização do Tiago para publicar a função backup com song_texts e crop_reviews; depois correr
+  backup.yml e confirmar. Até lá, dados.json não leva nenhuma das duas.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.
