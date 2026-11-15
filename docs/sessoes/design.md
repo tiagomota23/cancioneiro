@@ -168,9 +168,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v239)
-- App v239 (v238–v239 sem mudança visível, sem imagens novas); capa do mapa «versão 239 · 15 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 94, sistema de design versão 45. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+## Estado atual (15 nov 2026, v240)
+- App v240 (v238–v240 sem mudança visível, sem imagens novas); capa do mapa «versão 240 · 15 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 95, sistema de design versão 46. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
 - **Por decidir (Tiago, 15 nov):** (1) a frase da caixa sai em maiúsculas por herdar `.pend-bar p:first-child` (feito para
