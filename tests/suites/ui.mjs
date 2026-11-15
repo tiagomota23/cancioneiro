@@ -316,16 +316,17 @@ async function suites(full) {
     const mode = { role: 'coro', rest: tb => tb === 'catalog_version' ? (st.fail ? { body: { message: 'erro' }, status: 500 } : { body: [{ v: st.v }] }) : null };
     await withApp({ real: mode, wait: '#rows li a', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
       const songsGets = () => calls.filter(c => /^GET \/rest\/v1\/songs\b/.test(c)).length;
-      const ver = () => page.evaluate(() => localStorage.getItem('cancioneiro.songs.v2.versao'));
+      // v239: a chave é «versão|conta|perfil|folhas»; aqui só interessa a versão
+      const ver = () => page.evaluate(() => { try { return String(JSON.parse(localStorage.getItem('cancioneiro.songs.v2.versao'))).split('|')[0]; } catch (e) { return null; } });
       const reload = async () => { await page.reload(); await page.waitForSelector('#rows li a', { timeout: 20000 }).catch(() => {}); await sleep(2500); };
       if (songsGets() < 1) bad.push('1.ª abertura não descarregou a lista');
-      if (JSON.parse(await ver() || 'null') + '' !== '7') bad.push('versão não guardada: ' + await ver());
+      if (await ver() !== '7') bad.push('versão não guardada: ' + await ver());
       let n = songsGets(); await reload();
       if (songsGets() !== n) bad.push('mesma versão: voltou a pedir /rest/v1/songs');
       if (!(await count(page, '#rows li a'))) bad.push('mesma versão: lista vazia');
       st.v = 8; n = songsGets(); await reload();
       if (songsGets() === n) bad.push('versão nova: não descarregou');
-      if (JSON.parse(await ver() || 'null') + '' !== '8') bad.push('versão nova não guardada: ' + await ver());
+      if (await ver() !== '8') bad.push('versão nova não guardada: ' + await ver());
       st.fail = true; n = songsGets(); await reload();
       if (songsGets() === n) bad.push('sem versão (erro): não descarregou');
     });
