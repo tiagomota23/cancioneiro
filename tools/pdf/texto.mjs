@@ -37,7 +37,7 @@ const CHORD = /^\(?(?:[A-G]|do|dó|re|ré|mi|fa|fá|sol|la|lá|si)(?:#|b|♯|♭
 // …mas uma linha só é de acordes se algum tiver marca de acorde (maiúscula A–G, #, b, -, número, /, m…): «la la la» é letra
 const CHORDY = w => /^\(?[A-G]/.test(w) || /[#♯♭\d\/+°]|-\)?$/.test(w) || /^(?:do|dó|re|ré|mi|fa|fá|sol|la|lá|si)(?:b|m|maj|min|dim|aug|sus|add)/i.test(w);
 // (ou todos com maiúscula, como «Do Sol Lam»; um «Sol» sozinho também)
-const chordLine = l => { const ws = l.split(' '); return ws.every(w => CHORD.test(w)) && (ws.some(CHORDY) || ws.every(w => /^\(?\p{Lu}/u.test(w))); };
+const chordLine = l => { const ws = l.split(' '); return ws.every(w => CHORD.test(w)) && (ws.some(CHORDY) || ws.every(w => /^\(?\p{Lu}/u.test(w)) || (ws.length <= 6 && !ws.every(w => /^l[aà]$/i.test(w)))); };
 const letters = s => (s.match(/\p{L}/gu) || []).length;
 // palavras de uma letra que existem (a, e, o, é, y…); as outras letras soltas são restos das notas ou das pautas
 const ONE = new Set([...'aeiouyàáâãéèêíóòôõúAEIOUYÀÁÉÈÍÓÚ']);
@@ -94,6 +94,28 @@ async function textLayer(pdf, page, box) {
   if (box) { const [w, h] = await size(pdf); args.push('-r', '72', '-x', String(Math.floor(box[0] * w)), '-y', String(Math.floor(box[1] * h)), '-W', String(Math.ceil((box[2] - box[0]) * w)), '-H', String(Math.ceil((box[3] - box[1]) * h))); }
   return run('pdftotext', [...args, pdf, '-']);
 }
+// Recorte de um livro por linhas (não por retângulo): com -bbox-layout, cada linha do texto tem a sua posição; uma
+// linha é do cântico se começa dentro da coluna do recorte e o seu meio está dentro da altura do recorte — e entra
+// inteira, mesmo que passe do meio da página (no CANTI, as linhas compridas da coluna da esquerda passam). As linhas
+// da outra coluna ficam de fora. Separação de estrofes: espaço maior do que o normal entre linhas (medido com as
+// linhas dos acordes, que estão entre as da letra).
+const ent = t => t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
+async function textLines(pdf, box) {
+  const x = await run('pdftotext', ['-q', '-enc', 'UTF-8', '-bbox-layout', '-f', '1', '-l', '1', pdf, '-']);
+  const pg = x.match(/<page width="([\d.]+)" height="([\d.]+)"/); if (!pg) return '';
+  const W = +pg[1], H = +pg[2], [bx0, by0, bx1, by1] = box, lines = [];
+  for (const m of x.matchAll(/<line xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([\s\S]*?)<\/line>/g)) {
+    const text = [...m[5].matchAll(/<word[^>]*>([^<]*)<\/word>/g)].map(w => ent(w[1])).join(' ').trim();
+    if (text) lines.push({ x0: +m[1] / W, y0: +m[2] / H, x1: +m[3] / W, y1: +m[4] / H, text });
+  }
+  const sel = lines.filter(l => l.x0 >= bx0 - 0.01 && l.x0 < bx1 - 0.02 && (l.y0 + l.y1) / 2 >= by0 && (l.y0 + l.y1) / 2 <= by1)
+    .sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0);
+  if (!sel.length) return '';
+  const hs = sel.map(l => l.y1 - l.y0).sort((a, b) => a - b), h = hs[hs.length >> 1];
+  const out = [];
+  sel.forEach((l, i) => { if (i && l.y0 - sel[i - 1].y1 > 0.75 * h) out.push(''); out.push(l.text); });
+  return out.join('\n');
+}
 // quanto dois textos dizem o mesmo: palavras de 4+ letras em comum / as do mais curto
 const wordset = t => new Set(norm(t).match(/\p{L}{4,}/gu) || []);
 function agree(a, b) { const A = wordset(a), B = wordset(b); if (!A.size || !B.size) return 0; let c = 0; for (const w of A) if (B.has(w)) c++; return c / Math.min(A.size, B.size); }
@@ -106,7 +128,7 @@ async function page1(pdf, page) {
 }
 // recorte de um livro: a camada de texto só vale se coincidir com o que se vê (OCR do recorte)
 async function crop(pdf, box) {
-  const [t, o] = await Promise.all([textLayer(pdf, 1, box).then(clean), ocrPdf(pdf, 1, box).then(clean)]);
+  const [t, o] = await Promise.all([textLines(pdf, box).then(clean), ocrPdf(pdf, 1, box).then(clean)]);
   if (letters(t) >= 40 && agree(t, o) >= 0.3) return { text: t, method: 'text' };
   if (letters(o) >= 10) return { text: o, method: 'ocr', mismatch: letters(t) >= 40 };
   return { text: '', method: 'none' };
