@@ -94,6 +94,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   e é a primeira da ORDEM (antes de songs, para os gatilhos terem a linha que atualizam).
   Função backup v8 publicada (15 nov, autorizada pelo Tiago) com song_texts, crop_reviews e catalog_version; cópia
   manual de 15 nov passou (0 em falta). Nada pendente.
+- v248 (15 nov): colunas songs.lyrics_draft, draft_note, draft_at (rascunhos de letras, protegidas; sem grant a
+  authenticated). Já em backup_schema() e em dados.json (songs vai com todas as colunas): nada a mudar.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.

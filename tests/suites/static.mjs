@@ -259,6 +259,24 @@ export default async function (level) {
     if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
+  await t('SEG-53', 'Rascunhos de letra (v248, conteudo v45, código): song e songs só devolvem draft com lvl ≥ 3; drafts e draft começam por lvl < 3 → 403; draft: ação publish/discard (400), publish exige letra válida e não vazia, limite save antes de escrever, PATCH condicionado a lyrics_draft não nulo (409 se já não existe); o rascunho não entra no índice de pesquisa (s.lines/pdf) nem em lset', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
+    for (const op of ['song', 'songs']) { const b = blk(op); if (!b) { bad.push(`op ${op} não encontrada`); continue; } const m = b.match(/draft[^\n]*\?[^\n]*lyrics_draft/); if (!m || !/lvl >= 3 && s\.lyrics_draft \?/.test(b)) bad.push(`op ${op}: draft sem a condição lvl >= 3`); }
+    for (const op of ['drafts', 'draft']) { const b = blk(op); if (!b) bad.push(`op ${op} não encontrada`); else if (!/^[^\n]*\n\s*if \(lvl < 3\) return denied\(\);/.test(b)) bad.push(`op ${op} não começa por lvl < 3 → 403`); }
+    const d = blk('draft');
+    if (d) {
+      if (!/\['publish', 'discard'\]\.includes\(action\)/.test(d)) bad.push('draft: ação não validada');
+      if (!/action === 'publish' && \(!validLyrics\(b\.lyrics\) \|\| !b\.lyrics\.length\)/.test(d)) bad.push('draft: publish sem validar a letra');
+      const iLim = d.indexOf("limit(user, 'save'"), iW = d.search(/method: 'PATCH'/);
+      if (iLim < 0 || (iW >= 0 && iW < iLim)) bad.push('draft: escreve antes do limite save');
+      if (!/lyrics_draft=not\.is\.null/.test(d) || !/409\)/.test(d)) bad.push('draft: PATCH sem condição de rascunho existente / sem 409');
+    }
+    const sl = (c.match(/s\.lines = ([^\n]*)/) || [])[1] || '', ls = (c.match(/s\.lset = ([^\n]*)/) || [])[1] || '';
+    if (!sl || /draft/.test(sl) || /draft/.test(ls)) bad.push('o rascunho entra no índice (s.lines / s.lset)');
+    if (/Busca\.build\([^\n]*draft/.test(c)) bad.push('o rascunho entra no Busca.build');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
   await t('SEG-51', 'conteudo «songs» e «files» (v238, versão 40): no máximo 60, sem repetidos; songs só cânticos visible() e sem acordes no perfil Cancioneiro; files só lvl ≥ 2 (403) e só caminhos de song_files; limites por limitMany (song / file) exceto cânticos de folhas ativas (free, só lvl < 3); recusados em refused', () => {
     const c = read('supabase/functions/conteudo/index.ts'), bad = [];
     const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
