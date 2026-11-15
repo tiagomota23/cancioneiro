@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v251)
+## Estado e pendentes (15 nov 2026, v252)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -412,7 +412,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   haven't found / I saw her standing there. Línguas corrigidas em ~45 cânticos; 9 marcados com acordes sem os terem.
   (3) «Editar cântico»: sem letra («por transcrever» / «no livro») e com rascunho, a letra vem preenchida com o
   rascunho e «Guardar» publica-o (op draft publish).
-- Tudo publicado até à v251 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v252 (15 nov, Tiago: «yes»).** Songbook: 155 cânticos tinham na 1.ª estrofe uma linha de créditos (autor e ano,
+  «(p. N)» / «(b N)» = página da versão noutra língua / do CANTI, «1st q» = 1.ª nota, capotasto, «From Friuli»…):
+  passou para songs.author (junta ao autor que houvesse) e saiu da letra; letra anterior em song_edits (edited_by
+  «créditos do Songbook passados para o autor»). Ficaram como estavam: Lauda Sion, Red River Valley, Wabash
+  Cannonball (a 1.ª linha é letra). Cache de letras → `cancioneiro.letras.v4.`.
+- Tudo publicado até à v252 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
