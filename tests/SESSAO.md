@@ -60,6 +60,7 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - **v242 (60fbaf0, contorno do recorte na página inteira do livro):** FUN-83 escrito, por correr (`--only=FUN-83`, ~30 s) quando o Tiago autorizar; senão na semanal.
 - **v243 (eb20d91, zoom na revisão de recortes):** FUN-84 escrito (cliques e beliscão sintéticos: MouseEvent/TouchEvent com clientX/Y). Por correr com FUN-83 (`--only=FUN-83,FUN-84`, ~1 min) quando o Tiago autorizar; senão na semanal.
 - **v244 (ff8c8c8):** só aparência (− / + do zoom da revisão passam a .icon-btn 44×44, seletores [data-z] iguais); sem teste novo — FUN-84 continua válido.
+- **v245 (a91b02a, contorno --app-brand tracejado entre partes; «Rever recorte» no visor):** FUN-83 passa a --app-brand; FUN-85 escrito. Por correr: `--only=FUN-83,FUN-84,FUN-85` (~1,5 min) quando o Tiago autorizar; senão na semanal.
 - Erros de teste corrigidos nesta semanal: DB-RLS-07/09/11/14/16/17 (o 1.º Maestro por email ficou sem grupos → sem folhas, v210; agora `pinRoleEmails()` fixa por corrida a pessoa de cada perfil, preferindo quem tem grupo); INT-01 (ligações https externas kind other, v226, ficam fora; INT-21 cobre-as); FUN-70 (☰ só na página inicial). Testes novos: SEG-37 (drive-sync v10). Os detalhes dos resultados passam a ter emails tapados («email»).
 - Maestro sem grupo: resolvido a 2026-11-15 (a pedido do Tiago, acrescentado aos 5 grupos). pinRoleEmails() continua a preferir quem tem grupo; a pessoa escolhida para o perfil Maestro pode mudar, sem efeito nos testes.
 - MAN-01..03 (Safari) continuam manuais.
