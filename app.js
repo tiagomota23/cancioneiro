@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v238';
+  const APP_VERSION = '2026-11-15 v239';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -473,6 +473,16 @@
     try { const { data, error } = await sb.from('catalog_version').select('v').limit(1); return !error && data && data[0] ? String(data[0].v) : null; }
     catch (e) { return null; }
   }
+  // A lista que a base de dados devolve depende de quem pede (política «leitura familia»): além da versão do catálogo,
+  // a conta, o perfil da conta e, no perfil Cancioneiro, as folhas ativas para o Cancioneiro (cânticos e expiração —
+  // uma folha nova de um evento acrescenta cânticos; ao expirar, saem). Tudo isto entra na chave guardada com a lista.
+  function listKey(v) {
+    const fp = (rankOf(maxRole) || 0) >= 2 ? '' : cols.filter(c => c.audience === 'cancioneiro' && c.published !== false && !expired(c))
+      .map(c => c.id + ':' + (c.songs || []).map(x => x.song_slug).sort().join(',')).sort().join(';');
+    return [v, session ? session.user.id : '', maxRole || '', fp].join('|');
+  }
+  // depois de atualizar as folhas ou o perfil: se a chave mudou, a lista volta a ser pedida
+  function recheckList() { const k = store.get(VER_KEY, null); if (k && allSongs.length && k !== listKey(k.split('|')[0])) load(); }
   async function load() {
     loadedAt = Date.now();
     try { const h = sessionStorage.getItem('cancioneiro.depois'); if (h) { sessionStorage.removeItem('cancioneiro.depois'); history.replaceState(null, '', location.pathname + h); } } catch (e) {}
@@ -480,7 +490,7 @@
     if (cached && cached.length) { setSongs(cached); route(); }
     try {
       const v = await catalogVersion();
-      if (v && cached && cached.length && store.get(VER_KEY, null) === v) return; // nada mudou: fica a cópia guardada
+      if (v && cached && cached.length && store.get(VER_KEY, null) === listKey(v)) return; // nada mudou: fica a cópia guardada
       const fresh = await fetchSongs();
       if (!fresh.length) { // a base de dados só devolve cânticos a emails autorizados
         const inv = await claimInvite();
@@ -488,7 +498,7 @@
         return;
       }
       try { localStorage.removeItem(INV_KEY); } catch (e) {} // já tem acesso: o convite não é preciso
-      store.set(CACHE_KEY, fresh); if (v) store.set(VER_KEY, v);
+      store.set(CACHE_KEY, fresh); store.set(VER_KEY, v ? listKey(v) : null);
       const changed = !cached || JSON.stringify(cached) !== JSON.stringify(fresh);
       setSongs(fresh);
       if (changed) route();
@@ -503,7 +513,7 @@
   // folhas (mudanças feitas entretanto) e verifica se há uma versão nova da app (fica para a próxima abertura)
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !session || DEMO || Date.now() - loadedAt < 5 * 60e3) return;
-    load(); loadFavs(); loadCollections();
+    load(); loadFavs(); loadCollections().then(recheckList);
     if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(() => {});
   });
 
@@ -2222,7 +2232,9 @@
       try { const { data, error } = await sb.rpc('my_role'); if (error) return; role = data; } catch (e) { return; } // sem rede: fica o guardado
     }
     if (!rankOf(role)) return; // sem acesso: a lista vem vazia e load() termina a sessão
+    const roleChanged = maxRole && maxRole !== role;
     maxRole = role;
+    if (roleChanged) setTimeout(recheckList, 0); // perfil da conta mudou: a lista também muda
     await loadListen(); // antes do tutorial da 1.ª abertura, que mostra o passo do microfone só a quem o tem
     const meta = !DEMO && session && session.user.user_metadata || {};
     setPerfil((c && c.active) || meta.cancioneiro_perfil || maxRole);
@@ -3936,7 +3948,7 @@
     $('splash').classList.add('gone');
     if (!session) { if (location.hash.startsWith('#/p/')) route(); else showLogin(msg || ''); return; }
     $('view-login').hidden = true;
-    showList(); load(); loadFavs(); loadCollections();
+    showList(); load(); loadFavs(); loadCollections().then(recheckList);
     if (msg) $('status').textContent = msg;
   }
   setTimeout(() => rescue(), 10000);
@@ -3973,7 +3985,7 @@
     // descarrega os cânticos das folhas e dos Preferidos, depois de saber quais são
     // num evento, todos abrem a app ao mesmo tempo: cada telemóvel espera entre 3 e 23 s (ao acaso) antes de descarregar
     // as folhas, para os pedidos não chegarem todos no mesmo segundo
-    Promise.allSettled([loadFavs(), loadCollections()]).then(() => setTimeout(prefetchCollections, 3000 + Math.random() * 20000));
+    Promise.allSettled([loadFavs(), loadCollections()]).then(() => { recheckList(); setTimeout(prefetchCollections, 3000 + Math.random() * 20000); });
     loadSyncInfo();
     await loadGroups(); await askGroups(); // 1.ª vez: os grupos da pessoa
     startTour().catch(e => console.warn('tutorial', e)); // 1.ª vez: tutorial (no fim, a proposta de instalar)
