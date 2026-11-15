@@ -322,6 +322,13 @@ export default async function (level) {
     }
     const body = (pf.match(/Deno\.serve\(async req => \{\s*try \{\s*([^\n]*)/) || [])[1] || '', iLoc = pf.indexOf("op === 'locate'"), iOk = pf.indexOf('githubOk(req)', pf.indexOf('Deno.serve'));
     if (!/githubOk/.test(body) || iLoc < iOk) bad.push('pdf-texto locate antes do OIDC');
+    // v246/conteudo v43: só mexe (e apaga) nas folhas de revisão criadas pelo servidor — por publicar e sem created_by
+    if (cs && /collections\?select=id&title=like\./.test(cs)) {
+      const q = (cs.match(/rest\(`collections\?select=id&title=like\.[^`]*`/) || [''])[0];
+      if (!/published=is\.false/.test(q) || !/created_by=is\.null/.test(q)) bad.push('cropset mexe em folhas só pelo título (sem published=is.false e created_by=is.null)');
+      const iDelCol = cs.search(/collections\?id=eq\.\$\{c\.id\}`, \{ method: 'DELETE'/), iStill = cs.indexOf('const still');
+      if (iDelCol >= 0 && (iStill < 0 || iStill > iDelCol)) bad.push('cropset apaga a folha sem confirmar que ficou vazia');
+    }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/recortes.sql, supabase/functions/conteudo/index.ts, supabase/functions/pdf-texto/index.ts' });
   await t('EST-05','busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
