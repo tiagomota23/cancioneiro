@@ -272,7 +272,7 @@ export default async function (level) {
       if (!/r\.status !== 'pendente'[^\n]*404\)/.test(cs)) bad.push('cropset aceita revisão já feita');
       const iLim = cs.indexOf("limit(user, 'save'"), iW = cs.search(/method: 'PATCH'/);
       if (iLim < 0 || (iW >= 0 && iW < iLim)) bad.push('cropset escreve antes do limite save');
-      // v239 da conteudo: a decisão é de quem a marcar primeiro (PATCH condicionado a pendente → 409) e só depois muda o recorte
+      // conteudo v39: a decisão é de quem a marcar primeiro (PATCH condicionado a pendente → 409) e só depois muda o recorte
       const iClaim = cs.search(/crop_reviews\?id=eq\.\$\{id\}&status=eq\.pendente`, \{ method: 'PATCH'/), iFile = cs.search(/song_files\?id=eq\.[^`]*`, \{ method: 'PATCH'/);
       if (iClaim < 0) bad.push('cropset marca «feito» sem exigir status pendente (dois Maestros ao mesmo tempo)');
       else if (iFile >= 0 && iFile < iClaim) bad.push('cropset muda o recorte antes de marcar a decisão');
