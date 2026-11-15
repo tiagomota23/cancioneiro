@@ -380,9 +380,9 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - **v250 — «Librone dei canti» como fonte (Tiago, 15 nov: opção 2, «do your best to break verses — show them fully
   for coro (same as Coros & Companhia)»).** `supabase/librone.sql`: fonte `librone` em song_sources (ref = id no site;
   página https://www.libronedeicanti.it/canti/<id>.html), secções em song_tags grp «Librone dei canti» (as 7 do CANTI),
-  job `sync-librone`, log `librone_sync_log`, pg_cron segunda 06:45 UTC. 1493 cânticos ligados (1492 do site; os dois
+  job `sync-librone`, log `librone_sync_log`, pg_cron segunda 06:45 UTC. Os 1492 cânticos do site ligados (os dois
   Magnificat do site são cânticos novos, não o de Taizé); 360 cânticos novos importados (cancioneiro=false,
-  approved=true: do perfil Coro para cima, como os do Coros & Companhia), língua pela secção/subsecção do site
+  approved=true: do perfil Coro para cima, como os do Coros & Companhia; números 1960–2319), língua pela secção/subsecção do site
   (stranieri) ou pelas palavras. Letras: 1.ª linha «(letra do librone dei canti — libronedeicanti.it)»; estrofes pelo
   divisor `supabase/functions/sync-librone/strofe.js` (refrão = bloco repetido; fins de frase + linha com maiúscula;
   estrofes de tamanho regular; sem pontuação, só divide em 4 se o n.º de linhas for múltiplo de 4) — 287 do CANTI que
