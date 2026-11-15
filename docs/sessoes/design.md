@@ -171,15 +171,14 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v252)
-- App v252; capa do mapa «versão 252 · 15 nov 2026» (mapa versão 105, sistema de design versão 56). Ecrã novo `cantico-librone`
+## Estado atual (15 nov 2026, v253)
+- App v253; capa do mapa «versão 253 · 15 nov 2026». v252: Ecrã novo `cantico-librone`
   (no fim de SCREENS, quadro «Cântico» com 8 ecrãs, 3496 px) com o cântico de exemplo «Dell'aurora tu sorgi più bella»
   (hino mariano tradicional, domínio público; fonte librone). Índice 1734 px → quadro «Listas» 1988 px, quadros por baixo +107.
   Catálogo: peça nova v157 (linha de refrão, já existia na app), numeração +1 a partir daí.
-- **À espera da webapp** (especificação enviada a 15 nov, decisões do Tiago): (1) caixa `.crop-bar` com rótulo curto
-  «Recorte a rever (N)» e a explicação numa 2.ª linha em texto normal; (2) janela «Rever recorte»: proposto em `--accent`
-  3 px sem fundo (fim do `--app-brand`); (3) visor: contorno da letra em `--accent` (fim do `--app-brand` e do fallback hex).
-  Verificar na versão seguinte (grep `app-brand` em styles.css/app.js só deve dar capa/ícone/theme-color).
+- v253 aplicou as 3 decisões de 15 nov (verificado no código e no mapa): `.crop-bar` com rótulo «Recorte a rever» e explicação
+  em texto normal (catálogo v099, v114; `cantico-acordes` 929 px); proposto e contorno do visor em `--accent`; `--app-brand`
+  só no ecrã de arranque (.splash). Mapa versão 106, sistema de design versão 57. Nada pendente.
 - Ajudas: v229–v251 no registo do git; ecrãs que mudam só por relógio: ver «Sincronização» (lista atualizada).
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,

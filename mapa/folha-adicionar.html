@@ -1130,9 +1130,9 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .crop-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .crop-key { display: inline-block; width: 18px; height: 10px; margin-right: 4px; border: 2px solid; vertical-align: middle; }
 .crop-key.cur, .crop-box.cur { border-color: var(--danger); border-style: dashed; }
-.crop-key.prop, .crop-box.prop { border-color: var(--app-brand); border-width: 3px; }   /* sempre verde (não muda com o perfil) */
+.crop-key.prop, .crop-box.prop { border-color: var(--accent); border-width: 3px; }   /* cor do perfil, 3 px, sem fundo */
 .crop-key.prev, .crop-box.prev { border-color: var(--text-faint); border-style: dotted; }
-.crop-key.draw, .crop-box.draw { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.crop-key.draw, .crop-box.draw { border-color: var(--accent); border-width: 2px; background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .crop-page { margin: 0 0 14px; }
 .crop-page figcaption { margin: 0 0 4px; font-size: var(--fs-small); color: var(--text-soft); text-align: left; }
 .crop-canvas { position: relative; cursor: crosshair; }
@@ -1154,7 +1154,7 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .draft-bar .draft-text * { text-transform: none; letter-spacing: 0; }
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v252</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v253</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1222,7 +1222,7 @@ dialog.crop-dlg { width: min(96vw, 760px); }
       <div class="stanza verse has-ch"><div class="line">A<span class="ch" data-c="G"></span>mazing grace, how <span class="ch" data-c="C"></span>sweet the <span class="ch" data-c="G"></span>sound</div><div class="line">That saved a wretch like <span class="ch" data-c="D"></span>me.</div><div class="line">I <span class="ch" data-c="G"></span>once was lost, but <span class="ch" data-c="C"></span>now am <span class="ch" data-c="G"></span>found,</div><div class="line">Was <span class="ch" data-c="Em"></span>blind, but <span class="ch" data-c="D"></span>now I <span class="ch" data-c="G"></span>see.</div></div><div class="stanza verse has-ch"><div class="line">’Twas <span class="ch" data-c="G"></span>grace that taught my <span class="ch" data-c="C"></span>heart to <span class="ch" data-c="G"></span>fear,</div><div class="line">And grace my fears re<span class="ch" data-c="D"></span>lieved;</div><div class="line">How <span class="ch" data-c="G"></span>precious did that <span class="ch" data-c="C"></span>grace ap<span class="ch" data-c="G"></span>pear</div><div class="line">The <span class="ch" data-c="Em"></span>hour I <span class="ch" data-c="D"></span>first be<span class="ch" data-c="G"></span>lieved.</div></div>
       
       
-      <div class="pend-bar crop-bar"><p>Recorte do livro a rever: confirme se a página do livro mostra este cântico.</p><p><button class="edit-btn crop-rev" data-i="0">Rever recorte</button></p></div>
+      <div class="pend-bar crop-bar"><p>Recorte a rever</p><p>Confirme se a página do livro mostra este cântico.</p><p><button class="edit-btn crop-rev" data-i="0">Rever recorte</button></p></div>
       <p class="edit-bar"><button class="edit-btn" id="btn-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>Editar cântico</button></p>
       
       
@@ -1311,7 +1311,7 @@ dialog.crop-dlg { width: min(96vw, 760px); }
       <select id="src-filter"><option value="todas">Tudo (31)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="librone">Librone dei canti (1)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">28 cânticos · versão 2026-11-15 v252</p>
+    <p class="small" id="info-count">28 cânticos · versão 2026-11-15 v253</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
