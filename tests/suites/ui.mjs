@@ -314,6 +314,41 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-87', 'Rascunhos de letra (v248, ?demo): Coro sem .draft-bar no cantico_por_transcrever e sem «Rascunhos de letra» na gaveta; Maestro com a entrada (e o cântico na lista), .draft-bar com .draft-text; «Rever e publicar» abre #editor com o rascunho, #edit-reset escondido e aviso em #edit-msg; Guardar tira a caixa e mostra a letra; noutra abertura «Descartar» (dois toques) tira a caixa e a letra continua «por transcrever»', async () => {
+    const bad = [], H = '#/cantico/cantico_por_transcrever';
+    await withApp({ perfil: 'coro', hash: H }, async ({ page }) => {
+      await sleep(2000); if (await count(page, '.draft-bar')) bad.push('Coro vê a caixa do rascunho');
+      if (/rascunho/i.test(await txt(page, '#song'))) bad.push('Coro vê texto do rascunho');
+      await page.evaluate(() => { location.hash = '#/'; }); await sleep(500); await page.click('#btn-menu'); await sleep(500);
+      if (await count(page, 'a[href="#/lista/livro-rascunhos"]')) bad.push('Coro vê «Rascunhos de letra» na gaveta');
+    });
+    await withApp({ perfil: 'maestro' }, async ({ page }) => {
+      await page.click('#btn-menu'); await sleep(600);
+      if (!(await count(page, 'a[href="#/lista/livro-rascunhos"]'))) { bad.push('Maestro sem «Rascunhos de letra» na gaveta'); }
+      else { await page.click('a[href="#/lista/livro-rascunhos"]'); await sleep(800); if (!(await slugsOf(page)).includes('cantico_por_transcrever')) bad.push('lista de rascunhos sem o cântico'); }
+      await page.evaluate(h => { location.hash = h; }, H); await page.waitForSelector('.draft-bar', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '.draft-bar .draft-text'))) { bad.push('Maestro sem a caixa do rascunho'); return; }
+      await page.click('#draft-edit'); await sleep(700);
+      const ed = await page.evaluate(() => ({ open: document.querySelector('#editor').open, text: document.querySelector('#edit-text').value, reset: (e => !e || e.hidden || getComputedStyle(e).display === 'none')(document.querySelector('#edit-reset')), msg: document.querySelector('#edit-msg')?.textContent || '' }));
+      if (!ed.open) { bad.push('«Rever e publicar» não abriu o editor'); return; }
+      if (!/Primeira linha do rascunho/.test(ed.text)) bad.push('editor sem o texto do rascunho');
+      if (!ed.reset) bad.push('#edit-reset visível no rascunho');
+      if (!/públic/i.test(ed.msg)) bad.push('#edit-msg sem aviso de que fica pública: «' + ed.msg.trim().slice(0, 60) + '»');
+      await page.click('#edit-save'); await sleep(1500);
+      if (await count(page, '.draft-bar')) bad.push('depois de publicar, a caixa continua');
+      if (!/Primeira linha do rascunho/.test(await txt(page, '#song'))) bad.push('depois de publicar, a letra não aparece');
+    });
+    await withApp({ perfil: 'maestro', hash: H }, async ({ page }) => {
+      await page.waitForSelector('#draft-discard', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '#draft-discard'))) { bad.push('sem «Descartar»'); return; }
+      await page.click('#draft-discard'); await sleep(300);
+      if (!(await count(page, '.draft-bar'))) bad.push('um só toque em «Descartar» descartou');
+      await page.click('#draft-discard'); await sleep(1500);
+      if (await count(page, '.draft-bar')) bad.push('«Descartar» (dois toques) não tirou a caixa');
+      if (/Primeira linha do rascunho/.test(await txt(page, '#song'))) bad.push('depois de descartar, o rascunho aparece na letra');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta' });
   await t('FUN-86', 'Rever recorte a partir da folha de revisão (v246/v247, ?demo, Maestro; folha de revisão = título «Rever recortes dos livros…», por publicar, sem created_by): abrir o cântico da folha abre logo dialog.crop-dlg; «Cancelar» volta à folha e reabrir abre de novo; «Manter o atual» volta a #/lista/colecao-rev1 só com os outros cânticos; folha só com esse cântico é apagada e a app sai dela; folha comum: sem abertura automática e o cântico fica', async () => {
     const bad = [];
     const rev = (id, title, slugs) => ({ id, title, audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), created_by: null, published: false, sections: [], songs: slugs.map((s, i) => ({ song_slug: s, position: i })) });

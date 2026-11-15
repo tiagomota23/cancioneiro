@@ -236,6 +236,27 @@ export default async function (level) {
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
+  await t('SEG-52', 'Rascunhos de letra (v248): songs.lyrics_draft, draft_note e draft_at sem nenhum privilégio de coluna para anon e authenticated; como Cancioneiro, Coro, Maestro e Gestor, ler lyrics_draft pela base de dados é recusado (só a função conteudo os lê; em rollback)', async () => {
+    const bad = [];
+    const [m] = await sql(`begin; select ${['lyrics_draft', 'draft_note', 'draft_at'].flatMap(col => ['anon', 'authenticated'].map(r => `has_column_privilege('${r}', 'public.songs', '${col}', 'select,insert,update,references') "${r}_${col}"`)).join(', ')}; rollback;`);
+    for (const [k, v] of Object.entries(m || {})) if (v) bad.push(k.replace('_', ' tem privilégio em '));
+    if (!m) bad.push('colunas não encontradas');
+    for (const who of ['cancioneiro', 'coro', 'maestro', 'gestor']) {
+      try { await sql(asRole(who, 'select count(lyrics_draft)::int n from public.songs;')); bad.push(`${who} leu lyrics_draft`); }
+      catch (e) { if (!/permission denied/i.test(e.message)) bad.push(`${who}: erro inesperado ${e.message.slice(0, 80)}`); }
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'crítica', where: 'supabase/rascunhos.sql' });
+  await t('INT-26', 'Rascunhos de letra (v248): nenhuma letra pública ainda com «(rascunho…» ou «(texto litúrgico…» na 1.ª linha (migração feita); quem tem rascunho tem draft_at; rascunhos por rever (informativo)', async () => {
+    const [r] = await sql(`select count(*) filter (where lyrics_draft is not null)::int rascunhos,
+      count(*) filter (where lyrics_draft is not null and draft_at is null)::int sem_data,
+      count(*) filter (where coalesce(lyrics_edit, lyrics)->0->'lines'->>0 ~ '^\\((rascunho|texto litúrgico)')::int publicos
+      from public.songs`);
+    const bad = [];
+    if (r.publicos) bad.push(`${r.publicos} cânticos ainda com o rascunho na letra pública`);
+    if (r.sem_data) bad.push(`${r.sem_data} rascunhos sem draft_at`);
+    return bad.length ? { fail: bad.join('; ') + ` — ${r.rascunhos} rascunhos` } : { pass: `${r.rascunhos} rascunhos por rever` };
+  }, { sev: 'média', where: 'supabase/rascunhos.sql' });
   await t('SEG-50', 'catalog_version (v238): RLS ligada; anon sem privilégios; authenticated só SELECT (sem escrita); quem não tem acesso não lê a versão; os 4 perfis leem 1 linha e não a mudam; catalog_bump() não executável por anon/authenticated; gatilhos por instrução em songs, song_sources, song_tags, song_files (em rollback)', async () => {
     const bad = [];
     const [m] = await sql(`begin; select c.relrowsecurity rls,

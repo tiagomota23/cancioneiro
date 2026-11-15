@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v247** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243), FUN-85 (v245), FUN-86 (v246). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v248** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243), FUN-85 (v245), FUN-86 (v246/v247), FUN-87, SEG-52, SEG-53, INT-26 (v248). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -42,6 +42,7 @@ Catálogo atualizado até à **v247** (2026-11-15). Testes v231–v241 corridos 
 | FUN-84 | Zoom na revisão de recortes (v243, ?demo, Maestro): 100% → «+»×2 = 225% com canvas mais nítido (≤ 2400 px); limites 100–400%; desenho a 225% nas frações certas; beliscão muda o zoom e o toque logo a seguir não marca canto | ui | baixa | V | ☐ por correr |
 | FUN-85 | «Rever recorte» no visor (v245, ?demo): Coro sem botão; Maestro com «Rever recorte» no recorte e na página inteira; «Manter o atual» fecha diálogo e visor | ui | baixa | V | ☐ por correr |
 | FUN-86 | Rever recorte a partir da folha de revisão (v246/v247, ?demo, Maestro): diálogo abre sozinho; Cancelar volta à folha e reabrir abre de novo; decidir volta à folha sem o cântico; folha só com ele é apagada; folha comum sem abertura automática e intacta | ui | média | V | ☐ por correr |
+| FUN-87 | Rascunhos de letra (v248, ?demo): Coro sem caixa, sem texto e sem entrada na gaveta; Maestro com entrada e lista; «Rever e publicar» abre o editor com o rascunho, sem Repor, com aviso; publicar tira a caixa; Descartar com dois toques | ui | alta | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ✓ (v241) |
 | BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ✓ (v241) |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
@@ -272,6 +273,8 @@ Catálogo atualizado até à **v247** (2026-11-15). Testes v231–v241 corridos 
 | SEG-49 | crop_reviews (v237, SQL): RLS sem políticas; sem privilégios; leitura e escrita recusadas a anon e aos 4 perfis (rollback) | db | crítica | V | ✓ (v241) |
 | SEG-50 | catalog_version (v238, SQL): RLS; anon nada; authenticated só SELECT e só com acesso; 4 perfis leem 1 linha e não escrevem; catalog_bump() fechado; gatilhos por instrução nas 4 tabelas | db | alta | V | ✓ (v241) |
 | SEG-51 | conteudo songs/files (v238, código): ≤ 60 sem repetidos; songs visible() e sem acordes no Cancioneiro; files lvl ≥ 2 e só caminhos de song_files; limitMany fora das folhas (free só lvl < 3); refused | static | alta | V | ✓ (v241) |
+| SEG-52 | Rascunhos de letra (v248, SQL): lyrics_draft/draft_note/draft_at sem privilégios de coluna para anon/authenticated; leitura recusada aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
+| SEG-53 | Rascunhos de letra (v248, código): draft só lvl ≥ 3 em song/songs; drafts/draft 403 abaixo; publish valida a letra; limite antes de escrever; 409 sem rascunho; fora do índice de pesquisa | static | alta | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
 | DB-RLS-03 | authenticated: lista fechada de permissões (v209: groups, user_groups, collection_groups) | db | crítica | V | ✓ |
@@ -324,6 +327,7 @@ Catálogo atualizado até à **v247** (2026-11-15). Testes v231–v241 corridos 
 | INT-23 | Texto dos PDF (v233): song_texts só de song_files kind score (mesmo cântico); chars = length(text); progresso da extração (informativo) | db | baixa | S | ✓ (v241) |
 | INT-24 | Revisão de recortes (v237): revisões ligadas a ficheiros de livro do mesmo cântico; proposto/anterior do mesmo livro com &s=; feitas com quem e quando; pendentes (informativo) | db | baixa | S | ✓ (v241) |
 | INT-25 | catalog_version sobe (v238, rollback): 2 cânticos numa instrução → +1; song_files → +1; collections (informativo) | db | média | S | ✓ (v241) |
+| INT-26 | Rascunhos de letra (v248): nenhuma letra pública com «(rascunho…»/«(texto litúrgico…»; rascunhos com draft_at; quantos por rever (informativo) | db | média | S | ☐ por correr |
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
