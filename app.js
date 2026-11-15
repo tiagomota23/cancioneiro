@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v239';
+  const APP_VERSION = '2026-11-15 v240';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1092,7 +1092,7 @@
       if (!list.length && songs.length) $('status').innerHTML = '<span class="fav-empty">Ainda não tem cânticos preferidos.<br>Abra um cântico e toque na ☆ no topo para o adicionar.</span>';
       return;
     }
-    if (catId.startsWith('colecao-')) { showCollection(catId.slice(8)); return; }
+    if (catId.startsWith('colecao-')) { showCollection(catId.slice(8)); warmSheet(catId.slice(8)); return; }
     const bk = BOOKS_LIST.find(b => b.id === catId && b.id !== 'favoritos');
     if (bk) {
       title.hidden = false;
@@ -3071,6 +3071,21 @@
   // Ao abrir: descarrega as letras e (do perfil Coro para cima) partituras, páginas dos livros e gravações
   // dos cânticos das coleções ativas e dos Preferidos; apaga ficheiros guardados de cânticos que já não estão em nenhuma
   let prefetching = false;
+  // ao abrir uma folha: as letras dos seus cânticos que ainda não estão no telemóvel vêm logo, num só pedido (op songs),
+  // para passar de cântico em cântico sem esperas (a descarga geral pode ainda não ter terminado)
+  const warmed = new Set();
+  async function warmSheet(id) {
+    if (DEMO || warmed.has(id) || !navigator.onLine) return;
+    const c = cols.find(x => x.id === id); if (!c) return;
+    const miss = (c.songs || []).map(x => x.song_slug).filter(sl => bySlug.has(sl) && !hasLyrics(sl) && !pending.has(sl));
+    warmed.add(id);
+    if (!miss.length) return;
+    try {
+      const d = await api('songs', { slugs: miss.slice(0, 60) });
+      for (const [sl, x] of Object.entries(d.songs || {})) if (!hasLyrics(sl)) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
+      saveLyrCache();
+    } catch (e) { warmed.delete(id); }
+  }
   async function prefetchCollections() {
     if (prefetching || DEMO || !navigator.onLine) return; prefetching = true;
     try {
@@ -3983,9 +3998,8 @@
     showList();
     load();
     // descarrega os cânticos das folhas e dos Preferidos, depois de saber quais são
-    // num evento, todos abrem a app ao mesmo tempo: cada telemóvel espera entre 3 e 23 s (ao acaso) antes de descarregar
-    // as folhas, para os pedidos não chegarem todos no mesmo segundo
-    Promise.allSettled([loadFavs(), loadCollections()]).then(() => { recheckList(); setTimeout(prefetchCollections, 3000 + Math.random() * 20000); });
+    // descarga das folhas e dos Preferidos logo a seguir (2–3 pedidos por telemóvel: ops songs e files)
+    Promise.allSettled([loadFavs(), loadCollections()]).then(() => { recheckList(); setTimeout(prefetchCollections, 1000); });
     loadSyncInfo();
     await loadGroups(); await askGroups(); // 1.ª vez: os grupos da pessoa
     startTour().catch(e => console.warn('tutorial', e)); // 1.ª vez: tutorial (no fim, a proposta de instalar)
