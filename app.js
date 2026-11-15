@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v241';
+  const APP_VERSION = '2026-11-15 v242';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -2700,6 +2700,14 @@
       await renderPdf();
     } catch (e) { $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a letra.</p>'; }
   }
+  // páginas inteiras: contorno à volta das partes que são a «letra do cântico» (os recortes desta página)
+  function outlineCrops(ctx, crops, pg, ox, oy, w, h, r) {
+    const cr = (crops || []).filter(c => c[0] === pg); if (!cr.length) return;
+    ctx.save(); ctx.strokeStyle = themeColor('--accent') || '#10835c'; ctx.lineWidth = 2.5 * r;
+    const lw = ctx.lineWidth;
+    for (const [, x0, y0, x1, y1] of cr) ctx.strokeRect(ox + x0 * w + lw / 2, oy + y0 * h + lw / 2, (x1 - x0) * w - lw, (y1 - y0) * h - lw);
+    ctx.restore();
+  }
   async function renderMulti(id, box, width, dpr) {
     const blocks = [];
     for (const b of pdfMulti) {
@@ -2709,9 +2717,9 @@
         const d = b.book.get(pg); if (!d) continue;
         const page = await d.getPage(1); if (id !== pdfRender) return;
         const v1 = page.getViewport({ scale: 1 });
-        parts.push({ page, x0, y0, w: (x1 - x0) * v1.width, h: (y1 - y0) * v1.height, pw: v1.width });
+        parts.push({ page, pg, x0, y0, w: (x1 - x0) * v1.width, h: (y1 - y0) * v1.height, pw: v1.width });
       }
-      if (parts.length) blocks.push({ label: b.label, parts, L: pdfWhole ? cropLayout(parts.map(p => ({ ...p, pw: 0 }))) : cropLayout(parts) });
+      if (parts.length) blocks.push({ label: b.label, crops: b.crops, parts, L: pdfWhole ? cropLayout(parts.map(p => ({ ...p, pw: 0 }))) : cropLayout(parts) });
     }
     // a mesma escala para todos os blocos (letra do mesmo tamanho)
     const scale = (width - 22) / Math.max(...blocks.map(b => b.L.W)) * pdfZoom;
@@ -2731,6 +2739,7 @@
         await p.page.render({ canvasContext: pc.getContext('2d'), viewport: vp, transform: [1, 0, 0, 1, -p.x0 * vp.width, -p.y0 * vp.height] }).promise;
         if (id !== pdfRender) return;
         ctx.drawImage(pc, Math.round(b.L.pos[i].x * scale * r), Math.round(b.L.pos[i].y * scale * r));
+        if (pdfWhole) outlineCrops(ctx, b.crops, p.pg, Math.round(b.L.pos[i].x * scale * r), Math.round(b.L.pos[i].y * scale * r), pc.width, pc.height, r);
       }
     }
     const more = document.createElement('p'); more.className = 'pdf-more';
@@ -2802,6 +2811,13 @@
       c.style.width = Math.floor(vp.width / r) + 'px'; c.style.height = Math.floor(vp.height / r) + 'px';
       box.appendChild(c);
       await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      if (pdfCrops && pdfWhole && pdfBook) outlineCrops(c.getContext('2d'), pdfCrops, i, 0, 0, c.width, c.height, r);
+    }
+    if (pdfCrops && pdfWhole && id === pdfRender) { // voltar ao recorte
+      const more = document.createElement('p'); more.className = 'pdf-more';
+      more.innerHTML = '<button type="button">Ver só a letra do cântico</button>';
+      more.firstChild.onclick = () => { pdfWhole = false; renderPdf(); };
+      box.appendChild(more);
     }
   }
   function closePdf() {

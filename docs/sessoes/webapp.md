@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v241)
+## Estado e pendentes (15 nov 2026, v242)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -314,7 +314,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   só pedido (`warmSheet`, op songs). **Regra: nunca atrasar de propósito o que a pessoa vê para poupar o servidor.**
 - v241 (nota da sessão de testes): letras em lote só por `songsBatch` (pré-descarga e folha aberta), que não volta a
   pedir cânticos que já estão a vir noutro lote (`batching`) ou num op song (`pending`).
-- Tudo publicado até à v241 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v242 (Tiago, 15 nov): nas páginas inteiras de um livro («Ver a página inteira» / «Ver as páginas inteiras»), contorno
+  na cor --accent à volta das partes que são a «letra do cântico» (os recortes dessa página; `outlineCrops`); na vista
+  de um só livro, botão «Ver só a letra do cântico» para voltar ao recorte.
+- Tudo publicado até à v242 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
