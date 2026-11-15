@@ -259,6 +259,27 @@ export default async function (level) {
     if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
+  await t('SEG-42', 'Revisão de recortes (v237, código): crop_reviews com RLS, sem políticas, revoke anon/authenticated; conteudo crops/croppages/cropset começam por lvl < 3 → 403; croppages conta cada página no limite file; cropset: só pendente (404), limite save antes de escrever, caminho do mesmo livro com &s= do cântico da revisão, 1–4 partes, 1.ª parte = p, páginas a ±1 das atuais/anteriores, frações 0–1, largura ≥ 0,05 e altura ≥ 0,02; pdf-texto locate depois do OIDC', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), sq = read('supabase/recortes.sql'), pf = read('supabase/functions/pdf-texto/index.ts'), bad = [];
+    if (!/alter table public\.crop_reviews enable row level security/.test(sq)) bad.push('crop_reviews sem RLS');
+    if (/create policy[^;]*crop_reviews/i.test(sq)) bad.push('crop_reviews com políticas');
+    if (!/revoke all on public\.crop_reviews from anon, authenticated/.test(sq)) bad.push('crop_reviews sem revoke');
+    const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
+    for (const op of ['crops', 'croppages', 'cropset']) { const b = blk(op); if (!b) bad.push(`op ${op} não encontrada`); else if (!/^[^\n]*\n\s*if \(lvl < 3\) return denied\(\);/.test(b)) bad.push(`op ${op} não começa por lvl < 3 → 403`); }
+    const cp = blk('croppages'); if (cp && !/limit\(user, 'file',/.test(cp)) bad.push('croppages sem limite file por página');
+    const cs = blk('cropset');
+    if (cs) {
+      if (!/r\.status !== 'pendente'[^\n]*404\)/.test(cs)) bad.push('cropset aceita revisão já feita');
+      const iLim = cs.indexOf("limit(user, 'save'"), iW = cs.search(/method: 'PATCH'/);
+      if (iLim < 0 || (iW >= 0 && iW < iLim)) bad.push('cropset escreve antes do limite save');
+      for (const [k, re] of [['mesmo livro', /m\[1\] !== cur\.split\('#'\)\[0\]/], ['slug da revisão', /m\[4\] !== r\.song_slug/], ['1–4 partes', /parts\.length >= 1 && parts\.length <= 4/], ['1.ª parte = p', /\+m\[2\] === parts\[0\]\[0\]/], ['páginas perto', /pagesNear\.has\(pg\)/], ['±1 das atuais/anteriores', /\[cur, r\.previous \|\| ''\][^\n]*\[n - 1, n, n \+ 1\]/], ['frações 0–1', /v >= 0 && v <= 1/], ['largura ≥ 0,05', /x1 - x0 >= 0\.05/], ['altura ≥ 0,02', /y1 - y0 >= 0\.02/], ['400 inválido', /return out\(\{ error: 'Recorte inválido\.' \}, 400\)/]])
+        if (!re.test(cs)) bad.push('cropset sem verificação: ' + k);
+      if (!/\^\(livros\\\/\(\?:songbook\|canti2024\)\\\.pdf\)#p=\(\\d\+\)&c=\(\[0-9\.:,\|\]\+\)&s=\(\[a-z0-9_\]\+\)\$/.test(cs)) bad.push('cropset: formato do caminho diferente do revisto (rever)');
+    }
+    const body = (pf.match(/Deno\.serve\(async req => \{\s*try \{\s*([^\n]*)/) || [])[1] || '', iLoc = pf.indexOf("op === 'locate'"), iOk = pf.indexOf('githubOk(req)', pf.indexOf('Deno.serve'));
+    if (!/githubOk/.test(body) || iLoc < iOk) bad.push('pdf-texto locate antes do OIDC');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/recortes.sql, supabase/functions/conteudo/index.ts, supabase/functions/pdf-texto/index.ts' });
   await t('EST-05','busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada', () => {
     const h = read('index.html'), sw = read('sw.js'), v = (read('app.js').match(/APP_VERSION = '[^']* v(\d+)'/) || [])[1], bad = [];
     const ib = h.indexOf(`<script src="busca.js?v=${v}"></script>`), ia = h.search(/<script[^>]*src="app\.js/);

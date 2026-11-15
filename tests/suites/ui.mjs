@@ -311,6 +311,39 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-79', 'Revisão de recortes (v237, ?demo): Coro e Cancioneiro sem .crop-bar no amazing_grace; Maestro com .crop-bar → dialog.crop-dlg com páginas (.crop-page, canvas desenhado) e as caixas atual e proposta; dois toques numa página desenham .crop-box.draw e ativam «Usar o desenhado»; «Usar o desenhado» fecha, tira a caixa e não volta depois de recarregar; «Cancelar» não decide', async () => {
+    const bad = [], H = '#/cantico/amazing_grace';
+    for (const perfil of ['coro', 'cancioneiro']) await withApp({ perfil, hash: H }, async ({ page }) => { await sleep(2500); if (await count(page, '.crop-bar')) bad.push(perfil + ' vê a caixa de revisão'); });
+    await withApp({ perfil: 'maestro', hash: H }, async ({ page }) => {
+      await page.waitForSelector('.crop-bar button.crop-rev', { timeout: 8000 }).catch(() => {});
+      if (!(await count(page, '.crop-bar button.crop-rev'))) { bad.push('Maestro sem a caixa de revisão'); return; }
+      const openDlg = async () => { await page.click('.crop-bar button.crop-rev'); await page.waitForSelector('dialog.crop-dlg[open] .crop-page canvas', { timeout: 15000 }).catch(() => {}); await sleep(1500); };
+      await openDlg();
+      // Cancelar: não decide nada
+      if (await count(page, 'dialog.crop-dlg[open]')) { await page.click('dialog.crop-dlg [data-a=close]'); await sleep(500); if (!(await count(page, '.crop-bar'))) bad.push('«Cancelar» tirou a caixa'); if (await page.evaluate(() => localStorage.getItem('cancioneiro.demo.cropdone'))) bad.push('«Cancelar» decidiu'); }
+      await openDlg();
+      const st = await page.evaluate(() => { const d = document.querySelector('dialog.crop-dlg[open]'); return d && { pages: [...d.querySelectorAll('.crop-page')].map(p => +p.dataset.n), drawn: [...d.querySelectorAll('.crop-page canvas')].filter(c => c.width > 0).length, cur: d.querySelectorAll('.crop-box.cur').length, prop: d.querySelectorAll('.crop-box.prop').length, drawDis: d.querySelector('[data-a=draw]')?.disabled }; });
+      if (!st) { bad.push('o diálogo não abriu'); return; }
+      if (st.pages.length < 3 || !st.pages.includes(12)) bad.push('páginas ' + JSON.stringify(st.pages) + ' (esperado 11–13)');
+      if (st.drawn < st.pages.length) bad.push(`${st.pages.length - st.drawn} páginas sem desenho`);
+      if (!st.cur) bad.push('sem caixa do recorte atual'); if (!st.prop) bad.push('sem caixa do proposto');
+      if (st.drawDis !== true) bad.push('«Usar o desenhado» ativo sem desenho');
+      const cv = page.locator('dialog.crop-dlg .crop-page[data-n="12"] .crop-canvas');
+      await cv.scrollIntoViewIfNeeded(); const bb = await cv.boundingBox();
+      if (!bb) { bad.push('página 12 sem área de desenho'); return; }
+      await cv.click({ position: { x: bb.width * 0.2, y: bb.height * 0.2 } }); await sleep(200);
+      await cv.click({ position: { x: bb.width * 0.7, y: bb.height * 0.6 } }); await sleep(300);
+      const after = await page.evaluate(() => { const d = document.querySelector('dialog.crop-dlg[open]'); return { draw: d.querySelectorAll('.crop-box.draw').length, dis: d.querySelector('[data-a=draw]').disabled }; });
+      if (after.draw !== 1) bad.push(`${after.draw} caixas desenhadas depois de dois toques`);
+      if (after.dis) bad.push('«Usar o desenhado» continua desativado');
+      await page.click('dialog.crop-dlg [data-a=draw]'); await sleep(1200);
+      if (await count(page, 'dialog.crop-dlg[open]')) bad.push('«Usar o desenhado» não fechou');
+      if (await count(page, '.crop-bar')) bad.push('a caixa de revisão continua');
+      await page.reload(); await page.waitForSelector('#splash.gone', { state: 'attached' }); await sleep(2500);
+      if (await count(page, '.crop-bar')) bad.push('a caixa volta depois de recarregar');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-03', 'Cântico: título, letra, botões de idioma (original ↔ tradução)', () => withApp({ perfil: 'coro', hash: '#/cantico/salve_regina' }, async ({ page }) => {
     await page.waitForSelector('#song h1');
     if (!/Salve Regina/.test(await txt(page, '#song h1'))) return 'título errado';
