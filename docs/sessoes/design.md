@@ -168,15 +168,18 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v245)
-- App v245; capa do mapa «versão 245 · 15 nov 2026». v243–v244: zoom − / + na janela de rever recortes (não capturada);
+## Estado atual (15 nov 2026, v247)
+- App v247 (sem componentes nem imagens novas). Publicados: mapa «versão 246», sistema de design v246; a publicação da v247
+  (Main, Padrao, ds/tokens no mapa; design-system.json e tokens.json no sistema) foi recusada pelas permissões — o espelho
+  já está na v247: publicar na próxima sincronização. v246: caixa «Recorte a rever» também no cântico dentro de uma folha
+  (sem componentes novos, sem imagens novas). v243–v244: zoom − / + na janela de rever recortes (não capturada);
   v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. v245: contorno da letra no visor de partituras
   passa a `--app-brand` (verde fixo, todos os perfis com partituras; tracejado 8/6 entre partes) e `.pdf-more` «Rever recorte»
   no visor (Maestro/Gestor); não aparece no mapa. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14).
   v242: contorno `--accent`
   2,5 px à volta da letra nas páginas do livro (visor de partituras, desenhado no canvas) e `.pdf-more` na vista de um livro —
   não aparece no mapa (o ecrã `partitura` usa um PDF de exemplo). Sem imagens novas.
-- Mapa versão 99, sistema de design versão 50. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+- Mapa versão 100, sistema de design versão 51. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
 - **À espera de confirmação direta do Tiago (15 nov):** a webapp transmitiu que o Tiago (a) aprovou o verde fixo
