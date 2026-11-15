@@ -1124,9 +1124,26 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
   font: 700 var(--fs-small)/1.3 var(--sans); letter-spacing: var(--ls-chip); text-transform: uppercase; }
 .rows li.col-add-end button { margin-top: 12px; border: 1px dashed var(--border-dash); border-radius: var(--radius); width: calc(100% - 28px); margin-left: 14px; }
 .tpl-apply:disabled { opacity: .5; cursor: default; } /* opção ainda não disponível */
+
+/* Rever recortes dos livros (Maestro / Gestor): página do livro com o recorte atual, o proposto e o desenhado */
+dialog.crop-dlg { width: min(96vw, 760px); }
+.crop-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.crop-key { display: inline-block; width: 18px; height: 10px; margin-right: 4px; border: 2px solid; vertical-align: middle; }
+.crop-key.cur, .crop-box.cur { border-color: var(--danger); border-style: dashed; }
+.crop-key.prop, .crop-box.prop { border-color: var(--app-brand); border-width: 3px; }   /* sempre verde (não muda com o perfil) */
+.crop-key.prev, .crop-box.prev { border-color: var(--text-faint); border-style: dotted; }
+.crop-key.draw, .crop-box.draw { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.crop-page { margin: 0 0 14px; }
+.crop-page figcaption { margin: 0 0 4px; font-size: var(--fs-small); color: var(--text-soft); text-align: left; }
+.crop-canvas { position: relative; cursor: crosshair; }
+.crop-canvas canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+.crop-ov { position: absolute; inset: 0; pointer-events: none; }
+.crop-box { position: absolute; box-sizing: border-box; border: 2px solid; }
+.crop-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: var(--pill); background: var(--accent); }
+.crop-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v236</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v237</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1197,11 +1214,11 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <div class="spacer"></div>
     </header>
     <div id="admin" class="admin" data-ready="1"><h2>Pedidos de acesso</h2><ul class="adm-list">
-        <li data-req="00000000-0000-0000-0000-000000000000" data-email="novo@exemplo.pt"><div class="adm-who"><b>Pessoa Nova</b><span>novo@exemplo.pt</span><small>14/11/2026</small></div>
+        <li data-req="00000000-0000-0000-0000-000000000000" data-email="novo@exemplo.pt"><div class="adm-who"><b>Pessoa Nova</b><span>novo@exemplo.pt</span><small>15/11/2026</small></div>
           <div class="adm-act"><select class="req-role" aria-label="Perfil"><option value="cancioneiro" selected="">Cancioneiro</option><option value="coro">Coro</option><option value="maestro">Maestro</option><option value="gestor">Gestor</option></select><button class="adm-ok">Autorizar</button><button class="adm-no">Recusar</button></div></li></ul><h2>Utilizadores (2)</h2><ul class="adm-list">
         <li data-email="demo@localhost"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic"><circle cx="12" cy="12" r="7.5" style="fill:currentColor"></circle></svg>
           <b class="adm-name" role="button" tabindex="0" title="Mudar o nome (até a pessoa entrar com o Google)">Demo</b><span>demo@localhost</span>
-          <small>Última entrada: 14/11/2026 · (eu)</small>
+          <small>Última entrada: 15/11/2026 · (eu)</small>
           <small class="adm-groups" role="button" tabindex="0" title="Mudar os grupos">Sem grupo</small></div>
           <div class="adm-act"><select class="usr-role" aria-label="Perfil"><option value="cancioneiro">Cancioneiro</option><option value="coro">Coro</option><option value="maestro">Maestro</option><option value="gestor" selected="">Gestor</option></select><button class="adm-del" aria-label="Retirar acesso">Retirar</button></div></li>
         <li data-email="coro@exemplo.pt"><div class="adm-who"><svg viewBox="0 0 24 24" class="perfil-ic"><circle cx="12" cy="12" r="7.5"></circle><text x="12" y="12.4" text-anchor="middle" dominant-baseline="central" style="fill:currentColor;stroke:none;font:700 9.5px Lato, -apple-system, Helvetica, Arial, sans-serif">C</text></svg>
@@ -1298,7 +1315,7 @@ body:not(.solo) #info-groups { display: none; } /* quem tem mais perfis muda os 
       <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-11-14 v236</p>
+    <p class="small" id="info-count">27 cânticos · versão 2026-11-15 v237</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>
