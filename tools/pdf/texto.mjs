@@ -32,7 +32,12 @@ const PAR = 4;
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 // ---------- limpeza do texto ----------
-const CHORD = /^\(?(?:[A-G](?:#|b|♯|♭)?|Do|Dó|Re|Ré|Mi|Fa|Fá|Sol|La|Lá|Si)(?:m|maj|min|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?[-+°]?\)?$/;
+// acordes: americanos (A, Em7, F#/C) e latinos, também em minúsculas como no CANTI (sol-, sib, Re7, la-)
+const CHORD = /^\(?(?:[A-G]|do|dó|re|ré|mi|fa|fá|sol|la|lá|si)(?:#|b|♯|♭)?(?:m|maj|min|dim|aug|sus|add|M|-)?\d*(?:\/(?:[A-G]|do|re|mi|fa|sol|la|si)(?:#|b)?)?[-+°]?\)?$/i;
+// …mas uma linha só é de acordes se algum tiver marca de acorde (maiúscula A–G, #, b, -, número, /, m…): «la la la» é letra
+const CHORDY = w => /^\(?[A-G]/.test(w) || /[#♯♭\d\/+°]|-\)?$/.test(w) || /^(?:do|dó|re|ré|mi|fa|fá|sol|la|lá|si)(?:b|m|maj|min|dim|aug|sus|add)/i.test(w);
+// (ou todos com maiúscula, como «Do Sol Lam»; um «Sol» sozinho também)
+const chordLine = l => { const ws = l.split(' '); return ws.every(w => CHORD.test(w)) && (ws.some(CHORDY) || ws.every(w => /^\(?\p{Lu}/u.test(w))); };
 const letters = s => (s.match(/\p{L}/gu) || []).length;
 // palavras de uma letra que existem (a, e, o, é, y…); as outras letras soltas são restos das notas ou das pautas
 const ONE = new Set([...'aeiouyàáâãéèêíóòôõúAEIOUYÀÁÉÈÍÓÚ']);
@@ -42,17 +47,21 @@ function clean(t) {
   const out = [];
   for (let l of String(t || '').replace(/\r/g, '').replace(/\f/g, '\n').split('\n')) {
     l = l.replace(/_+/g, ' ').replace(/[\t ]+/g, ' ').trim();
+    // linha em branco = separação de estrofes (fica uma só; serve para montar a letra)
+    if (!l) { if (out.length && out[out.length - 1] !== '') out.push(''); continue; }
+    if (chordLine(l)) continue;                                           // linhas só de acordes (antes de juntar sílabas)
     // sílabas separadas por hífens com espaços: «Glo - ri - a», «Glo -ri -a» → «Gloria»
     let p; do { p = l; l = l.replace(/(\p{L})(?: +[-–—~]+ *| *[-–—~]+ +)(?=\p{L})/gu, '$1'); } while (l !== p);
     // tokens que não são palavras (símbolos de música, letras soltas que não são palavras)
     l = l.split(' ').filter(w => w && !NOISE.test(w) && !(letters(w) === 1 && w.replace(/[^\p{L}]/gu, '').length === 1 && !ONE.has(w.replace(/[^\p{L}]/gu, '')))).join(' ');
-    if (!l || l.split(' ').every(w => CHORD.test(w))) continue;          // linhas só de acordes
+    if (!l || chordLine(l)) continue;                                     // linhas só de acordes
     if (letters(l) < 3 || letters(l) / l.length < 0.6) continue;         // lixo do OCR (notas, pautas, números)
     out.push(l);
     // sílabas com hífen sem espaços («Ale-gra-te, Jeru-salém»): também a linha com as sílabas juntas, para se
     // encontrar «alegrate» e «jerusalém» (fica a original, por causa das palavras com hífen: «tende-nos»)
     if (/\p{L}-\p{L}/u.test(l)) out.push(l.replace(/(\p{L})-(?=\p{L})/gu, '$1'));
   }
+  while (out.length && out[out.length - 1] === '') out.pop();
   return out.join('\n').slice(0, 30000);
 }
 
