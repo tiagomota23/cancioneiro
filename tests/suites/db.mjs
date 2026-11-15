@@ -236,15 +236,15 @@ export default async function (level) {
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
-  await t('SEG-44', 'catalog_version (v238): RLS ligada; anon sem privilégios; authenticated só SELECT (sem escrita); quem não tem acesso não lê a versão; os 4 perfis leem 1 linha e não a mudam; catalog_bump() não executável por anon/authenticated; gatilhos por instrução em songs, song_sources, song_tags, song_files (em rollback)', async () => {
+  await t('SEG-50', 'catalog_version (v238): RLS ligada; anon sem privilégios; authenticated só SELECT (sem escrita); quem não tem acesso não lê a versão; os 4 perfis leem 1 linha e não a mudam; catalog_bump() não executável por anon/authenticated; gatilhos por instrução em songs, song_sources, song_tags, song_files (em rollback)', async () => {
     const bad = [];
-    const [m] = await sql(`select c.relrowsecurity rls,
+    const [m] = await sql(`begin; select c.relrowsecurity rls,
       has_table_privilege('anon', 'public.catalog_version', 'select,insert,update,delete') anon_priv,
       has_table_privilege('authenticated', 'public.catalog_version', 'insert,update,delete') auth_write,
       has_table_privilege('authenticated', 'public.catalog_version', 'select') auth_sel,
       has_function_privilege('anon', 'public.catalog_bump()', 'execute') anon_fn, has_function_privilege('authenticated', 'public.catalog_bump()', 'execute') auth_fn,
       (select string_agg(distinct t.event_object_table, ',' order by t.event_object_table) from information_schema.triggers t where t.trigger_schema = 'public' and t.trigger_name = 'catalog_bump' and t.action_orientation = 'STATEMENT') trg
-      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'catalog_version'`);
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'catalog_version'; rollback;`); // begin…rollback: a consulta tem as palavras insert/update (sql() recusa-as fora disso)
     if (!m) return 'catalog_version não existe';
     if (!m.rls) bad.push('RLS desligada'); if (m.anon_priv) bad.push('anon com privilégios'); if (m.auth_write) bad.push('authenticated pode escrever'); if (!m.auth_sel) bad.push('authenticated sem SELECT');
     if (m.anon_fn || m.auth_fn) bad.push('catalog_bump() executável por anon/authenticated');
@@ -275,12 +275,12 @@ export default async function (level) {
     if (vs[2] - vs[1] !== 1) bad.push(`song_files: +${vs[2] - vs[1]} (esperado +1)`);
     return bad.length ? bad.join('; ') : { pass: `songs +1, song_files +1, collections +${vs[3] - vs[2]}` };
   }, { sev: 'média', where: 'supabase/catalogo-versao.sql' });
-  await t('SEG-43', 'crop_reviews (v237): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; leitura e escrita recusadas a anon e aos 4 perfis (em rollback)', async () => {
+  await t('SEG-49', 'crop_reviews (v237): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; leitura e escrita recusadas a anon e aos 4 perfis (em rollback)', async () => {
     const bad = [];
-    const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'crop_reviews')::int pols,
+    const [m] = await sql(`begin; select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'crop_reviews')::int pols,
       has_table_privilege('anon', 'public.crop_reviews', 'select,insert,update,delete') anon_priv,
       has_table_privilege('authenticated', 'public.crop_reviews', 'select,insert,update,delete') auth_priv
-      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'crop_reviews'`);
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'crop_reviews'; rollback;`); // begin…rollback: a consulta tem as palavras insert/update (sql() recusa-as fora disso)
     if (!m) return 'crop_reviews não existe';
     if (!m.rls) bad.push('RLS desligada'); if (m.pols) bad.push(`${m.pols} políticas`);
     if (m.anon_priv) bad.push('anon com privilégios'); if (m.auth_priv) bad.push('authenticated com privilégios');
@@ -290,12 +290,12 @@ export default async function (level) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'crítica', where: 'supabase/recortes.sql' });
-  await t('SEG-40', 'song_texts (v233): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; como anon, Cancioneiro, Coro, Maestro e Gestor a leitura é recusada (em rollback)', async () => {
+  await t('SEG-46', 'song_texts (v233): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; como anon, Cancioneiro, Coro, Maestro e Gestor a leitura é recusada (em rollback)', async () => {
     const bad = [];
-    const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'song_texts')::int pols,
+    const [m] = await sql(`begin; select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'song_texts')::int pols,
       has_table_privilege('anon', 'public.song_texts', 'select,insert,update,delete') anon_priv,
       has_table_privilege('authenticated', 'public.song_texts', 'select,insert,update,delete') auth_priv
-      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'song_texts'`);
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'song_texts'; rollback;`); // begin…rollback: a consulta tem as palavras insert/update (sql() recusa-as fora disso)
     if (!m) return 'song_texts não existe';
     if (!m.rls) bad.push('RLS desligada');
     if (m.pols) bad.push(`${m.pols} políticas`);
