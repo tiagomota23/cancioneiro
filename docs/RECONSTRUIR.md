@@ -55,6 +55,8 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
    A `conteudo` importa `./busca.js`, que vive na raiz do repositório (também usado pela app): antes do deploy copiar `busca.js`
    para `supabase/functions/conteudo/` (sem fazer commit da cópia), ou, pela Management API, enviar no mesmo deploy
    `file=@supabase/functions/conteudo/index.ts` e `file=@busca.js`.
+   A `sync-librone` publica-se com `strofe.js` ao lado do index.ts (já está na pasta da função; pela Management API,
+   enviar os dois ficheiros no mesmo deploy).
    A `pdf-texto` só aceita a Action «Texto dos PDF» (token OIDC do GitHub, audiência `cancioneiro-pdf`, texto-pdf.yml em main).
    O texto dos PDF (tabela `song_texts`) vem em dados.json; se faltar, correr essa Action até «0 por tratar».
 6. **Ficheiros:** recriar o bucket `coro` e enviar os ficheiros (ver o passo 6 do texto acima).
@@ -72,7 +74,7 @@ Registo do que está configurado à mão (outubro 2026). Os valores secretos nã
 - **Segredos das funções:** `GROQ_API_KEY`, `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth do Drive).
   Os SUPABASE_* são postos pelo próprio Supabase.
 - **Funções e verify_jwt:** transcribe false, sync-songs **true**, notify **true**, drive-auth false, drive-sync false,
-  conteudo false, gravacoes false, backup false, pdf-texto false, sync-cc false, cc-transcribe false (estas duas protegidas por pedido em job_requests, como o drive-sync). (Em 10/out/2026 as publicadas coincidiam com `supabase/functions/` em main.)
+  conteudo false, gravacoes false, backup false, pdf-texto false, sync-cc false, cc-transcribe false, sync-librone false (estas três protegidas por pedido em job_requests, como o drive-sync). (Em 10/out/2026 as publicadas coincidiam com `supabase/functions/` em main.)
 - **Google Cloud, dois clientes OAuth (Web):**
   (a) login: id `627200817574-ht0695cvjhn96rrogggk14u6fdktvs33.apps.googleusercontent.com`, redirect
   `https://<ref>.supabase.co/auth/v1/callback`, segredo guardado no Supabase (Auth → Google);
