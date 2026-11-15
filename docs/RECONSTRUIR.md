@@ -55,8 +55,8 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
    A `conteudo` importa `./busca.js`, que vive na raiz do repositório (também usado pela app): antes do deploy copiar `busca.js`
    para `supabase/functions/conteudo/` (sem fazer commit da cópia), ou, pela Management API, enviar no mesmo deploy
    `file=@supabase/functions/conteudo/index.ts` e `file=@busca.js`.
-   A `sync-librone` publica-se com `strofe.js` ao lado do index.ts (já está na pasta da função; pela Management API,
-   enviar os dois ficheiros no mesmo deploy).
+   A `sync-librone` publica-se com `strofe.js` e `pagina.js` ao lado do index.ts (já estão na pasta da função; pela
+   Management API, enviar os três ficheiros no mesmo deploy).
    A `pdf-texto` só aceita a Action «Texto dos PDF» (token OIDC do GitHub, audiência `cancioneiro-pdf`, texto-pdf.yml em main).
    O texto dos PDF (tabela `song_texts`) vem em dados.json; se faltar, correr essa Action até «0 por tratar».
 6. **Ficheiros:** recriar o bucket `coro` e enviar os ficheiros (ver o passo 6 do texto acima).
