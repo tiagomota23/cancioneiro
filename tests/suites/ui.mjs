@@ -314,17 +314,27 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
-  await t('FUN-86', 'Rever recorte a partir da folha de revisão (v246, ?demo, Maestro): #/cantico/amazing_grace/folha/rev1 mostra .crop-bar; «Manter o atual» volta a #/lista/colecao-rev1 só com os outros cânticos; numa folha de revisão só com esse cântico, a folha é apagada e a app volta a #/ (ou à seguinte de revisão)', async () => {
+  await t('FUN-86', 'Rever recorte a partir da folha de revisão (v246/v247, ?demo, Maestro; folha de revisão = título «Rever recortes dos livros…», por publicar, sem created_by): abrir o cântico da folha abre logo dialog.crop-dlg; «Cancelar» volta à folha e reabrir abre de novo; «Manter o atual» volta a #/lista/colecao-rev1 só com os outros cânticos; folha só com esse cântico é apagada e a app sai dela; folha comum: sem abertura automática e o cântico fica', async () => {
     const bad = [];
-    const rev = (id, title, slugs) => ({ id, title, audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), created_by: 'demo@localhost', published: false, sections: [], songs: slugs.map((s, i) => ({ song_slug: s, position: i })) });
+    const rev = (id, title, slugs) => ({ id, title, audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 30 * 864e5).toISOString(), created_by: null, published: false, sections: [], songs: slugs.map((s, i) => ({ song_slug: s, position: i })) });
+    const autoDlg = async page => { await page.waitForSelector('dialog.crop-dlg[open] [data-a=keep]', { timeout: 12000 }).catch(() => {}); return !!(await count(page, 'dialog.crop-dlg[open]')); };
     const decide = async page => {
-      await page.waitForSelector('.crop-bar button.crop-rev', { timeout: 8000 }).catch(() => {});
-      if (!(await count(page, '.crop-bar button.crop-rev'))) return 'sem .crop-bar no cântico aberto da folha';
-      await page.click('.crop-bar button.crop-rev');
-      await page.waitForSelector('dialog.crop-dlg[open] [data-a=keep]', { timeout: 15000 }).catch(() => {}); await sleep(800);
-      await page.click('dialog.crop-dlg [data-a=keep]'); await sleep(1800);
+      if (!(await autoDlg(page))) return 'o diálogo de revisão não abriu sozinho no cântico aberto da folha';
+      await sleep(800); await page.click('dialog.crop-dlg [data-a=keep]'); await sleep(1800);
       return null;
     };
+    // 0) Cancelar volta à folha; reabrir o cântico abre o diálogo de novo
+    await withApp({ perfil: 'maestro', cols: [...demoCols(), rev('rev1', 'Rever recortes dos livros (1/1)', ['amazing_grace', 'salve_regina'])], hash: '#/cantico/amazing_grace/folha/rev1' }, async ({ page }) => {
+      if (!(await autoDlg(page))) { bad.push('o diálogo não abriu sozinho'); return; }
+      await page.click('dialog.crop-dlg [data-a=close]'); await sleep(1200);
+      if (!/#\/lista\/colecao-rev1$/.test(page.url())) bad.push('«Cancelar» ficou em ' + page.url().split('#')[1]);
+      await page.evaluate(() => { location.hash = '#/cantico/amazing_grace/folha/rev1'; });
+      if (!(await autoDlg(page))) bad.push('reabrir o cântico da folha não abriu o diálogo de novo');
+    });
+    // folha comum (demo2, «Encontro de jovens», com created_by): sem abertura automática
+    await withApp({ perfil: 'maestro', hash: '#/cantico/amazing_grace/folha/demo2' }, async ({ page }) => {
+      await sleep(3000); if (await count(page, 'dialog.crop-dlg[open]')) bad.push('folha comum abriu o diálogo de revisão sozinho');
+    });
     // 1) folha com dois cânticos: volta à folha, sem o decidido
     await withApp({ perfil: 'maestro', cols: [...demoCols(), rev('rev1', 'Rever recortes dos livros (1/1)', ['amazing_grace', 'salve_regina'])], hash: '#/cantico/amazing_grace/folha/rev1' }, async ({ page }) => {
       const e = await decide(page); if (e) { bad.push('2 cânticos: ' + e); return; }
