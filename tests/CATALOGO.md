@@ -337,7 +337,7 @@ Catálogo atualizado até à **v250** (2026-11-15). Testes v231–v241 corridos 
 | INT-05 | Cânticos do original todos no Cancioneiro | db | alta | V | ✓ |
 | INT-06 | Folhas sem posições repetidas | db | baixa | V | ✓ |
 | INT-07 | Limpezas automáticas (partilhas, coleções, convites, pedidos) | db | média | V | ✓ |
-| INT-08 | 7 agendamentos pg_cron ativos e sem falhas (9 tarefas, + cancioneiro-librone-semanal desde v250 desde v226) | db | alta | V | ✓ |
+| INT-08 | 9 agendamentos pg_cron ativos e sem falhas recentes (cancioneiro-coros-companhia-semanal desde v226, cancioneiro-librone-semanal desde v250) | db | alta | V | ✓ |
 | INT-09 | sync_log, drive_sync_log, health_log ≤ 8 dias e sem erro | db | alta | V | ✓ |
 | INT-10 | Cópia de segurança semanal com sucesso ≤ 8 dias | db | alta | V | ✓ |
 | INT-11 | Verificação semanal e conversão de gravações sem falhas | db | média | V | ✓ |
