@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v238** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, FUN-79, FUN-80, BUS-01, BUS-02, EST-05, EST-06, SEG-38, SEG-39, SEG-40, SEG-41, SEG-42, SEG-43, SEG-44, SEG-45, INT-23, INT-24, INT-25 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v239** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, FUN-79, FUN-80, BUS-01, BUS-02, EST-05, EST-06, SEG-38, SEG-39, SEG-40, SEG-41, SEG-42, SEG-43, SEG-44, SEG-45, INT-23, INT-24, INT-25 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -150,7 +150,7 @@ Catálogo atualizado até à **v238** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | EST-03 | Ficheiros do SHELL do sw.js existem | static | alta | V | ✓ |
 | EST-04 | Versão do supabase-js igual no `<script>` e na CSP | static | alta | V | ✓ |
 | EST-05 | busca.js (v232): no index.html com ?v= da versão e antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js documentada | static | alta | V | ☐ por correr |
-| EST-06 | Versão do catálogo cobre tudo o que muda a lista guardada: cânticos/fontes/etiquetas/ficheiros, perfil da pessoa e folhas ativas do Cancioneiro (incl. expiração) | static | alta | V | ☐ por correr (falha esperada na v238: achado enviado à webapp) |
+| EST-06 | Versão do catálogo cobre tudo o que muda a lista guardada: cânticos/fontes/etiquetas/ficheiros, perfil da pessoa e folhas ativas do Cancioneiro (incl. expiração) | static | alta | V | ☐ por correr (v239: listKey + recheckList corrigem o achado da v238) |
 | EST-10 | Sessão longa (60/150 navegações): sem erros, memória e nós DOM estáveis | ui | alta | V/S | ✓ |
 | EST-11 | Service worker ativo, abre sem rede | ui | alta | V | ✓ |
 | EST-12 | Ao mudar de versão o SW apaga caches antigas (mantém cancioneiro-media) | ui | alta | V | ✓ |
