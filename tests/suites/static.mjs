@@ -259,6 +259,37 @@ export default async function (level) {
     if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
+  await t('SEG-45', 'conteudo «songs» e «files» (v238, versão 40): no máximo 60, sem repetidos; songs só cânticos visible() e sem acordes no perfil Cancioneiro; files só lvl ≥ 2 (403) e só caminhos de song_files; limites por limitMany (song / file) exceto cânticos de folhas ativas (free, só lvl < 3); recusados em refused', () => {
+    const c = read('supabase/functions/conteudo/index.ts'), bad = [];
+    const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
+    const so = blk('songs'), fi = blk('files');
+    if (!so) bad.push('op songs não encontrada'); else {
+      if (!/\[\.\.\.new Set\([^\n]*b\.slugs[^\n]*\)\]\.slice\(0, 60\)\.filter\(sl => visible\(c\.bySlug\.get\(sl\)\)\)/.test(so)) bad.push('songs: sem dedupe/≤60/visible()');
+      if (!/limitMany\(user, 'song', want\.filter\(sl => !free\.has\(sl\)\)\)/.test(so)) bad.push('songs: sem limitMany song (fora das folhas)');
+      if (!/lvl >= 2 \? s\.eff : noChords\(s\.eff\)/.test(so)) bad.push('songs: acordes para o perfil Cancioneiro');
+      if (!/refused: want\.filter\(sl => !ok\.has\(sl\)\)/.test(so)) bad.push('songs: sem refused');
+    }
+    if (!fi) bad.push('op files não encontrada'); else {
+      if (!/^[^\n]*\n\s*if \(lvl < 2\) return denied\(\);/.test(fi)) bad.push('files: não começa por lvl < 2 → 403');
+      if (!/\.slice\(0, 60\)/.test(fi)) bad.push('files: sem máximo 60');
+      if (!/rest\(`song_files\?select=path,song_slug&path=in\./.test(fi)) bad.push('files: não restringe a caminhos de song_files');
+      if (!/limitMany\(user, 'file', need\)/.test(fi)) bad.push('files: sem limitMany file');
+      if (!/refused: raw\.filter\(p => !files\[p\]\)/.test(fi)) bad.push('files: sem refused');
+    }
+    if (!/const free = user\.rank >= 3 \? new Set\(\) : colSet;/.test(c)) bad.push('free (sem limite) também para Maestro/Gestor');
+    if (!/\['song', 'songs', 'search', 'match', 'file', 'files', 'share'\]\.includes\(op\)/.test(c)) bad.push('colSet não calculado para songs/files');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/conteudo/index.ts' });
+  await t('EST-06', 'Versão do catálogo (v238): a lista guardada só se reaproveita se nada de que ela depende mudou — cânticos/fontes/etiquetas/ficheiros (gatilhos), mas também o perfil da pessoa (allowed_emails.role) e, no perfil Cancioneiro, as folhas ativas para o Cancioneiro (collections / collection_songs, e a expiração, que não escreve nada)', () => {
+    const sq = read('supabase/catalogo-versao.sql'), js = read('app.js'), bad = [];
+    for (const tb of ['songs', 'song_sources', 'song_tags', 'song_files']) if (!new RegExp(`'${tb}'`).test(sq)) bad.push(`sem gatilho em ${tb}`);
+    const verKey = (js.match(/const VER_KEY = ([^;\n]*)/) || [])[1] || '', cmp = (js.match(/if \(v && cached && cached\.length && ([^)]*)\) return;/) || [])[1] || '';
+    const coversRole = /allowed_emails/.test(sq) || /maxRole|role|rank/i.test(verKey + cmp);
+    const coversSheets = /collection_songs|collections/.test(sq) && /expir/i.test(sq) || /cols|colecc|collection|expir/i.test(verKey + cmp);
+    if (!coversRole) bad.push('mudança de perfil (ex.: Cancioneiro → Coro, Coro → Maestro) não invalida a lista guardada: fica a lista antiga até outro cântico mudar');
+    if (!coversSheets) bad.push('perfil Cancioneiro: uma folha nova (ou que expira) para o Cancioneiro muda os cânticos que a pessoa vê (in_cancioneiro_collection na política «leitura familia»), mas não sobe a versão: a lista guardada não tem os cânticos da folha');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/catalogo-versao.sql, app.js (load, VER_KEY)' });
   await t('SEG-42', 'Revisão de recortes (v237, código): crop_reviews com RLS, sem políticas, revoke anon/authenticated; conteudo crops/croppages/cropset começam por lvl < 3 → 403; croppages conta cada página no limite file; cropset: só pendente (404), limite save antes de escrever, caminho do mesmo livro com &s= do cântico da revisão, 1–4 partes, 1.ª parte = p, páginas a ±1 das atuais/anteriores, frações 0–1, largura ≥ 0,05 e altura ≥ 0,02; pdf-texto locate depois do OIDC', () => {
     const c = read('supabase/functions/conteudo/index.ts'), sq = read('supabase/recortes.sql'), pf = read('supabase/functions/pdf-texto/index.ts'), bad = [];
     if (!/alter table public\.crop_reviews enable row level security/.test(sq)) bad.push('crop_reviews sem RLS');

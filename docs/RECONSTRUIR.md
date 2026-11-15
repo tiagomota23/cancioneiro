@@ -24,7 +24,8 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
 3. Dados: `node tools/backup/restaurar-dados.mjs dados.json > dados.sql` e aplica dados.sql (uma só transação; respeita as
    colunas geradas e de identidade; favorites só entram para utilizadores que já existam em auth.users — depois de os
    utilizadores entrarem, volta a correr só essa tabela com `--tabela=favorites`). Se o pedido for grande demais para a
-   Management API, gera e aplica uma tabela de cada vez com `--tabela=<nome>`, pela ordem do script.
+   Management API, gera e aplica uma tabela de cada vez com `--tabela=<nome>`, pela ordem do script. Confirma no fim que
+   catalog_version tem a linha id=1 (cópias anteriores a 15/nov não a trazem: `insert into catalog_version values (1, 1, now())`).
 4. Segredos das funções: pede-me GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET (cliente OAuth do Drive), GROQ_API_KEY e RESEND_API_KEY
    e guarda-os no Supabase. Configura o login Google (Authentication → Providers → Google) com o cliente OAuth do login, o
    Site URL e a lista de redireccionamentos (só o endereço da app). Guia-me passo a passo no que tiver de ser eu.

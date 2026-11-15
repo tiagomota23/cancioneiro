@@ -89,8 +89,11 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   Esquema e grants já saem em backup_schema(). song_texts acrescentada à constante T e à ORDEM (commit 14 nov).
 - v237 (15 nov): tabela crop_reviews (revisão de recortes dos livros, 27 linhas, insubstituível); esquema e grants já em
   backup_schema(); acrescentada à constante T e à ORDEM (depois de song_files e songs).
-  **Pendente:** autorização do Tiago para publicar a função backup com song_texts e crop_reviews; depois correr
-  backup.yml e confirmar. Até lá, dados.json não leva nenhuma das duas.
+- v238 (15 nov): tabela catalog_version (uma linha id=1), função catalog_bump() e gatilhos em songs, song_sources,
+  song_tags e song_files: tudo em backup_schema(). A linha id=1 não vem no esquema: catalog_version entra na constante T
+  e é a primeira da ORDEM (antes de songs, para os gatilhos terem a linha que atualizam).
+  **Pendente:** autorização do Tiago para publicar a função backup com song_texts, crop_reviews e catalog_version;
+  depois correr backup.yml e confirmar. Até lá, dados.json não leva nenhuma das três.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.
