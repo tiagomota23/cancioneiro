@@ -102,6 +102,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   cancioneiro-librone-semanal, função sync-librone (com strofe.js): tudo em backup_schema(). SRC de backup.mjs com
   librone e coros_companhia. librone_sync_log acrescentada a T e à ORDEM.
   Função backup v9 publicada (15 nov, autorizada pelo Tiago) com librone_sync_log.
+  Cópia manual de 15 nov ~21h passou: 2256 cânticos, 1435 ficheiros, 0 em falta; 358 novos, 22 removidos, 919 s.
+  Nada pendente.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.
