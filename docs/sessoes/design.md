@@ -168,21 +168,22 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v247)
-- App v247 (sem componentes nem imagens novas). Publicados: mapa «versão 246», sistema de design v246; a publicação da v247
-  (Main, Padrao, ds/tokens no mapa; design-system.json e tokens.json no sistema) foi recusada pelas permissões — o espelho
-  já está na v247: publicar na próxima sincronização. v246: caixa «Recorte a rever» também no cântico dentro de uma folha
-  (sem componentes novos, sem imagens novas). v243–v244: zoom − / + na janela de rever recortes (não capturada);
+## Estado atual (15 nov 2026, v248)
+- App v248; capa do mapa «versão 248 · 15 nov 2026» (mapa versão 101, sistema de design versão 52; v247 publicada junto).
+  v248 (Maestro/Gestor): caixa `.pend-bar.draft-bar` «Rascunho de letra» (rótulo em maiúsculas, `.draft-note` fs-small
+  itálico, `.draft-text` em `--surface`; já segue a regra 15 proposta) — não capturada (o rascunho do demo não está no cântico
+  dos ecrãs); entrada «Rascunhos de letra (N)» no menu (ecrã `gaveta` e catálogo v039, v041, v042 carregados de novo).
+  v246–v247: caixa «Recorte a rever» também dentro de folhas; tocar na folha de revisão abre a janela. v243–v244: zoom − / +;
   v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. v245: contorno da letra no visor de partituras
   passa a `--app-brand` (verde fixo, todos os perfis com partituras; tracejado 8/6 entre partes) e `.pdf-more` «Rever recorte»
   no visor (Maestro/Gestor); não aparece no mapa. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14).
   v242: contorno `--accent`
   2,5 px à volta da letra nas páginas do livro (visor de partituras, desenhado no canvas) e `.pdf-more` na vista de um livro —
   não aparece no mapa (o ecrã `partitura` usa um PDF de exemplo). Sem imagens novas.
-- Mapa versão 100, sistema de design versão 51. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+- v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
-- **À espera de confirmação direta do Tiago (15 nov):** a webapp transmitiu que o Tiago (a) aprovou o verde fixo
+- **À espera de confirmação direta do Tiago (15 nov; a regra 15 cobre também a caixa do rascunho, v248):** a webapp transmitiu que o Tiago (a) aprovou o verde fixo
   (`--app-brand`) no recorte proposto e (b) deixou à sessão de design a regra das maiúsculas; a v245 alarga o verde fixo
   ao contorno da letra no visor (pedido do Tiago, segundo a webapp). A mudança ao README foi recusada pelas permissões por a
   decisão não vir diretamente do Tiago. Proposta feita ao Tiago: regra 15 «Caixas amarelas» (1.ª linha = rótulo curto em
