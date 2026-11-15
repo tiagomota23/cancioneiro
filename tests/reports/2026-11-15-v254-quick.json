@@ -1,0 +1,26 @@
+{
+ "version": "254",
+ "level": "quick",
+ "date": "2026-11-15",
+ "secs": 26,
+ "results": [
+  {
+   "id": "INT-14",
+   "title": "«Todos os cânticos»: nenhum cântico sem categoria (consulta de docs/sessoes/webapp.md; tarefa contínua da sessão principal) (v190)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "ms": 1619
+  },
+  {
+   "id": "FUN-85",
+   "title": "«Rever recorte» no visor (v245, ?demo, Amazing Grace): Coro sem o botão no visor; Maestro com «Rever recorte» no recorte e na página inteira; abre dialog.crop-dlg; «Manter o atual» fecha o diálogo e o visor",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 23248
+  }
+ ]
+}

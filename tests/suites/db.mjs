@@ -463,7 +463,8 @@ export default async function (level) {
         and not exists (select 1 from public.song_tags t where t.song_slug = s.slug and (
           t.grp = 'Tema' or t.grp = 'Coro CLU — momento'
           or (t.grp = 'Coro CLU' and t.tag in ('Para a Missa', 'Para Gestos'))
-          or (t.grp = 'CANTI 2024' and t.tag in ('Canti per la liturgia', 'Canti della nostra storia', 'Canti per bambini', 'Canti popolari regionali', 'Canti di montagna', 'Canzoni italiane'))
+          or (t.grp in ('CANTI 2024', 'Librone dei canti') and t.tag in ('Canti per la liturgia', 'Canti della nostra storia', 'Canti per bambini', 'Canti popolari regionali', 'Canti di montagna', 'Canzoni italiane'))
+          or t.grp = 'Coros & Companhia' -- regras de TEMAS em app.js (v250: Librone dei canti; v226: Coros & Companhia)
           or (t.grp = 'Songbook' and t.tag in ('Hymns', 'Latin songs', 'Spirituals', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs', 'Rock – pop – folk'))))
       order by s.slug`);
     return r.length ? { warn: `${r.length} cânticos sem categoria (a classificar pela sessão principal): ${r.slice(0, 8).map(x => x.slug).join(', ')}` } : true;

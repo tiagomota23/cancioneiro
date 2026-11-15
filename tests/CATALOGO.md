@@ -40,7 +40,7 @@ Catálogo atualizado até à **v251** (2026-11-15). Testes v231–v241 corridos 
 | FUN-82 | Sem lotes repetidos (v241, modo real simulado, folha ativa, op songs lento): abrir a folha durante a pré-descarga → nenhum cântico em dois op songs; todos com letra no fim | ui | baixa | V | ✓ (v241) |
 | FUN-83 | Página inteira do livro com contorno (v242, ?demo, recorte injetado): «Ver a página inteira» → contorno na cor --app-brand desde v245 (pixel na aresta) e «Ver só a letra do cântico», que volta ao recorte | ui | baixa | V | ✓ (v252) |
 | FUN-84 | Zoom na revisão de recortes (v243, ?demo, Maestro): 100% → «+»×2 = 225% com canvas mais nítido (≤ 2400 px); limites 100–400%; desenho a 225% nas frações certas; beliscão muda o zoom e o toque logo a seguir não marca canto | ui | baixa | V | ✓ (v252) |
-| FUN-85 | «Rever recorte» no visor (v245, ?demo): Coro sem botão; Maestro com «Rever recorte» no recorte e na página inteira; «Manter o atual» fecha diálogo e visor | ui | baixa | V | ✗ (v252: sem «Rever recorte» no visor quando o recorte atual é a página inteira, sem &c=) |
+| FUN-85 | «Rever recorte» no visor (v245, ?demo): Coro sem botão; Maestro com «Rever recorte» no recorte e na página inteira; «Manter o atual» fecha diálogo e visor | ui | baixa | V | ✓ (v254) |
 | FUN-86 | Rever recorte a partir da folha de revisão (v246/v247, ?demo, Maestro): diálogo abre sozinho; Cancelar volta à folha e reabrir abre de novo; decidir volta à folha sem o cântico; folha só com ele é apagada; folha comum sem abertura automática e intacta | ui | média | V | ✓ (v252) |
 | FUN-87 | Rascunhos de letra (v248, ?demo): Coro sem caixa, sem texto e sem entrada na gaveta; Maestro com entrada e lista; «Rever e publicar» abre o editor com o rascunho, sem Repor, com aviso; publicar tira a caixa; Descartar com dois toques | ui | alta | V | ✓ (v252) |
 | FUN-88 | Cache de letras (v249 v2, v251 v3; modo real simulado): cópias antigas apagadas e não usadas; letra pedida e guardada na chave v3; ao recarregar abre da cópia sem novo pedido | ui | média | V | ✓ (v252) |
@@ -320,7 +320,7 @@ Catálogo atualizado até à **v251** (2026-11-15). Testes v231–v241 corridos 
 | INT-03 | Objetos órfãos no armazenamento | db | baixa | V | ✓ |
 | INT-04 | Número único, título, letra (ou partitura), fonte | db | alta | V | ✓ |
 | INT-13 | Cânticos novos aprovados todos no Coro (coro_clu) (v174) | db | média | V | ✓ |
-| INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ✓ |
+| INT-14 | «Todos os cânticos»: zero cânticos sem categoria (consulta de docs/sessoes/webapp.md; aviso, não falha) (v190) | db | baixa | V | ✓ (v254; conta Librone dei canti e Coros & Companhia) |
 | INT-15 | Etiquetas «Tema» só com os 7 nomes das categorias (sem «Infantis e de gestos») (v191) | db | baixa | V | ✓ |
 | INT-16 | os_crocodilos (só original, sem tradução) e dos_cocodrilos como versão es/songbook fora do Cancioneiro, com página do Songbook (v196) | db | baixa | V | ✓ |
 | INT-17 | Versões: principal existe e não é versão; sem versões de si próprias; cânticos juntados apagados (v193) | db | média | V | ✓ |
