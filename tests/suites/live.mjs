@@ -160,6 +160,13 @@ export default async function (level) {
     const r = await get(`${SB}/functions/v1/sync-cc`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: '{}' });
     return r.status === 403 || `sync-cc sem pedido: ${r.status} ${r.text().slice(0, 80)}`;
   }, { sev: 'alta', where: 'supabase/functions/sync-cc/index.ts (claimJob)' });
+  await t('SEG-55', 'sync-librone sem pedido do agendamento → 403 (v250); só se testa quando não há nenhum pedido sync-librone pendente (nunca consome um verdadeiro: não corre a atualização nem envia emails)', async () => {
+    if (!hasSql()) return { skip: 'sem SUPABASE_ACCESS_TOKEN: não se confirma que não há pedido pendente, por isso não se chama a função' };
+    const [p] = await sql(`select count(*)::int n from public.job_requests where job = 'sync-librone' and requested_at > now() - interval '15 minutes'`);
+    if (p.n) return { skip: 'há um pedido sync-librone pendente: não se chama a função para não o consumir' };
+    const r = await get(`${SB}/functions/v1/sync-librone`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: '{}' });
+    return r.status === 403 || `sync-librone sem pedido: ${r.status} ${r.text().slice(0, 80)}`;
+  }, { sev: 'alta', where: 'supabase/functions/sync-librone/index.ts (claimJob)' });
   await t('SEG-36', 'cc-transcribe (v227): pedido mal formado → 400 (antes de tocar em job_requests); pedido bem formado sem pedido do agendamento → 403, só quando não há nenhum pedido cc-transcribe pendente (nunca consome um verdadeiro nem chama o serviço de transcrição)', async () => {
     const bad = [];
     const call = body => get(`${SB}/functions/v1/cc-transcribe`, { method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

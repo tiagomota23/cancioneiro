@@ -96,6 +96,10 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   manual de 15 nov passou (0 em falta). Nada pendente.
 - v248 (15 nov): colunas songs.lyrics_draft, draft_note, draft_at (rascunhos de letras, protegidas; sem grant a
   authenticated). Já em backup_schema() e em dados.json (songs vai com todas as colunas): nada a mudar.
+- v250 (15 nov): fonte 'librone' (checks de song_sources e job_requests), tabela librone_sync_log, pg_cron
+  cancioneiro-librone-semanal, função sync-librone (com strofe.js): tudo em backup_schema(). SRC de backup.mjs com
+  librone e coros_companhia. librone_sync_log acrescentada a T e à ORDEM.
+  **Pendente:** autorização do Tiago para publicar a função backup (v9, com librone_sync_log); depois correr backup.yml.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.
