@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v237)
+## Estado e pendentes (15 nov 2026, v238)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -294,7 +294,17 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   de resultados (a lista mostra já o que o telemóvel encontrou); o número aparece quando o servidor responde. Números,
   pesquisas curtas, sem rede ou com o servidor em erro: o número aparece logo (`searchLyricsRemote` devolve se espera;
   `lyricFailed` guarda as que falharam, limpo ao voltar a rede e ao mudar de perfil).
-- Tudo publicado até à v237 (conteudo versão 39, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **Eventos (v238, pedido do Tiago, 15 nov): muitas pessoas a abrir, pesquisar e descarregar o mesmo ao mesmo tempo.**
+  Lista de cânticos (~1,1 MB, refeita pela base de dados a cada abertura e a cada regresso à app depois de 5 min): agora
+  `catalog_version` (`supabase/catalogo-versao.sql`; uma linha, gatilhos por instrução em songs, song_sources,
+  song_tags e song_files sobem `v`); a app lê só esse número e só descarrega a lista se mudou (`cancioneiro.songs.v2.versao`).
+  Folhas ativas e Preferidos ao abrir: ops novas da conteudo `songs` {slugs ≤60} (letras) e `files` {paths ≤60}
+  (endereços de 1 h; livros por página), com as regras dos ops song/file (cânticos de folhas ativas sem limite);
+  ~25 pedidos por telemóvel passam a 2–3. Limites: registo de uso de cada pessoa 60 s em memória por instância
+  (`logRows`), escrita em lote sem atrasar a resposta (`limitMany`). Pré-descarga começa 3–23 s depois de abrir (ao
+  acaso). Já existiam: cache de resultados de pesquisa 60 s, títulos/números/páginas no telemóvel, caches de sessão,
+  grupos e folhas na conteudo. Testado com a função a correr localmente (Deno, `npx deno`) contra um Supabase falso.
+- Tudo publicado até à v238 (conteudo versão 40, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

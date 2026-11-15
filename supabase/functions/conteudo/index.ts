@@ -67,24 +67,49 @@ async function mailGestores(subject, html) {
 }
 
 // ---------- limites ----------
-async function limit(user, kind, key) {
-  const [perHour, perDay] = LIMITS[kind];
+// O registo de uso de cada pessoa (últimas 24 h) fica 60 s em memória e é acrescentado aqui: num evento, cada pessoa faz
+// muitos pedidos seguidos e não é preciso ler a base de dados em cada um (noutra instância da função conta-se à parte
+// durante esse minuto — tolerância aceitável para limites que são contra cópias em massa).
+const logCache = new Map();
+async function logRows(user, kind) {
+  const k = user.id + ':' + kind, h = logCache.get(k);
+  if (h && Date.now() - h.at < 60e3) return h.rows;
   const since = new Date(Date.now() - 864e5).toISOString();
   const rows = await rest(`access_log?select=key,at&user_id=eq.${user.id}&kind=eq.${kind}&at=gte.${since}&order=at.desc&limit=5000`);
-  const hourAgo = Date.now() - 3600e3;
-  if (DISTINCT.has(kind)) {
-    if (rows.some(r => r.key === key)) return true; // já visto nas últimas 24 h: não conta de novo
-    const day = new Set(rows.map(r => r.key)), hour = new Set(rows.filter(r => Date.parse(r.at) > hourAgo).map(r => r.key));
-    if (hour.size >= perHour || day.size >= perDay) { await alert(user, kind, day.size); return false; }
-  } else {
-    const hour = rows.filter(r => Date.parse(r.at) > hourAgo).length;
-    if (hour >= perHour || rows.length >= perDay) { await alert(user, kind, rows.length); return false; }
-  }
-  // o registo não atrasa a resposta (termina depois dela, quando o ambiente o permite)
-  const w = rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ user_id: user.id, email: user.email, kind, key }) }).catch(e => console.error('access_log', e));
+  if (logCache.size > 5000) logCache.clear();
+  logCache.set(k, { rows, at: Date.now() });
+  return rows;
+}
+// regista sem atrasar a resposta (termina depois dela, quando o ambiente o permite)
+function logWrite(user, kind, keys) {
+  const now = new Date().toISOString(), h = logCache.get(user.id + ':' + kind);
+  if (h) for (const key of keys) h.rows.unshift({ key, at: now });
+  const w = rest('access_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(keys.map(key => ({ user_id: user.id, email: user.email, kind, key }))) }).catch(e => console.error('access_log', e));
   const er = (globalThis as any).EdgeRuntime;
-  if (er?.waitUntil) er.waitUntil(w); else await w;
-  return true;
+  return er?.waitUntil ? (er.waitUntil(w), Promise.resolve()) : w;
+}
+async function limit(user, kind, key) {
+  return (await limitMany(user, kind, [key])).length === 1;
+}
+// várias chaves de uma vez (folhas: letras e ficheiros de todos os cânticos num só pedido): devolve as permitidas
+async function limitMany(user, kind, keys) {
+  const [perHour, perDay] = LIMITS[kind];
+  const rows = await logRows(user, kind), hourAgo = Date.now() - 3600e3, ok = [], fresh = [];
+  if (DISTINCT.has(kind)) {
+    const day = new Set(rows.map(r => r.key)), hour = new Set(rows.filter(r => Date.parse(r.at) > hourAgo).map(r => r.key));
+    for (const key of keys) {
+      if (day.has(key)) { ok.push(key); continue; } // já visto nas últimas 24 h: não conta de novo
+      if (hour.size >= perHour || day.size >= perDay) continue;
+      day.add(key); hour.add(key); ok.push(key); fresh.push(key);
+    }
+    if (ok.length < keys.length) await alert(user, kind, day.size);
+  } else {
+    let hour = rows.filter(r => Date.parse(r.at) > hourAgo).length, day = rows.length;
+    for (const key of keys) { if (hour >= perHour || day >= perDay) break; hour++; day++; ok.push(key); fresh.push(key); }
+    if (ok.length < keys.length) await alert(user, kind, day);
+  }
+  if (fresh.length) await logWrite(user, kind, fresh);
+  return ok;
 }
 async function alert(user, kind, n) {
   const since = new Date(Date.now() - 864e5).toISOString();
@@ -188,6 +213,16 @@ async function sign(path) {
   const d = await r.json();
   if (!r.ok || !d.signedURL) throw new Error('ficheiro indisponível');
   return `${SB}/storage/v1${d.signedURL}`;
+}
+// vários endereços de uma vez (um só pedido ao Storage): caminho -> endereço
+async function signMany(paths) {
+  const out = new Map();
+  for (let i = 0; i < paths.length; i += 100) {
+    const r = await fetch(`${SB}/storage/v1/object/sign/coro`, { method: 'POST', headers: HDR, body: JSON.stringify({ expiresIn: 3600, paths: paths.slice(i, i + 100) }) });
+    if (!r.ok) continue;
+    for (const x of await r.json()) if (x.signedURL) out.set(x.path, `${SB}/storage/v1${x.signedURL}`);
+  }
+  return out;
 }
 const BOOKS = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' };
 const pageFile = (dir, n) => `${dir}/p${String(n).padStart(3, '0')}.pdf`;
@@ -364,7 +399,7 @@ Deno.serve(async (req) => {
     // cânticos de coleções ativas que esta pessoa vê: o perfil Cancioneiro passa a vê-los, e não contam para os limites
     // (a app descarrega-os ao abrir, para estarem logo disponíveis)
     let colSet = new Set();
-    if (['song', 'search', 'match', 'file', 'share'].includes(op)) {
+    if (['song', 'songs', 'search', 'match', 'file', 'files', 'share'].includes(op)) {
       const aud = lvl < 2 ? '&collections.audience=eq.cancioneiro' : '';
       const rows = await activeSheets(aud);
       // grupos (abaixo de Gestor): só as folhas para todos os grupos ou de um dos seus; sem grupo, nenhuma
@@ -395,6 +430,42 @@ Deno.serve(async (req) => {
       }
       // o perfil Cancioneiro não vê acordes
       return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha });
+    }
+    // várias letras num só pedido (a app descarrega assim as folhas ativas e os Preferidos ao abrir): os mesmos
+    // limites e regras do op song, mas uma só leitura do registo e uma só escrita
+    if (op === 'songs') {
+      const c = await songs();
+      const want = [...new Set((Array.isArray(b.slugs) ? b.slugs : []).map(String))].slice(0, 60).filter(sl => visible(c.bySlug.get(sl)));
+      const ok = new Set([...want.filter(sl => free.has(sl)), ...await limitMany(user, 'song', want.filter(sl => !free.has(sl)))]);
+      const res = {};
+      for (const sl of want) if (ok.has(sl)) { const s = c.bySlug.get(sl); res[sl] = { lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit }; }
+      return out({ songs: res, refused: want.filter(sl => !ok.has(sl)) });
+    }
+    // vários ficheiros num só pedido: endereços de 1 hora (livros: as páginas do recorte), como o op file
+    if (op === 'files') {
+      if (lvl < 2) return denied();
+      const raw = [...new Set((Array.isArray(b.paths) ? b.paths : []).map(String))].slice(0, 60);
+      if (!raw.length) return out({ files: {}, refused: [] });
+      const known = await rest(`song_files?select=path,song_slug&path=in.(${raw.map(p => '"' + encodeURIComponent(p.replace(/"/g, '')) + '"').join(',')})`);
+      const items = known.map(f => {
+        const [path, frag = ''] = f.path.split('#');
+        if (!BOOKS[path]) return { key: f.path, slug: f.song_slug, objs: [{ n: 0, obj: path }] };
+        const p = +(frag.match(/(?:^|&)p=(\d+)/) || [])[1] || 1, crop = (frag.match(/(?:^|&)c=([^&]+)/) || [])[1];
+        const ns = crop ? [...new Set(crop.split('|').map(r => +r.split(':')[0]))] : [p, p + 1];
+        return { key: f.path, slug: f.song_slug, book: path, objs: ns.map(n => ({ n, obj: pageFile(BOOKS[path], n) })) };
+      });
+      // limites por ficheiro / página (cânticos de folhas ativas sem limite, como no op file)
+      const lkey = (it, o) => it.book ? `${it.book}#${o.n}` : o.obj;
+      const need = items.filter(it => !free.has(it.slug)).flatMap(it => it.objs.map(o => lkey(it, o)));
+      const allowed = new Set(await limitMany(user, 'file', need));
+      const okItems = items.filter(it => free.has(it.slug) || it.objs.every(o => allowed.has(lkey(it, o))));
+      const urls = await signMany(okItems.flatMap(it => it.objs.map(o => o.obj)));
+      const files = {};
+      for (const it of okItems) {
+        if (it.book) files[it.key] = { pages: it.objs.map(o => ({ n: o.n, url: urls.get(o.obj) })).filter(x => x.url) };
+        else if (urls.get(it.objs[0].obj)) files[it.key] = { url: urls.get(it.objs[0].obj) };
+      }
+      return out({ files, refused: raw.filter(p => !files[p]) });
     }
     if (op === 'collyrics') { // Maestro: letra de um cântico só numa folha (lyrics: null volta à letra original)
       if (lvl < 3) return denied();

@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v237';
+  const APP_VERSION = '2026-11-15 v238';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -465,12 +465,22 @@
     } catch (e) { return null; }
   }
   let loadedAt = 0;
+  // versão do catálogo (supabase/catalogo-versao.sql): um número que sobe quando a lista muda. Ao abrir e ao voltar à
+  // app, lê-se só este número; a lista (~1 MB) só se descarrega se mudou (num evento, todos abrem a app ao mesmo tempo)
+  const VER_KEY = CACHE_KEY + '.versao';
+  async function catalogVersion() {
+    if (DEMO) return null;
+    try { const { data, error } = await sb.from('catalog_version').select('v').limit(1); return !error && data && data[0] ? String(data[0].v) : null; }
+    catch (e) { return null; }
+  }
   async function load() {
     loadedAt = Date.now();
     try { const h = sessionStorage.getItem('cancioneiro.depois'); if (h) { sessionStorage.removeItem('cancioneiro.depois'); history.replaceState(null, '', location.pathname + h); } } catch (e) {}
     const cached = store.get(CACHE_KEY, null);
     if (cached && cached.length) { setSongs(cached); route(); }
     try {
+      const v = await catalogVersion();
+      if (v && cached && cached.length && store.get(VER_KEY, null) === v) return; // nada mudou: fica a cópia guardada
       const fresh = await fetchSongs();
       if (!fresh.length) { // a base de dados só devolve cânticos a emails autorizados
         const inv = await claimInvite();
@@ -478,7 +488,7 @@
         return;
       }
       try { localStorage.removeItem(INV_KEY); } catch (e) {} // já tem acesso: o convite não é preciso
-      store.set(CACHE_KEY, fresh);
+      store.set(CACHE_KEY, fresh); if (v) store.set(VER_KEY, v);
       const changed = !cached || JSON.stringify(cached) !== JSON.stringify(fresh);
       setSongs(fresh);
       if (changed) route();
@@ -3053,20 +3063,33 @@
     if (prefetching || DEMO || !navigator.onLine) return; prefetching = true;
     try {
       const slugs = [...new Set([...cols.filter(c => colVisible(c) && !expired(c)).flatMap(c => (c.songs || []).map(x => x.song_slug)), ...favs])].filter(sl => bySlug.has(sl));
-      const keep = new Set();
-      for (const sl of slugs) {
-        try { await getLyrics(sl); } catch (e) { if (e instanceof Limit) break; }
-        if (lvl() < 2) continue;
-        const s = bySlug.get(sl);
-        for (const f of [...scoresOf(s), ...filesOf(s, 'recording')]) {
-          if (!f.path) continue;
-          keep.add(mkey(f.path));
-          try { await mediaSave(f); } catch (e) { if (e instanceof Limit) return; }
-        }
+      // letras que faltam: várias num só pedido (op songs), em vez de um pedido por cântico
+      const miss = slugs.filter(sl => !hasLyrics(sl));
+      for (let i = 0; i < miss.length; i += 40) {
+        let d;
+        try { d = await api('songs', { slugs: miss.slice(i, i + 40) }); } catch (e) { if (e instanceof Limit) break; throw e; }
+        for (const [sl, x] of Object.entries(d.songs || {})) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
+        saveLyrCache();
+        if ((d.refused || []).length) break; // limite atingido
       }
-      if ('caches' in window && lvl() >= 2) { // limpeza
-        const c = await caches.open(MEDIA);
-        for (const r of await c.keys()) { const base = r.url.split('%40')[0]; if (!keep.has(base) && !keep.has(r.url)) await c.delete(r); }
+      if (lvl() < 2) return;
+      // partituras, páginas dos livros e gravações: os endereços dos que ainda não estão guardados num só pedido
+      // (op files), depois o download de cada um
+      const files = slugs.flatMap(sl => { const s = bySlug.get(sl); return [...scoresOf(s), ...filesOf(s, 'recording')]; }).filter(f => f.path);
+      const keep = new Set(files.map(f => mkey(f.path)));
+      const mc = 'caches' in window ? await caches.open(MEDIA) : null;
+      const todo = [];
+      for (const f of files) if (!mc || !(await mc.match(mkey(f.path)))) todo.push(f);
+      const remote = todo.filter(f => !f.url && !/^https?:/.test(f.path));
+      for (let i = 0; i < remote.length; i += 40) {
+        try {
+          const d = await api('files', { paths: remote.slice(i, i + 40).map(f => f.path) });
+          for (const [p, src] of Object.entries(d.files || {})) signed.set(p, { src, until: Date.now() + 3300e3 });
+        } catch (e) { if (e instanceof Limit) break; }
+      }
+      for (const f of todo) { try { await mediaSave(f); } catch (e) { if (e instanceof Limit) break; } }
+      if (mc) { // limpeza
+        for (const r of await mc.keys()) { const base = r.url.split('%40')[0]; if (!keep.has(base) && !keep.has(r.url)) await mc.delete(r); }
       }
     } catch (e) { /* sem rede: fica para a próxima */ } finally { prefetching = false; }
   }
@@ -3948,7 +3971,9 @@
     showList();
     load();
     // descarrega os cânticos das folhas e dos Preferidos, depois de saber quais são
-    Promise.allSettled([loadFavs(), loadCollections()]).then(() => setTimeout(prefetchCollections, 3000));
+    // num evento, todos abrem a app ao mesmo tempo: cada telemóvel espera entre 3 e 23 s (ao acaso) antes de descarregar
+    // as folhas, para os pedidos não chegarem todos no mesmo segundo
+    Promise.allSettled([loadFavs(), loadCollections()]).then(() => setTimeout(prefetchCollections, 3000 + Math.random() * 20000));
     loadSyncInfo();
     await loadGroups(); await askGroups(); // 1.ª vez: os grupos da pessoa
     startTour().catch(e => console.warn('tutorial', e)); // 1.ª vez: tutorial (no fim, a proposta de instalar)
