@@ -110,7 +110,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v252';
+  const APP_VERSION = '2026-11-15 v253';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -968,7 +968,7 @@
   // ---------- Recortes dos livros a rever (Maestro / Gestor) ----------
   // Recortes do Songbook / CANTI que não coincidiam com a letra do cântico (verificação do texto dos PDF, 14 nov 2026):
   // na página do cântico, uma caixa amarela «Recorte do livro a rever» abre a página do livro com o recorte atual
-  // (laranja), o proposto (verde, se houver) e o que se desenhar (dois toques: canto de cima à esquerda e de baixo à
+  // (laranja), o proposto (cor do perfil, 3 px, se houver) e o que se desenhar (dois toques: canto de cima à esquerda e de baixo à
   // direita; até 4 partes). Manter, usar o proposto, repor o anterior ou usar o desenhado: op cropset da conteudo.
   let cropRev = null, cropRevLoading = false, autoRev = null; // slug -> [{ id, current, proposed, previous, note }]
   async function loadCropReviews() {
@@ -1313,7 +1313,7 @@
     if (lvl() >= 3 && !cropRev) loadCropReviews();
     // também dentro de uma folha (as folhas «Rever recortes dos livros» abrem os cânticos assim)
     const revs = lvl() >= 3 && extrasOn() && cropRev ? cropRev.get(slug) || [] : [];
-    const cropHtml = revs.length ? `<div class="pend-bar crop-bar"><p>Recorte do livro a rever${revs.length > 1 ? ` (${revs.length})` : ''}: confirme se a página do livro mostra este cântico.</p><p>${revs.map((r, i) => `<button class="edit-btn crop-rev" data-i="${i}">Rever recorte${revs.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}</p></div>` : '';
+    const cropHtml = revs.length ? `<div class="pend-bar crop-bar"><p>Recorte a rever${revs.length > 1 ? ` (${revs.length})` : ''}</p><p>Confirme se a página do livro mostra este cântico.</p><p>${revs.map((r, i) => `<button class="edit-btn crop-rev" data-i="${i}">Rever recorte${revs.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}</p></div>` : '';
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
     const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn() && !fcol; // Maestro / Gestor: em "Editar cântico"
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
@@ -2803,12 +2803,12 @@
       await renderPdf();
     } catch (e) { $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a letra.</p>'; }
   }
-  // páginas inteiras: contorno verde à volta das partes que são a «letra do cântico» (os recortes desta página). Quando
+  // páginas inteiras: contorno na cor do perfil (--accent) à volta das partes que são a «letra do cântico» (os recortes desta página). Quando
   // a letra continua noutra coluna ou página, a linha de baixo da parte fica tracejada, e a de cima da continuação também.
   function outlineCrops(ctx, crops, pg, ox, oy, w, h, r) {
     const all = crops || [];
     if (!all.some(c => c[0] === pg)) return;
-    ctx.save(); ctx.strokeStyle = themeColor('--app-brand') || '#10835c'; ctx.lineWidth = 2.5 * r; ctx.lineCap = 'butt';
+    ctx.save(); ctx.strokeStyle = themeColor('--accent'); ctx.lineWidth = 2.5 * r; ctx.lineCap = 'butt';
     const lw = ctx.lineWidth, dash = [8 * r, 6 * r];
     const line = (x0, y0, x1, y1, dashed) => { ctx.setLineDash(dashed ? dash : []); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); };
     all.forEach((c, i) => {

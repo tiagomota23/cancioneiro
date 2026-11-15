@@ -1130,9 +1130,9 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .crop-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .crop-key { display: inline-block; width: 18px; height: 10px; margin-right: 4px; border: 2px solid; vertical-align: middle; }
 .crop-key.cur, .crop-box.cur { border-color: var(--danger); border-style: dashed; }
-.crop-key.prop, .crop-box.prop { border-color: var(--app-brand); border-width: 3px; }   /* sempre verde (não muda com o perfil) */
+.crop-key.prop, .crop-box.prop { border-color: var(--accent); border-width: 3px; }   /* cor do perfil, 3 px, sem fundo */
 .crop-key.prev, .crop-box.prev { border-color: var(--text-faint); border-style: dotted; }
-.crop-key.draw, .crop-box.draw { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.crop-key.draw, .crop-box.draw { border-color: var(--accent); border-width: 2px; background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .crop-page { margin: 0 0 14px; }
 .crop-page figcaption { margin: 0 0 4px; font-size: var(--fs-small); color: var(--text-soft); text-align: left; }
 .crop-canvas { position: relative; cursor: crosshair; }
@@ -1154,7 +1154,7 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .draft-bar .draft-text * { text-transform: none; letter-spacing: 0; }
 </style></head>
 <body class="can-listen perfil-gestor">
-  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v251</span></p></div></div>
+  <div id="splash" class="splash gone"><div class="splash-in"><h1>CANCIONEIRO</h1><p class="splash-sub">Versão Teste <span id="splash-ver">v253</span></p></div></div>
 
   <!-- Entrada (Google) -->
   <section id="view-login" class="view login" hidden="">
@@ -1312,10 +1312,10 @@ dialog.crop-dlg { width: min(96vw, 760px); }
     <p class="maestro-only">Como <b>Maestro</b>: no fim de cada cântico pode <b>Editar letra</b> (a letra original fica guardada e pode ser reposta) e <b>Promover ao Cancioneiro</b> um cântico do Coro ou dos livros (ou retirá-lo, se foi promovido). Em <b>Gestão de utilizadores</b> (no menu do perfil) pode mudar perfis entre Cancioneiro, Coro e Maestro.</p>
     <p class="gestor-only">Como <b>Gestor</b>: em <b>Gestão de utilizadores</b> acrescenta ou retira pessoas, muda perfis e decide os pedidos de acesso, que também chegam por email.</p>
     <label class="src-row coro-only">Mostrar cânticos de:
-      <select id="src-filter"><option value="todas">Tudo (30)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="novos">Novos Cânticos (1)</option></select>
+      <select id="src-filter"><option value="todas">Tudo (31)</option><option value="original">Cancioneiro (23)</option><option value="coro_clu">Coro (5)</option><option value="songbook">Songbook (2)</option><option value="canti2024">CANTI 2024 (2)</option><option value="coros_companhia">Coros &amp; Companhia (1)</option><option value="librone">Librone dei canti (1)</option><option value="novos">Novos Cânticos (1)</option></select>
     </label>
     <p class="small"><i>Os conteúdos destinam-se exclusivamente a consulta no âmbito educativo e sem qualquer fim lucrativo.</i></p>
-    <p class="small" id="info-count">27 cânticos · versão 2026-11-15 v251</p>
+    <p class="small" id="info-count">28 cânticos · versão 2026-11-15 v253</p>
     <p class="small" id="info-user">Sessão: demo@localhost</p>
     <p class="small" id="info-sync"></p>
     <p class="small"><a href="privacidade.html">Política de privacidade</a></p>

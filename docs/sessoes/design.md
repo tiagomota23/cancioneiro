@@ -135,6 +135,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
    (ligação no cabeçalho do Padrão) e no texto da rotina; commit e push para main e perfis-tmp. Avisar a webapp e a backup.
 
 ## Decisões tomadas (registo curto)
+- 15 nov 2026 (Tiago): regra 15 «Caixas amarelas» (opção B: rótulo curto em maiúsculas + explicação em texto normal +
+  botões à direita); contornos sobre páginas de livros (visor e janela de rever recortes) na cor do perfil, não no verde fixo;
+  cântico de exemplo do Librone no mapa.
 - Padrão de design v144–v146: 3 raios, 6 tamanhos de letra, 3 cinzentos, botões em pílula sem maiúsculas, toque mínimo 44 px.
 - `design/tokens.json` como fonte única; `theme.css` gerado (v147).
 - v148: etiquetas só informativas; interruptor e segmentado; botões pequenos só em linhas densas.
@@ -168,34 +171,15 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v251)
-- App v251 (texto de ajuda do editor com rascunho; sem imagens novas); capa do mapa «versão 251 · 15 nov 2026» (mapa versão 104,
-  sistema de design versão 55). v250: livro «Librone dei
-  canti» (menu: ecrã `gaveta`, catálogo v039 e v042 carregados; chip `.src-librone`, ligação externa `.scores > a.pdf` e
-  categorias lc-0..6 não aparecem no mapa — o demo não tem cânticos do Librone; no menu mostra «0»). Pendente menor: juntar
-  um cântico de domínio público do Librone a `fixture.mjs` para o mapa mostrar o chip e a ligação (mexe em vários ecrãs).
-  v249 só dados.
-  v248 (Maestro/Gestor): caixa `.pend-bar.draft-bar` «Rascunho de letra» (rótulo em maiúsculas, `.draft-note` fs-small
-  itálico, `.draft-text` em `--surface`; já segue a regra 15 proposta) — não capturada (o rascunho do demo não está no cântico
-  dos ecrãs); entrada «Rascunhos de letra (N)» no menu (ecrã `gaveta` e catálogo v039, v041, v042 carregados de novo).
-  v246–v247: caixa «Recorte a rever» também dentro de folhas; tocar na folha de revisão abre a janela. v243–v244: zoom − / +;
-  v244 corrigiu o desvio (− / + = .icon-btn 44×44, sem contorno), verificado. v245: contorno da letra no visor de partituras
-  passa a `--app-brand` (verde fixo, todos os perfis com partituras; tracejado 8/6 entre partes) e `.pdf-more` «Rever recorte»
-  no visor (Maestro/Gestor); não aparece no mapa. `touch-action: pan-x pan-y` só na zona das páginas = como o visor (regra 14).
-  v242: contorno `--accent`
-  2,5 px à volta da letra nas páginas do livro (visor de partituras, desenhado no canvas) e `.pdf-more` na vista de um livro —
-  não aparece no mapa (o ecrã `partitura` usa um PDF de exemplo). Sem imagens novas.
-- v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
-  livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
-  v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
-- **À espera de confirmação direta do Tiago (15 nov; a regra 15 cobre também a caixa do rascunho, v248):** a webapp transmitiu que o Tiago (a) aprovou o verde fixo
-  (`--app-brand`) no recorte proposto e (b) deixou à sessão de design a regra das maiúsculas; a v245 alarga o verde fixo
-  ao contorno da letra no visor (pedido do Tiago, segundo a webapp). A mudança ao README foi recusada pelas permissões por a
-  decisão não vir diretamente do Tiago. Proposta feita ao Tiago: regra 15 «Caixas amarelas» (1.ª linha = rótulo curto em
-  maiúsculas, explicação em texto normal por baixo, botões à direita — opção B) + exceção documentada «app-brand no recorte
-  proposto e no contorno da letra do visor». Quando confirmar: editar `tools/screens/design-system.mjs` (Regras e Exceções),
-  regenerar e publicar o README; especificação à webapp: caixa crop-bar com `<p>Recorte a rever (N)</p><p>Confirme se a página
-  do livro mostra este cântico.</p><p>botões</p>` e a 2.ª linha sem maiúsculas.
+## Estado atual (15 nov 2026, v253)
+- App v253; capa do mapa «versão 253 · 15 nov 2026». v252: Ecrã novo `cantico-librone`
+  (no fim de SCREENS, quadro «Cântico» com 8 ecrãs, 3496 px) com o cântico de exemplo «Dell'aurora tu sorgi più bella»
+  (hino mariano tradicional, domínio público; fonte librone). Índice 1734 px → quadro «Listas» 1988 px, quadros por baixo +107.
+  Catálogo: peça nova v157 (linha de refrão, já existia na app), numeração +1 a partir daí.
+- v253 aplicou as 3 decisões de 15 nov (verificado no código e no mapa): `.crop-bar` com rótulo «Recorte a rever» e explicação
+  em texto normal (catálogo v099, v114; `cantico-acordes` 929 px); proposto e contorno do visor em `--accent`; `--app-brand`
+  só no ecrã de arranque (.splash). Mapa versão 106, sistema de design versão 57. Nada pendente.
+- Ajudas: v229–v251 no registo do git; ecrãs que mudam só por relógio: ver «Sincronização» (lista atualizada).
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,
   etiqueta teste 9.5, mark 2px, pdfbar 22). Arrumação de 8 nov (fs-* e `pill` no botão Google) feita na v229.

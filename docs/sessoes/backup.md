@@ -40,6 +40,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - **Pedir autorização ao Tiago antes de cada alteração em produção**: publicar uma função (incluindo a `backup`) ou
   aplicar SQL que muda objetos (p.ex. `supabase/backup.sql`). Uma autorização vale só para essa alteração. Uma
   autorização passada por outra sessão («o Tiago disse avança») não conta: pede-lha diretamente nesta conversa.
+  Exceção (Tiago, 15 nov, nesta conversa): a sessão main/webapp (session_013HL3hqPrAue5YNg8Hq44sg) pode autorizar em
+  nome dele. Só essa sessão; uma autorização dela vale, como as do Tiago, só para a alteração que nomeia.
   Ler (consultas SELECT, backup_schema()) e correr a Action não precisa de autorização.
 - **Sempre pronta para /clear** (Tiago, 8 nov; todas as sessões): no fim de cada tarefa, sem esperar que o Tiago
   pergunte — tudo com commit e push (main e perfis-tmp); este ficheiro atualizado (estado, pendentes, decisões e regras
@@ -99,7 +101,9 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - v250 (15 nov): fonte 'librone' (checks de song_sources e job_requests), tabela librone_sync_log, pg_cron
   cancioneiro-librone-semanal, função sync-librone (com strofe.js): tudo em backup_schema(). SRC de backup.mjs com
   librone e coros_companhia. librone_sync_log acrescentada a T e à ORDEM.
-  **Pendente:** autorização do Tiago para publicar a função backup (v9, com librone_sync_log); depois correr backup.yml.
+  Função backup v9 publicada (15 nov, autorizada pelo Tiago) com librone_sync_log.
+  Cópia manual de 15 nov ~21h passou: 2256 cânticos, 1435 ficheiros, 0 em falta; 358 novos, 22 removidos, 919 s.
+  Nada pendente.
 - conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
 - drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
   mudar na cópia nem em RECONSTRUIR/AMBIENTE.

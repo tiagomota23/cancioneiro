@@ -77,4 +77,10 @@ songs.push(song({ slug: 'are_you_sleeping', title: 'Are you sleeping', author: '
 songs.push(song({ slug: 'frei_martinho', title: 'Frei Martinho', author: 'Tradicional', language: 'pt', version_of: 'frere_jacques',
   lyrics: [v('Frei Martinho, frei Martinho,', 'dormes tu? dormes tu?', 'Toca o sino, toca o sino,', 'dim, dim, dão! dim, dim, dão!')] }));
 
+// cântico do Librone dei canti (v250): chip de fonte e ligação externa para libronedeicanti.it; hino mariano tradicional (séc. XIX, domínio público)
+songs.push(song({ slug: 'dell_aurora', title: "Dell'aurora tu sorgi più bella", author: 'Tradicional', language: 'it', cancioneiro: false,
+  sources: [{ source: 'librone', ref: 'dellaurora' }], tags: [{ grp: 'Librone dei canti', tag: 'Canti per la liturgia' }],
+  lyrics: [v("Dell'aurora tu sorgi più bella", 'coi tuoi raggi a far lieta la terra,', 'e fra gli astri che il cielo rinserra', 'non v’è stella più bella di te.'),
+    c('Bella tu sei qual sole,', 'bianca più della luna,', 'e le stelle più belle', 'non son belle al par di te.')] }));
+
 export default songs;
