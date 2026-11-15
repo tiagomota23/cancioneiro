@@ -8,7 +8,9 @@
     gl: 'Galego-português', cu: 'Eslavo eclesiástico', fur: 'Friulano', nap: 'Napolitano', ln: 'Lingala', ru: 'Russo', sw: 'Suaíli', de: 'Alemão', xx: 'Outra língua',
   };
   // Fontes dos cânticos (tabela song_sources). "original" = cancioneiro.marriaga.com
-  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024', coros_companhia: 'Coros & Companhia', novos: 'Novos Cânticos' };
+  const SOURCES = { original: 'Cancioneiro', coro_clu: 'Coro', songbook: 'Songbook', canti2024: 'CANTI 2024', coros_companhia: 'Coros & Companhia', librone: 'Librone dei canti', novos: 'Novos Cânticos' };
+  // página do cântico no libronedeicanti.it (song_sources.ref = id do cântico no site)
+  const LIBRONE = id => 'https://www.libronedeicanti.it/canti/' + encodeURIComponent(id) + '.html';
   const srcOf = s => (s.sources && s.sources.length ? s.sources.map(x => x.source) : ['original']);
   // Perfis (hierárquicos; cada um pode tudo o que os anteriores podem). O perfil da pessoa vem de allowed_emails.role;
   // o perfil ativo pode ser qualquer um até esse, escolhido no símbolo do canto superior direito
@@ -49,6 +51,8 @@
     { id: 'sb', grp: 'Songbook', head: 'Songbook', secs: ['English songs', 'Spirituals', 'Rock – pop – folk', 'Songs', 'Hymns', 'Latin songs', 'Troubadour-songs', 'Italian songs', 'Italian folk songs', 'French songs', 'Spanish songs', 'Brasilian songs', 'German songs', 'African songs'] },
     { id: 'ct', grp: 'CANTI 2024', head: 'CANTI 2024', secs: ['Canti per la liturgia', 'Canti della nostra storia', 'Canti di montagna', 'Canti popolari regionali', 'Canti per bambini', 'Canzoni italiane', 'Canti stranieri'] },
     // repertório do grupo Coros & Companhia (lista pública, atualizada todas as semanas pela função sync-cc)
+    // libronedeicanti.it (as mesmas secções do CANTI; atualizado todas as semanas pela função sync-librone)
+    { id: 'lc', grp: 'Librone dei canti', head: 'Librone dei canti', secs: ['Canti per la liturgia', 'Canti della nostra storia', 'Canti di montagna', 'Canti popolari regionali', 'Canti per bambini', 'Canzoni italiane', 'Canti stranieri'] },
     { id: 'cc', grp: 'Coros & Companhia', head: 'Coros & Companhia', secs: ['Entrada', 'Perdão', 'Salmo', 'Aleluia', 'Ofertório', 'Santo', 'Cordeiro de Deus / Paz', 'Comunhão', 'Ação de Graças', 'Saída', 'Matrimónio', 'Baptismo', 'Funeral'] },
   ];
   // Categorias do índice (como na versão italiana, agrupadas por língua)
@@ -87,13 +91,13 @@
   // da etiqueta «Tema» (atribuída pela sessão webapp; ver docs/sessoes/webapp.md). Um cântico pode estar em várias.
   const tg = (s, grp, ...tags) => (s.tags || []).some(t => t.grp === grp && (!tags.length || tags.includes(t.tag)));
   const TEMAS = [
-    ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'Coros & Companhia') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
+    ['liturgia', 'Liturgia e Missa', s => s.language === 'la' || tg(s, 'Coro CLU', 'Para a Missa') || tg(s, 'Coro CLU — momento') || tg(s, 'Coros & Companhia') || tg(s, 'CANTI 2024', 'Canti per la liturgia') || tg(s, 'Librone dei canti', 'Canti per la liturgia') || tg(s, 'Songbook', 'Hymns', 'Latin songs')],
     ['espirituais', 'Espirituais e gospel', s => tg(s, 'Songbook', 'Spirituals')],
-    ['movimento', 'Cânticos do Movimento', s => tg(s, 'CANTI 2024', 'Canti della nostra storia')],
-    ['infantis', 'Infantis', s => tg(s, 'CANTI 2024', 'Canti per bambini')],
+    ['movimento', 'Cânticos do Movimento', s => tg(s, 'CANTI 2024', 'Canti della nostra storia') || tg(s, 'Librone dei canti', 'Canti della nostra storia')],
+    ['infantis', 'Infantis', s => tg(s, 'CANTI 2024', 'Canti per bambini') || tg(s, 'Librone dei canti', 'Canti per bambini')],
     ['gestos', 'Gestos', s => tg(s, 'Coro CLU', 'Para Gestos')],
-    ['populares', 'Populares e tradicionais', s => tg(s, 'CANTI 2024', 'Canti popolari regionali', 'Canti di montagna') || tg(s, 'Songbook', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs')],
-    ['autor', 'Pop, rock e canções de autor', s => tg(s, 'Songbook', 'Rock – pop – folk') || tg(s, 'CANTI 2024', 'Canzoni italiane')],
+    ['populares', 'Populares e tradicionais', s => tg(s, 'CANTI 2024', 'Canti popolari regionali', 'Canti di montagna') || tg(s, 'Librone dei canti', 'Canti popolari regionali', 'Canti di montagna') || tg(s, 'Songbook', 'Italian folk songs', 'Troubadour-songs', 'African songs', 'Brasilian songs')],
+    ['autor', 'Pop, rock e canções de autor', s => tg(s, 'Songbook', 'Rock – pop – folk') || tg(s, 'CANTI 2024', 'Canzoni italiane') || tg(s, 'Librone dei canti', 'Canzoni italiane')],
   ].map(([id, label, rule], i) => ({ id: 'tema-' + id, head: i === 0 ? 'Todos os cânticos' : null, label, short: label, tema: true,
     test: s => lvl() >= 2 && (rule(s) || tg(s, 'Tema', label)) }));
   // categorias da secção Cancioneiro (de «Todos os cânticos» a «Com copyright»): só os cânticos do Cancioneiro,
@@ -106,7 +110,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v249';
+  const APP_VERSION = '2026-11-15 v250';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -402,7 +406,7 @@
       return full.map(({ lyrics, translation, lyrics_edit, ...x }) => ({ ...x, has_translation: !!translation, is_edited: !!lyrics_edit }));
     }
     const cols = 'slug,number,book_page,title,author,language,translation_language,version_of,has_chords,has_translation,pdf_url,rights,is_edited,edited_by,edited_at,cancioneiro,promoted_by,promoted_at,approved,added_by,added_at,parecidos,' +
-      'sources:song_sources(source),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
+      'sources:song_sources(source,ref),tags:song_tags(grp,tag),files:song_files(kind,label,path,mime,sort)';
     const all = [];
     for (let from = 0; ; from += 1000) {
       const get = () => fetch(`${SUPABASE_URL}/rest/v1/songs?select=${cols}&order=number.asc`, {
@@ -1269,6 +1273,9 @@
         ? `<a class="pdf" href="${esc(sc.url)}" target="_blank" rel="noopener">${PDF_IC}${esc(lbl)}</a>`
         : `<a class="pdf" href="#/cantico/${encodeURIComponent(slug)}/partitura${i ? '/' + i : ''}">${PDF_IC}${esc(lbl)}</a>`;
     }).join('');
+    const lref = ((s.sources || []).find(x => x.source === 'librone') || {}).ref;
+    // ligação para a página do cântico no libronedeicanti.it (fora da app; do perfil Coro para cima)
+    const lnk = extrasOn() && lref ? `<a class="pdf" href="${esc(LIBRONE(lref))}" target="_blank" rel="noopener"><svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Librone dei canti</a>` : '';
     const srcs = (extrasOn() ? srcOf(s) : []).map(k => `<span class="src-chip src-${esc(k)}">${esc(SOURCES[k] || k)}</span>`).join('');
     const moments = (extrasOn() ? s.tags || [] : []).filter(t => t.grp === 'Coro CLU — momento').map(t => t.tag);
     const recs = filesOf(s, 'recording').filter(f => shown(f));
@@ -1322,7 +1329,7 @@
       ${s.approved === false ? '<small class="pend pend-top">Por aprovar</small>' : ''}<h1>${esc(s.title)}</h1>
       ${s.author ? `<p class="author">${esc(s.author)}</p>` : ''}
       ${rights}
-      <div class="meta">${sw}</div>${pdf ? `<div class="scores">${pdf}</div>` : ''}
+      <div class="meta">${sw}</div>${pdf || lnk ? `<div class="scores">${pdf}${lnk}</div>` : ''}
       ${note}
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
@@ -2387,7 +2394,7 @@
       { go: goHome, el: '#btn-mic', msg: 'Toque no microfone e deixe o telemóvel ouvir uns segundos de um cântico: a app descobre qual é.' },
       { go: goHome, el: '#btn-menu', msg: 'Este botão, à esquerda da pesquisa, abre as coleções. Vamos abri-las…' },
       { go: async () => { closeAllDialogs(); openDrawer(); await new Promise(r => setTimeout(r, 450)); }, el: '.drawer-panel',
-        msg: L >= 2 ? 'As coleções: no topo, os seus Preferidos e os Novos Cânticos; depois os livros (Cancioneiro, Coro, Songbook, CANTI 2024, Coros & Companhia) e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
+        msg: L >= 2 ? 'As coleções: no topo, os seus Preferidos e os Novos Cânticos; depois os livros (Cancioneiro, Coro, Songbook, CANTI 2024, Coros & Companhia, Librone dei canti) e as folhas preparadas para cada Missa.' : 'As coleções: os seus Preferidos, o Cancioneiro e as folhas preparadas para cada Missa.' },
     ];
     if (song) {
       st.push({ go: openSong, el: '#view-song .songbar', msg: `Toque num cântico de qualquer lista para o abrir — por exemplo, «${song.title}». No topo: ${L >= 3 ? 'o livro põe-no nos Preferidos, no Cancioneiro ou numa folha' : '☆ guarda-o nos Preferidos'}; partilhar envia-o a alguém (o endereço vale 24 horas); ☾ alterna claro / escuro; A− / A+ muda o tamanho da letra.` });
@@ -4008,6 +4015,7 @@
     { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
     { id: 'livro-canti', label: 'CANTI 2024', coro: true, book: 'canti2024', test: s => srcOf(s).includes('canti2024') },
     { id: 'livro-cc', label: 'Coros & Companhia', coro: true, test: s => srcOf(s).includes('coros_companhia') },
+    { id: 'livro-librone', label: 'Librone dei canti', coro: true, test: s => srcOf(s).includes('librone') },
   ];
   // página de um cântico num livro (do endereço da página: livros/<livro>.pdf#p=N)
   const pageIn = (s, book) => { const f = (s.files || []).find(f => f.path.startsWith(`livros/${book}.pdf`)); return f ? +(f.path.match(/[#&]p=(\d+)/) || [])[1] || 0 : 0; };

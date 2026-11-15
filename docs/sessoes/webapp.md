@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v249)
+## Estado e pendentes (15 nov 2026, v250)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -377,8 +377,24 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   «Mina») e That lonesome road, A questo punto, El Ebro, Dio a l’ommo. App: chave da cache de letras passa a
   `cancioneiro.letras.v2.` (a antiga é apagada uma vez, para os telemóveis voltarem a pedir as letras).
   Extração dos PDF dos livros: agora por linhas inteiras (pdftotext -bbox-layout) e com separação de estrofes.
-  **Por decidir com o Tiago:** o librone como fonte (como o Coros & Companhia) — avaliação enviada a 15 nov.
-- Tudo publicado até à v249 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v250 — «Librone dei canti» como fonte (Tiago, 15 nov: opção 2, «do your best to break verses — show them fully
+  for coro (same as Coros & Companhia)»).** `supabase/librone.sql`: fonte `librone` em song_sources (ref = id no site;
+  página https://www.libronedeicanti.it/canti/<id>.html), secções em song_tags grp «Librone dei canti» (as 7 do CANTI),
+  job `sync-librone`, log `librone_sync_log`, pg_cron segunda 06:45 UTC. 1493 cânticos ligados (1492 do site; os dois
+  Magnificat do site são cânticos novos, não o de Taizé); 360 cânticos novos importados (cancioneiro=false,
+  approved=true: do perfil Coro para cima, como os do Coros & Companhia), língua pela secção/subsecção do site
+  (stranieri) ou pelas palavras. Letras: 1.ª linha «(letra do librone dei canti — libronedeicanti.it)»; estrofes pelo
+  divisor `supabase/functions/sync-librone/strofe.js` (refrão = bloco repetido; fins de frase + linha com maiúscula;
+  estrofes de tamanho regular; sem pontuação, só divide em 4 se o n.º de linhas for múltiplo de 4) — 287 do CANTI que
+  estavam num só bloco foram divididos; ficam num bloco só ~30. Preenchidas também «La fiesta» (Coro) e «That lonesome
+  road» (CANTI). Função `sync-librone` (deploy com strofe.js ao lado): acrescenta secções; atualiza a letra se o site
+  mudou e a do Cancioneiro ainda é a do librone (1.ª linha) sem edição de Maestro; cânticos novos no site e os que
+  saem só por email. App: SOURCES.librone, livro «Librone dei canti» (gaveta), secções em BOOKS (id lc), temas de
+  «Todos os cânticos» incluem as secções do librone, ligação «Librone dei canti» (↗) junto às partituras do cântico.
+  Lista de cânticos pede `song_sources(source,ref)`.
+  **Por decidir com o Tiago:** as 6 entradas do CANTI que são títulos de secção («Brunori Sas», «Cesare Cremonini»,
+  «Lucio Dalla», «Giorgio Gaber», «Jovanotti», «Mina») — apagar?
+- Tudo publicado até à v250 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
