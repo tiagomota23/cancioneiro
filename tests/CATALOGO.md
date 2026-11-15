@@ -260,7 +260,7 @@ Catálogo atualizado até à **v237** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | SEG-39 | Texto dos PDF (v233, código): song_texts com RLS, sem políticas, revoke anon/authenticated; pdf-texto exige OIDC (RS256, aud, repositório, main, texto-pdf.yml) → 401 antes de tudo; save só kind score e ≤ 30000; conteudo sem trechos pdf para o perfil Cancioneiro em search **e em match** | static | alta | V | ☐ por correr |
 | SEG-40 | song_texts (v233, SQL): RLS sem políticas; anon/authenticated sem privilégios; leitura recusada a anon e aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
 | SEG-41 | pdf-texto (v233, produção): sem token, token forjado ou chave anon → 401 em op=list e op=save | live | crítica | V | ☐ por correr |
-| SEG-42 | Revisão de recortes (v237, código): crop_reviews RLS/revoke; crops/croppages/cropset lvl < 3 → 403; limites file/save; cropset só pendente, mesmo livro, &s= do cântico, 1–4 partes, páginas ±1, frações e tamanhos mínimos → 400; pdf-texto locate depois do OIDC | static | alta | V | ☐ por correr |
+| SEG-42 | Revisão de recortes (v237, código): crop_reviews RLS/revoke; crops/croppages/cropset lvl < 3 → 403; limites file/save; cropset só pendente (404) e decisão condicionada a pendente antes de mudar o recorte (409, conteudo v39), mesmo livro, &s= do cântico, 1–4 partes, páginas ±1 do atual/anterior/proposto, frações e tamanhos mínimos → 400; pdf-texto locate depois do OIDC | static | alta | V | ☐ por correr |
 | SEG-43 | crop_reviews (v237, SQL): RLS sem políticas; sem privilégios; leitura e escrita recusadas a anon e aos 4 perfis (rollback) | db | crítica | V | ☐ por correr |
 | DB-RLS-01 | RLS ligada em todas as tabelas | db | crítica | V | ✓ |
 | DB-RLS-02 | anon sem permissões em public | db | crítica | V | ✓ |
