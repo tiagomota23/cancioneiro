@@ -311,6 +311,26 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-80', 'Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega a lista e guarda a versão; ao recarregar com a mesma versão não pede /rest/v1/songs; com versão nova descarrega de novo e guarda-a; sem versão (erro) descarrega como antes', async () => {
+    const bad = [], st = { v: 7, fail: false };
+    const mode = { role: 'coro', rest: tb => tb === 'catalog_version' ? (st.fail ? { body: { message: 'erro' }, status: 500 } : { body: [{ v: st.v }] }) : null };
+    await withApp({ real: mode, wait: '#rows li a', timeout: 20000, allowErrors: true }, async ({ page, calls }) => {
+      const songsGets = () => calls.filter(c => /^GET \/rest\/v1\/songs\b/.test(c)).length;
+      const ver = () => page.evaluate(() => localStorage.getItem('cancioneiro.songs.v2.versao'));
+      const reload = async () => { await page.reload(); await page.waitForSelector('#rows li a', { timeout: 20000 }).catch(() => {}); await sleep(2500); };
+      if (songsGets() < 1) bad.push('1.ª abertura não descarregou a lista');
+      if (JSON.parse(await ver() || 'null') + '' !== '7') bad.push('versão não guardada: ' + await ver());
+      let n = songsGets(); await reload();
+      if (songsGets() !== n) bad.push('mesma versão: voltou a pedir /rest/v1/songs');
+      if (!(await count(page, '#rows li a'))) bad.push('mesma versão: lista vazia');
+      st.v = 8; n = songsGets(); await reload();
+      if (songsGets() === n) bad.push('versão nova: não descarregou');
+      if (JSON.parse(await ver() || 'null') + '' !== '8') bad.push('versão nova não guardada: ' + await ver());
+      st.fail = true; n = songsGets(); await reload();
+      if (songsGets() === n) bad.push('sem versão (erro): não descarregou');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-79', 'Revisão de recortes (v237, ?demo): Coro e Cancioneiro sem .crop-bar no amazing_grace; Maestro com .crop-bar → dialog.crop-dlg com páginas (.crop-page, canvas desenhado) e as caixas atual e proposta; dois toques numa página desenham .crop-box.draw e ativam «Usar o desenhado»; «Usar o desenhado» fecha, tira a caixa e não volta depois de recarregar; «Cancelar» não decide', async () => {
     const bad = [], H = '#/cantico/amazing_grace';
     for (const perfil of ['coro', 'cancioneiro']) await withApp({ perfil, hash: H }, async ({ page }) => { await sleep(2500); if (await count(page, '.crop-bar')) bad.push(perfil + ' vê a caixa de revisão'); });

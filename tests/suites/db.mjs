@@ -236,6 +236,45 @@ export default async function (level) {
     for (const k of Object.keys(want)) if (out[k] !== want[k]) bad.push(`${k}: ${out[k]} (esperado ${want[k]})`);
     return bad.length ? { fail: bad.join('; '), evidence: JSON.stringify(out) } : { pass: JSON.stringify(out) };
   }, { sev: 'alta', where: 'supabase/grupos.sql (col_group_ok, «colecoes ler»)' });
+  await t('SEG-44', 'catalog_version (v238): RLS ligada; anon sem privilégios; authenticated só SELECT (sem escrita); quem não tem acesso não lê a versão; os 4 perfis leem 1 linha e não a mudam; catalog_bump() não executável por anon/authenticated; gatilhos por instrução em songs, song_sources, song_tags, song_files (em rollback)', async () => {
+    const bad = [];
+    const [m] = await sql(`select c.relrowsecurity rls,
+      has_table_privilege('anon', 'public.catalog_version', 'select,insert,update,delete') anon_priv,
+      has_table_privilege('authenticated', 'public.catalog_version', 'insert,update,delete') auth_write,
+      has_table_privilege('authenticated', 'public.catalog_version', 'select') auth_sel,
+      has_function_privilege('anon', 'public.catalog_bump()', 'execute') anon_fn, has_function_privilege('authenticated', 'public.catalog_bump()', 'execute') auth_fn,
+      (select string_agg(distinct t.event_object_table, ',' order by t.event_object_table) from information_schema.triggers t where t.trigger_schema = 'public' and t.trigger_name = 'catalog_bump' and t.action_orientation = 'STATEMENT') trg
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname = 'catalog_version'`);
+    if (!m) return 'catalog_version não existe';
+    if (!m.rls) bad.push('RLS desligada'); if (m.anon_priv) bad.push('anon com privilégios'); if (m.auth_write) bad.push('authenticated pode escrever'); if (!m.auth_sel) bad.push('authenticated sem SELECT');
+    if (m.anon_fn || m.auth_fn) bad.push('catalog_bump() executável por anon/authenticated');
+    if (m.trg !== 'song_files,song_sources,song_tags,songs') bad.push('gatilhos: ' + (m.trg || 'nenhum'));
+    try { const r = await sql(asRole('anon', 'select count(*)::int n from public.catalog_version;')); bad.push('anon leu (' + r[0].n + ')'); } catch (e) { if (!/permission denied/i.test(e.message)) bad.push('anon: ' + e.message.slice(0, 60)); }
+    const [s] = await sql(asRole('stranger', 'select count(*)::int n from public.catalog_version;')); if (s.n) bad.push('sem acesso lê a versão');
+    for (const who of ['cancioneiro', 'coro', 'maestro', 'gestor']) {
+      const [r] = await sql(asRole(who, 'select count(*)::int n from public.catalog_version;')); if (r.n !== 1) bad.push(`${who} lê ${r.n} linhas`);
+      try { await sql(asRole(who, 'update public.catalog_version set v = v + 1;')); bad.push(`${who} mudou a versão`); } catch (e) { if (!/permission denied/i.test(e.message)) bad.push(`${who}: ${e.message.slice(0, 60)}`); }
+    }
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/catalogo-versao.sql' });
+  await t('INT-25', 'catalog_version sobe (v238, em rollback): uma instrução que muda 2 cânticos sobe 1 vez; mudar song_tags/song_files também sobe; mudar só collections não sobe (informativo, ver EST-06)', async () => {
+    const [r] = await sql(`begin;
+      create temp table _v on commit drop as select v from public.catalog_version;
+      update public.songs set title = title where slug in (select slug from public.songs order by slug limit 2);
+      insert into _v select v from public.catalog_version;
+      update public.song_files set path = path where id = (select min(id) from public.song_files);
+      insert into _v select v from public.catalog_version;
+      update public.collections set title = title where id = (select id from public.collections limit 1);
+      insert into _v select v from public.catalog_version;
+      select array_agg(v order by ctid)::text vs from _v;
+      rollback;`.replace(/\n\s*/g, ' '));
+    const vs = String(r && r.vs || '').replace(/[{}]/g, '').split(',').map(Number);
+    if (vs.length !== 4) return 'não leu as versões: ' + (r && r.vs);
+    const bad = [];
+    if (vs[1] - vs[0] !== 1) bad.push(`songs (2 linhas numa instrução): +${vs[1] - vs[0]} (esperado +1)`);
+    if (vs[2] - vs[1] !== 1) bad.push(`song_files: +${vs[2] - vs[1]} (esperado +1)`);
+    return bad.length ? bad.join('; ') : { pass: `songs +1, song_files +1, collections +${vs[3] - vs[2]}` };
+  }, { sev: 'média', where: 'supabase/catalogo-versao.sql' });
   await t('SEG-43', 'crop_reviews (v237): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; leitura e escrita recusadas a anon e aos 4 perfis (em rollback)', async () => {
     const bad = [];
     const [m] = await sql(`select c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'crop_reviews')::int pols,
