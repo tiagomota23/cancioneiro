@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v247';
+  const APP_VERSION = '2026-11-15 v248';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -285,11 +285,12 @@
     return d;
   }
   const pending = new Map();
-  const hasLyrics = slug => lyr.has(slug) && !(lyr.get(slug).nc && lvl() >= 2);
+  // pedida como Maestro (m): traz o rascunho, se houver; guardada antes disso, um Maestro pede-a de novo
+  const hasLyrics = slug => lyr.has(slug) && !(lyr.get(slug).nc && lvl() >= 2) && !(lvl() >= 3 && !lyr.get(slug).m);
   function getLyrics(slug) {
     if (hasLyrics(slug)) { const v = lyr.get(slug); lyr.delete(slug); lyr.set(slug, v); return Promise.resolve(v); } // mais recente no fim
     if (!pending.has(slug)) pending.set(slug, api('song', { slug }).then(d => {
-      const v = { lyrics: d.lyrics || [], translation: d.translation || null, edited: !!d.edited, nc: lvl() < 2 };
+      const v = { lyrics: d.lyrics || [], translation: d.translation || null, edited: !!d.edited, nc: lvl() < 2, m: lvl() >= 3, draft: d.draft || null };
       lyr.set(slug, v); saveLyrCache();
       return v;
     }).finally(() => pending.delete(slug)));
@@ -298,7 +299,14 @@
   // Modo de teste local (?demo): o mesmo, mas com a cópia songs.json e sem limites
   let demoFull = new Map();
   async function demoApi(op, b) {
-    if (op === 'song') { const s = demoFull.get(b.slug), own = b.collection && store.get('cancioneiro.demo.collyr', {})[b.collection + '/' + b.slug]; return { lyrics: own || s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit, folha: !!own }; }
+    if (op === 'song') {
+      const s = demoFull.get(b.slug), own = b.collection && store.get('cancioneiro.demo.collyr', {})[b.collection + '/' + b.slug];
+      // rascunho de exemplo (só Maestro / Gestor): no «Cântico por transcrever», até ser publicado ou descartado
+      const dd = store.get('cancioneiro.demo.draftdone', false), draft = lvl() >= 3 && !dd && /transcrever/.test(s.title) ? { lyrics: [{ type: 'verse', lines: ['Primeira linha do rascunho (?)', 'segunda linha do rascunho'] }, { type: 'chorus', lines: ['Refrão do rascunho'] }], note: '(rascunho transcrito automaticamente da gravação — a rever)', at: new Date().toISOString() } : undefined;
+      return { lyrics: own || s.lyrics_edit || s.lyrics || [], translation: s.translation || null, edited: !!s.lyrics_edit, folha: !!own, draft };
+    }
+    if (op === 'drafts') return { slugs: store.get('cancioneiro.demo.draftdone', false) ? [] : ['cantico_por_transcrever'] };
+    if (op === 'draft') { store.set('cancioneiro.demo.draftdone', true); if (b.action === 'publish') { const s = demoFull.get(b.slug); s.lyrics_edit = b.lyrics; } return { ok: true, edited_by: b.action === 'publish' ? 'demo' : null, edited_at: new Date().toISOString(), is_edited: b.action === 'publish' }; }
     if (op === 'collyrics') { const all = store.get('cancioneiro.demo.collyr', {}), k = b.collection + '/' + b.slug; if (b.lyrics) all[k] = b.lyrics; else delete all[k]; store.set('cancioneiro.demo.collyr', all); return { ok: true, edited_at: b.lyrics ? new Date().toISOString() : null }; }
     if (op === 'search') return { hits: demoSearch(b.q) };
     if (op === 'share') return { token: 'demo_' + b.slug, expires_at: new Date(Date.now() + 864e5).toISOString() };
@@ -1288,6 +1296,9 @@
     const pendHtml = s.approved === false
       ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 && !fcol ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="edit-btn danger-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
       : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
+    // rascunho de letra (transcrição automática por rever): só Maestro / Gestor; rever e publicar, ou descartar
+    const draft = lvl() >= 3 && !fcol && mode === 'orig' && data && data.draft && (data.draft.lyrics || []).length ? data.draft : null;
+    const draftHtml = draft ? `<div class="pend-bar draft-bar"><p>Rascunho de letra — só Maestros</p>${draft.note ? `<p class="draft-note">${esc(draft.note.replace(/^\(|\)$/g, '').replace(/\) \(/g, ' · '))}</p>` : ''}<div class="draft-text">${renderStanzas(draft.lyrics)}</div><p><button class="edit-btn" id="draft-edit">Rever e publicar</button><button class="edit-btn danger-btn" id="draft-discard">Descartar</button></p></div>` : '';
     // recortes dos livros a rever (Maestro / Gestor): caixa amarela com «Rever recorte»
     if (lvl() >= 3 && !cropRev) loadCropReviews();
     // também dentro de uma folha (as folhas «Rever recortes dos livros» abrem os cânticos assim)
@@ -1313,6 +1324,7 @@
       ${note}
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
+      ${draftHtml}
       ${pendHtml}
       ${cropHtml}
       ${editBar}
@@ -1324,6 +1336,14 @@
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
     $('song').querySelectorAll('button.crop-rev').forEach(b => b.onclick = () => openCropReview(slug, revs[+b.dataset.i]));
+    if (draft) {
+      $('draft-edit').onclick = () => openEditor(slug, draft);
+      $('draft-discard').onclick = async e => {
+        if (!tapConfirm(e.currentTarget, 'Confirmar: descartar')) return;
+        try { await api('draft', { slug, action: 'discard' }); draftSlugs.delete(slug); const v = lyr.get(slug); if (v) { v.draft = null; saveLyrCache(); } toast('Rascunho descartado.'); showSong(slug); }
+        catch (err) { appAlert('Não foi possível descartar: ' + (err.message || err)); }
+      };
+    }
     // aberto a partir de uma folha «Rever recortes dos livros»: vai logo para a revisão (uma vez por abertura)
     if (revs.length && revSheetOf() && autoRev !== location.hash && !document.querySelector('dialog.crop-dlg')) { autoRev = location.hash; openCropReview(slug, revs[0]); }
     if (!revs.length || !revSheetOf()) autoRev = null;
@@ -2127,14 +2147,15 @@
         return { type: chorus ? 'chorus' : 'verse', lines: b.filter(l => l.trim()) };
       }).filter(x => x.lines.length);
   }
-  let editSlug = null;
-  function openEditor(slug) {
+  let editSlug = null, editDraft = false;
+  // draft: rever um rascunho de letra (Maestro) — o texto vem do rascunho e «Guardar» publica-o
+  function openEditor(slug, draft) {
     const s = bySlug.get(slug);
-    editSlug = slug;
+    editSlug = slug; editDraft = !!draft;
     $('edit-title').textContent = s.title;
-    $('edit-text').value = toText(lyricsOf(s));
-    $('edit-msg').textContent = '';
-    $('edit-reset').hidden = !s.is_edited;
+    $('edit-text').value = toText(draft ? draft.lyrics : (lyr.get(slug) || {}).lyrics || []);
+    $('edit-msg').textContent = draft ? 'Ao guardar, a letra fica publicada e visível para todos.' : '';
+    $('edit-reset').hidden = draft || !s.is_edited;
     $('editor').showModal();
   }
   async function saveLyrics(value) {
@@ -2142,7 +2163,8 @@
     $('edit-msg').textContent = 'A guardar…';
     for (const b of document.querySelectorAll('#editor button')) b.disabled = true;
     try {
-      const d = await api('save', { slug: editSlug, lyrics_edit: value });
+      const d = editDraft ? await api('draft', { slug: editSlug, action: 'publish', lyrics: value }) : await api('save', { slug: editSlug, lyrics_edit: value });
+      if (editDraft) draftSlugs.delete(editSlug);
       Object.assign(s, { edited_by: d.edited_by, edited_at: d.edited_at, is_edited: !!d.is_edited });
       store.set(CACHE_KEY, allSongs.map(({ _t, _a, ...x }) => x));
       lyr.delete(editSlug); saveLyrCache(); // volta a pedir a letra (editada ou original)
@@ -3183,7 +3205,7 @@
     want.forEach(sl => batching.add(sl));
     try {
       const d = await api('songs', { slugs: want });
-      for (const [sl, x] of Object.entries(d.songs || {})) if (!hasLyrics(sl)) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2 });
+      for (const [sl, x] of Object.entries(d.songs || {})) if (!hasLyrics(sl)) lyr.set(sl, { lyrics: x.lyrics || [], translation: x.translation || null, edited: !!x.edited, nc: lvl() < 2, m: lvl() >= 3, draft: x.draft || null });
       saveLyrCache();
       return d;
     } finally { want.forEach(sl => batching.delete(sl)); }
@@ -3977,6 +3999,8 @@
     { id: 'favoritos', label: 'Preferidos', icon: '<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6 6.7 19.5l1.1-5.9L3.4 9.5l6-.8z"/>', test: s => isFav(s.slug) },
     // acrescentados na app (ficam aqui mesmo depois de passarem para o Cancioneiro)
     { id: 'livro-novos', label: 'Novos Cânticos', coro: true, novos: true, icon: '<path d="M10.5 3.5c.7 4.6 2.9 6.8 7.5 7.5-4.6.7-6.8 2.9-7.5 7.5-.7-4.6-2.9-6.8-7.5-7.5 4.6-.7 6.8-2.9 7.5-7.5z"/><path d="M18.5 14.5c.3 1.9 1.1 2.7 3 3-1.9.3-2.7 1.1-3 3-.3-1.9-1.1-2.7-3-3 1.9-.3 2.7-1.1 3-3z"/>', test: s => srcOf(s).includes('novos') },
+    // Maestro / Gestor: cânticos com rascunho de letra por rever (só aparece se houver)
+    { id: 'livro-rascunhos', label: 'Rascunhos de letra', maestro: true, top: true, icon: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/>', test: s => draftSlugs.has(s.slug) },
     { id: 'livro-cancioneiro', label: 'Cancioneiro', test: s => inCancioneiro(s) },
     { id: 'livro-coro', label: 'Coro', coro: true, test: s => srcOf(s).includes('coro_clu') },
     { id: 'livro-songbook', label: 'Songbook', coro: true, book: 'songbook', test: s => srcOf(s).includes('songbook') },
@@ -3992,14 +4016,20 @@
     };
     // no topo, sem título: Preferidos e Novos Cânticos; depois as secções Livros e Folhas (uma secção vazia não aparece)
     const sec = (title, body) => body ? `<li class="cat-head">${title}</li>${body}` : '';
-    const books = BOOKS_LIST.filter(b => !b.coro || lvl() >= 2), top = b => b.id === 'favoritos' || b.novos;
+    const books = BOOKS_LIST.filter(b => (!b.coro || lvl() >= 2) && (!b.maestro || (lvl() >= 3 && draftSlugs.size))), top = b => b.id === 'favoritos' || b.novos || b.top;
     $('az').innerHTML = books.filter(top).map(row).join('') +
       (lvl() >= 2 ? sec('Livros', books.filter(b => !top(b)).map(row).join('')) : books.filter(b => !top(b)).map(row).join('')) + // perfil Cancioneiro: só o Cancioneiro, sem título
       sec('Folhas', renderCollectionsMenu());
     const nb = $('az').querySelector('.col-new'); if (nb) nb.onclick = () => { closeDrawer(); openCollectionDlg(null); };
   }
+  // rascunhos de letra por rever (Maestro / Gestor): a lista vem da função conteudo (op drafts)
+  let draftSlugs = new Set();
+  async function loadDrafts() {
+    if (lvl() < 3) { draftSlugs = new Set(); return; }
+    try { draftSlugs = new Set((await api('drafts')).slugs || []); } catch (e) { /* sem rede: fica a anterior */ }
+  }
   function openDrawer() {
-    renderBooks(); loadCollections().then(() => { if ($('drawer').classList.contains('open')) renderBooks(); });
+    renderBooks(); Promise.all([loadCollections(), loadDrafts()]).then(() => { if ($('drawer').classList.contains('open')) renderBooks(); });
     $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
   }
   function closeDrawer() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }

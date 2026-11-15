@@ -971,3 +971,8 @@ dialog.crop-dlg { width: min(96vw, 760px); }
 .crop-zoom { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin: 0 0 8px; }
 .crop-zoom .icon-btn { border: 0; background: none; color: var(--accent); font: 700 var(--fs-ui)/1 var(--sans); }   /* botão de símbolo, como o A− / A+ */
 .crop-zoom-n { min-width: 4em; text-align: center; font-size: var(--fs-small); color: var(--text-soft); font-variant-numeric: tabular-nums; }
+
+/* rascunho de letra (só Maestros): o texto do rascunho em letra normal, num fundo claro dentro da caixa amarela */
+.draft-bar .draft-note { font-size: var(--fs-small); text-transform: none; letter-spacing: 0; font-style: italic; }
+.draft-bar .draft-text { margin: 10px 0; padding: 10px 12px; background: var(--surface); border-radius: var(--radius); color: var(--text); text-transform: none; letter-spacing: 0; }
+.draft-bar .draft-text * { text-transform: none; letter-spacing: 0; }

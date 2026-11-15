@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v247)
+## Estado e pendentes (15 nov 2026, v248)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -350,7 +350,21 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   dos PDF». O código de revisão (crop_reviews, ops crops/croppages/cropset, caixa e diálogo) fica para futuras
   revisões: para pôr um recorte em revisão, inserir em crop_reviews e acrescentar o cântico a uma folha por publicar,
   sem autor, com título «Rever recortes dos livros…».
-- Tudo publicado até à v247 (conteudo versão 43, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- **v248 — rascunhos de letra só para Maestros (Tiago, 15 nov).** `supabase/rascunhos.sql`: songs.lyrics_draft,
+  draft_note, draft_at (sem grant a authenticated — songs só tem grants por coluna). Migração: os 61 rascunhos que
+  estavam na letra pública (1.ª linha «(rascunho…» / «(texto litúrgico…») passaram para lyrics_draft; a letra pública
+  voltou a «(letra por transcrever)». Mais 5 novos (Hossana eh — o ficheiro do Drive é vídeo MP4, agora aceite pela
+  cc-transcribe —, 3 Aleluias, Deus é Amor): 66 rascunhos. conteudo: op song e songs devolvem `draft` a lvl ≥ 3; op
+  `drafts` (lista dos slugs); op `draft` {slug, action publish|discard} — publicar grava a letra revista em lyrics_edit
+  com edited_by (Repor original volta ao «por transcrever») e limpa o rascunho; 409 se já não houver rascunho. Rascunhos
+  fora da pesquisa. App: caixa amarela «Rascunho de letra — só Maestros» na página do cântico (nota da origem, o texto,
+  «Rever e publicar» → editor `#editor` pré-preenchido em modo rascunho; «Descartar» com confirmação); entrada
+  «Rascunhos de letra (N)» no topo do menu Coleções (Maestro+, só com rascunhos). Cache de letras: entradas pedidas
+  como Maestro marcadas `m` (as antigas são pedidas de novo).
+  Por transcrever sem fonte possível aqui: 29 só com ligação do YouTube (descarregar o áudio do YouTube não é
+  permitido), «No caminho encontrei-te» (gravação sem letra percetível), «Deixa a luz do Céu entrar» e «Aleluia
+  (Chepponis)» (sem fonte), «Si los hombres» (identificada, gravação ilegível).
+- Tudo publicado até à v248 (conteudo versão 45, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de

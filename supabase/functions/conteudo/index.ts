@@ -140,7 +140,7 @@ async function songs() {
   const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}|${t?.extracted_at}|${cv?.v}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
-  const list = await all('songs?select=slug,title,author,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');
+  const list = await all('songs?select=slug,title,author,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation,lyrics_draft,draft_note,draft_at&order=number.asc');
   for (const s of list) {
     s.eff = s.lyrics_edit || s.lyrics || [];
     s.lines = s.eff.flatMap(st => st.lines.map(stripChords)).concat((s.translation || []).flatMap(st => st.lines));
@@ -431,7 +431,9 @@ Deno.serve(async (req) => {
         if (o && c && (lvl >= 4 || (lvl >= 3 && await gOk()) || (c.published && Date.parse(c.expires_at) > Date.now() && (c.audience === 'cancioneiro' || lvl >= 2) && await gOk()))) { eff = o.lyrics; folha = true; }
       }
       // o perfil Cancioneiro não vê acordes
-      return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha });
+      // rascunho de letra (transcrição automática por rever): só para Maestro / Gestor
+      const draft = lvl >= 3 && s.lyrics_draft ? { lyrics: s.lyrics_draft, note: s.draft_note || null, at: s.draft_at || null } : undefined;
+      return out({ slug, lyrics: lvl >= 2 ? eff : noChords(eff), translation: s.translation || null, edited: !!s.lyrics_edit, folha, draft });
     }
     // várias letras num só pedido (a app descarrega assim as folhas ativas e os Preferidos ao abrir): os mesmos
     // limites e regras do op song, mas uma só leitura do registo e uma só escrita
@@ -440,7 +442,11 @@ Deno.serve(async (req) => {
       const want = [...new Set((Array.isArray(b.slugs) ? b.slugs : []).map(String))].slice(0, 60).filter(sl => visible(c.bySlug.get(sl)));
       const ok = new Set([...want.filter(sl => free.has(sl)), ...await limitMany(user, 'song', want.filter(sl => !free.has(sl)))]);
       const res = {};
-      for (const sl of want) if (ok.has(sl)) { const s = c.bySlug.get(sl); res[sl] = { lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit }; }
+      for (const sl of want) if (ok.has(sl)) {
+        const s = c.bySlug.get(sl);
+        res[sl] = { lyrics: lvl >= 2 ? s.eff : noChords(s.eff), translation: s.translation || null, edited: !!s.lyrics_edit,
+          draft: lvl >= 3 && s.lyrics_draft ? { lyrics: s.lyrics_draft, note: s.draft_note || null, at: s.draft_at || null } : undefined };
+      }
       return out({ songs: res, refused: want.filter(sl => !ok.has(sl)) });
     }
     // vários ficheiros num só pedido: endereços de 1 hora (livros: as páginas do recorte), como o op file
@@ -468,6 +474,25 @@ Deno.serve(async (req) => {
         else if (urls.get(it.objs[0].obj)) files[it.key] = { url: urls.get(it.objs[0].obj) };
       }
       return out({ files, refused: raw.filter(p => !files[p]) });
+    }
+    // rascunho de letra (Maestro / Gestor): publicar (a letra revista passa a ser a letra do cântico, como uma edição,
+    // com quem a publicou; «Repor original» volta ao «por transcrever») ou descartar
+    if (op === 'drafts') { // cânticos com rascunho de letra por rever (lista «Rascunhos de letra» dos Maestros)
+      if (lvl < 3) return denied();
+      const c = await songs();
+      return out({ slugs: c.list.filter(s => s.lyrics_draft).map(s => s.slug) });
+    }
+    if (op === 'draft') {
+      if (lvl < 3) return denied();
+      const slug = String(b.slug || ''), action = String(b.action || '');
+      if (!['publish', 'discard'].includes(action)) return out({ error: 'ação inválida' }, 400);
+      if (action === 'publish' && (!validLyrics(b.lyrics) || !b.lyrics.length)) return out({ error: 'letra inválida' }, 400);
+      if (!(await limit(user, 'save', 'draft:' + slug))) return tooMany();
+      const body = { lyrics_draft: null, draft_note: null, draft_at: null, ...(action === 'publish' ? { lyrics_edit: b.lyrics, edited_by: user.email } : {}) };
+      const r = await rest(`songs?slug=eq.${encodeURIComponent(slug)}&lyrics_draft=not.is.null&select=slug,edited_by,edited_at,is_edited`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) });
+      if (!r.length) return out({ error: 'Este rascunho já não existe (outra pessoa já o publicou ou descartou).' }, 409);
+      cache = null;
+      return out({ ok: true, edited_by: r[0].edited_by, edited_at: r[0].edited_at, is_edited: r[0].is_edited });
     }
     if (op === 'collyrics') { // Maestro: letra de um cântico só numa folha (lyrics: null volta à letra original)
       if (lvl < 3) return denied();

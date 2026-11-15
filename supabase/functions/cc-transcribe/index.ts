@@ -34,11 +34,12 @@ Deno.serve(async (req) => {
       : await fetch(`https://drive.google.com/uc?export=download&id=${id}`, { redirect: 'follow' });
     if (!r.ok) throw new Error((path ? 'Storage' : 'Drive') + ' HTTP ' + r.status);
     const type = path ? (f.mime || 'audio/mpeg') : r.headers.get('content-type') || '';
-    if (!/audio|octet-stream/.test(type)) throw new Error('não é áudio (' + type + ')');
+    // vídeos MP4 também servem (o Whisper usa a faixa de som)
+    if (!/audio|octet-stream|video\/mp4/.test(type)) throw new Error('não é áudio (' + type + ')');
     const buf = await r.arrayBuffer();
     if (buf.byteLength > 24e6) throw new Error('ficheiro grande demais (' + buf.byteLength + ')');
     const form = new FormData();
-    const ext = /mp4|m4a|aac/.test(type) ? 'm4a' : /ogg/.test(type) ? 'ogg' : /webm/.test(type) ? 'webm' : /wav/.test(type) ? 'wav' : 'mp3';
+    const ext = /video\/mp4/.test(type) ? 'mp4' : /mp4|m4a|aac/.test(type) ? 'm4a' : /ogg/.test(type) ? 'ogg' : /webm/.test(type) ? 'webm' : /wav/.test(type) ? 'wav' : 'mp3';
     form.append('file', new Blob([buf], { type }), 'audio.' + ext);
     form.append('model', 'whisper-large-v3');
     form.append('response_format', 'verbose_json');
