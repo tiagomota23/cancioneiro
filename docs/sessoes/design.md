@@ -87,7 +87,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
    `design/artefactos/mapa/blobs/*.json` para uma pasta `bNNN`): é a base da comparação e de onde se repõem as imagens não
    carregadas (repor os ficheiros em `out/` para que imagens e ids batam certo). Mudam sempre, só por data ou relógio, e não se
    carregam: `folha-adicionar`, `gestao` («Última entrada», validade), `folha`, `folha-edicao`, `partilhado`, `gravacao`, e no
-   catálogo v079, v083, v093, v095, v130, v145, v148, v158, v159 (ver a caixa de diferenças: altura ≤ 24 px = relógio).
+   catálogo v079, v083, v093, v094, v095, v096, v131, v146, v149, v159, v160 (numeração da v237); `login` às vezes também (repetir a captura) (ver a caixa de diferenças: altura ≤ 24 px = relógio).
    O catálogo tem peças repetidas (o mesmo PNG com dois números, p. ex. v001 = v005): o `blobs.json` novo faz-se por hash
    (vNNN novo → id do PNG antigo com o mesmo sha256; senão, o id carregado). `catalogue.mjs` apaga `out/catalogo/blobs.json`:
    escreve-o de novo antes de `catalogue-board.mjs`. Os ids carregados vêm no resultado do Artifact (`→ "/_blob/<id>"`).
@@ -168,9 +168,10 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v240)
-- App v240 (v238–v240 sem mudança visível, sem imagens novas); capa do mapa «versão 240 · 15 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 95, sistema de design versão 46. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+## Estado atual (15 nov 2026, v241)
+- App v241 (v238–v241 sem mudança visível, sem imagens novas). Capa do mapa publicada: «versão 240»; o espelho já diz 241
+  (publicação recusada pelas permissões) — publicar Main/Padrao/ds na próxima sincronização; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 95, sistema de design versão 47. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
   livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
   v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
 - **Por decidir (Tiago, 15 nov):** (1) a frase da caixa sai em maiúsculas por herdar `.pend-bar p:first-child` (feito para
