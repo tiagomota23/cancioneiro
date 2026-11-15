@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-14 v236';
+  const APP_VERSION = '2026-11-15 v237';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -321,6 +321,10 @@
         lyrics: (s.lyrics_edit || s.lyrics || []).map(x => ({ ...x, lines: x.lines.map(stripChords) })), translation: s.translation || null, expires_at: new Date(Date.now() + 864e5).toISOString() };
     }
     if (op === 'match') return { matches: Busca.match(demoIndex(), b.text) };
+    // recortes a rever: um exemplo no Amazing Grace (Songbook, pág. 12)
+    if (op === 'crops') return { reviews: store.get('cancioneiro.demo.cropdone', false) ? [] : [{ id: 1, slug: 'amazing_grace', current: 'livros/songbook.pdf#p=12', proposed: 'livros/songbook.pdf#p=12&c=12:0.0,0.1,0.513,0.45&s=amazing_grace', previous: null, note: 'O texto deste recorte não coincide com a letra do cântico (exemplo de demonstração).' }] };
+    if (op === 'croppages') return { pages: [11, 12, 13].map(n => ({ n, url: `drive-coro-clu/out/livros/songbook/p${String(n).padStart(3, '0')}.pdf` })) };
+    if (op === 'cropset') { store.set('cancioneiro.demo.cropdone', true); return { ok: true, path: b.path || 'livros/songbook.pdf#p=12' }; }
     if (op === 'file') {
       const [path, frag = ''] = b.path.split('#');
       const book = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' }[path];
@@ -920,6 +924,99 @@
   $('listen-stop').onclick = () => { if (rec) { if (heard) finish(); else listenMsg('Ainda a ouvir…', true); } else if (heard) finishListening(); else openListen(); };
   $('listen').addEventListener('click', e => { if (e.target === $('listen')) closeListen(); });
 
+  // ---------- Recortes dos livros a rever (Maestro / Gestor) ----------
+  // Recortes do Songbook / CANTI que não coincidiam com a letra do cântico (verificação do texto dos PDF, 14 nov 2026):
+  // na página do cântico, uma caixa amarela «Recorte do livro a rever» abre a página do livro com o recorte atual
+  // (laranja), o proposto (verde, se houver) e o que se desenhar (dois toques: canto de cima à esquerda e de baixo à
+  // direita; até 4 partes). Manter, usar o proposto, repor o anterior ou usar o desenhado: op cropset da conteudo.
+  let cropRev = null, cropRevLoading = false; // slug -> [{ id, current, proposed, previous, note }]
+  async function loadCropReviews() {
+    if (cropRev || cropRevLoading || lvl() < 3) return;
+    cropRevLoading = true;
+    try {
+      const d = await api('crops');
+      cropRev = new Map();
+      for (const r of d.reviews || []) { const a = cropRev.get(r.slug) || []; a.push(r); cropRev.set(r.slug, a); }
+      if (lastSongSlug && cropRev.has(lastSongSlug) && !$('view-song').hidden) { const y = window.scrollY; showSong(lastSongSlug); window.scrollTo(0, y); }
+    } catch (e) { cropRev = null; } finally { cropRevLoading = false; }
+  }
+  const cropParts = path => { const m = String(path || '').match(/[#&]c=([^&]+)/); return m ? m[1].split('|').map(r => { const [pg, b] = r.split(':'); return [+pg, ...b.split(',').map(Number)]; }) : []; };
+  const cropPath = (base, slug, parts) => `${base}#p=${parts[0][0]}&c=${parts.map(p => `${p[0]}:${p.slice(1).map(v => +v.toFixed(3)).join(',')}`).join('|')}&s=${slug}`;
+  async function openCropReview(slug, rv) {
+    const base = String(rv.current || '').split('#')[0];
+    const dlg = document.createElement('dialog');
+    dlg.className = 'editor crop-dlg';
+    dlg.innerHTML = `<h2 tabindex="-1" autofocus>Rever recorte</h2>
+      <p class="small">${esc(rv.note || '')}</p>
+      <p class="small crop-legend"><span class="crop-key cur"></span>atual${rv.proposed ? '<span class="crop-key prop"></span>proposto' : ''}${rv.previous ? '<span class="crop-key prev"></span>anterior' : ''}<span class="crop-key draw"></span>desenhado</p>
+      <p class="small">Para desenhar: toque no canto de cima à esquerda e depois no canto de baixo à direita da letra do cântico (com o título). Se continuar noutra coluna ou página, desenhe outra parte (até 4).</p>
+      <div class="crop-pages"><p class="pdf-msg">A abrir as páginas…</p></div>
+      <form method="dialog" class="edit-actions crop-actions">
+        <button type="button" data-a="keep">Manter o atual</button>
+        ${rv.proposed ? '<button type="button" data-a="prop">Usar o proposto</button>' : ''}
+        ${rv.previous ? '<button type="button" data-a="prev">Repor o anterior</button>' : ''}
+        <button type="button" data-a="draw" disabled>Usar o desenhado</button>
+        <button type="button" data-a="clear" class="ghost-btn" disabled>Limpar o desenho</button>
+        <button type="button" data-a="close" class="ghost-btn">Cancelar</button>
+      </form>`;
+    document.body.appendChild(dlg);
+    const close = () => { dlg.close(); dlg.remove(); };
+    dlg.addEventListener('close', () => dlg.remove());
+    dlg.showModal();
+    const drawn = []; let corner = null;
+    const boxes = (n, cls, path) => cropParts(path).filter(p => p[0] === n).map(([, x0, y0, x1, y1]) =>
+      `<span class="crop-box ${cls}" style="left:${x0 * 100}%;top:${y0 * 100}%;width:${(x1 - x0) * 100}%;height:${(y1 - y0) * 100}%"></span>`).join('');
+    const redraw = () => {
+      dlg.querySelectorAll('.crop-page').forEach(pg => {
+        const n = +pg.dataset.n;
+        pg.querySelector('.crop-ov').innerHTML = boxes(n, 'cur', rv.current) + boxes(n, 'prop', rv.proposed) + boxes(n, 'prev', rv.previous) +
+          drawn.filter(p => p[0] === n).map(([, x0, y0, x1, y1]) => `<span class="crop-box draw" style="left:${x0 * 100}%;top:${y0 * 100}%;width:${(x1 - x0) * 100}%;height:${(y1 - y0) * 100}%"></span>`).join('') +
+          (corner && corner[0] === n ? `<span class="crop-dot" style="left:${corner[1] * 100}%;top:${corner[2] * 100}%"></span>` : '');
+      });
+      dlg.querySelector('[data-a=draw]').disabled = !drawn.length;
+      dlg.querySelector('[data-a=clear]').disabled = !drawn.length && !corner;
+    };
+    try {
+      const d = await api('croppages', { id: rv.id });
+      const lib = await loadPdfJs(), wrap = dlg.querySelector('.crop-pages');
+      wrap.innerHTML = d.pages.map(p => `<figure class="crop-page" data-n="${p.n}"><figcaption>pág. ${p.n}</figcaption><div class="crop-canvas"><canvas></canvas><div class="crop-ov"></div></div></figure>`).join('');
+      for (const p of d.pages) {
+        const doc = await lib.getDocument({ url: p.url, isEvalSupported: false }).promise, page = await doc.getPage(1);
+        const fig = wrap.querySelector(`.crop-page[data-n="${p.n}"]`), cv = fig.querySelector('canvas');
+        const v1 = page.getViewport({ scale: 1 }), w = Math.max(320, fig.clientWidth || 600) * (window.devicePixelRatio || 1);
+        const vp = page.getViewport({ scale: w / v1.width });
+        cv.width = vp.width; cv.height = vp.height;
+        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        fig.querySelector('.crop-canvas').onclick = e => {
+          const r = e.currentTarget.getBoundingClientRect(), x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+          if (!corner || corner[0] !== p.n) { if (drawn.length >= 4) return; corner = [p.n, x, y]; }
+          else { const [, ax, ay] = corner; corner = null; if (Math.abs(x - ax) >= 0.05 && Math.abs(y - ay) >= 0.02) drawn.push([p.n, Math.min(ax, x), Math.min(ay, y), Math.max(ax, x), Math.max(ay, y)]); }
+          redraw();
+        };
+      }
+      redraw();
+      // abre na página do recorte atual
+      const first = cropParts(rv.current)[0];
+      if (first) wrap.querySelector(`.crop-page[data-n="${first[0]}"]`)?.scrollIntoView({ block: 'start' });
+    } catch (e) { dlg.querySelector('.crop-pages').innerHTML = `<p class="pdf-msg">Não foi possível abrir as páginas. ${esc(e.message || '')}</p>`; }
+    dlg.querySelector('.crop-actions').onclick = async e => {
+      const a = e.target.closest('button')?.dataset.a; if (!a) return;
+      if (a === 'close') return close();
+      if (a === 'clear') { drawn.length = 0; corner = null; return redraw(); }
+      const path = a === 'prop' ? rv.proposed : a === 'prev' ? rv.previous : a === 'draw' ? cropPath(base, slug, drawn) : null;
+      dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = true);
+      try {
+        const r = await api('cropset', path ? { id: rv.id, path } : { id: rv.id });
+        // atualiza o cântico na lista local (o recorte novo vale já nesta sessão)
+        const s = allSongs.find(x => x.slug === slug), f = s && (s.files || []).find(x => x.path === rv.current);
+        if (f && r.path) f.path = r.path;
+        cropRev.set(slug, (cropRev.get(slug) || []).filter(x => x.id !== rv.id));
+        pdfUrl = null; close(); toast(path ? 'Recorte guardado.' : 'Recorte mantido.');
+        if (lastSongSlug === slug) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
+      } catch (err) { toast(err.message || 'Não foi possível guardar.'); dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = false); redraw(); }
+    };
+  }
+
   // ---------- Vistas ----------
   function show(id) {
     for (const v of ['view-list', 'view-song', 'view-admin']) $(v).hidden = v !== id;
@@ -1111,6 +1208,10 @@
     const pendHtml = s.approved === false
       ? `<div class="pend-bar"><p>Cântico novo por aprovar${s.added_by ? ` · acrescentado por ${esc(s.added_by.split('@')[0])}` : ''}</p>${simHtml}${lvl() >= 3 && !fcol ? '<p><button class="edit-btn" id="song-approve">Aprovar</button><button class="edit-btn danger-btn" id="song-reject">Recusar</button></p>' : ''}</div>`
       : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
+    // recortes dos livros a rever (Maestro / Gestor): caixa amarela com «Rever recorte»
+    if (lvl() >= 3 && !cropRev) loadCropReviews();
+    const revs = lvl() >= 3 && !fcol && extrasOn() && cropRev ? cropRev.get(slug) || [] : [];
+    const cropHtml = revs.length ? `<div class="pend-bar crop-bar"><p>Recorte do livro a rever${revs.length > 1 ? ` (${revs.length})` : ''}: confirme se a página do livro mostra este cântico.</p><p>${revs.map((r, i) => `<button class="edit-btn crop-rev" data-i="${i}">Rever recorte${revs.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}</p></div>` : '';
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
     const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn() && !fcol; // Maestro / Gestor: em "Editar cântico"
     const fileBtns = canFiles ? `<button class="edit-btn" id="btn-add-rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Gravação</button><button class="edit-btn" id="btn-add-score"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Partitura</button>` : '';
@@ -1132,6 +1233,7 @@
       ${wait}
       ${bookNote(body, s, scores) || renderStanzas(body)}
       ${pendHtml}
+      ${cropHtml}
       ${editBar}
       ${verBtn}
       ${upHtml}
@@ -1140,6 +1242,7 @@
       <p class="srcs">${srcs}${moments.length ? `<span class="moments">${esc(moments.join(' · '))}</span>` : ''}</p>
       <p class="num">${s.number}${s.book_page ? ` · pág. ${s.book_page} do livro` : ''}</p>`;
     $('song').querySelectorAll('button.rec').forEach(b => b.onclick = () => playRec(b, recs[+b.dataset.i]));
+    $('song').querySelectorAll('button.crop-rev').forEach(b => b.onclick = () => openCropReview(slug, revs[+b.dataset.i]));
     if (nowRec && nowRec.slug === slug) { const b = [...$('song').querySelectorAll('button.rec')].find(x => x.dataset.path === nowRec.path); if (b) b.closest('li').appendChild(nowRec.a); }
     miniUpdate();
     $('song').classList.toggle('show-chords', prefs.chords && mode === 'orig');

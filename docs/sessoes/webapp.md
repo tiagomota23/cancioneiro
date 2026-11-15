@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (14 nov 2026, v236)
+## Estado e pendentes (15 nov 2026, v237)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -255,7 +255,19 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   letra 0,471–0,552, recorte 0,659–0,787); vários parecem bem (a letra está dentro do recorte: outra língua/versão);
   os de inglês com palavras comuns (father_and_son, all_of_me) são ambíguos só com coordenadas. Não se corrigiu nada às
   cegas: à espera do Tiago (revisão visual — ex.: ecrã de Maestro com a página, o recorte atual e o proposto).
-  **Pendente (dados, por decidir com o Tiago): 26 recortes de livros que não coincidem com a letra do cântico** —
+  **Revisão dos recortes (v237, 15 nov, decisão do Tiago: ecrã de revisão + corrigir os claros + folha para Maestros):**
+  tabela `crop_reviews` (`supabase/recortes.sql`; só service_role): 27 recortes (os 26 + vero_amor_e_gesu CANTI p35),
+  com `proposed` (father_and_son, vorrei p277) e `previous` (os corrigidos). Corrigidos e confirmados pelo texto:
+  padre_claudio_chieffo (p80, coluna errada; 60% da letra) e minha_luz (p399; título no recorte). Tentados e repostos
+  (0% da letra — o localizador engana-se com palavras comuns): la_smortina p100, vero_amor_e_gesu p35.
+  Ops da conteudo (lvl ≥ 3): `crops` (pendentes), `croppages` (páginas atual/anterior/proposto ±1, conta no limite
+  file), `cropset` {id, path?} (valida livro, slug, 1–4 partes, páginas perto das atuais, frações; muda
+  song_files.path; marca feito). Na app: caixa amarela «Recorte do livro a rever» na página do cântico (Maestro+),
+  diálogo com as páginas (atual laranja tracejado, proposto verde --app-brand, anterior pontilhado, desenhado na cor do
+  perfil; dois toques por parte, até 4): Manter / Usar o proposto / Repor o anterior / Usar o desenhado. Demo: exemplo
+  no Amazing Grace. Folhas por publicar (só Maestro/Gestor) «Rever recortes dos livros (1/3, 2/3, 3/3)» com os 24
+  cânticos (máx. 10 por folha), até 15 dez. Recorte mudado → o texto do PDF é refeito pela Action seguinte.
+  Lista original dos suspeitos:
   alguns são outra versão/língua (legítimos), outros mostram mesmo outro cântico (ex.: father_and_son). A app mostra
   esses recortes como «Partitura». Lista (slug, livro, página):
     ave_regina_coelorum_gregoriano (songbook p.196); gloria (canti2024 p.68); lauda_sion_salvatorem_gregoriano
@@ -282,7 +294,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   de resultados (a lista mostra já o que o telemóvel encontrou); o número aparece quando o servidor responde. Números,
   pesquisas curtas, sem rede ou com o servidor em erro: o número aparece logo (`searchLyricsRemote` devolve se espera;
   `lyricFailed` guarda as que falharam, limpo ao voltar a rede e ao mudar de perfil).
-- Tudo publicado até à v236 (conteudo versão 37, pdf-texto versão 2); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v237 (conteudo versão 38, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
   transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».

@@ -412,6 +412,47 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ collection_id: id, song_slug: slug, lyrics: v, edited_by: user.email, edited_at: new Date().toISOString() }) });
       return out({ ok: true, edited_at: r?.edited_at || null });
     }
+    // recortes dos livros a rever (Maestro / Gestor): lista dos pendentes, e decisão (manter, ou um recorte novo)
+    if (op === 'crops') {
+      if (lvl < 3) return denied();
+      const rows = await rest('crop_reviews?select=id,song_slug,proposed,previous,note,f:song_files(path)&status=eq.pendente&order=id.asc');
+      return out({ reviews: rows.map(r => ({ id: r.id, slug: r.song_slug, current: r.f?.path || null, proposed: r.proposed, previous: r.previous, note: r.note })) });
+    }
+    if (op === 'croppages') { // páginas para a revisão: as dos recortes atual, anterior e proposto, e uma de cada lado
+      if (lvl < 3) return denied();
+      const [r] = await rest(`crop_reviews?select=id,proposed,previous,f:song_files(path)&id=eq.${+b.id || 0}&status=eq.pendente`);
+      if (!r || !r.f) return out({ error: 'Esta revisão já não está pendente.' }, 404);
+      const base = String(r.f.path).split('#')[0];
+      if (!BOOKS[base]) return out({ error: 'não é um livro' }, 400);
+      const nums = [...new Set([r.f.path, r.previous || '', r.proposed || ''].flatMap(x => [...x.matchAll(/(\d+):/g)].map(y => +y[1])).flatMap(n => [n - 1, n, n + 1]).filter(n => n >= 1))].sort((x, y) => x - y);
+      const res = [];
+      for (const n of nums) {
+        if (!(await limit(user, 'file', `${base}#${n}`))) return tooMany();
+        res.push({ n, url: await sign(pageFile(BOOKS[base], n)).catch(() => null) });
+      }
+      return out({ pages: res.filter(x => x.url) });
+    }
+    if (op === 'cropset') {
+      if (lvl < 3) return denied();
+      const id = +b.id || 0;
+      const [r] = await rest(`crop_reviews?select=id,song_slug,song_file_id,status,previous,f:song_files(path)&id=eq.${id}`);
+      if (!r || r.status !== 'pendente' || !r.f) return out({ error: 'Esta revisão já não está pendente.' }, 404);
+      if (!(await limit(user, 'save', 'crop:' + id))) return tooMany();
+      if (b.path) {
+        // o mesmo livro e o mesmo cântico; 1 a 4 partes, páginas perto das do recorte atual (ou anterior), frações válidas
+        const path = String(b.path), cur = String(r.f.path);
+        const m = path.match(/^(livros\/(?:songbook|canti2024)\.pdf)#p=(\d+)&c=([0-9.:,|]+)&s=([a-z0-9_]+)$/);
+        if (!m || m[1] !== cur.split('#')[0] || m[4] !== r.song_slug) return out({ error: 'Recorte inválido.' }, 400);
+        const parts = m[3].split('|').map(x => { const [pg, bx] = x.split(':'); return [+pg, ...String(bx).split(',').map(Number)]; });
+        const pagesNear = new Set([cur, r.previous || ''].flatMap(x => [...x.matchAll(/(\d+):/g)].map(y => +y[1])).flatMap(n => [n - 1, n, n + 1]));
+        const ok = parts.length >= 1 && parts.length <= 4 && +m[2] === parts[0][0] && parts.every(([pg, x0, y0, x1, y1]) =>
+          pagesNear.has(pg) && [x0, y0, x1, y1].every(v => v >= 0 && v <= 1) && x1 - x0 >= 0.05 && y1 - y0 >= 0.02);
+        if (!ok) return out({ error: 'Recorte inválido.' }, 400);
+        if (path !== cur) await rest(`song_files?id=eq.${r.song_file_id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ path }) });
+      }
+      await rest(`crop_reviews?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'feito', decided_by: user.email, decided_at: new Date().toISOString() }) });
+      return out({ ok: true, path: b.path || r.f.path });
+    }
     if (op === 'invite') { // "Partilhar a app": convite para um perfil até ao de quem convida (o acesso continua a precisar de aprovação)
       const role = String(b.role || 'cancioneiro');
       if (!ROLES.includes(role) || rank(role) > user.rank) return denied();
