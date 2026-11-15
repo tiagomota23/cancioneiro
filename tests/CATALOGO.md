@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v242** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v243** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -39,6 +39,7 @@ Catálogo atualizado até à **v242** (2026-11-15). Testes v231–v241 corridos 
 | FUN-81 | Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada): abrir a folha → um só op songs com os cânticos sem letra; abrir um deles → sem op song; reabrir a folha → sem novo pedido | ui | média | V | ✓ (v241) |
 | FUN-82 | Sem lotes repetidos (v241, modo real simulado, folha ativa, op songs lento): abrir a folha durante a pré-descarga → nenhum cântico em dois op songs; todos com letra no fim | ui | baixa | V | ✓ (v241) |
 | FUN-83 | Página inteira do livro com contorno (v242, ?demo, recorte injetado): «Ver a página inteira» → contorno na cor --accent (pixel na aresta) e «Ver só a letra do cântico», que volta ao recorte | ui | baixa | V | ☐ por correr |
+| FUN-84 | Zoom na revisão de recortes (v243, ?demo, Maestro): 100% → «+»×2 = 225% com canvas mais nítido (≤ 2400 px); limites 100–400%; desenho a 225% nas frações certas; beliscão muda o zoom e o toque logo a seguir não marca canto | ui | baixa | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ✓ (v241) |
 | BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ✓ (v241) |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
