@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v245';
+  const APP_VERSION = '2026-11-15 v246';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -324,7 +324,13 @@
     // recortes a rever: um exemplo no Amazing Grace (Songbook, pág. 12)
     if (op === 'crops') return { reviews: store.get('cancioneiro.demo.cropdone', false) ? [] : [{ id: 1, slug: 'amazing_grace', current: 'livros/songbook.pdf#p=12', proposed: 'livros/songbook.pdf#p=12&c=12:0.0,0.1,0.513,0.45&s=amazing_grace', previous: null, note: 'O texto deste recorte não coincide com a letra do cântico (exemplo de demonstração).' }] };
     if (op === 'croppages') return { pages: [11, 12, 13].map(n => ({ n, url: `drive-coro-clu/out/livros/songbook/p${String(n).padStart(3, '0')}.pdf` })) };
-    if (op === 'cropset') { store.set('cancioneiro.demo.cropdone', true); return { ok: true, path: b.path || 'livros/songbook.pdf#p=12' }; }
+    if (op === 'cropset') {
+      store.set('cancioneiro.demo.cropdone', true);
+      const all = store.get('cancioneiro.demo.cols', []), removedFrom = [], deleted = [];
+      for (const c of all) if (/^Rever recortes dos livros/.test(c.title) && (c.songs || []).some(x => x.song_slug === 'amazing_grace')) { c.songs = c.songs.filter(x => x.song_slug !== 'amazing_grace'); removedFrom.push(c.id); if (!c.songs.length) deleted.push(c.id); }
+      store.set('cancioneiro.demo.cols', all.filter(c => !deleted.includes(c.id)));
+      return { ok: true, path: b.path || 'livros/songbook.pdf#p=12', songDone: true, removedFrom, deleted };
+    }
     if (op === 'file') {
       const [path, frag = ''] = b.path.split('#');
       const book = { 'livros/songbook.pdf': 'livros/songbook', 'livros/canti2024.pdf': 'livros/canti2024' }[path];
@@ -1066,6 +1072,21 @@
         cropRev.set(slug, (cropRev.get(slug) || []).filter(x => x.id !== rv.id));
         pdfUrl = null; close(); toast(path ? 'Recorte guardado.' : 'Recorte mantido.');
         if (!$('pdfview').hidden && pdfSlug === slug) closePdf(); // o visor mostrava o recorte antigo
+        // o cântico já não tem recortes por rever: sai das folhas de revisão (o servidor já o tirou; folha vazia apagada)
+        // e, se veio de uma delas, volta-se à folha (ou à seguinte, se esta ficou vazia)
+        const isRev = c => /^Rever recortes dos livros/.test(c.title || '');
+        const from = songCol && cols.find(c => c.id === songCol && isRev(c));
+        if (r.songDone) {
+          for (const c of cols) if ((r.removedFrom || []).includes(c.id)) c.songs = (c.songs || []).filter(x => x.song_slug !== slug);
+          cols = cols.filter(c => !(r.deleted || []).includes(c.id)); store.set(colsKey(), cols);
+          if (from) {
+            const next = cols.find(c => c.id === from.id) || cols.find(c => isRev(c) && colVisible(c));
+            location.hash = next ? '#/lista/colecao-' + next.id : '#/';
+            loadCollections();
+            return;
+          }
+          loadCollections();
+        }
         if (lastSongSlug === slug) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
       } catch (err) { toast(err.message || 'Não foi possível guardar.'); dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = false); redraw(); }
     };
@@ -1264,7 +1285,8 @@
       : ''; // apagar um cântico novo já aprovado: em «Editar cântico»
     // recortes dos livros a rever (Maestro / Gestor): caixa amarela com «Rever recorte»
     if (lvl() >= 3 && !cropRev) loadCropReviews();
-    const revs = lvl() >= 3 && !fcol && extrasOn() && cropRev ? cropRev.get(slug) || [] : [];
+    // também dentro de uma folha (as folhas «Rever recortes dos livros» abrem os cânticos assim)
+    const revs = lvl() >= 3 && extrasOn() && cropRev ? cropRev.get(slug) || [] : [];
     const cropHtml = revs.length ? `<div class="pend-bar crop-bar"><p>Recorte do livro a rever${revs.length > 1 ? ` (${revs.length})` : ''}: confirme se a página do livro mostra este cântico.</p><p>${revs.map((r, i) => `<button class="edit-btn crop-rev" data-i="${i}">Rever recorte${revs.length > 1 ? ' ' + (i + 1) : ''}</button>`).join('')}</p></div>` : '';
     // Maestro / Gestor: acrescentar gravações e partituras (Coro, nos cânticos novos que acrescentou; o Maestro / Gestor faz isto em "Editar cântico")
     const canFiles = lvl() === 2 && mine && srcOf(s).includes('novos') && extrasOn() && !fcol; // Maestro / Gestor: em "Editar cântico"

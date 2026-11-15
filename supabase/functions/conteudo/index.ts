@@ -526,7 +526,20 @@ Deno.serve(async (req) => {
       const claimed = await rest(`crop_reviews?id=eq.${id}&status=eq.pendente`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ status: 'feito', decided_by: user.email, decided_at: new Date().toISOString() }) });
       if (!claimed.length) return out({ error: 'Esta revisão já foi decidida por outra pessoa.' }, 409);
       if (b.path && b.path !== r.f.path) await rest(`song_files?id=eq.${r.song_file_id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ path: String(b.path) }) });
-      return out({ ok: true, path: b.path || r.f.path });
+      // sem mais recortes por rever deste cântico: sai das folhas «Rever recortes dos livros» (folha vazia é apagada)
+      const left = await rest(`crop_reviews?select=id&song_slug=eq.${encodeURIComponent(r.song_slug)}&status=eq.pendente`);
+      const removedFrom = [], deleted = [];
+      if (!left.length) {
+        const revCols = await rest(`collections?select=id&title=like.${encodeURIComponent('Rever recortes dos livros*')}`);
+        for (const c of revCols) {
+          const del = await rest(`collection_songs?collection_id=eq.${c.id}&song_slug=eq.${encodeURIComponent(r.song_slug)}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+          if (!del.length) continue;
+          removedFrom.push(c.id);
+          const still = await rest(`collection_songs?select=song_slug&collection_id=eq.${c.id}&limit=1`);
+          if (!still.length) { await rest(`collections?id=eq.${c.id}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); deleted.push(c.id); }
+        }
+      }
+      return out({ ok: true, path: b.path || r.f.path, songDone: !left.length, removedFrom, deleted });
     }
     if (op === 'invite') { // "Partilhar a app": convite para um perfil até ao de quem convida (o acesso continua a precisar de aprovação)
       const role = String(b.role || 'cancioneiro');
