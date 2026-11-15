@@ -345,6 +345,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   (vuestra_soy_pues_me_criasteis_teresa_avila_rafael_andreo) e o 1077 foi apagado. Revisões pendentes: 449 (proposto
   p35 col. direita 0,04–0,655) e 450 (o recorte atual 0,66–0,951, confirmar); folha nova por publicar «Rever recortes
   dos livros (Vuestra soy)». As folhas 1/3 e 3/3 já acabaram (revistas pelo Tiago); fica a 2/3 com 9.
+- **Revisão dos recortes concluída (Tiago, 15 nov):** as 29 revisões (27 + os dois «Vuestra soy») estão «feito»; as
+  folhas «Rever recortes dos livros» apagaram-se ao ficar vazias. Os recortes mudados foram relidos pela Action «Texto
+  dos PDF». O código de revisão (crop_reviews, ops crops/croppages/cropset, caixa e diálogo) fica para futuras
+  revisões: para pôr um recorte em revisão, inserir em crop_reviews e acrescentar o cântico a uma folha por publicar,
+  sem autor, com título «Rever recortes dos livros…».
 - Tudo publicado até à v247 (conteudo versão 43, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
