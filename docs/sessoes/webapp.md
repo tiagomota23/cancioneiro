@@ -328,7 +328,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   ligações externas (YouTube / Drive deles) — não há nada que se possa transcrever aqui.
   `conteudo`: a marca do cache das letras inclui catalog_version.v (letras mudadas por SQL sem updated_at ficavam por
   ver até a função reiniciar).
-- Maestro sem grupos (não vê folhas): Joana Paulo Pardal (perguntado pelo Tiago a 15 nov).
+- Joana Paulo Pardal (Maestro) estava sem grupos; acrescentada a todos os 5 grupos a pedido do Tiago (15 nov).
 - À espera do Tiago: nada. Adiado: envio de folhas por email (falta domínio verificado no Resend; ver acima).
 - **Segunda 9 nov, depois do drive-sync (06:15 UTC)**: drive-sync v10 (8 nov) segue atalhos; o atalho «Sicut cervus -
   Palestrina» (missa/) deve vir no email como pasta nova. Ver em drive_files para onde aponta e o que tem, verificar se
