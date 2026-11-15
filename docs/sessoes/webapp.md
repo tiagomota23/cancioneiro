@@ -201,7 +201,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v244)
+## Estado e pendentes (15 nov 2026, v245)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -327,7 +327,11 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   --hit, sem contorno, --accent, fs-ui 700), como A− / A+. Decisões do Tiago (15 nov) sobre a caixa «Recorte do
   livro a rever»: verde fixo do proposto aprovado; maiúsculas → seguir/definir no design system (pedido ao design; à
   espera da especificação dele para aplicar).
-- Tudo publicado até à v244 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v245 (Tiago, 15 nov): contorno da «letra do cântico» nas páginas inteiras em verde (--app-brand, fixo); quando a letra
+  continua noutra coluna/página, a linha de baixo da parte fica tracejada e a de cima da continuação também. No visor
+  de partituras, Maestro/Gestor com o cântico em revisão: «Rever recorte» por baixo das páginas (`addCropReview`);
+  depois de decidir, o visor fecha (mostrava o recorte antigo).
+- Tudo publicado até à v245 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de

@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v244';
+  const APP_VERSION = '2026-11-15 v245';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -1065,6 +1065,7 @@
         if (f && r.path) f.path = r.path;
         cropRev.set(slug, (cropRev.get(slug) || []).filter(x => x.id !== rv.id));
         pdfUrl = null; close(); toast(path ? 'Recorte guardado.' : 'Recorte mantido.');
+        if (!$('pdfview').hidden && pdfSlug === slug) closePdf(); // o visor mostrava o recorte antigo
         if (lastSongSlug === slug) { const y = window.scrollY; showSong(slug); window.scrollTo(0, y); }
       } catch (err) { toast(err.message || 'Não foi possível guardar.'); dlg.querySelectorAll('.crop-actions button').forEach(b => b.disabled = false); redraw(); }
     };
@@ -2733,13 +2734,31 @@
       await renderPdf();
     } catch (e) { $('pdfpages').innerHTML = '<p class="pdf-msg">Não foi possível mostrar a letra.</p>'; }
   }
-  // páginas inteiras: contorno à volta das partes que são a «letra do cântico» (os recortes desta página)
+  // páginas inteiras: contorno verde à volta das partes que são a «letra do cântico» (os recortes desta página). Quando
+  // a letra continua noutra coluna ou página, a linha de baixo da parte fica tracejada, e a de cima da continuação também.
   function outlineCrops(ctx, crops, pg, ox, oy, w, h, r) {
-    const cr = (crops || []).filter(c => c[0] === pg); if (!cr.length) return;
-    ctx.save(); ctx.strokeStyle = themeColor('--accent') || '#10835c'; ctx.lineWidth = 2.5 * r;
-    const lw = ctx.lineWidth;
-    for (const [, x0, y0, x1, y1] of cr) ctx.strokeRect(ox + x0 * w + lw / 2, oy + y0 * h + lw / 2, (x1 - x0) * w - lw, (y1 - y0) * h - lw);
+    const all = crops || [];
+    if (!all.some(c => c[0] === pg)) return;
+    ctx.save(); ctx.strokeStyle = themeColor('--app-brand') || '#10835c'; ctx.lineWidth = 2.5 * r; ctx.lineCap = 'butt';
+    const lw = ctx.lineWidth, dash = [8 * r, 6 * r];
+    const line = (x0, y0, x1, y1, dashed) => { ctx.setLineDash(dashed ? dash : []); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); };
+    all.forEach((c, i) => {
+      if (c[0] !== pg) return;
+      const L = ox + c[1] * w + lw / 2, T = oy + c[2] * h + lw / 2, R = ox + c[3] * w - lw / 2, B = oy + c[4] * h - lw / 2;
+      line(L, T, R, T, i > 0);               // de cima: tracejada se é continuação
+      line(L, B, R, B, i < all.length - 1);  // de baixo: tracejada se continua a seguir
+      line(L, T, L, B, false); line(R, T, R, B, false);
+    });
     ctx.restore();
+  }
+  // Maestro / Gestor: se este cântico tem recortes a rever, «Rever recorte» também aqui, por baixo das páginas
+  function addCropReview(box) {
+    const revs = lvl() >= 3 && cropRev && pdfSlug ? cropRev.get(pdfSlug) || [] : [];
+    if (!revs.length) return;
+    const p = document.createElement('p'); p.className = 'pdf-more';
+    p.innerHTML = revs.map((r, i) => `<button type="button" data-i="${i}">Rever recorte${revs.length > 1 ? ' ' + (i + 1) : ''}</button>`).join(' ');
+    p.querySelectorAll('button').forEach(b => b.onclick = () => openCropReview(pdfSlug, revs[+b.dataset.i]));
+    box.appendChild(p);
   }
   async function renderMulti(id, box, width, dpr) {
     const blocks = [];
@@ -2779,6 +2798,7 @@
     more.innerHTML = `<button type="button">${pdfWhole ? 'Ver só a letra do cântico' : 'Ver as páginas inteiras'}</button>`;
     more.firstChild.onclick = () => { pdfWhole = !pdfWhole; renderPdf(); };
     box.appendChild(more);
+    addCropReview(box);
   }
   // página n: num livro cada página é um PDF à parte (página 1 desse PDF)
   const pdfPageN = async n => pdfBook ? (pdfBook.has(n) ? pdfBook.get(n).getPage(1) : null) : (n >= 1 && n <= pdfDoc.numPages ? pdfDoc.getPage(n) : null);
@@ -2826,6 +2846,7 @@
       more.innerHTML = '<button type="button">Ver a página inteira</button>';
       more.firstChild.onclick = () => { pdfWhole = true; renderPdf(); };
       box.appendChild(more);
+      addCropReview(box);
       return;
     }
     // num livro mostra só as páginas do cântico (as que o servidor enviou)
@@ -2851,6 +2872,7 @@
       more.innerHTML = '<button type="button">Ver só a letra do cântico</button>';
       more.firstChild.onclick = () => { pdfWhole = false; renderPdf(); };
       box.appendChild(more);
+      addCropReview(box);
     }
   }
   function closePdf() {
