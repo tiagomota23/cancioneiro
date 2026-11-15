@@ -272,7 +272,12 @@ export default async function (level) {
       if (!/r\.status !== 'pendente'[^\n]*404\)/.test(cs)) bad.push('cropset aceita revisão já feita');
       const iLim = cs.indexOf("limit(user, 'save'"), iW = cs.search(/method: 'PATCH'/);
       if (iLim < 0 || (iW >= 0 && iW < iLim)) bad.push('cropset escreve antes do limite save');
-      for (const [k, re] of [['mesmo livro', /m\[1\] !== cur\.split\('#'\)\[0\]/], ['slug da revisão', /m\[4\] !== r\.song_slug/], ['1–4 partes', /parts\.length >= 1 && parts\.length <= 4/], ['1.ª parte = p', /\+m\[2\] === parts\[0\]\[0\]/], ['páginas perto', /pagesNear\.has\(pg\)/], ['±1 das atuais/anteriores', /\[cur, r\.previous \|\| ''\][^\n]*\[n - 1, n, n \+ 1\]/], ['frações 0–1', /v >= 0 && v <= 1/], ['largura ≥ 0,05', /x1 - x0 >= 0\.05/], ['altura ≥ 0,02', /y1 - y0 >= 0\.02/], ['400 inválido', /return out\(\{ error: 'Recorte inválido\.' \}, 400\)/]])
+      // conteudo v39: a decisão é de quem a marcar primeiro (PATCH condicionado a pendente → 409) e só depois muda o recorte
+      const iClaim = cs.search(/crop_reviews\?id=eq\.\$\{id\}&status=eq\.pendente`, \{ method: 'PATCH'/), iFile = cs.search(/song_files\?id=eq\.[^`]*`, \{ method: 'PATCH'/);
+      if (iClaim < 0) bad.push('cropset marca «feito» sem exigir status pendente (dois Maestros ao mesmo tempo)');
+      else if (iFile >= 0 && iFile < iClaim) bad.push('cropset muda o recorte antes de marcar a decisão');
+      if (!/return out\(\{ error: '[^']*' \}, 409\)/.test(cs)) bad.push('cropset sem 409 quando outra pessoa já decidiu');
+      for (const [k, re] of [['mesmo livro', /m\[1\] !== cur\.split\('#'\)\[0\]/], ['slug da revisão', /m\[4\] !== r\.song_slug/], ['1–4 partes', /parts\.length >= 1 && parts\.length <= 4/], ['1.ª parte = p', /\+m\[2\] === parts\[0\]\[0\]/], ['páginas perto', /pagesNear\.has\(pg\)/], ['±1 das atuais/anteriores/propostas', /\[cur, r\.previous \|\| '', r\.proposed \|\| ''\][^\n]*\[n - 1, n, n \+ 1\]/], ['frações 0–1', /v >= 0 && v <= 1/], ['largura ≥ 0,05', /x1 - x0 >= 0\.05/], ['altura ≥ 0,02', /y1 - y0 >= 0\.02/], ['400 inválido', /return out\(\{ error: 'Recorte inválido\.' \}, 400\)/]])
         if (!re.test(cs)) bad.push('cropset sem verificação: ' + k);
       if (!/\^\(livros\\\/\(\?:songbook\|canti2024\)\\\.pdf\)#p=\(\\d\+\)&c=\(\[0-9\.:,\|\]\+\)&s=\(\[a-z0-9_\]\+\)\$/.test(cs)) bad.push('cropset: formato do caminho diferente do revisto (rever)');
     }

@@ -168,10 +168,16 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (14 nov 2026, v236)
-- App v236; capa do mapa «versão 236 · 14 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
-- Mapa versão 91, sistema de design versão 42 (v231–v236: pesquisa, servidor e janela «Ouvir» — texto ouvido mais cedo,
-  barra até 15 s; sem imagens novas, a janela «Ouvir» a ouvir não é capturada). Sem comentários por responder; main = perfis-tmp.
+## Estado atual (15 nov 2026, v237)
+- App v237; capa do mapa «versão 237 · 15 nov 2026»; `build.mjs --check` com 78 variáveis; tokens do sistema de design = `design/tokens.json`.
+- Mapa versão 92, sistema de design versão 43. v237 (temporário, Maestro/Gestor): caixa `.pend-bar.crop-bar` «Recorte do
+  livro a rever» com «Rever recorte» na página do cântico (ecrã `cantico-acordes`, 921 px; catálogo v099 caixa, v114 texto,
+  v101 botão) e janela `dialog.crop-dlg` (não capturada). O catálogo renumerou a partir de v099 (+1). Sem comentários; main = perfis-tmp.
+- **Por decidir (Tiago, 15 nov):** (1) a frase da caixa sai em maiúsculas por herdar `.pend-bar p:first-child` (feito para
+  rótulos curtos) — proposta: rótulo curto «RECORTE A REVER» + frase em texto normal, ou a frase sem maiúsculas;
+  (2) a janela usa `--app-brand` (verde fixo) no contorno «proposto», fora da regra 13 (app-brand só capa/ícone/theme-color)
+  — aceitar como exceção documentada (ferramenta temporária) ou trocar por outro token. Depois da decisão: especificação à webapp
+  ou exceção no README.
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,
   etiqueta teste 9.5, mark 2px, pdfbar 22). Arrumação de 8 nov (fs-* e `pill` no botão Google) feita na v229.
