@@ -135,7 +135,9 @@ async function songs() {
   const nc = (r.headers.get('content-range') || '').split('/')[1];
   // texto das partituras (song_texts, Action «Texto dos PDF»): quando chega texto novo, o índice é refeito
   const [t] = await rest('song_texts?select=extracted_at&order=extracted_at.desc&limit=1').catch(() => []);
-  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}|${t?.extracted_at}`;
+  // versão do catálogo (sobe com qualquer mudança em songs, mesmo sem updated_at — ex.: letras corrigidas por SQL)
+  const [cv] = await rest('catalog_version?select=v').catch(() => []);
+  const stamp = `${a?.updated_at}|${b?.edited_at}|${c?.number}|${nc}|${t?.extracted_at}|${cv?.v}`;
   checkedAt = Date.now();
   if (cache && stamp === cacheStamp) return cache;
   const list = await all('songs?select=slug,title,author,cancioneiro,approved,added_by,lyrics,lyrics_edit,translation&order=number.asc');

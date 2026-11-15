@@ -314,10 +314,21 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   só pedido (`warmSheet`, op songs). **Regra: nunca atrasar de propósito o que a pessoa vê para poupar o servidor.**
 - v241 (nota da sessão de testes): letras em lote só por `songsBatch` (pré-descarga e folha aberta), que não volta a
   pedir cânticos que já estão a vir noutro lote (`batching`) ou num op song (`pending`).
-- Tudo publicado até à v241 (conteudo versão 40, pdf-texto versão 3); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- Tudo publicado até à v241 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
-- Por rever (Maestros): 37 rascunhos de letra transcritos e 37 «por transcrever» do Coros & Companhia; 7 «por
-  transcrever» do Coro (Drive, 26 out); o texto do «Glória a Deus (Ferreira dos Santos)».
+- Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
+  (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
+  domingo e quinta-feira transcritos inteiros, de segunda e sexta só a 1.ª estrofe (é o que está na gravação); Jesus,
+  meu Rei (gravação + partitura); Eu não vim para ser servido (gravação + partitura, 1 Cor 13, partes incertas);
+  Conta-me outra vez, La fiesta, Os bravos (trechos). Si los hombres fica «por transcrever» com a identificação
+  («Si los hombres han llegado hasta la luna», Gilberto Santa Rosa — canção comercial, não se copiou de sites de
+  letras). Aleluia (Chepponis): sem gravação nem partitura. Transcrições em cc_transcripts (função `cc-transcribe`,
+  agora também com { slug, path } para gravações do bucket; pedido em job_requests 'cc-transcribe').
+  Coros & Companhia: os 37 rascunhos continuam a rever (tirada uma linha «Aplausos»); os 37 «por transcrever» só têm
+  ligações externas (YouTube / Drive deles) — não há nada que se possa transcrever aqui.
+  `conteudo`: a marca do cache das letras inclui catalog_version.v (letras mudadas por SQL sem updated_at ficavam por
+  ver até a função reiniciar).
+- Maestro sem grupos (não vê folhas): Joana Paulo Pardal (perguntado pelo Tiago a 15 nov).
 - À espera do Tiago: nada. Adiado: envio de folhas por email (falta domínio verificado no Resend; ver acima).
 - **Segunda 9 nov, depois do drive-sync (06:15 UTC)**: drive-sync v10 (8 nov) segue atalhos; o atalho «Sicut cervus -
   Palestrina» (missa/) deve vir no email como pasta nova. Ver em drive_files para onde aponta e o que tem, verificar se
