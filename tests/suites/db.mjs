@@ -247,19 +247,20 @@ export default async function (level) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'crítica', where: 'supabase/rascunhos.sql' });
-  await t('INT-27', 'Letras do librone (v249/v250): cânticos com 1.ª linha «(letra do librone dei canti…» são do CANTI 2024 ou do Librone (fonte librone) e não têm acordes ([…]); quantos têm letra e quantos do CANTI continuam só «no livro» (informativo)', async () => {
-    const [r] = await sql(`with c as (select s.slug, coalesce(s.lyrics_edit, s.lyrics) l,
+  await t('INT-27', 'Letras do librone (v249/v250): cânticos com 1.ª linha «(letra do librone dei canti…» são do CANTI 2024 ou do Librone (fonte librone); com acordes ([…], desde v251) → has_chords verdadeiro; quantos têm letra e quantos do CANTI continuam só «no livro» (informativo)', async () => {
+    const [r] = await sql(`with c as (select s.slug, coalesce(s.lyrics_edit, s.lyrics) l, s.has_chords hc,
         exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'canti2024') canti,
         exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'librone') lib from public.songs s)
       select count(*) filter (where canti)::int canti,
         count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%')::int librone,
         count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and not canti and not lib)::int librone_fora,
         count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and l::text ~ '\\[[A-G][^\\]]{0,6}\\]')::int com_acordes,
+        count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and l::text ~ '\\[[A-G][^\\]]{0,6}\\]' and not coalesce(hc, false))::int acordes_sem_flag,
         count(*) filter (where canti and l->0->'lines'->>0 ilike '(letra no livro%')::int so_livro
       from c`);
     const bad = [];
     if (r.librone_fora) bad.push(`${r.librone_fora} cânticos sem fonte CANTI nem librone com letra do librone`);
-    if (r.com_acordes) bad.push(`${r.com_acordes} letras do librone com acordes`);
+    if (r.acordes_sem_flag) bad.push(`${r.acordes_sem_flag} letras do librone com acordes mas has_chords falso (o botão de acordes não aparece)`);
     if (!r.librone) bad.push('nenhum cântico com letra do librone');
     const info = `CANTI ${r.canti}: ${r.librone} com letra do librone, ${r.so_livro} ainda só no livro`;
     return bad.length ? { fail: bad.join('; ') + ' — ' + info } : { pass: info };
