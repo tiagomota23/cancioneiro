@@ -106,7 +106,7 @@
     const i = CATEGORIES.findIndex(c => c.id === 'copyright') + 1; // depois das automáticas (que são do Cancioneiro)
     return [...CATEGORIES.slice(0, i), ...own.map((t, k) => ({ id: 'cat-' + norm(t).replace(/[^a-z0-9]+/g, '-'), head: k === 0 ? 'Outras categorias' : null, tg: ['Categoria', t], label: t, test: s => (s.tags || []).some(x => x.grp === 'Categoria' && x.tag === t) })), ...CATEGORIES.slice(i), ...TEMAS];
   };
-  const APP_VERSION = '2026-11-15 v242';
+  const APP_VERSION = '2026-11-15 v243';
   const CACHE_KEY = 'cancioneiro.songs.v2'; // só a lista (sem letras)
   try { localStorage.removeItem('cancioneiro.songs.v1'); } catch (e) {} // versão antiga guardava todas as letras
   const $ = id => document.getElementById(id);
@@ -969,7 +969,8 @@
     dlg.innerHTML = `<h2 tabindex="-1" autofocus>Rever recorte</h2>
       <p class="small">${esc(rv.note || '')}</p>
       <p class="small crop-legend"><span class="crop-key cur"></span>atual${rv.proposed ? '<span class="crop-key prop"></span>proposto' : ''}${rv.previous ? '<span class="crop-key prev"></span>anterior' : ''}<span class="crop-key draw"></span>desenhado</p>
-      <p class="small">Para desenhar: toque no canto de cima à esquerda e depois no canto de baixo à direita da letra do cântico (com o título). Se continuar noutra coluna ou página, desenhe outra parte (até 4).</p>
+      <p class="small">Para desenhar: toque no canto de cima à esquerda e depois no canto de baixo à direita da letra do cântico (com o título). Se continuar noutra coluna ou página, desenhe outra parte (até 4). Para ampliar: dois dedos, ou − / +.</p>
+      <p class="crop-zoom"><button type="button" data-z="-" aria-label="Reduzir">−</button><span class="crop-zoom-n">100%</span><button type="button" data-z="+" aria-label="Ampliar">+</button></p>
       <div class="crop-pages"><p class="pdf-msg">A abrir as páginas…</p></div>
       <form method="dialog" class="edit-actions crop-actions">
         <button type="button" data-a="keep">Manter o atual</button>
@@ -996,18 +997,49 @@
       dlg.querySelector('[data-a=draw]').disabled = !drawn.length;
       dlg.querySelector('[data-a=clear]').disabled = !drawn.length && !corner;
     };
+    // zoom: dois dedos (ou − / +), de 100% a 400%; a zona das páginas desliza nos dois sentidos e os toques para desenhar
+    // continuam certos (as caixas estão em percentagem da página). Depois de ampliar, as páginas são redesenhadas com
+    // mais resolução. Os dedos a levantar no fim do gesto não contam como canto.
+    const wrap = dlg.querySelector('.crop-pages'), rendered = [];
+    let zoom = 1, pinch = null, pinchEnd = 0, sharpT = null;
+    async function paint(fig, page) {
+      const cv = fig.querySelector('canvas'), v1 = page.getViewport({ scale: 1 });
+      const w = Math.min(2400, Math.max(320, fig.querySelector('.crop-canvas').clientWidth || 600) * (window.devicePixelRatio || 1));
+      if (cv.width && Math.abs(cv.width - w) < 40) return;
+      const vp = page.getViewport({ scale: w / v1.width });
+      const off = document.createElement('canvas'); off.width = vp.width; off.height = vp.height;
+      await page.render({ canvasContext: off.getContext('2d'), viewport: vp }).promise;
+      cv.width = off.width; cv.height = off.height; cv.getContext('2d').drawImage(off, 0, 0);
+    }
+    function applyZoom(z, cx, cy) {
+      z = Math.min(4, Math.max(1, Math.round(z * 100) / 100)); if (z === zoom) return;
+      const r = wrap.getBoundingClientRect(), px = (cx ?? r.left + r.width / 2) - r.left, py = (cy ?? r.top + r.height / 2) - r.top;
+      const fx = (wrap.scrollLeft + px) / zoom, fy = (wrap.scrollTop + py) / zoom;
+      zoom = z;
+      wrap.querySelectorAll('.crop-canvas').forEach(el => { el.style.width = zoom * 100 + '%'; });
+      wrap.scrollLeft = fx * zoom - px; wrap.scrollTop = fy * zoom - py;
+      dlg.querySelector('.crop-zoom-n').textContent = Math.round(zoom * 100) + '%';
+      clearTimeout(sharpT); sharpT = setTimeout(() => rendered.forEach(([fig, page]) => paint(fig, page).catch(() => {})), 300);
+    }
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    wrap.addEventListener('touchstart', e => { if (e.touches.length === 2) pinch = { d: dist(e.touches), z: zoom }; }, { passive: true });
+    wrap.addEventListener('touchmove', e => {
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      applyZoom(pinch.z * dist(e.touches) / pinch.d, (e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2);
+    }, { passive: false });
+    wrap.addEventListener('touchend', e => { if (pinch && e.touches.length < 2) { pinch = null; pinchEnd = Date.now(); } });
+    dlg.querySelector('.crop-zoom').onclick = e => { const b = e.target.closest('button'); if (b) applyZoom(zoom * (b.dataset.z === '+' ? 1.5 : 1 / 1.5)); };
     try {
       const d = await api('croppages', { id: rv.id });
-      const lib = await loadPdfJs(), wrap = dlg.querySelector('.crop-pages');
+      const lib = await loadPdfJs();
       wrap.innerHTML = d.pages.map(p => `<figure class="crop-page" data-n="${p.n}"><figcaption>pág. ${p.n}</figcaption><div class="crop-canvas"><canvas></canvas><div class="crop-ov"></div></div></figure>`).join('');
       for (const p of d.pages) {
         const doc = await lib.getDocument({ url: p.url, isEvalSupported: false }).promise, page = await doc.getPage(1);
-        const fig = wrap.querySelector(`.crop-page[data-n="${p.n}"]`), cv = fig.querySelector('canvas');
-        const v1 = page.getViewport({ scale: 1 }), w = Math.max(320, fig.clientWidth || 600) * (window.devicePixelRatio || 1);
-        const vp = page.getViewport({ scale: w / v1.width });
-        cv.width = vp.width; cv.height = vp.height;
-        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        const fig = wrap.querySelector(`.crop-page[data-n="${p.n}"]`);
+        await paint(fig, page); rendered.push([fig, page]);
         fig.querySelector('.crop-canvas').onclick = e => {
+          if (pinch || Date.now() - pinchEnd < 400) return; // fim de um gesto de zoom, não um toque
           const r = e.currentTarget.getBoundingClientRect(), x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
           if (!corner || corner[0] !== p.n) { if (drawn.length >= 4) return; corner = [p.n, x, y]; }
           else { const [, ax, ay] = corner; corner = null; if (Math.abs(x - ax) >= 0.05 && Math.abs(y - ay) >= 0.02) drawn.push([p.n, Math.min(ax, x), Math.min(ay, y), Math.max(ax, x), Math.max(ay, y)]); }
@@ -1017,7 +1049,8 @@
       redraw();
       // abre na página do recorte atual
       const first = cropParts(rv.current)[0];
-      if (first) wrap.querySelector(`.crop-page[data-n="${first[0]}"]`)?.scrollIntoView({ block: 'start' });
+      const f0 = first && wrap.querySelector(`.crop-page[data-n="${first[0]}"]`);
+      if (f0) wrap.scrollTop = f0.offsetTop - wrap.offsetTop;
     } catch (e) { dlg.querySelector('.crop-pages').innerHTML = `<p class="pdf-msg">Não foi possível abrir as páginas. ${esc(e.message || '')}</p>`; }
     dlg.querySelector('.crop-actions').onclick = async e => {
       const a = e.target.closest('button')?.dataset.a; if (!a) return;

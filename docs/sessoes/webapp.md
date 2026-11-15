@@ -200,7 +200,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v242)
+## Estado e pendentes (15 nov 2026, v243)
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
@@ -317,7 +317,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - v242 (Tiago, 15 nov): nas páginas inteiras de um livro («Ver a página inteira» / «Ver as páginas inteiras»), contorno
   na cor --accent à volta das partes que são a «letra do cântico» (os recortes dessa página; `outlineCrops`); na vista
   de um só livro, botão «Ver só a letra do cântico» para voltar ao recorte.
-- Tudo publicado até à v242 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
+- v243 (Tiago, 15 nov): zoom no diálogo «Rever recorte» — dois dedos ou − / + (100–400%); a zona das páginas
+  (.crop-pages, máx. 58dvh) desliza nos dois sentidos e tem `touch-action: pan-x pan-y` (o zoom é dela, não da página);
+  mantém o ponto entre os dedos; redesenha as páginas com mais resolução 300 ms depois (máx. 2400 px de largura); os
+  dedos a levantar no fim do gesto não contam como canto (400 ms). Testado no ?demo (botões, desenho a 225% com as
+  frações certas, beliscão simulado com TouchEvent).
+- Tudo publicado até à v243 (conteudo versão 41, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
   (1.ª linha diz a origem; «(?)» = palavras incertas): Kyrie e Santo (1) com o texto litúrgico; hinos de Laudes de
