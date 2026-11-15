@@ -339,6 +339,12 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - v247 (Tiago, 15 nov): cântico aberto de uma folha de revisão (`isRevCol`: título «Rever recortes dos livros…», por
   publicar, sem autor) abre logo o diálogo de revisão (uma vez por abertura; `autoRev`, limpo ao voltar a uma lista);
   decidir ou cancelar volta sempre à folha (`backToRevSheet`; se a folha já não existe, a seguinte; sem nenhuma, #/).
+- «Vuestra soy» (Tiago, 15 nov: são dois cânticos — «para Vos nací» e «pues me criasteis»): o CANTI p.35 tem os dois
+  (pues me criasteis em cima, para Vos nací em baixo, coluna da direita). A entrada «Vuestra» (nº 1077, só CANTI, sem
+  letra, língua «it») era o «pues me criasteis» do CANTI: ficheiro, fonte e etiqueta passaram para o nº 449
+  (vuestra_soy_pues_me_criasteis_teresa_avila_rafael_andreo) e o 1077 foi apagado. Revisões pendentes: 449 (proposto
+  p35 col. direita 0,04–0,655) e 450 (o recorte atual 0,66–0,951, confirmar); folha nova por publicar «Rever recortes
+  dos livros (Vuestra soy)». As folhas 1/3 e 3/3 já acabaram (revistas pelo Tiago); fica a 2/3 com 9.
 - Tudo publicado até à v247 (conteudo versão 43, pdf-texto versão 3, cc-transcribe com gravações do bucket); design, testes e cópia avisados. FUN-71 re-testado na v230: ok (4 perfis × 3 tamanhos). Última corrida completa:
   v229 (234 ok, 1 falha corrigida na v230; COM-02 WebKit por correr).
 - Letras (15 nov, Tiago: «faz o que puderes»): os 13 «por transcrever» do Coro — 12 com rascunho em songs.lyrics
