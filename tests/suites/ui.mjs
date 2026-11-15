@@ -314,6 +314,32 @@ async function suites(full) {
     } finally { await fb.close(); }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'média' });
+  await t('FUN-89', 'Librone dei canti (v250, ?demo, fonte librone injetada no amazing_grace e uma ref com aspas no salve_regina): Coro vê «Librone dei canti» na gaveta (com contagem), o chip da fonte e a ligação https://www.libronedeicanti.it/canti/<ref>.html (target=_blank, rel=noopener); a ref com aspas fica codificada no endereço (sem atributos a mais); Cancioneiro sem o livro na gaveta e sem a ligação', async () => {
+    const songs = fixture.map(x => x.slug === 'amazing_grace' ? { ...x, sources: [...(x.sources || []), { source: 'librone', ref: '1234' }] }
+      : x.slug === 'salve_regina' ? { ...x, sources: [...(x.sources || []), { source: 'librone', ref: 'x" onmouseover="alert(1)' }] } : x);
+    const bad = [];
+    const link = page => page.evaluate(() => [...document.querySelectorAll('#song a')].filter(a => /libronedeicanti/.test(a.getAttribute('href') || '')).map(a => ({ href: a.getAttribute('href'), t: a.target, rel: a.rel, attrs: a.getAttributeNames() })));
+    await withApp({ perfil: 'coro', songs, hash: '#/cantico/amazing_grace' }, async ({ page }) => {
+      await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(800);
+      const l = await link(page);
+      if (!l.length) bad.push('Coro: sem ligação para o librone');
+      else { if (l[0].href !== 'https://www.libronedeicanti.it/canti/1234.html') bad.push('endereço ' + l[0].href); if (l[0].t !== '_blank' || !/noopener/.test(l[0].rel)) bad.push('ligação sem target=_blank / rel=noopener'); }
+      if (!/Librone dei canti/.test(await txt(page, '#song .src-chip, #song'))) bad.push('Coro: sem chip da fonte');
+      await page.evaluate(() => { location.hash = '#/cantico/salve_regina'; }); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(800);
+      const q = await link(page);
+      if (q.length && (q[0].attrs.some(a => /^on/i.test(a)) || !/%22/.test(q[0].href))) bad.push('ref com aspas não codificada: ' + JSON.stringify(q[0]));
+      await page.evaluate(() => { location.hash = '#/'; }); await sleep(400); await page.click('#btn-menu'); await sleep(500);
+      const d = await page.evaluate(() => { const a = document.querySelector('a[href="#/lista/livro-librone"]'); return a ? a.textContent.replace(/\s+/g, ' ').trim() : null; });
+      if (!d) bad.push('Coro: sem «Librone dei canti» na gaveta'); else if (!/\d/.test(d)) bad.push('gaveta sem contagem: ' + d);
+    });
+    await withApp({ perfil: 'cancioneiro', songs, hash: '#/cantico/amazing_grace' }, async ({ page }) => {
+      await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(800);
+      if ((await link(page)).length) bad.push('Cancioneiro vê a ligação para o librone');
+      await page.evaluate(() => { location.hash = '#/'; }); await sleep(400); await page.click('#btn-menu'); await sleep(500);
+      if (await count(page, 'a[href="#/lista/livro-librone"]')) bad.push('Cancioneiro vê o livro na gaveta');
+    });
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'média' });
   await t('FUN-88', 'Cache de letras v2 (v249, modo real simulado): a cópia antiga (cancioneiro.letras.<id>) é apagada ao abrir e a letra antiga não aparece; o cântico pede a letra (op song) e fica em cancioneiro.letras.v2.<id>; ao recarregar abre da cópia nova sem novo op song', async () => {
     const uid = '11111111-1111-4111-8111-111111111111', OLD = 'cancioneiro.letras.' + uid, NEW = 'cancioneiro.letras.v2.' + uid;
     const old = [['amazing_grace', { lyrics: [{ type: 'verse', lines: ['TEXTO ANTIGO DA CACHE'] }], translation: null, edited: false, nc: false }]];

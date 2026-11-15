@@ -247,21 +247,44 @@ export default async function (level) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'crítica', where: 'supabase/rascunhos.sql' });
-  await t('INT-27', 'Letras do CANTI (v249, librone dei canti): cânticos com 1.ª linha «(letra do librone dei canti…» são todos do CANTI 2024 e não têm acordes ([…]); quantos têm letra e quantos continuam só «no livro» (informativo)', async () => {
-    const [r] = await sql(`with c as (select s.slug, coalesce(s.lyrics_edit, s.lyrics) l, exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'canti2024') canti from public.songs s)
+  await t('INT-27', 'Letras do librone (v249/v250): cânticos com 1.ª linha «(letra do librone dei canti…» são do CANTI 2024 ou do Librone (fonte librone) e não têm acordes ([…]); quantos têm letra e quantos do CANTI continuam só «no livro» (informativo)', async () => {
+    const [r] = await sql(`with c as (select s.slug, coalesce(s.lyrics_edit, s.lyrics) l,
+        exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'canti2024') canti,
+        exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'librone') lib from public.songs s)
       select count(*) filter (where canti)::int canti,
         count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%')::int librone,
-        count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and not canti)::int librone_fora,
+        count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and not canti and not lib)::int librone_fora,
         count(*) filter (where l->0->'lines'->>0 ilike '(letra do librone dei canti%' and l::text ~ '\\[[A-G][^\\]]{0,6}\\]')::int com_acordes,
         count(*) filter (where canti and l->0->'lines'->>0 ilike '(letra no livro%')::int so_livro
       from c`);
     const bad = [];
-    if (r.librone_fora) bad.push(`${r.librone_fora} cânticos fora do CANTI com letra do librone`);
+    if (r.librone_fora) bad.push(`${r.librone_fora} cânticos sem fonte CANTI nem librone com letra do librone`);
     if (r.com_acordes) bad.push(`${r.com_acordes} letras do librone com acordes`);
     if (!r.librone) bad.push('nenhum cântico com letra do librone');
     const info = `CANTI ${r.canti}: ${r.librone} com letra do librone, ${r.so_livro} ainda só no livro`;
     return bad.length ? { fail: bad.join('; ') + ' — ' + info } : { pass: info };
   }, { sev: 'média', where: 'dados (songs.lyrics do CANTI)' });
+  await t('INT-28', 'Librone dei canti (v250): song_sources librone com ref só [A-Za-z0-9_-] (vai para o endereço do site); cânticos só do librone fora do Cancioneiro e aprovados; librone_sync_log com RLS e sem privilégios para anon/authenticated; última atualização semanal ≤ 8 dias (aviso se ainda não correu)', async () => {
+    const [r] = await sql(`begin; select (select count(*) from public.song_sources where source = 'librone')::int n,
+      (select count(*) from public.song_sources where source = 'librone' and coalesce(ref, '') !~ '^[A-Za-z0-9_-]+$')::int ref_mau,
+      (select count(*) from public.songs s where exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'librone')
+         and not exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source <> 'librone'))::int so_librone,
+      (select count(*) from public.songs s where exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source = 'librone')
+         and not exists (select 1 from public.song_sources x where x.song_slug = s.slug and x.source <> 'librone') and (s.cancioneiro or s.approved is false))::int so_librone_mau,
+      (select relrowsecurity from pg_class where oid = 'public.librone_sync_log'::regclass) rls,
+      has_table_privilege('anon', 'public.librone_sync_log', 'select,insert,update,delete') anon_priv,
+      has_table_privilege('authenticated', 'public.librone_sync_log', 'select,insert,update,delete') auth_priv,
+      (select max(run_at)::text from public.librone_sync_log) ultima,
+      (select max(run_at) > now() - interval '8 days' from public.librone_sync_log) recente; rollback;`);
+    const bad = [];
+    if (!r.n) bad.push('nenhuma fonte librone');
+    if (r.ref_mau) bad.push(`${r.ref_mau} refs com caracteres fora de [A-Za-z0-9_-]`);
+    if (r.so_librone_mau) bad.push(`${r.so_librone_mau} cânticos só do librone no Cancioneiro ou por aprovar`);
+    if (!r.rls) bad.push('librone_sync_log sem RLS'); if (r.anon_priv || r.auth_priv) bad.push('librone_sync_log com privilégios para anon/authenticated');
+    const info = `${r.n} ligados ao librone, ${r.so_librone} só do librone; última atualização ${r.ultima || '—'}`;
+    if (bad.length) return { fail: bad.join('; ') + ' — ' + info };
+    return r.recente ? { pass: info } : { warn: 'a atualização semanal ainda não correu (ou há mais de 8 dias) — ' + info };
+  }, { sev: 'média', where: 'supabase/librone.sql, dados' });
   await t('INT-26', 'Rascunhos de letra (v248): nenhuma letra pública ainda com «(rascunho…» ou «(texto litúrgico…» na 1.ª linha (migração feita); quem tem rascunho tem draft_at; rascunhos por rever (informativo)', async () => {
     const [r] = await sql(`select count(*) filter (where lyrics_draft is not null)::int rascunhos,
       count(*) filter (where lyrics_draft is not null and draft_at is null)::int sem_data,
@@ -644,8 +667,8 @@ export default async function (level) {
     const bad = Object.entries(r).filter(([, v]) => v);
     return bad.length ? 'por limpar: ' + bad.map(([k, v]) => `${k} ${v}`).join(', ') : true;
   });
-  await t('INT-08', 'Agendamentos pg_cron presentes e ativos (8 tarefas, com cancioneiro-coros-companhia-semanal desde v226) e sem falhas recentes', async () => {
-    const want = ['cancioneiro-colecoes-limpeza', 'cancioneiro-convites-limpeza', 'cancioneiro-drive-semanal', 'cancioneiro-partilhas-limpeza', 'cancioneiro-pedidos-limpeza', 'cancioneiro-saude-semanal', 'cancioneiro-verificacao-semanal', 'cancioneiro-coros-companhia-semanal'];
+  await t('INT-08', 'Agendamentos pg_cron presentes e ativos (9 tarefas, com cancioneiro-coros-companhia-semanal desde v226 e cancioneiro-librone-semanal desde v250) e sem falhas recentes', async () => {
+    const want = ['cancioneiro-colecoes-limpeza', 'cancioneiro-convites-limpeza', 'cancioneiro-drive-semanal', 'cancioneiro-partilhas-limpeza', 'cancioneiro-pedidos-limpeza', 'cancioneiro-saude-semanal', 'cancioneiro-verificacao-semanal', 'cancioneiro-coros-companhia-semanal', 'cancioneiro-librone-semanal'];
     const r = await sql(`select jobname, active from cron.job`);
     const miss = want.filter(w => !r.some(x => x.jobname === w && x.active));
     let fails = [];

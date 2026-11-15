@@ -259,6 +259,20 @@ export default async function (level) {
     if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
+  await t('SEG-54', 'sync-librone (v250, código): a 1.ª coisa é claimJob (pedido do agendamento, últimos 10 min) → 403 sem ele; os ficheiros do site lidos com JSON.parse (nunca eval / new Function / import remoto); ao site só GET; nada se apaga em songs/song_sources/song_tags; a letra só muda onde lyrics_edit é nulo e a 1.ª linha é a marca do librone; librone_sync_log com RLS e revoke', () => {
+    const c = read('supabase/functions/sync-librone/index.ts'), sq = read('supabase/librone.sql'), bad = [];
+    if (!/Deno\.serve\(async \(\) => \{\s*if \(!\(await claimJob\('sync-librone'\)\.catch\(\(\) => false\)\)\) return json\(\{[^}]*\}, 403\);/.test(c)) bad.push('Deno.serve não começa por claimJob → 403');
+    if (!/Date\.now\(\) - 10 \* 60e3/.test(c)) bad.push('janela do pedido diferente de 10 min');
+    if (/\beval\s*\(|new Function|import\(\s*SITE|import\(\s*['"`]https?:/.test(c)) bad.push('código remoto executado (eval / Function / import)');
+    if (!/JSON\.parse\(s\.slice/.test(c)) bad.push('os ficheiros do site não são lidos com JSON.parse');
+    const site = [...c.matchAll(/fetch\(([^)]*SITE[^)]*)\)/g)].map(m => m[1]);
+    if (!site.length) bad.push('sem pedidos ao site'); else if (site.some(a => /method/.test(a))) bad.push('pedido ao site que não é GET');
+    if (/(songs|song_sources|song_tags)\?[^`]*`, \{ method: 'DELETE'/.test(c)) bad.push('apaga cânticos, fontes ou etiquetas');
+    if (!/songs\?slug=eq\.[^`]*&lyrics_edit=is\.null`, \{ method: 'PATCH'/.test(c)) bad.push('PATCH da letra sem lyrics_edit=is.null');
+    if (!/ly\[0\]\?\.lines\?\.\[0\] !== MARK/.test(c)) bad.push('muda letras sem confirmar a marca do librone');
+    if (!/alter table public\.librone_sync_log enable row level security/.test(sq) || !/revoke all on public\.librone_sync_log from public, anon, authenticated/.test(sq)) bad.push('librone_sync_log sem RLS/revoke');
+    return bad.length ? bad.join('; ') : true;
+  }, { sev: 'alta', where: 'supabase/functions/sync-librone/index.ts, supabase/librone.sql' });
   await t('SEG-53', 'Rascunhos de letra (v248, conteudo v45, código): song e songs só devolvem draft com lvl ≥ 3; drafts e draft começam por lvl < 3 → 403; draft: ação publish/discard (400), publish exige letra válida e não vazia, limite save antes de escrever, PATCH condicionado a lyrics_draft não nulo (409 se já não existe); o rascunho não entra no índice de pesquisa (s.lines/pdf) nem em lset', () => {
     const c = read('supabase/functions/conteudo/index.ts'), bad = [];
     const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
