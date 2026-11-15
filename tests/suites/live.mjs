@@ -183,7 +183,7 @@ export default async function (level) {
     }
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'crítica' });
-  await t('SEG-41', 'pdf-texto (v233; locate desde v237): sem token OIDC, com token forjado (alg none) ou com a chave anon → 401, em op=list, op=save e op=locate (nada é lido nem gravado)', async () => {
+  await t('SEG-47', 'pdf-texto (v233; locate desde v237): sem token OIDC, com token forjado (alg none) ou com a chave anon → 401, em op=list, op=save e op=locate (nada é lido nem gravado)', async () => {
     const forged = ['eyJhbGciOiJub25lIn0', Buffer.from(JSON.stringify({ iss: 'https://token.actions.githubusercontent.com', aud: 'cancioneiro-pdf', repository: 'tiagomota23/cancioneiro', ref: 'refs/heads/main', workflow_ref: 'tiagomota23/cancioneiro/.github/workflows/texto-pdf.yml@refs/heads/main', exp: 9e9, nbf: 0 })).toString('base64url'), 'x'].join('.');
     const bad = [];
     for (const [q, method] of [['op=list&n=1', 'GET'], ['op=save', 'POST'], ['op=locate', 'POST']]) {

@@ -185,7 +185,8 @@ async function suites(full) {
   await t('FUN-73', 'Pesquisa por número com páginas vizinhas (v231): «12» → primeiro os da pág. 12 e o nº 12, depois pág. 11, depois pág. 13; pág. 10 e 14 fora; «99» sem nenhum destes', async () => {
     // songs.json do fixture com book_page 10–14 em 5 cânticos (números altos, títulos sem algarismos) e um nº 12 sem página
     const songs = fixture.map(x => ({ ...x, number: x.number === 12 ? 912 : x.number }));
-    const pg = songs.slice(-5), L = ['a', 'b', 'c', 'd', 'e'];
+    // cânticos que aparecem nas listas do Coro: sem versões (version_of fica fora das listas) e aprovados
+    const pg = songs.filter(x => !x.version_of && x.approved !== false && !songs.some(y => y.version_of === x.slug)).slice(-5), L = ['a', 'b', 'c', 'd', 'e'];
     pg.forEach((x, k) => Object.assign(x, { book_page: 10 + k, number: 2000 + k, title: 'Teste página ' + L[k] }));
     const n12 = songs.find(x => !pg.includes(x)); n12.number = 12; n12.book_page = null;
     const P = Object.fromEntries(pg.map(x => [x.book_page, x.slug]));
@@ -334,11 +335,12 @@ async function suites(full) {
       return bad.length ? bad.join('; ') : true;
     });
   }, { sev: 'média' });
-  await t('FUN-82', 'Sem lotes repetidos (v241, modo real simulado, Coro, folha ativa, op songs com 3 s): abrir a folha enquanto a pré-descarga pede as letras → nenhum cântico pedido em dois op songs; no fim todos têm letra (o cântico abre sem op song)', async () => {
+  await t('FUN-82', 'Sem lotes repetidos (v241, modo real simulado, Gestor, folha ativa, op songs com 3 s): abrir a folha enquanto a pré-descarga pede as letras → nenhum cântico pedido em dois op songs; no fim todos têm letra (o cântico abre sem op song)', async () => {
     const id = '00000000-0000-4000-8000-0000000000f2', slugs = ['salve_regina', 'amazing_grace', 'santa_lucia', 'adoro_te_devote'];
     const col = { id, title: 'Folha de teste ativa', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: null, published: true,
       songs: slugs.map((s, i) => ({ song_slug: s, position: i, no_chords: false, no_scores: false, edit: [] })), sections: [], groups: [] };
-    return withApp({ real: { role: 'coro', songsDelay: 3000, rest: tb => tb === 'collections' ? { body: [col] } : null }, wait: '#rows li a', timeout: 20000, settle: 300 }, async ({ page, calls }) => {
+    // Gestor: vê todas as folhas (sem grupo próprio, Coro e Maestro não veem folhas — colGroupOk)
+    return withApp({ real: { role: 'gestor', songsDelay: 3000, rest: tb => tb === 'collections' ? { body: [col] } : null }, wait: '#rows li a', timeout: 20000, settle: 300 }, async ({ page, calls }) => {
       const bad = [], sc = () => calls.filter(c => c.startsWith('songs:'));
       for (let i = 0; i < 60 && !sc().length; i++) await sleep(100); // a pré-descarga começou (1 s depois das folhas)
       if (!sc().length) { bad.push('a pré-descarga não pediu as letras da folha ativa'); }
@@ -389,7 +391,7 @@ async function suites(full) {
       if (!st) { bad.push('o diálogo não abriu'); return; }
       if (st.pages.length < 3 || !st.pages.includes(12)) bad.push('páginas ' + JSON.stringify(st.pages) + ' (esperado 11–13)');
       if (st.drawn < st.pages.length) bad.push(`${st.pages.length - st.drawn} páginas sem desenho`);
-      if (!st.cur) bad.push('sem caixa do recorte atual'); if (!st.prop) bad.push('sem caixa do proposto');
+      if (!st.prop) bad.push('sem caixa do proposto'); // o recorte atual da demo é a página inteira (sem &c=): sem caixa .cur
       if (st.drawDis !== true) bad.push('«Usar o desenhado» ativo sem desenho');
       const cv = page.locator('dialog.crop-dlg .crop-page[data-n="12"] .crop-canvas');
       await cv.scrollIntoViewIfNeeded(); const bb = await cv.boundingBox();

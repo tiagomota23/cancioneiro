@@ -1,0 +1,248 @@
+{
+ "version": "241",
+ "level": "quick",
+ "date": "2026-11-15",
+ "secs": 174,
+ "results": [
+  {
+   "id": "SEG-38",
+   "title": "conteudo «search» (v232, versão 33): números e pesquisas < 3 letras → hits [] antes do limite e do índice; limite search 200/h e 1000/dia; resultados partilhados em cache sem perfil e o filtro visible() aplicado depois a cada pessoa (também em match); no máximo 40 (MAX_HITS); cache 60 s; busca.js importado ao lado",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts",
+   "ms": 0
+  },
+  {
+   "id": "SEG-39",
+   "title": "Texto dos PDF (v233): song_texts com RLS e sem políticas, revoke a anon/authenticated (texto-pdf.sql); pdf-texto verifica o OIDC (RS256, aud cancioneiro-pdf, repositório, main, workflow texto-pdf.yml) antes de tudo e responde 401; save só para song_files kind score e texto ≤ 30000; conteudo: search sem hits «pdf» para o perfil Cancioneiro (lvl < 2) e match sem trechos do PDF para lvl < 2",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts",
+   "ms": 1
+  },
+  {
+   "id": "SEG-51",
+   "title": "conteudo «songs» e «files» (v238, versão 40): no máximo 60, sem repetidos; songs só cânticos visible() e sem acordes no perfil Cancioneiro; files só lvl ≥ 2 (403) e só caminhos de song_files; limites por limitMany (song / file) exceto cânticos de folhas ativas (free, só lvl < 3); recusados em refused",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/functions/conteudo/index.ts",
+   "ms": 0
+  },
+  {
+   "id": "EST-06",
+   "title": "Versão do catálogo (v238): a lista guardada só se reaproveita se nada de que ela depende mudou — cânticos/fontes/etiquetas/ficheiros (gatilhos), mas também o perfil da pessoa (allowed_emails.role) e, no perfil Cancioneiro, as folhas ativas para o Cancioneiro (collections / collection_songs, e a expiração, que não escreve nada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/catalogo-versao.sql, app.js (load, VER_KEY)",
+   "ms": 2
+  },
+  {
+   "id": "SEG-48",
+   "title": "Revisão de recortes (v237, código): crop_reviews com RLS, sem políticas, revoke anon/authenticated; conteudo crops/croppages/cropset começam por lvl < 3 → 403; croppages conta cada página no limite file; cropset: só pendente (404), limite save antes de escrever, caminho do mesmo livro com &s= do cântico da revisão, 1–4 partes, 1.ª parte = p, páginas a ±1 das atuais/anteriores, frações 0–1, largura ≥ 0,05 e altura ≥ 0,02; pdf-texto locate depois do OIDC",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "supabase/recortes.sql, supabase/functions/conteudo/index.ts, supabase/functions/pdf-texto/index.ts",
+   "ms": 1
+  },
+  {
+   "id": "EST-05",
+   "title": "busca.js (v232): carregado no index.html com ?v= da versão, antes do app.js; no SHELL do sw.js; publicação da conteudo com busca.js ao lado documentada",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — repositório",
+   "sev": "alta",
+   "where": "index.html, sw.js",
+   "ms": 1
+  },
+  {
+   "id": "BUS-01",
+   "title": "busca.js (v232) com o fixture: erro de letras no título («amazng»), variante ortográfica («pange lyngua»), início de palavra («misericord»), letra com erros («swet sound», marks), nada para lixo; trechos ≤ 7 palavras; hits só com slug/score/field/snip/marks; max respeitado; match corrige palavras mal ouvidas",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — motor de pesquisa (busca.js)",
+   "sev": "alta",
+   "where": "busca.js",
+   "ms": 17
+  },
+  {
+   "id": "BUS-02",
+   "title": "busca.js com texto dos PDF (v233): palavras que só existem no texto da partitura → hit field «pdf» com trecho ≤ 7 palavras; a letra ganha à partitura quando a palavra está nas duas; match também encontra pelo texto da partitura",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — motor de pesquisa (busca.js)",
+   "sev": "média",
+   "where": "busca.js",
+   "ms": 1
+  },
+  {
+   "id": "SEG-47",
+   "title": "pdf-texto (v233; locate desde v237): sem token OIDC, com token forjado (alg none) ou com a chave anon → 401, em op=list, op=save e op=locate (nada é lido nem gravado)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — produção",
+   "sev": "crítica",
+   "where": "supabase/functions/pdf-texto/index.ts",
+   "ms": 993
+  },
+  {
+   "id": "SEG-50",
+   "title": "catalog_version (v238): RLS ligada; anon sem privilégios; authenticated só SELECT (sem escrita); quem não tem acesso não lê a versão; os 4 perfis leem 1 linha e não a mudam; catalog_bump() não executável por anon/authenticated; gatilhos por instrução em songs, song_sources, song_tags, song_files (em rollback)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "alta",
+   "where": "supabase/catalogo-versao.sql",
+   "ms": 8504
+  },
+  {
+   "id": "INT-25",
+   "title": "catalog_version sobe (v238, em rollback): uma instrução que muda 2 cânticos sobe 1 vez; mudar song_tags/song_files também sobe; mudar só collections não sobe (informativo, ver EST-06)",
+   "status": "pass",
+   "detail": "songs +1, song_files +1, collections +0",
+   "dim": "Segurança — base de dados",
+   "sev": "média",
+   "where": "supabase/catalogo-versao.sql",
+   "ms": 763
+  },
+  {
+   "id": "SEG-49",
+   "title": "crop_reviews (v237): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; leitura e escrita recusadas a anon e aos 4 perfis (em rollback)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "where": "supabase/recortes.sql",
+   "ms": 7463
+  },
+  {
+   "id": "SEG-46",
+   "title": "song_texts (v233): RLS ligada e sem políticas; anon e authenticated sem nenhum privilégio; como anon, Cancioneiro, Coro, Maestro e Gestor a leitura é recusada (em rollback)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Segurança — base de dados",
+   "sev": "crítica",
+   "where": "supabase/texto-pdf.sql",
+   "ms": 5263
+  },
+  {
+   "id": "INT-23",
+   "title": "Texto dos PDF (v233): song_texts só com file_key de song_files kind score e song_slug igual; method em text/ocr/none; chars = length(text); progresso da extração (informativo)",
+   "status": "pass",
+   "detail": "1882/1882 partituras com texto extraído (10 sem texto legível); última 2026-11-15 07:46:06.519+00",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "where": "supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts",
+   "ms": 698
+  },
+  {
+   "id": "INT-24",
+   "title": "Revisão de recortes (v237): cada crop_review aponta para um song_files de livro (livros/songbook.pdf ou canti2024.pdf) do mesmo cântico; proposed/previous do mesmo livro e com &s= do cântico; feitas com decided_by e decided_at; pendentes (informativo)",
+   "status": "pass",
+   "detail": "27 revisões, 27 pendentes",
+   "dim": "Integridade dos dados",
+   "sev": "baixa",
+   "where": "supabase/recortes.sql, conteudo op cropset",
+   "ms": 657
+  },
+  {
+   "id": "FUN-73",
+   "title": "Pesquisa por número com páginas vizinhas (v231): «12» → primeiro os da pág. 12 e o nº 12, depois pág. 11, depois pág. 13; pág. 10 e 14 fora; «99» sem nenhum destes",
+   "status": "pass",
+   "detail": "«12»: 4 primeiros na ordem; «99»: 0 resultados",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 5632
+  },
+  {
+   "id": "FUN-74",
+   "title": "Pesquisa com erros (v232, ?demo): «amazng» → Amazing Grace em 1.º; «swet sound» → Amazing Grace com trecho e <mark> em sweet/sound; perfil Cancioneiro não vê Pange lingua (fora do Cancioneiro) por título com erro nem pela letra, mas encontra Amazing Grace",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "alta",
+   "ms": 18600
+  },
+  {
+   "id": "FUN-75",
+   "title": "Pesquisa e servidor (v232, modo real simulado): números («12») e < 3 letras («ab») nunca chamam op search; «grace» chama uma vez e repetir a mesma pesquisa usa a cache; sem rede, #status «Sem ligação: a pesquisa só procura nos títulos, autores, números e páginas.»",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 12526
+  },
+  {
+   "id": "FUN-76",
+   "title": "Hit da partitura (v233, modo real simulado): o servidor devolve field «pdf» → a linha do cântico mostra «Na partitura: …» com a palavra marcada; um hit da letra não leva o prefixo",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 6018
+  },
+  {
+   "id": "FUN-77",
+   "title": "«A procurar…» (v235, modo real simulado, servidor da pesquisa com 2 s de atraso): «grace» → #list-title «A procurar…» com as linhas do telemóvel já na lista, depois «N resultados»; número logo para «12», «sw», «grace» repetido (cache) e depois de um erro do servidor na mesma pesquisa (sem nova chamada)",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 11568
+  },
+  {
+   "id": "FUN-78",
+   "title": "Som com texto ao vivo (v236, modo real simulado, microfone falso do Chromium, transcribe e match simulados): 1.º pedido ao transcribe aos ~2 s, um de cada vez; #listen-text mostra logo o texto; «A ouvir… parece «Amazing Grace»» com score ≥ 0,2; texto igual → sem novo match; texto claro com ≥ 6 palavras termina em #/ouvir com Amazing Grace; sem correspondência pára aos 15 s",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 30790
+  },
+  {
+   "id": "FUN-81",
+   "title": "Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada — fora da pré-descarga): abrir a folha → um só op songs com os cânticos sem letra; abrir depois um deles → sem op song; abrir a folha outra vez → sem novo op songs",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 10197
+  },
+  {
+   "id": "FUN-82",
+   "title": "Sem lotes repetidos (v241, modo real simulado, Gestor, folha ativa, op songs com 3 s): abrir a folha enquanto a pré-descarga pede as letras → nenhum cântico pedido em dois op songs; no fim todos têm letra (o cântico abre sem op song)",
+   "status": "pass",
+   "detail": "1 op songs, 4 cânticos, sem repetidos",
+   "dim": "Funcionalidade — interface",
+   "sev": "baixa",
+   "ms": 8695
+  },
+  {
+   "id": "FUN-80",
+   "title": "Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega a lista e guarda a versão; ao recarregar com a mesma versão não pede /rest/v1/songs; com versão nova descarrega de novo e guarda-a; sem versão (erro) descarrega como antes",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 17632
+  },
+  {
+   "id": "FUN-79",
+   "title": "Revisão de recortes (v237, ?demo): Coro e Cancioneiro sem .crop-bar no amazing_grace; Maestro com .crop-bar → dialog.crop-dlg com páginas (.crop-page, canvas desenhado) e as caixas atual e proposta; dois toques numa página desenham .crop-box.draw e ativam «Usar o desenhado»; «Usar o desenhado» fecha, tira a caixa e não volta depois de recarregar; «Cancelar» não decide",
+   "status": "pass",
+   "detail": "",
+   "dim": "Funcionalidade — interface",
+   "sev": "média",
+   "ms": 26261
+  }
+ ]
+}

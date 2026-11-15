@@ -238,7 +238,7 @@ export default async function (level) {
     if (!/const MAX_HITS = 40\b/.test(c)) bad.push('MAX_HITS ≠ 40');
     if (!/cached\(c, 's:' \+ nq, \(\) => Busca\.search\(index\(c\), q, null, \d+\)\)/.test(op)) bad.push('pesquisa sem cache partilhada por nq (ou com o perfil dentro da cache)');
     if (!/all\.filter\(h => visible\(c\.bySlug\.get\(h\.slug\)\)[^\n]*\)\.slice\(0, MAX_HITS\)/.test(op)) bad.push('hits sem filtro visible() por pessoa'); // v233: + (lvl >= 2 || h.field !== 'pdf')
-    if (!c.includes('Busca.pick(all.filter(h => visible(c.bySlug.get(h.slug))))')) bad.push('match sem filtro visible()');
+    if (!/Busca\.pick\(all\.filter\(h => visible\(c\.bySlug\.get\(h\.slug\)\)[^\n]*\)\)/.test(c)) bad.push('match sem filtro visible()'); // v234: + (lvl >= 2 || h.field !== 'pdf')
     if (!/Date\.now\(\) - r\.at < 60e3/.test(c)) bad.push('cache de resultados ≠ 60 s');
     if (!/^import '\.\/busca\.js';/m.test(c)) bad.push("sem import './busca.js'");
     return bad.length ? bad.join('; ') : true;
@@ -259,7 +259,7 @@ export default async function (level) {
     if (!mt.includes("(lvl >= 2 || h.field !== 'pdf')")) bad.push('match: o perfil Cancioneiro pode receber trechos do texto das partituras (match não distingue lvl; busca.match usa também as linhas do PDF)');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/texto-pdf.sql, supabase/functions/pdf-texto/index.ts, supabase/functions/conteudo/index.ts' });
-  await t('SEG-45', 'conteudo «songs» e «files» (v238, versão 40): no máximo 60, sem repetidos; songs só cânticos visible() e sem acordes no perfil Cancioneiro; files só lvl ≥ 2 (403) e só caminhos de song_files; limites por limitMany (song / file) exceto cânticos de folhas ativas (free, só lvl < 3); recusados em refused', () => {
+  await t('SEG-51', 'conteudo «songs» e «files» (v238, versão 40): no máximo 60, sem repetidos; songs só cânticos visible() e sem acordes no perfil Cancioneiro; files só lvl ≥ 2 (403) e só caminhos de song_files; limites por limitMany (song / file) exceto cânticos de folhas ativas (free, só lvl < 3); recusados em refused', () => {
     const c = read('supabase/functions/conteudo/index.ts'), bad = [];
     const blk = op => (c.match(new RegExp(`if \\(op === '${op}'\\) \\{([\\s\\S]*?)\\n    \\}`)) || [])[1] || '';
     const so = blk('songs'), fi = blk('files');
@@ -298,7 +298,7 @@ export default async function (level) {
     if (!coversSheets) bad.push('perfil Cancioneiro: uma folha nova (ou que expira) para o Cancioneiro muda os cânticos que a pessoa vê (in_cancioneiro_collection na política «leitura familia»), mas não sobe a versão: a lista guardada não tem os cânticos da folha');
     return bad.length ? bad.join('; ') : true;
   }, { sev: 'alta', where: 'supabase/catalogo-versao.sql, app.js (load, VER_KEY)' });
-  await t('SEG-42', 'Revisão de recortes (v237, código): crop_reviews com RLS, sem políticas, revoke anon/authenticated; conteudo crops/croppages/cropset começam por lvl < 3 → 403; croppages conta cada página no limite file; cropset: só pendente (404), limite save antes de escrever, caminho do mesmo livro com &s= do cântico da revisão, 1–4 partes, 1.ª parte = p, páginas a ±1 das atuais/anteriores, frações 0–1, largura ≥ 0,05 e altura ≥ 0,02; pdf-texto locate depois do OIDC', () => {
+  await t('SEG-48', 'Revisão de recortes (v237, código): crop_reviews com RLS, sem políticas, revoke anon/authenticated; conteudo crops/croppages/cropset começam por lvl < 3 → 403; croppages conta cada página no limite file; cropset: só pendente (404), limite save antes de escrever, caminho do mesmo livro com &s= do cântico da revisão, 1–4 partes, 1.ª parte = p, páginas a ±1 das atuais/anteriores, frações 0–1, largura ≥ 0,05 e altura ≥ 0,02; pdf-texto locate depois do OIDC', () => {
     const c = read('supabase/functions/conteudo/index.ts'), sq = read('supabase/recortes.sql'), pf = read('supabase/functions/pdf-texto/index.ts'), bad = [];
     if (!/alter table public\.crop_reviews enable row level security/.test(sq)) bad.push('crop_reviews sem RLS');
     if (/create policy[^;]*crop_reviews/i.test(sq)) bad.push('crop_reviews com políticas');
