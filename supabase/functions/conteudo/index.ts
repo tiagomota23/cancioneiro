@@ -435,7 +435,7 @@ Deno.serve(async (req) => {
     if (op === 'cropset') {
       if (lvl < 3) return denied();
       const id = +b.id || 0;
-      const [r] = await rest(`crop_reviews?select=id,song_slug,song_file_id,status,previous,f:song_files(path)&id=eq.${id}`);
+      const [r] = await rest(`crop_reviews?select=id,song_slug,song_file_id,status,previous,proposed,f:song_files(path)&id=eq.${id}`);
       if (!r || r.status !== 'pendente' || !r.f) return out({ error: 'Esta revisão já não está pendente.' }, 404);
       if (!(await limit(user, 'save', 'crop:' + id))) return tooMany();
       if (b.path) {
@@ -444,13 +444,15 @@ Deno.serve(async (req) => {
         const m = path.match(/^(livros\/(?:songbook|canti2024)\.pdf)#p=(\d+)&c=([0-9.:,|]+)&s=([a-z0-9_]+)$/);
         if (!m || m[1] !== cur.split('#')[0] || m[4] !== r.song_slug) return out({ error: 'Recorte inválido.' }, 400);
         const parts = m[3].split('|').map(x => { const [pg, bx] = x.split(':'); return [+pg, ...String(bx).split(',').map(Number)]; });
-        const pagesNear = new Set([cur, r.previous || ''].flatMap(x => [...x.matchAll(/(\d+):/g)].map(y => +y[1])).flatMap(n => [n - 1, n, n + 1]));
+        const pagesNear = new Set([cur, r.previous || '', r.proposed || ''].flatMap(x => [...x.matchAll(/(\d+):/g)].map(y => +y[1])).flatMap(n => [n - 1, n, n + 1]));
         const ok = parts.length >= 1 && parts.length <= 4 && +m[2] === parts[0][0] && parts.every(([pg, x0, y0, x1, y1]) =>
           pagesNear.has(pg) && [x0, y0, x1, y1].every(v => v >= 0 && v <= 1) && x1 - x0 >= 0.05 && y1 - y0 >= 0.02);
         if (!ok) return out({ error: 'Recorte inválido.' }, 400);
-        if (path !== cur) await rest(`song_files?id=eq.${r.song_file_id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ path }) });
       }
-      await rest(`crop_reviews?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'feito', decided_by: user.email, decided_at: new Date().toISOString() }) });
+      // a decisão fica de quem a marcar primeiro (só se ainda estiver pendente); só depois muda o recorte
+      const claimed = await rest(`crop_reviews?id=eq.${id}&status=eq.pendente`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ status: 'feito', decided_by: user.email, decided_at: new Date().toISOString() }) });
+      if (!claimed.length) return out({ error: 'Esta revisão já foi decidida por outra pessoa.' }, 409);
+      if (b.path && b.path !== r.f.path) await rest(`song_files?id=eq.${r.song_file_id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ path: String(b.path) }) });
       return out({ ok: true, path: b.path || r.f.path });
     }
     if (op === 'invite') { // "Partilhar a app": convite para um perfil até ao de quem convida (o acesso continua a precisar de aprovação)
