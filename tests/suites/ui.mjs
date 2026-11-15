@@ -65,6 +65,7 @@ function mockSupabase(mode, songs, calls) {
     if (p === '/functions/v1/conteudo') {
       const b = JSON.parse(req.postData() || '{}');
       calls.push(`${b.op}:${b.slug || (Array.isArray(b.slugs) ? b.slugs.join(',') : '')}`); // op songs (v238): os slugs pedidos
+      if (b.op === 'songs' && mode.songsDelay) await sleep(mode.songsDelay); // lote lento (v241: outro lote em curso)
       if (b.op === 'songs' && !mode.conteudo?.('songs', b)) { const res = {}; for (const sl of b.slugs || []) { const s = songs.find(x => x.slug === sl); if (s) res[sl] = { lyrics: s.lyrics, translation: s.translation || null, edited: false }; } return json({ songs: res, refused: [] }); }
       if (b.op === 'search' && mode.searchDelay) await sleep(mode.searchDelay); // servidor lento só na pesquisa (v235)
       const custom = mode.conteudo && mode.conteudo(b.op, b);
@@ -333,6 +334,25 @@ async function suites(full) {
       return bad.length ? bad.join('; ') : true;
     });
   }, { sev: 'média' });
+  await t('FUN-82', 'Sem lotes repetidos (v241, modo real simulado, Coro, folha ativa, op songs com 3 s): abrir a folha enquanto a pré-descarga pede as letras → nenhum cântico pedido em dois op songs; no fim todos têm letra (o cântico abre sem op song)', async () => {
+    const id = '00000000-0000-4000-8000-0000000000f2', slugs = ['salve_regina', 'amazing_grace', 'santa_lucia', 'adoro_te_devote'];
+    const col = { id, title: 'Folha de teste ativa', audience: 'coro', duration: '1w', expires_at: new Date(Date.now() + 7 * 864e5).toISOString(), created_by: null, published: true,
+      songs: slugs.map((s, i) => ({ song_slug: s, position: i, no_chords: false, no_scores: false, edit: [] })), sections: [], groups: [] };
+    return withApp({ real: { role: 'coro', songsDelay: 3000, rest: tb => tb === 'collections' ? { body: [col] } : null }, wait: '#rows li a', timeout: 20000, settle: 300 }, async ({ page, calls }) => {
+      const bad = [], sc = () => calls.filter(c => c.startsWith('songs:'));
+      for (let i = 0; i < 60 && !sc().length; i++) await sleep(100); // a pré-descarga começou (1 s depois das folhas)
+      if (!sc().length) { bad.push('a pré-descarga não pediu as letras da folha ativa'); }
+      await page.evaluate(h => { location.hash = h; }, '#/lista/colecao-' + id); await sleep(4500);
+      const seen = new Map();
+      for (const c of sc()) for (const sl of c.slice(6).split(',').filter(Boolean)) seen.set(sl, (seen.get(sl) || 0) + 1);
+      const dup = [...seen].filter(([, n]) => n > 1).map(([s, n]) => `${s}×${n}`);
+      if (dup.length) bad.push('pedidos em dois lotes: ' + dup.join(', '));
+      const miss = slugs.filter(s => !seen.has(s)); if (miss.length) bad.push('nunca pedidos: ' + miss.join(', '));
+      await page.evaluate(() => { location.hash = '#/cantico/santa_lucia'; }); await page.waitForSelector('#song h1', { timeout: 8000 }).catch(() => {}); await sleep(1000);
+      if (calls.includes('song:santa_lucia')) bad.push('o cântico da folha voltou a pedir a letra (op song)');
+      return bad.length ? bad.join('; ') : { pass: `${sc().length} op songs, ${seen.size} cânticos, sem repetidos` };
+    });
+  }, { sev: 'baixa' });
   await t('FUN-80', 'Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega a lista e guarda a versão; ao recarregar com a mesma versão não pede /rest/v1/songs; com versão nova descarrega de novo e guarda-a; sem versão (erro) descarrega como antes', async () => {
     const bad = [], st = { v: 7, fail: false };
     const mode = { role: 'coro', rest: tb => tb === 'catalog_version' ? (st.fail ? { body: { message: 'erro' }, status: 500 } : { body: [{ v: st.v }] }) : null };

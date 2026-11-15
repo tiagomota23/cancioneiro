@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
 
-Catálogo atualizado até à **v240** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, FUN-79, FUN-80, FUN-81, BUS-01, BUS-02, EST-05, EST-06, SEG-38, SEG-39, SEG-40, SEG-41, SEG-42, SEG-43, SEG-44, SEG-45, INT-23, INT-24, INT-25 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v241** (2026-11-14). Por correr: FUN-73, FUN-74, FUN-75, FUN-76, FUN-77, FUN-78, FUN-79, FUN-80, FUN-81, FUN-82, BUS-01, BUS-02, EST-05, EST-06, SEG-38, SEG-39, SEG-40, SEG-41, SEG-42, SEG-43, SEG-44, SEG-45, INT-23, INT-24, INT-25 (aguardam autorização do Tiago). A pesquisa com sessão real em produção não tem conta de teste: coberta por SEG-38 (código) e BUS-01 (motor). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
@@ -37,6 +37,7 @@ Catálogo atualizado até à **v240** (2026-11-14). Por correr: FUN-73, FUN-74, 
 | FUN-79 | Revisão de recortes (v237, ?demo): só Maestro+ vê .crop-bar; diálogo com páginas desenhadas e caixas atual/proposta; dois toques desenham; «Usar o desenhado» fecha e não volta; «Cancelar» não decide | ui | média | V | ☐ por correr |
 | FUN-80 | Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega e guarda a versão; mesma versão não pede /rest/v1/songs; versão nova ou erro descarregam | ui | média | V | ☐ por correr |
 | FUN-81 | Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada): abrir a folha → um só op songs com os cânticos sem letra; abrir um deles → sem op song; reabrir a folha → sem novo pedido | ui | média | V | ☐ por correr |
+| FUN-82 | Sem lotes repetidos (v241, modo real simulado, folha ativa, op songs lento): abrir a folha durante a pré-descarga → nenhum cântico em dois op songs; todos com letra no fim | ui | baixa | V | ☐ por correr |
 | BUS-01 | Motor busca.js com o fixture (Node): erro de letras, variante ortográfica, início de palavra, letra com marks, lixo → nada; trechos ≤ 7 palavras; hits só slug/score/field/snip/marks; max; match corrige palavras ouvidas | static | alta | V | ☐ por correr |
 | BUS-02 | busca.js com texto dos PDF (v233): palavra só no PDF → field «pdf» com trecho ≤ 7 palavras; letra ganha ao PDF quando está nos dois; match pelo PDF | static | média | V | ☐ por correr |
 | FUN-03 | Cântico: título, letra, botões original ↔ tradução | ui | alta | V | ✓ |
