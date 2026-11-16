@@ -171,8 +171,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (15 nov 2026, v253)
-- App v253; capa do mapa «versão 253 · 15 nov 2026». v252: Ecrã novo `cantico-librone`
+## Estado atual (16 nov 2026, v254)
+- App v254 («Rever recorte» também no visor de um livro sem recorte; sem imagens novas; sincronizada pela rotina — o aviso
+  da webapp não chegou); capa do mapa «versão 254 · 15 nov 2026» (mapa versão 107, sistema de design versão 58). v252: Ecrã novo `cantico-librone`
   (no fim de SCREENS, quadro «Cântico» com 8 ecrãs, 3496 px) com o cântico de exemplo «Dell'aurora tu sorgi più bella»
   (hino mariano tradicional, domínio público; fonte librone). Índice 1734 px → quadro «Listas» 1988 px, quadros por baixo +107.
   Catálogo: peça nova v157 (linha de refrão, já existia na app), numeração +1 a partir daí.
