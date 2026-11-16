@@ -39,7 +39,7 @@ Reconstrói o Cancioneiro a partir da cópia de segurança que carreguei. Lê pr
 7. Drive: dá-me as duas ligações para autorizar de novo: drive-auth (Drive do Coro, só leitura, conta tiago.mota@gmail.com) e
    drive-auth?para=copia (destino da cópia, outra conta, definida em drive_state → backup_target).
 8. Verifica: corre as Actions (verificação semanal, cópia de segurança, texto dos PDF), abre a app, entra com a minha conta e abre um cântico.
-9. Ambiente de desenvolvimento: no fim, segue docs/AMBIENTE.md para recriar as sessões webapp, design, testes e backup.
+9. Ambiente de desenvolvimento: no fim, segue docs/AMBIENTE.md para recriar as sessões webapp, design, testes, backup e ideas.
 Regras: nunca ponhas letras no repositório (é público); sobe a versão da app nos três sítios quando a mudares.
 ```
 
@@ -63,7 +63,7 @@ Regras: nunca ponhas letras no repositório (é público); sobe a versão da app
 7. **Drive:** abrir `https://<ref>.supabase.co/functions/v1/drive-auth` (Drive do Coro, só leitura, conta do dono) e
    `…/drive-auth?para=copia` (destino da cópia, outra conta; antes definir `drive_state` → `backup_target` = `{"email": "…"}`).
 8. **Verificar:** abrir a app, entrar, abrir cânticos e ficheiros; correr as Actions.
-9. **Sessões do Claude:** recriar o ambiente e as quatro sessões (webapp, design, testes, backup) com `ambiente/AMBIENTE.md`
+9. **Sessões do Claude:** recriar o ambiente e as cinco sessões (webapp, design, testes, backup, ideas) com `ambiente/AMBIENTE.md`
    e as instruções em `ambiente/` (as mesmas que `docs/AMBIENTE.md` e `docs/sessoes/` no repositório).
 
 ## Configuração que não está no repositório nem na cópia

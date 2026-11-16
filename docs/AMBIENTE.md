@@ -1,6 +1,6 @@
 # Ambiente de desenvolvimento do Cancioneiro
 
-O Cancioneiro é mantido por quatro sessões do Claude Code na nuvem (claude.ai/code), cada uma com um papel. Este ficheiro
+O Cancioneiro é mantido por cinco sessões do Claude Code na nuvem (claude.ai/code), cada uma com um papel. Este ficheiro
 diz como recriar esse ambiente do zero; as instruções de cada sessão estão em `docs/sessoes/`. A cópia de segurança semanal
 leva este ficheiro e `docs/sessoes/*.md` para a pasta `ambiente/` do Drive (e o repositório inteiro em `codigo/`).
 Para reconstruir a app e os dados, ver RECONSTRUIR.md; este ficheiro trata só das sessões.
@@ -20,10 +20,12 @@ Para reconstruir a app e os dados, ver RECONSTRUIR.md; este ficheiro trata só d
 | design (cloud) | Sistema de design e mapa da app (artefactos no claude.ai) e tokens do tema. | docs/sessoes/design.md |
 | testes (cloud) | Baterias de testes (UI e servidor), catálogo de testes, corrida semanal. | docs/sessoes/testes.md |
 | backup (cloud) | Cópia de segurança semanal para o Drive e guias de reconstrução. | docs/sessoes/backup.md |
+| ideas (cloud) | Guarda ideias do Tiago para o futuro em docs/ideias/IDEIAS.md; não implementa nada. | docs/sessoes/ideias.md |
 
 Ids atuais (mudam quando se recriam; atualizar aqui e nas instruções de cada sessão):
 webapp `session_013HL3hqPrAue5YNg8Hq44sg`, design `session_01GWkEx3J14wmMHpvf4WYAM9`,
-testes `session_01MbBa3QkGyoxxLSRFoyRJmX`, backup `session_01BKazgpooLjc3L4evvmL8vy`.
+testes `session_01MbBa3QkGyoxxLSRFoyRJmX`, backup `session_01BKazgpooLjc3L4evvmL8vy`,
+ideas `session_01Qit1XddZoaoFQjFt2bKQKZ`.
 As sessões falam entre si com send_message (ferramentas claude-code-remote), sempre pelo id.
 
 ## 3. Rotinas (claude.ai/code → Routines)
@@ -48,7 +50,7 @@ completo em docs/sessoes/design.md.
 ## 5. Recriar tudo do zero
 1. Reconstruir a app e os dados (RECONSTRUIR.md). No fim o repositório está no GitHub com todos os ramos.
 2. Criar o ambiente «Cancioneiro» (secção 1), com o repositório e o `SUPABASE_ACCESS_TOKEN`; ligar os conectores.
-3. Criar as sessões por esta ordem: webapp, design, testes, backup. Cada uma começa com o texto da sua instrução em
+3. Criar as sessões por esta ordem: webapp, design, testes, backup, ideas. Cada uma começa com o texto da sua instrução em
    `docs/sessoes/<nome>.md`. Depois de as criar, atualizar os ids na secção 2 (e nas instruções) e fazer push.
 4. Cada sessão recria as suas rotinas (secção 3) e a design recria os artefactos (secção 4) se se perderam; as ligações
    novas vão para docs/sessoes/design.md e para esta secção.
@@ -57,7 +59,7 @@ completo em docs/sessoes/design.md.
 Atalho: numa só sessão nova, cole
 ```
 Recria o ambiente de desenvolvimento do Cancioneiro. Lê docs/AMBIENTE.md e docs/sessoes/*.md no repositório
-tiagomota23/cancioneiro. Cria as sessões webapp, design, testes e backup no ambiente «Cancioneiro» (create_session), cada uma
+tiagomota23/cancioneiro. Cria as sessões webapp, design, testes, backup e ideas no ambiente «Cancioneiro» (create_session), cada uma
 com o texto da sua instrução; atualiza os ids em docs/AMBIENTE.md e nas instruções; pede a cada sessão que recrie as suas
 rotinas e, à design, que confirme os artefactos. Diz-me o que tiver de ser eu a fazer (contas, tokens, autorizações).
 ```
