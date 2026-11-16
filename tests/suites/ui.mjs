@@ -533,7 +533,7 @@ async function suites(full) {
       return bad.length ? bad.join('; ') : { pass: `225% → canvas ${w0.px}→${w1.px} px; beliscão → ${pinched.z}` };
     });
   }, { sev: 'baixa' });
-  await t('FUN-83', 'Página inteira do livro com contorno (v242, ?demo, Amazing Grace com recorte c=12:0.0,0.12,0.513,0.62): o visor mostra o recorte e «Ver a página inteira»; nesta, a página com um contorno na cor --app-brand (v245) à volta do recorte e «Ver só a letra do cântico», que volta ao recorte', async () => {
+  await t('FUN-83', 'Página inteira do livro com contorno (v242, ?demo, Amazing Grace com recorte c=12:0.0,0.12,0.513,0.62): o visor mostra o recorte e «Ver a página inteira»; nesta, a página com um contorno na cor do perfil (--accent, v253; --app-brand na v245) à volta do recorte e «Ver só a letra do cântico», que volta ao recorte', async () => {
     const songs = fixture.map(x => x.slug !== 'amazing_grace' ? x : { ...x, files: (x.files || []).map(f => f.path === 'livros/songbook.pdf#p=12' ? { ...f, path: 'livros/songbook.pdf#p=12&c=12:0.0,0.12,0.513,0.62' } : f) });
     return withApp({ perfil: 'coro', songs, hash: '#/cantico/amazing_grace' }, async ({ page }) => {
       const bad = [], btn = () => page.evaluate(() => document.querySelector('#pdfpages .pdf-more button')?.textContent.trim() || '');
@@ -550,12 +550,12 @@ async function suites(full) {
         const px = await page.evaluate(() => {
           const c = document.querySelector('#pdfpages canvas'); if (!c) return null;
           const r = c.width / parseFloat(c.style.width || c.width), lw = 2.5 * r, d = c.getContext('2d').getImageData(Math.round(lw / 2), Math.round(c.height * 0.37), 1, 1).data;
-          const acc = getComputedStyle(document.documentElement).getPropertyValue('--app-brand').trim();
+          const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
           const t = document.createElement('canvas').getContext('2d'); t.fillStyle = acc || '#10835c'; t.fillRect(0, 0, 1, 1); const a = t.getImageData(0, 0, 1, 1).data;
           return { px: [d[0], d[1], d[2]], acc: [a[0], a[1], a[2]] };
         });
         if (!px) bad.push('página inteira sem canvas');
-        else if (Math.hypot(px.px[0] - px.acc[0], px.px[1] - px.acc[1], px.px[2] - px.acc[2]) > 60) bad.push(`sem contorno na cor --app-brand: pixel ${px.px} vs ${px.acc}`);
+        else if (Math.hypot(px.px[0] - px.acc[0], px.px[1] - px.acc[1], px.px[2] - px.acc[2]) > 60) bad.push(`sem contorno na cor do perfil (--accent): pixel ${px.px} vs ${px.acc}`);
         await page.click('#pdfpages .pdf-more button');
         if (!(await waitBtn(/Ver a página inteira/))) bad.push('«Ver só a letra do cântico» não voltou ao recorte');
       }

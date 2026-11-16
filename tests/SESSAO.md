@@ -45,7 +45,7 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 
 ## Estado (2026-11-15)
 
-- Última corrida completa: **v229, 2026-11-09 (semanal)** — 234 ok, 1 falha, 0 avisos, 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
+- Última corrida completa: **v254, 2026-11-16 (semanal)** — 274 ok, 0 falhas, 1 aviso (DES-01, app.js 302 KB > orçamento 300 KB: decisão pendente do Tiago — subir o orçamento ou reduzir), 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`. Erro de teste corrigido: FUN-83 (contorno na cor do perfil --accent desde v253). Dados: librone 1492 ligados (355 só do librone), sync-librone correu 16/11 06:45; 63 rascunhos por rever; 0 revisões de recortes pendentes; texto dos PDF 1876/1876.
 - FUN-71 (tutorial, falha da v229) **corrigido na v230 e re-testado a 2026-11-09 com autorização do Tiago: ok** nos 4 perfis a 390×844, 375×667 e 360×640 (relatório `tests/reports/2026-11-09-v230-quick.md`).
 - **v231 (a829cc7, pesquisa por página com as vizinhas):** FUN-73 escrito, por correr — aguarda autorização do Tiago (`--only=FUN-73`, ~1 min); senão corre na semanal de 2ª.
 - **v232 (d238e6b, pesquisa nova: busca.js + conteudo v33):** escritos BUS-01 (motor em Node com o fixture), EST-05 e SEG-38 (static), FUN-74 (?demo: erros e visibilidade por perfil), FUN-75 (modo real simulado: números sem servidor, cache, sem rede). Por correr — aguardam autorização do Tiago (`--only=FUN-73,FUN-74,FUN-75,BUS-01,EST-05,SEG-38`, ~3 min); senão na semanal de 2ª. A pesquisa com sessão real em produção não é testável sem conta de teste (ver Pendentes no catálogo).

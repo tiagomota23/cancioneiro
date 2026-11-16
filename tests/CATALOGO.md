@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v229, 2026-11-09 (semanal)** — 234 ok · 1 falha (FUN-71, app: tutorial do Maestro/Gestor com a caixa do passo 19 fora do ecrã a 390×844) · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-09-v229-full.md`.
+Última execução completa: **v254, 2026-11-16 (semanal)** — 274 ok · 0 falhas · 1 aviso (DES-01: app.js 302 KB > 300 KB) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`.
 
 Catálogo atualizado até à **v251** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243), FUN-85 (v245), FUN-86 (v246/v247), FUN-87, SEG-52, SEG-53, INT-26 (v248), FUN-88, INT-27 (v249), FUN-89, SEG-54, SEG-55, INT-28 (v250; INT-08 com a tarefa nova), FUN-90 (v251; FUN-88 e INT-27 atualizados). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
@@ -38,7 +38,7 @@ Catálogo atualizado até à **v251** (2026-11-15). Testes v231–v241 corridos 
 | FUN-80 | Versão do catálogo (v238, modo real simulado): 1.ª abertura descarrega e guarda a versão; mesma versão não pede /rest/v1/songs; versão nova ou erro descarregam | ui | média | V | ✓ (v241) |
 | FUN-81 | Folha aquece as letras (v240, modo real simulado, Maestro, folha expirada): abrir a folha → um só op songs com os cânticos sem letra; abrir um deles → sem op song; reabrir a folha → sem novo pedido | ui | média | V | ✓ (v241) |
 | FUN-82 | Sem lotes repetidos (v241, modo real simulado, folha ativa, op songs lento): abrir a folha durante a pré-descarga → nenhum cântico em dois op songs; todos com letra no fim | ui | baixa | V | ✓ (v241) |
-| FUN-83 | Página inteira do livro com contorno (v242, ?demo, recorte injetado): «Ver a página inteira» → contorno na cor --app-brand desde v245 (pixel na aresta) e «Ver só a letra do cântico», que volta ao recorte | ui | baixa | V | ✓ (v252) |
+| FUN-83 | Página inteira do livro com contorno (v242, ?demo, recorte injetado): «Ver a página inteira» → contorno na cor do perfil (--accent desde v253) (pixel na aresta) e «Ver só a letra do cântico», que volta ao recorte | ui | baixa | V | ✓ (v252) |
 | FUN-84 | Zoom na revisão de recortes (v243, ?demo, Maestro): 100% → «+»×2 = 225% com canvas mais nítido (≤ 2400 px); limites 100–400%; desenho a 225% nas frações certas; beliscão muda o zoom e o toque logo a seguir não marca canto | ui | baixa | V | ✓ (v252) |
 | FUN-85 | «Rever recorte» no visor (v245, ?demo): Coro sem botão; Maestro com «Rever recorte» no recorte e na página inteira; «Manter o atual» fecha diálogo e visor | ui | baixa | V | ✓ (v254) |
 | FUN-86 | Rever recorte a partir da folha de revisão (v246/v247, ?demo, Maestro): diálogo abre sozinho; Cancelar volta à folha e reabrir abre de novo; decidir volta à folha sem o cântico; folha só com ele é apagada; folha comum sem abertura automática e intacta | ui | média | V | ✓ (v252) |
