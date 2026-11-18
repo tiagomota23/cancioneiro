@@ -171,7 +171,9 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (16 nov 2026, v254)
+## Estado atual (18 nov 2026, v254)
+- Retomar depois de um /clear: ler este ficheiro e docs/AMBIENTE.md; a rotina diária (06:52) continua a acordar esta sessão;
+  nada pendente (decisões de 15 nov aplicadas na v253 e verificadas; regra 15 e cor do perfil nos recortes no README).
 - App v254 («Rever recorte» também no visor de um livro sem recorte; sem imagens novas; sincronizada pela rotina — o aviso
   da webapp não chegou); capa do mapa «versão 254 · 15 nov 2026» (mapa versão 107, sistema de design versão 58). v252: Ecrã novo `cantico-librone`
   (no fim de SCREENS, quadro «Cântico» com 8 ecrãs, 3496 px) com o cântico de exemplo «Dell'aurora tu sorgi più bella»
