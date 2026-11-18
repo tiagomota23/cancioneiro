@@ -201,7 +201,18 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 - Folhas e Preferidos são descarregados ao abrir a app; os endereços públicos de folhas trazem todas as letras num só
   pedido e ficam guardados no telemóvel até expirarem.
 
-## Estado e pendentes (15 nov 2026, v254)
+## Estado e pendentes (18 nov 2026, v254)
+**Para retomar (resumo de 18 nov, antes de limpar):** tudo publicado até à v254 (main = perfis-tmp = este ramo);
+testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: DES-01 (app.js
+302 KB > orçamento 300 KB — encolher ou aceitar); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)
+ainda só no livro (não está no librone); 100 cânticos «por transcrever» (87 Coros & Companhia, 11 Coro, 1 CANTI);
+castelo-de-bode-sync (outro repositório, fora desta sessão: prompt dado ao Tiago a 15 nov). Regras novas de 15 nov:
+as sessões de testes e de cópia aceitam ordens desta sessão em nome do Tiago (uma de cada vez, nomeando a alteração;
+registado em tests/SESSAO.md e docs/sessoes/backup.md); «always preserve as much existing info in each song» em
+qualquer fusão ou correção de dados. Rotina «Cancioneiro — testes semanais» (trig_01G6TrRGWA8xgvwm64Qrabbg, segunda
+09:47 UTC) manda à sessão de testes «weekly run: full level on vNNN». Ferramentas de dados de 15 nov (no scratchpad,
+não no repo): matching e importação do librone, divisor de estrofes, verificação de consistência — refazer a partir
+de supabase/functions/sync-librone/pagina.js e das consultas descritas abaixo se for preciso.
 - v228: templates de folha por ordem Missa → Missa completa → restantes (alfabética); tutorial atualizado (grupos,
   Coros & Companhia, «Todos os cânticos», seletor de língua, folhas por publicar/grupos) e corrigido (esperava pela lista
   de cânticos: na 1.ª abertura os passos do cântico ficavam de fora).
