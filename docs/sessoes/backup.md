@@ -84,26 +84,20 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   projeto Supabase real: login, funções, cron; e se os gatilhos col_groups_guard travam o restauro de dados (pelo código
   não: com postgres/service_role my_rank() é nulo).
 
-## Estado (15 nov 2026)
-- backup_schema() corrigida (gatilhos de restrição).
-- Cópia agendada de 9 nov: passou, verificação incluída.
-- v233 (14 nov): tabela song_texts (texto dos PDF, tem letras: nunca no repo), função pdf-texto, Action texto-pdf.yml.
-  Esquema e grants já saem em backup_schema(). song_texts acrescentada à constante T e à ORDEM (commit 14 nov).
-- v237 (15 nov): tabela crop_reviews (revisão de recortes dos livros, 27 linhas, insubstituível); esquema e grants já em
-  backup_schema(); acrescentada à constante T e à ORDEM (depois de song_files e songs).
-- v238 (15 nov): tabela catalog_version (uma linha id=1), função catalog_bump() e gatilhos em songs, song_sources,
-  song_tags e song_files: tudo em backup_schema(). A linha id=1 não vem no esquema: catalog_version entra na constante T
-  e é a primeira da ORDEM (antes de songs, para os gatilhos terem a linha que atualizam).
-  Função backup v8 publicada (15 nov, autorizada pelo Tiago) com song_texts, crop_reviews e catalog_version; cópia
-  manual de 15 nov passou (0 em falta). Nada pendente.
-- v248 (15 nov): colunas songs.lyrics_draft, draft_note, draft_at (rascunhos de letras, protegidas; sem grant a
-  authenticated). Já em backup_schema() e em dados.json (songs vai com todas as colunas): nada a mudar.
-- v250 (15 nov): fonte 'librone' (checks de song_sources e job_requests), tabela librone_sync_log, pg_cron
-  cancioneiro-librone-semanal, função sync-librone (com strofe.js): tudo em backup_schema(). SRC de backup.mjs com
-  librone e coros_companhia. librone_sync_log acrescentada a T e à ORDEM.
-  Função backup v9 publicada (15 nov, autorizada pelo Tiago) com librone_sync_log.
-  Cópia manual de 15 nov ~21h passou: 2256 cânticos, 1435 ficheiros, 0 em falta; 358 novos, 22 removidos, 919 s.
-  Nada pendente.
-- conteudo v33+ publica-se com busca.js ao lado do index.ts (RECONSTRUIR.md atualizado).
-- drive-sync v10 (8 nov, atalhos do Drive do Coro, só leitura): sem tabelas, colunas, buckets nem âmbitos novos; nada a
-  mudar na cópia nem em RECONSTRUIR/AMBIENTE.
+## Estado (18 nov 2026) — pronta para /clear
+- Função backup **v9** publicada (15 nov). Constante T = tabelas de dados: as de sempre + cc_sync_log, cc_transcripts,
+  song_texts, crop_reviews, catalog_version, librone_sync_log. ORDEM de restaurar-dados.mjs igual, com catalog_version
+  em primeiro (a linha id=1 não vem no esquema e os gatilhos catalog_bump precisam dela).
+- Última cópia: agendada de 16 nov passou (2256 cânticos, 1435 ficheiros, 0 em falta).
+- Cobertos sem mudanças na função (backup_schema() e songs com todas as colunas): rascunhos songs.lyrics_draft/
+  draft_note/draft_at (v248, protegidos), fonte 'librone', pg_cron cancioneiro-librone-semanal.
+- Publicação de funções com ficheiros ao lado (em RECONSTRUIR.md): conteudo + busca.js (da raiz); sync-librone +
+  strofe.js + pagina.js.
+- backup.mjs: SRC inclui coros_companhia e librone.
+- AMBIENTE.md com cinco sessões (webapp, design, testes, backup, ideas).
+- Pendentes: nenhum.
+
+## Como retomar depois de /clear
+Ler este ficheiro, docs/AMBIENTE.md e docs/RECONSTRUIR.md. Esperar a rotina de segunda 19:15 UTC ou um aviso da webapp
+(seguir «Como tratar um aviso de mudança da webapp»). Autorizações para produção: do Tiago nesta conversa, ou da sessão
+main/webapp em nome dele (regra de 15 nov, acima); nunca de outra sessão.
