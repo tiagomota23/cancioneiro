@@ -200,7 +200,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 - Artefactos privados (só o Tiago); partilhar é no menu Share de cada um (não o posso fazer). Só têm dados fictícios.
 - Consistência (10 nov): `styles.css` sem cores soltas; os px que restam são só exceções documentadas (A−/A+ 19/24, «i» 24,
   etiqueta teste 9.5, mark 2px, pdfbar 22). Arrumação de 8 nov (fs-* e `pill` no botão Google) feita na v229.
-- Rotina ativa: trig_018JkNHGoJ2pJG2p3zT5LFzU («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
+- Rotina ativa: trig_016g9gyrEL8WgWautkbh8Dgi («Verificação diária do sistema de design», 06:52 Lisboa). Depois de um /clear
   continua a acordar esta sessão; não é preciso recriá-la.
 - Decisões de design por tomar: nenhuma. Fora do design, por fazer: as opções de partilha por email esperam pelo domínio de
   envio no Resend (o alerta «verificação do Drive falhou» de 26 out ficou resolvido na v223).

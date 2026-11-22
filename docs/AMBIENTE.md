@@ -22,10 +22,10 @@ Para reconstruir a app e os dados, ver RECONSTRUIR.md; este ficheiro trata só d
 | backup (cloud) | Cópia de segurança semanal para o Drive e guias de reconstrução. | docs/sessoes/backup.md |
 | ideas (cloud) | Guarda ideias do Tiago para o futuro em docs/ideias/IDEIAS.md; não implementa nada. | docs/sessoes/ideias.md |
 
-Ids atuais (mudam quando se recriam; atualizar aqui e nas instruções de cada sessão):
-webapp `session_013HL3hqPrAue5YNg8Hq44sg`, design `session_01GWkEx3J14wmMHpvf4WYAM9`,
-testes `session_01MbBa3QkGyoxxLSRFoyRJmX`, backup `session_01BKazgpooLjc3L4evvmL8vy`,
-ideas `session_01Qit1XddZoaoFQjFt2bKQKZ`.
+Ids atuais (recriadas a 22 nov como sessões próprias, sem sessão-mãe; mudam quando se recriam; atualizar aqui e nas instruções de cada sessão):
+webapp `session_013HL3hqPrAue5YNg8Hq44sg`, design `session_01Qit1XcQQFroY62tRreLQ1Z`,
+testes `session_01Qit1XcfrSvuf5MFtjafgLF`, backup `session_01Qit1XehFpvMjT5xfNnv9Sp`,
+ideas `session_01Qit1XeHw8RNAVKELDEp7jx`.
 As sessões falam entre si com send_message (ferramentas claude-code-remote), sempre pelo id.
 
 ## 3. Rotinas (claude.ai/code → Routines)

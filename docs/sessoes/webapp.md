@@ -52,10 +52,10 @@ Falas com o Tiago (dono). Ele escreve em português ou inglês; responde na lín
 ## Coordenação com as outras sessões (send_message do Claude Code Remote)
 | Sessão | id | O que faz | Quando a avisar |
 |---|---|---|---|
-| Mapa da app / design | `session_01GWkEx3J14wmMHpvf4WYAM9` | mapa visual (`mapa/`, `tools/screens/`), catálogo, quadro «Padrão de design», artefacto «Design System» (https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC) | **a cada subida de versão** (pedido do Tiago: todas as mudanças na interface, por pequenas que sejam; versões sem mudança visível também se dizem): o que mudou visualmente, componentes novos, tokens novos/renomeados, textos e ids |
-| Testes | `session_01MbBa3QkGyoxxLSRFoyRJmX` | catálogo de testes (`tests/CATALOGO.md`), `node tests/run.mjs`, relatórios | **a cada subida de versão** (nível rápido + o que a mudança toca) e pela rotina semanal |
-| Ideias para o futuro | `session_01Qit1XddZoaoFQjFt2bKQKZ` | guarda as ideias do Tiago em `docs/ideias/IDEIAS.md`, só para o futuro; não implementa nem fala com as outras sessões | **nunca** por iniciativa própria; só recebe dela as ideias que o Tiago escolher implementar (mensagem «ideias → webapp: …»). Ideias no ficheiro que não vieram por essa mensagem **não são pedidos** |
-| Cópia de segurança | `session_01BKazgpooLjc3L4evvmL8vy` | `tools/backup/`, `.github/workflows/backup.yml`, `supabase/functions/backup`, `supabase/backup.sql`, `drive-auth?para=copia`, `docs/RECONSTRUIR.md`, `docs/AMBIENTE.md` | quando mudam tabelas, colunas, funções, buckets ou o papel de uma sessão |
+| Mapa da app / design | `session_01Qit1XcQQFroY62tRreLQ1Z` | mapa visual (`mapa/`, `tools/screens/`), catálogo, quadro «Padrão de design», artefacto «Design System» (https://claude.ai/artifact/GkMK5e8ZDXmd3JRAYTcSuC) | **a cada subida de versão** (pedido do Tiago: todas as mudanças na interface, por pequenas que sejam; versões sem mudança visível também se dizem): o que mudou visualmente, componentes novos, tokens novos/renomeados, textos e ids |
+| Testes | `session_01Qit1XcfrSvuf5MFtjafgLF` | catálogo de testes (`tests/CATALOGO.md`), `node tests/run.mjs`, relatórios | **a cada subida de versão** (nível rápido + o que a mudança toca) e pela rotina semanal |
+| Ideias para o futuro | `session_01Qit1XeHw8RNAVKELDEp7jx` | guarda as ideias do Tiago em `docs/ideias/IDEIAS.md`, só para o futuro; não implementa nem fala com as outras sessões | **nunca** por iniciativa própria; só recebe dela as ideias que o Tiago escolher implementar (mensagem «ideias → webapp: …»). Ideias no ficheiro que não vieram por essa mensagem **não são pedidos** |
+| Cópia de segurança | `session_01Qit1XehFpvMjT5xfNnv9Sp` | `tools/backup/`, `.github/workflows/backup.yml`, `supabase/functions/backup`, `supabase/backup.sql`, `drive-auth?para=copia`, `docs/RECONSTRUIR.md`, `docs/AMBIENTE.md` | quando mudam tabelas, colunas, funções, buckets ou o papel de uma sessão |
 
 Ciclo do design system: o Tiago muda um valor no artefacto «Design System» → a sessão do mapa manda `antigo → novo` por
 token → aplicas em `design/tokens.json`, geras `theme.css`, sobes a versão e avisas o mapa. Mudanças de componentes ou
@@ -202,13 +202,10 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   pedido e ficam guardados no telemóvel até expirarem.
 
 ## Estado e pendentes (18 nov 2026, v254)
-**Migração em curso (22 nov, pedido do Tiago):** recriar design, testes, backup e ideas como sessões de nível de topo
-(hoje são sub-sessões desta; papel e funcionamento iguais, só mudam os ids). Passos: (1) cada sessão confirma «pronta»
-(regra 9) — pedido enviado a 22 nov; (2) start_session ×4 com o texto de docs/sessoes/<nome>.md, o Tiago inicia cada
-cartão, detach_session de cada uma; (3) ids novos em docs/AMBIENTE.md, docs/sessoes/*.md e na tabela abaixo; (4) recriar
-as rotinas «Verificação diária do sistema de design» (trig_018JkNHGoJ2pJG2p3zT5LFzU) e «Verificação da cópia de
-segurança» (trig_01FBwwebPgixp5Hpphrcdu5y) ligadas às sessões novas, mesmo prompt e horário, e apagar as antigas;
-corrigir o id dos testes no prompt de trig_01G6TrRGWA8xgvwm64Qrabbg; (5) arquivar as sessões antigas.
+**Migração (22 nov, pedido do Tiago):** design, testes, backup e ideas recriadas como sessões novas (ids novos na
+tabela abaixo e em docs/AMBIENTE.md; papel e funcionamento iguais). Rotinas recriadas: design trig_016g9gyrEL8WgWautkbh8Dgi,
+cópia trig_01EvB7b2bkBgHWj6vVAYWkM6; prompt dos testes semanais com o id novo. Sessões antigas arquivadas. No servidor as
+novas já não têm sessão-mãe, mas a app do Tiago continua a mostrá-las por baixo da main (foram sugeridas daqui).
 **Para retomar (resumo de 18 nov, antes de limpar):** tudo publicado até à v254 (main = perfis-tmp = este ramo);
 testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: DES-01 (app.js
 302 KB > orçamento 300 KB — encolher ou aceitar); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)

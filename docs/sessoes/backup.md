@@ -73,7 +73,7 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 
 ## Notas práticas
 - O agendamento do GitHub atrasa a cópia das 07:30 em 6–9 h; por isso a verificação semanal é às 19:15 UTC
-  (rotina «Verificação da cópia de segurança», trig_01FBwwebPgixp5Hpphrcdu5y, liga a esta sessão).
+  (rotina «Verificação da cópia de segurança», trig_01EvB7b2bkBgHWj6vVAYWkM6, liga a esta sessão).
 - `gh` funciona neste ambiente para listar/correr/ver execuções; se os registos completos derem 403, usar
   `gh api repos/tiagomota23/cancioneiro/actions/jobs/<id>/logs`.
 - O dados.json tem ~4,5 MB: não o abrir pelo conector do Drive (enche o contexto); confirmar pela função publicada e
