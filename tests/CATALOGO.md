@@ -18,7 +18,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 Última execução completa: **v254, 2026-11-16 (semanal)** — 274 ok · 0 falhas · 1 aviso (DES-01: app.js 302 KB > 300 KB) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`.
 
-Catálogo atualizado até à **v251** (2026-11-15). Testes v231–v241 corridos a 2026-11-15 (autorização do Tiago): 25 ok, relatório `tests/reports/2026-11-15-v241-quick.md`. Por correr: FUN-83 (v242), FUN-84 (v243), FUN-85 (v245), FUN-86 (v246/v247), FUN-87, SEG-52, SEG-53, INT-26 (v248), FUN-88, INT-27 (v249), FUN-89, SEG-54, SEG-55, INT-28 (v250; INT-08 com a tarefa nova), FUN-90 (v251; FUN-88 e INT-27 atualizados). Regras de corrida e ajudas: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
+Catálogo atualizado até à **v254** (2026-11-18). Nada por correr: todos os testes escritos até à v254 passaram (semanal de 16/11). Regras de corrida, estado e como retomar: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 
 ---
 
