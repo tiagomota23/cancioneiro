@@ -16,7 +16,7 @@ Só a pasta `tests/`:
 - `tests/suites/static.mjs` (repositório), `live.mjs` (produção sem sessão), `db.mjs` (SQL: RLS, permissões, integridade, cópias), `ui.mjs` (Playwright/Chromium).
 - `tests/baseline.json` — sha256 dos ficheiros vendor (pdf.js, pdf-lib).
 - `tests/reports/AAAA-MM-DD-vNNN-<nível>.md|json` — relatórios datados.
-- `tests/SESSAO.md` — este brief (`docs/sessoes/testes.md` é uma ligação para ele).(cópia em `docs/sessoes/testes.md`).
+- `tests/SESSAO.md` — este brief (`docs/sessoes/testes.md` é uma ligação simbólica para ele).
 
 Uso também, sem as alterar, `tools/screens/harness.mjs` (servidor local do modo `?demo`), `tools/screens/fixture.mjs` (dados fictícios / domínio público), `tools/screens/supabase-stub.js` e `tools/theme/build.mjs --check`. Nunca altero app.js, index.html, styles.css, theme.css, sw.js, supabase/*, design/*. Se um teste precisar de um gancho na app (ex.: data-testid), peço à sessão principal.
 
@@ -43,7 +43,10 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Antes de correr: `git fetch origin main && git merge --ff-only origin/main`, num comando **separado** da corrida (em 2026-10-19 o ambiente recusou os dois juntos).
 - Na segunda de manhã: drive-sync às 06:15 UTC e sync-cc às 06:30 UTC. Se a sessão principal disser que vai correr uma sincronização, correr primeiro `--no-db` e a parte DB depois (`--only=DB-,INT-,ESC-0`).
 
-## Estado (2026-11-18) — pronta para /clear
+## Estado (2026-11-22) — pronta para migração / /clear
+
+- **Migração (pedido do Tiago, 22/11):** esta sessão passa de sub-sessão da webapp a sessão de nível de topo; papel e regras iguais, só muda o id. Rotinas e ids tratados pela webapp, não por esta sessão. A sessão nova não tem memória: tudo o que precisa está neste ficheiro, em `tests/CATALOGO.md` e em `tests/reports/`. O rascunho não tem nada a recuperar (só um diagnóstico antigo do tutorial, já resolvido na v230).
+- Sem alterações à app desde 18/11 (continua v254); nada por correr.
 
 - **App em v254.** Catálogo atualizado até à v254; **nada por correr** (todos os testes escritos até à v254 passaram).
 - **Última corrida completa: v254, 2026-11-16 (semanal)** — 274 ok, 0 falhas, 1 aviso, 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`. Corridas anteriores do dia 15: `2026-11-15-v241-quick`, `-v252-quick/-full`, `-v254-quick` (FUN-85 e INT-14 re-testados: ok).
