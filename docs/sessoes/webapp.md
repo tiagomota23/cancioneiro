@@ -202,6 +202,13 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
   pedido e ficam guardados no telemóvel até expirarem.
 
 ## Estado e pendentes (18 nov 2026, v254)
+**Migração em curso (22 nov, pedido do Tiago):** recriar design, testes, backup e ideas como sessões de nível de topo
+(hoje são sub-sessões desta; papel e funcionamento iguais, só mudam os ids). Passos: (1) cada sessão confirma «pronta»
+(regra 9) — pedido enviado a 22 nov; (2) start_session ×4 com o texto de docs/sessoes/<nome>.md, o Tiago inicia cada
+cartão, detach_session de cada uma; (3) ids novos em docs/AMBIENTE.md, docs/sessoes/*.md e na tabela abaixo; (4) recriar
+as rotinas «Verificação diária do sistema de design» (trig_018JkNHGoJ2pJG2p3zT5LFzU) e «Verificação da cópia de
+segurança» (trig_01FBwwebPgixp5Hpphrcdu5y) ligadas às sessões novas, mesmo prompt e horário, e apagar as antigas;
+corrigir o id dos testes no prompt de trig_01G6TrRGWA8xgvwm64Qrabbg; (5) arquivar as sessões antigas.
 **Para retomar (resumo de 18 nov, antes de limpar):** tudo publicado até à v254 (main = perfis-tmp = este ramo);
 testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: DES-01 (app.js
 302 KB > orçamento 300 KB — encolher ou aceitar); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)
