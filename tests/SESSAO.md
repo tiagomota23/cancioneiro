@@ -45,7 +45,8 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 
 ## Estado (2026-11-22) — pronta para migração / /clear
 
-- **Migração (pedido do Tiago, 22/11):** esta sessão passa de sub-sessão da webapp a sessão de nível de topo; papel e regras iguais, só muda o id. Rotinas e ids tratados pela webapp, não por esta sessão. A sessão nova não tem memória: tudo o que precisa está neste ficheiro, em `tests/CATALOGO.md` e em `tests/reports/`. O rascunho não tem nada a recuperar (só um diagnóstico antigo do tutorial, já resolvido na v230).
+- **Migração concluída (22/11):** esta sessão é a de nível de topo `session_01Qit1XcfrSvuf5MFtjafgLF` (ids em docs/AMBIENTE.md, tratados pela webapp); a rotina semanal de segunda já pede a corrida a esta sessão.
+- **DES-01 (22/11, decisão do Tiago via webapp):** orçamento do app.js 350 KB, KB = 1000 bytes no limite e na mensagem; corrido só o DES-01: ok (app.js 310 KB). Commit 522deb0. Já não há pendentes do Tiago.
 - Sem alterações à app desde 18/11 (continua v254); nada por correr.
 
 - **App em v254.** Catálogo atualizado até à v254; **nada por correr** (todos os testes escritos até à v254 passaram).
