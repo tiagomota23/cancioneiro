@@ -1,0 +1,17 @@
+{
+ "version": "254",
+ "level": "quick",
+ "date": "2026-11-22",
+ "secs": 3,
+ "results": [
+  {
+   "id": "DES-01",
+   "title": "Tamanho dos ficheiros da app (app.js, styles.css, theme.css, index.html) dentro do orçamento",
+   "status": "pass",
+   "detail": "app.js 310 KB, styles.css 74 KB, theme.css 8 KB, index.html 26 KB",
+   "dim": "Desempenho — produção",
+   "sev": "média",
+   "ms": 1038
+  }
+ ]
+}

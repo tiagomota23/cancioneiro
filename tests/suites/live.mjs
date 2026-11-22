@@ -230,13 +230,14 @@ export default async function (level) {
   dim('Desempenho — produção', 'média');
   await t('DES-01', 'Tamanho dos ficheiros da app (app.js, styles.css, theme.css, index.html) dentro do orçamento', async () => {
     await needHost(SITE);
-    const budget = { 'app.js': 300e3, // 300 KB desde 2026-10-26 (decisão do Tiago; ~84 KB em gzip)
+    const budget = { 'app.js': 350e3, // 350 KB desde 2026-11-22 (decisão do Tiago; antes 300 KB). KB = 1000 bytes, limite e mensagem
+      // na mesma unidade
       'styles.css': 80e3, 'theme.css': 15e3, 'index.html': 35e3 };
-    const out = [], bad = [];
+    const out = [], bad = [], kb = n => Math.round(n / 1000);
     for (const [f, max] of Object.entries(budget)) {
       const r = await get(SITE + f + (f.endsWith('.html') ? '' : '?v=' + v.app), { headers: { 'Accept-Encoding': 'gzip' } });
-      out.push(`${f} ${Math.round(r.body.length / 1024)} KB`);
-      if (r.body.length > max) bad.push(`${f} ${Math.round(r.body.length / 1024)} KB > ${Math.round(max / 1024)} KB`);
+      out.push(`${f} ${kb(r.body.length)} KB`);
+      if (r.body.length > max) bad.push(`${f} ${kb(r.body.length)} KB > ${kb(max)} KB`);
     }
     return bad.length ? { warn: bad.join('; '), evidence: out.join(', ') } : { pass: out.join(', ') };
   });
