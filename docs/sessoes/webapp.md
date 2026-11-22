@@ -205,7 +205,7 @@ que for ambíguo ou visível, e respondes com o que foi corrigido para voltar a 
 **Migração (22 nov, pedido do Tiago):** design, testes, backup e ideas recriadas como sessões novas (ids novos na
 tabela abaixo e em docs/AMBIENTE.md; papel e funcionamento iguais). Rotinas recriadas: design trig_016g9gyrEL8WgWautkbh8Dgi,
 cópia trig_01EvB7b2bkBgHWj6vVAYWkM6; prompt dos testes semanais com o id novo. Sessões antigas arquivadas. No servidor as
-novas já não têm sessão-mãe, mas a app do Tiago continua a mostrá-las por baixo da main (foram sugeridas daqui).
+novas estão ao nível da main (o Tiago moveu-as na app). Migração concluída.
 **Para retomar (resumo de 18 nov, antes de limpar):** tudo publicado até à v254 (main = perfis-tmp = este ramo);
 testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: DES-01 (app.js
 302 KB > orçamento 300 KB — encolher ou aceitar); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)
