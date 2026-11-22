@@ -62,15 +62,24 @@ O Tiago escreve em português ou inglês: responde na língua dele, em 2–3 lin
 - **backup**: copia o repositório (logo o espelho) para o Drive todas as semanas. Avisa-a se mudares o sítio das fontes.
 
 ## Rotina (claude.ai → Routines)
-«Verificação diária do sistema de design» — todos os dias 06:52 Europe/Lisbon, acorda esta sessão:
-1. Compara `project/tokens.json` do sistema de design com `design/tokens.json` (sem `meta`); se o Tiago mudou um valor,
-   envia à webapp antes → depois por token; o que não for só valor (token novo/retirado, componente, regra) vai ao Tiago.
-2. Vê comentários por responder nos dois artefactos.
-3. Se a versão da app (app.js) for mais recente do que a da capa do mapa, faz a sincronização.
-4. Procura valores soltos em `styles.css` (`grep -nE "#[0-9a-fA-F]{3,6}\b|font-size: *[0-9.]+px|border-radius: *[0-9]+px" styles.css`)
-   fora das exceções documentadas no README; novos → especificação à webapp.
-5. Sem mudanças: termina em silêncio. Com algo feito ou por decidir: 2–3 linhas ao Tiago.
+«Verificação diária do sistema de design» — todos os dias 06:52 Europe/Lisbon, acorda esta sessão (rede de segurança, caso
+falhe um aviso). Texto atual (inglês), passos:
+1. Lê `project/tokens.json` do sistema de design e `design/tokens.json` em main (`git pull origin main`); compara todas as
+   famílias menos `meta`. Mudança de valor → envia à webapp antes → depois por token. `node tools/theme/build.mjs --check`
+   antes de qualquer push. O que não for só valor (token novo/retirado, componente, regra do README) vai primeiro ao Tiago.
+2. Comentários por responder nos dois artefactos e republicações de qualquer deles ainda não tratadas
+   (`Artifact action:"list"`: o mapa foi publicado pela última vez a 16 nov).
+3. Se a versão da app (app.js) for mais recente do que a da capa do mapa, faz a sincronização (abaixo); imagens sem mudança
+   reaproveitadas por hash; push de `mapa/` para main e perfis-tmp.
+4. Valores soltos em `styles.css` (`grep -nE "#[0-9a-fA-F]{3,6}\b|font-size: *[0-9.]+px|border-radius: *[0-9]+px" styles.css`)
+   fora das exceções documentadas no README; novos → especificação à webapp (usar o token). No catálogo, variantes novas de
+   um elemento existente (uma variante é um erro, segundo o README).
+5. Quadros de opções: quando a opção escolhida estiver implementada, retirar o quadro «Opções — …» do mapa (a decisão fica
+   neste ficheiro).
+6. Sem mudanças: termina em silêncio (nada ao Tiago nem à webapp). Com algo feito ou por decidir: 2–3 linhas ao Tiago.
+   Terminar sempre pronta para /clear (regra 9).
 Para a recriar: create_trigger com esse nome, cron `CRON_TZ=Europe/Lisbon 52 6 * * *`, a ligar a esta sessão, e o texto acima.
+(Na migração de 22 nov é a webapp que trata das rotinas e dos ids.)
 
 ## Sincronização a cada versão da app
 ```
@@ -171,7 +180,12 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
   botões da folha); os ficheiros ficam no histórico do git (commit anterior a esta mudança) e os geradores `opcoes-*`
   em `tools/screens/` servem de modelo para os próximos.
 
-## Estado atual (18 nov 2026, v254)
+## Estado atual (22 nov 2026, v254)
+- 22 nov: migração pedida pelo Tiago (via webapp) — esta sessão passa a sessão de nível de topo (era sub-sessão da webapp);
+  papel e funcionamento iguais, só muda o id. A webapp trata das rotinas e dos ids (docs/AMBIENTE.md). Na sessão nova: ler
+  este ficheiro e docs/AMBIENTE.md, confirmar que os dois artefactos abrem e que a rotina diária acorda a sessão nova.
+- Verificações diárias de 19–22 nov: sem mudanças (tokens iguais, sem comentários, app v254 = capa do mapa, styles.css só
+  com as exceções documentadas, nenhum quadro de opções no mapa).
 - Retomar depois de um /clear: ler este ficheiro e docs/AMBIENTE.md; a rotina diária (06:52) continua a acordar esta sessão;
   nada pendente (decisões de 15 nov aplicadas na v253 e verificadas; regra 15 e cor do perfil nos recortes no README).
 - App v254 («Rever recorte» também no visor de um livro sem recorte; sem imagens novas; sincronizada pela rotina — o aviso
