@@ -54,7 +54,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   `Authorization: Bearer $SUPABASE_ACCESS_TOKEN` e corpo {"query": "..."}.
 - Publicar função: POST /v1/projects/hmfjbyiesghqhwhqgnem/functions/deploy?slug=<nome>, multipart, metadata
   {"entrypoint_path":"index.ts","name":"<nome>","verify_jwt":false} e file=@index.ts.
-- GitHub: ferramentas mcp__github__ (actions_list, actions_run_trigger, get_job_logs). O conector Google Drive lê a pasta da cópia.
+- GitHub: `gh run list/view --workflow backup.yml`, `gh workflow run backup.yml --ref main` e `gh api` REST (as ferramentas
+  mcp__github__ e o GraphQL deixaram de estar disponíveis, 22 nov). O conector Google Drive lê a pasta da cópia.
 
 ## Rotina
 - Todas as segundas às 19:15 UTC (a cópia agendada para as 07:30 costuma arrancar 6–9 h depois): confirmar que a execução passou (verificação incluída); se falhou,
@@ -73,8 +74,8 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 ## Notas práticas
 - O agendamento do GitHub atrasa a cópia das 07:30 em 6–9 h; por isso a verificação semanal é às 19:15 UTC
   (rotina «Verificação da cópia de segurança», trig_01FBwwebPgixp5Hpphrcdu5y, liga a esta sessão).
-- `gh` funciona neste ambiente para listar/correr/ver execuções; os registos completos às vezes dão 403 por `gh` e
-  lêem-se com mcp__github__get_job_logs.
+- `gh` funciona neste ambiente para listar/correr/ver execuções; se os registos completos derem 403, usar
+  `gh api repos/tiagomota23/cancioneiro/actions/jobs/<id>/logs`.
 - O dados.json tem ~4,5 MB: não o abrir pelo conector do Drive (enche o contexto); confirmar pela função publicada e
   pelo resultado da Action.
 - restaurar-dados.mjs insere só as colunas presentes na cópia (cópias antigas ficam com os valores por omissão) e cada
@@ -84,7 +85,15 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   projeto Supabase real: login, funções, cron; e se os gatilhos col_groups_guard travam o restauro de dados (pelo código
   não: com postgres/service_role my_rank() é nulo).
 
-## Estado (18 nov 2026) — pronta para /clear
+## Estado (22 nov 2026) — pronta para migração
+- Migração (pedido do Tiago, 22 nov, via webapp): esta sessão passa de sub-sessão da webapp a sessão de nível de topo.
+  Papel e regras iguais; muda só o id. A webapp trata dos ids, da rotina de segunda e de docs/AMBIENTE.md: confirma lá o
+  id novo desta sessão e o da rotina (o trig_ acima pode ter mudado). A exceção de autorizações continua a valer só para
+  a sessão webapp, pelo id que estiver em AMBIENTE.md.
+- Nada mudou desde 18 nov: última cópia agendada (16 nov) passou; main e perfis-tmp iguais; sem trabalho por enviar.
+- Próximo: rotina de segunda 23 nov 19:15 UTC (confirmar a cópia agendada das 07:30).
+
+## Estado anterior (18 nov 2026)
 - Função backup **v9** publicada (15 nov). Constante T = tabelas de dados: as de sempre + cc_sync_log, cc_transcripts,
   song_texts, crop_reviews, catalog_version, librone_sync_log. ORDEM de restaurar-dados.mjs igual, com catalog_version
   em primeiro (a linha id=1 não vem no esquema e os gatilhos catalog_bump precisam dela).
