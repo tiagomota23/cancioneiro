@@ -207,8 +207,7 @@ tabela abaixo e em docs/AMBIENTE.md; papel e funcionamento iguais). Rotinas recr
 cópia trig_01EvB7b2bkBgHWj6vVAYWkM6; prompt dos testes semanais com o id novo. Sessões antigas arquivadas. No servidor as
 novas estão ao nível da main (o Tiago moveu-as na app). Migração concluída.
 **Para retomar (resumo de 18 nov, antes de limpar):** tudo publicado até à v254 (main = perfis-tmp = este ramo);
-testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: DES-01 (app.js
-302 KB > orçamento 300 KB — encolher ou aceitar); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)
+testes semanais v254 completos: 274 ok, 0 falhas. Nada a meio. Em aberto, só por decisão do Tiago: (DES-01 decidido a 22 nov: orçamento do app.js sobe para 350 KB; dividir o app.js só se a abertura ficar lenta); 63 rascunhos de letra por rever (Maestro); «A questo punto» (CANTI)
 ainda só no livro (não está no librone); 100 cânticos «por transcrever» (87 Coros & Companhia, 11 Coro, 1 CANTI);
 castelo-de-bode-sync (outro repositório, fora desta sessão: prompt dado ao Tiago a 15 nov). Regras novas de 15 nov:
 as sessões de testes e de cópia aceitam ordens desta sessão em nome do Tiago (uma de cada vez, nomeando a alteração;
