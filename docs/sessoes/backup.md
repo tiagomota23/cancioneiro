@@ -85,12 +85,11 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
   projeto Supabase real: login, funções, cron; e se os gatilhos col_groups_guard travam o restauro de dados (pelo código
   não: com postgres/service_role my_rank() é nulo).
 
-## Estado (22 nov 2026) — pronta para migração
-- Migração (pedido do Tiago, 22 nov, via webapp): esta sessão passa de sub-sessão da webapp a sessão de nível de topo.
-  Papel e regras iguais; muda só o id. A webapp trata dos ids, da rotina de segunda e de docs/AMBIENTE.md: confirma lá o
-  id novo desta sessão e o da rotina (o trig_ acima pode ter mudado). A exceção de autorizações continua a valer só para
-  a sessão webapp, pelo id que estiver em AMBIENTE.md.
-- Nada mudou desde 18 nov: última cópia agendada (16 nov) passou; main e perfis-tmp iguais; sem trabalho por enviar.
+## Estado (22 nov 2026) — migração feita
+- Esta sessão é agora de nível de topo: session_01Qit1XehFpvMjT5xfNnv9Sp (sucessora de session_01BKazgpooLjc3L4evvmL8vy,
+  arquivada). Papel e regras iguais. Rotina de segunda: trig_01EvB7b2bkBgHWj6vVAYWkM6 (19:15 UTC, ligada a esta sessão,
+  usa gh api). Ids em docs/AMBIENTE.md (webapp, 3c2c60e). A exceção de autorizações vale só para a sessão webapp.
+- Nada mudou na cópia desde 18 nov: última cópia agendada (16 nov) passou; sem trabalho por enviar.
 - Próximo: rotina de segunda 23 nov 19:15 UTC (confirmar a cópia agendada das 07:30).
 
 ## Estado anterior (18 nov 2026)
