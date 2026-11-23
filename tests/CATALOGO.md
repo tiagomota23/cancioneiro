@@ -16,7 +16,7 @@ node tests/run.mjs --dim=static,live      # ou por suite: static, live, db, ui; 
 
 **Colunas** — *Como*: suite automática (`static` repositório · `live` produção sem sessão · `db` SQL pela Management API · `ui` Playwright/Chromium) ou `manual`. *Freq.*: **V** cada versão (`--quick`) · **S** semanal (`--full`) · **M** mensal (manual). *Estado*: resultado da última execução completa (✓ ok · ✗ falha · ! aviso · – não corrido · ☐ manual por fazer).
 
-Última execução completa: **v254, 2026-11-16 (semanal)** — 274 ok · 0 falhas · 1 aviso (DES-01: app.js 302 KB > 300 KB) · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`.
+Última execução completa: **v254, 2026-11-23 (semanal)** — 275 ok · 0 falhas · 0 avisos · 1 não corrido (WebKit). Relatório `tests/reports/2026-11-23-v254-full.md`.
 
 Catálogo atualizado até à **v254** (2026-11-18). Nada por correr: todos os testes escritos até à v254 passaram (semanal de 16/11). Regras de corrida, estado e como retomar: `tests/SESSAO.md` (= `docs/sessoes/testes.md`, ligação).
 

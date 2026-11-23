@@ -43,16 +43,16 @@ Outras decisões do Tiago: USA-04 é verificação real desde a v225 (zoom com o
 - Antes de correr: `git fetch origin main && git merge --ff-only origin/main`, num comando **separado** da corrida (em 2026-10-19 o ambiente recusou os dois juntos).
 - Na segunda de manhã: drive-sync às 06:15 UTC e sync-cc às 06:30 UTC. Se a sessão principal disser que vai correr uma sincronização, correr primeiro `--no-db` e a parte DB depois (`--only=DB-,INT-,ESC-0`).
 
-## Estado (2026-11-22) — pronta para migração / /clear
+## Estado (2026-11-23) — pronta para /clear
 
 - **Migração concluída (22/11):** esta sessão é a de nível de topo `session_01Qit1XcfrSvuf5MFtjafgLF` (ids em docs/AMBIENTE.md, tratados pela webapp); a rotina semanal de segunda já pede a corrida a esta sessão.
 - **DES-01 (22/11, decisão do Tiago via webapp):** orçamento do app.js 350 KB, KB = 1000 bytes no limite e na mensagem; corrido só o DES-01: ok (app.js 310 KB). Commit 522deb0. Já não há pendentes do Tiago.
 - Sem alterações à app desde 18/11 (continua v254); nada por correr.
 
 - **App em v254.** Catálogo atualizado até à v254; **nada por correr** (todos os testes escritos até à v254 passaram).
-- **Última corrida completa: v254, 2026-11-16 (semanal)** — 274 ok, 0 falhas, 1 aviso, 1 não corrido (COM-02, WebKit). Relatório `tests/reports/2026-11-16-v254-full.md`. Corridas anteriores do dia 15: `2026-11-15-v241-quick`, `-v252-quick/-full`, `-v254-quick` (FUN-85 e INT-14 re-testados: ok).
-- **Próxima semanal:** 2ª 23/11, quando a sessão principal mandar «weekly run: full level on vNNN» (~09:47 Lisboa). Corre depois das tarefas das 06:15 (drive-sync), 06:30 (sync-cc) e 06:45 UTC (sync-librone) — o INT-28 avisa se a sync-librone não tiver corrido nos últimos 8 dias.
-- Dados na última corrida: librone 1492 ligados (355 só do librone); 1085 letras do librone, 1 cântico do CANTI ainda só no livro; 63 rascunhos de letra por rever; 0 revisões de recortes pendentes; texto dos PDF 1876/1876 (4 sem texto legível).
+- **Última corrida completa: v254, 2026-11-23 (semanal)** — 275 ok, 0 falhas, 0 avisos, 1 não corrido (COM-02, WebKit), 1894 s. Relatório `tests/reports/2026-11-23-v254-full.md`. Anterior: `2026-11-16-v254-full` (1 aviso DES-01, resolvido a 22/11).
+- **Próxima semanal:** 2ª 30/11, quando a sessão principal mandar «weekly run: full level on vNNN» (~09:47 Lisboa). Corre depois das tarefas das 06:15 (drive-sync), 06:30 (sync-cc) e 06:45 UTC (sync-librone) — o INT-28 avisa se a sync-librone não tiver corrido nos últimos 8 dias.
+- Dados na última corrida (23/11): librone 1492 ligados (355 só do librone; sync-librone 23/11 06:45 UTC); 1085 letras do librone, 1 cântico do CANTI ainda só no livro; 63 rascunhos de letra por rever; 29 revisões de recortes, 0 pendentes; texto dos PDF 1876/1876 (4 sem texto legível).
 - MAN-01..03 (Safari / iPhone / Android) continuam manuais; COM-02 sem WebKit neste ambiente.
 
 ### Histórico curto (o detalhe está nos commits e nos relatórios)
