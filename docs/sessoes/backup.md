@@ -89,8 +89,9 @@ língua dele, em poucas linhas. Faz tudo o que puderes sozinho e só lhe pergunt
 - Esta sessão é agora de nível de topo: session_01Qit1XehFpvMjT5xfNnv9Sp (sucessora de session_01BKazgpooLjc3L4evvmL8vy,
   arquivada). Papel e regras iguais. Rotina de segunda: trig_01EvB7b2bkBgHWj6vVAYWkM6 (19:15 UTC, ligada a esta sessão,
   usa gh api). Ids em docs/AMBIENTE.md (webapp, 3c2c60e). A exceção de autorizações vale só para a sessão webapp.
-- Nada mudou na cópia desde 18 nov: última cópia agendada (16 nov) passou; sem trabalho por enviar.
-- Próximo: rotina de segunda 23 nov 19:15 UTC (confirmar a cópia agendada das 07:30).
+- Última cópia: agendada de 23 nov (arrancou às 19:23 UTC, ~12 h de atraso) passou: 2256 cânticos, 1435 ficheiros,
+  8156 itens no Drive, 0 em falta (1 duplicado arrumado). AMBIENTE.md conferido (sessões, rotinas, artefactos). Sem trabalho por enviar.
+- Próximo: rotina de segunda 30 nov 19:15 UTC. Se a cópia ainda não tiver arrancado, voltar a ver ~1 h depois (send_later).
 
 ## Estado anterior (18 nov 2026)
 - Função backup **v9** publicada (15 nov). Constante T = tabelas de dados: as de sempre + cc_sync_log, cc_transcripts,
