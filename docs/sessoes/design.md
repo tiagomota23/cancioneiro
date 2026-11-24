@@ -184,7 +184,7 @@ NODE_PATH=$(npm root -g) NODE_USE_ENV_PROXY=1 node tools/screens/catalogue.mjs  
 - 22 nov: migração pedida pelo Tiago (via webapp) — esta sessão passa a sessão de nível de topo (era sub-sessão da webapp);
   papel e funcionamento iguais, só muda o id. A webapp trata das rotinas e dos ids (docs/AMBIENTE.md). Na sessão nova: ler
   este ficheiro e docs/AMBIENTE.md, confirmar que os dois artefactos abrem e que a rotina diária acorda a sessão nova.
-- Verificações diárias de 19–23 nov: sem mudanças (tokens iguais, sem comentários, app v254 = capa do mapa, styles.css só
+- Verificações diárias de 19–24 nov: sem mudanças (tokens iguais, sem comentários, app v254 = capa do mapa, styles.css só
   com as exceções documentadas, nenhum quadro de opções no mapa).
 - Retomar depois de um /clear: ler este ficheiro e docs/AMBIENTE.md; a rotina diária (06:52) continua a acordar esta sessão;
   nada pendente (decisões de 15 nov aplicadas na v253 e verificadas; regra 15 e cor do perfil nos recortes no README).
